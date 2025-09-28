@@ -9,6 +9,9 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install
 
+# Install a simple HTTP server globally
+RUN npm install -g serve
+
 # Copy source code
 COPY . .
 
@@ -31,9 +34,6 @@ EXPOSE 3000
 # Health check
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:3000 || exit 1
-
-# Install a simple HTTP server
-RUN npm install -g serve
 
 # Start the application
 CMD ["serve", "-s", "dist", "-l", "3000"]
