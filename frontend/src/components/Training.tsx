@@ -32,7 +32,7 @@ export const Training: React.FC = () => {
         <div className="card">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             💪 Conditioning
-          </h4>
+          </h3>
           <div className="space-y-3">
             <div className="p-3 bg-red-50 rounded-lg">
               <h4 className="font-medium text-red-900">Sprint Intervals</h4>
@@ -48,7 +48,7 @@ export const Training: React.FC = () => {
         <div className="card">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             🏀 Ball Handling
-          </h4>
+          </h3>
           <div className="space-y-3">
             <div className="p-3 bg-yellow-50 rounded-lg">
               <h4 className="font-medium text-yellow-900">Weak Hand Dribbling</h4>
@@ -64,7 +64,7 @@ export const Training: React.FC = () => {
         <div className="card">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             📊 Progress Tracking
-          </h4>
+          </h3>
           <div className="space-y-3">
             <div className="text-sm">
               <span className="text-gray-600">This week's focus:</span>
