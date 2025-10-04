@@ -1,0 +1,320 @@
+import React, { useState, useEffect } from 'react';
+import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+
+interface Device {
+  id: number;
+  device_type: string;
+  device_identifier: string;
+  status: 'connected' | 'disconnected';
+  last_sync: string;
+  battery_level?: number;
+}
+
+interface HeartRateData {
+  timestamp: string;
+  value: number;
+}
+
+interface ActivitySummary {
+  steps: number;
+  distance: number;
+  calories: number;
+  active_minutes: number;
+  heart_rate_avg: number;
+  heart_rate_max: number;
+  heart_rate_resting: number;
+}
+
+export const WearableData: React.FC = () => {
+  const [devices, setDevices] = useState<Device[]>([]);
+  const [heartRateData, setHeartRateData] = useState<HeartRateData[]>([]);
+  const [activitySummary, setActivitySummary] = useState<ActivitySummary>({
+    steps: 0,
+    distance: 0,
+    calories: 0,
+    active_minutes: 0,
+    heart_rate_avg: 0,
+    heart_rate_max: 0,
+    heart_rate_resting: 0,
+  });
+  const [loading, setLoading] = useState(true);
+  const [showConnectModal, setShowConnectModal] = useState(false);
+
+  useEffect(() => {
+    fetchWearableData();
+  }, []);
+
+  const fetchWearableData = async () => {
+    try {
+      // Mock data for demonstration
+      setDevices([
+        {
+          id: 1,
+          device_type: 'Apple Watch Series 9',
+          device_identifier: 'AW-2024-001',
+          status: 'connected',
+          last_sync: new Date().toISOString(),
+          battery_level: 85,
+        },
+        {
+          id: 2,
+          device_type: 'Fitbit Charge 6',
+          device_identifier: 'FB-2024-002',
+          status: 'disconnected',
+          last_sync: new Date(Date.now() - 3600000).toISOString(),
+          battery_level: 42,
+        },
+      ]);
+
+      // Mock heart rate data
+      const mockHeartRate: HeartRateData[] = [];
+      for (let i = 0; i < 24; i++) {
+        mockHeartRate.push({
+          timestamp: `${i}:00`,
+          value: 60 + Math.random() * 40,
+        });
+      }
+      setHeartRateData(mockHeartRate);
+
+      // Mock activity summary
+      setActivitySummary({
+        steps: 12453,
+        distance: 8.7,
+        calories: 2156,
+        active_minutes: 87,
+        heart_rate_avg: 78,
+        heart_rate_max: 165,
+        heart_rate_resting: 62,
+      });
+
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching wearable data:', error);
+      setLoading(false);
+    }
+  };
+
+  const connectDevice = async (deviceType: string) => {
+    try {
+      // In real app, this would initiate OAuth or Bluetooth pairing
+      console.log('Connecting to', deviceType);
+      setShowConnectModal(false);
+      // Refresh device list
+      fetchWearableData();
+    } catch (error) {
+      console.error('Error connecting device:', error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Wearable Devices</h1>
+          <p className="text-gray-600">Monitor your health and fitness data in real-time</p>
+        </div>
+        <button
+          onClick={() => setShowConnectModal(true)}
+          className="px-6 py-3 bg-orange-600 text-white font-semibold rounded-lg hover:bg-orange-700 transition-colors flex items-center"
+        >
+          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          Connect Device
+        </button>
+      </div>
+
+      {/* Connected Devices */}
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-4">Connected Devices</h2>
+        <div className="space-y-4">
+          {devices.map((device) => (
+            <div
+              key={device.id}
+              className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex items-center">
+                <div className={`w-12 h-12 rounded-full ${device.status === 'connected' ? 'bg-green-100' : 'bg-gray-100'} flex items-center justify-center mr-4`}>
+                  <svg className={`w-6 h-6 ${device.status === 'connected' ? 'text-green-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">{device.device_type}</p>
+                  <p className="text-sm text-gray-600">{device.device_identifier}</p>
+                  <p className="text-xs text-gray-500">
+                    Last sync: {new Date(device.last_sync).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                {device.battery_level && (
+                  <div className="flex items-center">
+                    <svg className={`w-5 h-5 mr-1 ${device.battery_level > 20 ? 'text-green-600' : 'text-red-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    <span className="text-sm font-medium text-gray-700">{device.battery_level}%</span>
+                  </div>
+                )}
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${device.status === 'connected' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                  {device.status}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Activity Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow-md p-6 text-white">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-orange-100 text-sm font-medium">Steps Today</p>
+            <svg className="w-8 h-8 text-orange-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <p className="text-4xl font-bold mb-1">{activitySummary.steps.toLocaleString()}</p>
+          <p className="text-orange-100 text-sm">Target: 10,000</p>
+        </div>
+
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-md p-6 text-white">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-blue-100 text-sm font-medium">Distance</p>
+            <svg className="w-8 h-8 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </div>
+          <p className="text-4xl font-bold mb-1">{activitySummary.distance}</p>
+          <p className="text-blue-100 text-sm">miles</p>
+        </div>
+
+        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-md p-6 text-white">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-green-100 text-sm font-medium">Calories</p>
+            <svg className="w-8 h-8 text-green-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
+            </svg>
+          </div>
+          <p className="text-4xl font-bold mb-1">{activitySummary.calories.toLocaleString()}</p>
+          <p className="text-green-100 text-sm">kcal burned</p>
+        </div>
+
+        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-md p-6 text-white">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-purple-100 text-sm font-medium">Active Minutes</p>
+            <svg className="w-8 h-8 text-purple-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <p className="text-4xl font-bold mb-1">{activitySummary.active_minutes}</p>
+          <p className="text-purple-100 text-sm">minutes</p>
+        </div>
+      </div>
+
+      {/* Heart Rate Chart */}
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold text-gray-900">Heart Rate (24h)</h2>
+          <div className="flex items-center gap-4 text-sm">
+            <div className="flex items-center">
+              <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+              <span className="text-gray-600">Avg: {activitySummary.heart_rate_avg} bpm</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-3 h-3 bg-orange-500 rounded-full mr-2"></div>
+              <span className="text-gray-600">Max: {activitySummary.heart_rate_max} bpm</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+              <span className="text-gray-600">Resting: {activitySummary.heart_rate_resting} bpm</span>
+            </div>
+          </div>
+        </div>
+        <ResponsiveContainer width="100%" height={300}>
+          <AreaChart data={heartRateData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="timestamp" />
+            <YAxis domain={[40, 180]} />
+            <Tooltip />
+            <Area type="monotone" dataKey="value" stroke="#ef4444" fill="#fee2e2" />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Heart Rate Zones */}
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-4">Heart Rate Zones</h2>
+        <div className="space-y-3">
+          {[
+            { zone: 'Peak', range: '171-190 bpm', percentage: 15, color: 'bg-red-600' },
+            { zone: 'Cardio', range: '152-171 bpm', percentage: 25, color: 'bg-orange-600' },
+            { zone: 'Fat Burn', range: '133-152 bpm', percentage: 35, color: 'bg-yellow-500' },
+            { zone: 'Light', range: '114-133 bpm', percentage: 20, color: 'bg-green-500' },
+            { zone: 'Rest', range: '<114 bpm', percentage: 5, color: 'bg-blue-500' },
+          ].map((zone) => (
+            <div key={zone.zone}>
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center">
+                  <div className={`w-4 h-4 ${zone.color} rounded mr-3`}></div>
+                  <span className="font-semibold text-gray-900">{zone.zone}</span>
+                  <span className="text-gray-600 ml-2 text-sm">({zone.range})</span>
+                </div>
+                <span className="text-gray-900 font-medium">{zone.percentage}%</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-3">
+                <div
+                  className={`${zone.color} h-3 rounded-full transition-all duration-500`}
+                  style={{ width: `${zone.percentage}%` }}
+                ></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Connect Device Modal */}
+      {showConnectModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Connect Device</h2>
+            <p className="text-gray-600 mb-6">Select a device type to connect</p>
+            <div className="space-y-3">
+              {['Apple Watch', 'Fitbit', 'Garmin', 'Samsung Galaxy Watch', 'Polar', 'Generic HR Monitor'].map((deviceType) => (
+                <button
+                  key={deviceType}
+                  onClick={() => connectDevice(deviceType)}
+                  className="w-full p-4 border-2 border-gray-300 rounded-lg hover:border-orange-600 hover:bg-orange-50 transition-colors text-left flex items-center"
+                >
+                  <svg className="w-6 h-6 text-orange-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="font-medium text-gray-900">{deviceType}</span>
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowConnectModal(false)}
+              className="w-full mt-6 px-4 py-2 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
