@@ -1,79 +1,243 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
+import { useTheme } from '../context/ThemeContext'
+import { useToast } from './Toast'
+import { LoadingSpinner } from './LoadingSpinner'
+import api from '../services/api'
+
+interface TrainingRecommendation {
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  duration: number;
+  frequency: string;
+  priority: number;
+  progress: number;
+}
+
+interface TrainingProgress {
+  current_focus: string;
+  next_milestone: string;
+  completion_rate: number;
+  weekly_goal: number;
+  achievements: string[];
+}
 
 export const Training: React.FC = () => {
-  return (
-    <div className="space-y-6">
-      <div className="card">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">
-          Training Recommendations
-        </h1>
-        <p className="text-gray-600">
-          AI-powered training programs based on your performance analysis.
-        </p>
-      </div>
+  const { darkMode } = useTheme()
+  const { showToast } = useToast()
+  const [recommendations, setRecommendations] = useState<TrainingRecommendation[]>([])
+  const [progress, setProgress] = useState<TrainingProgress | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchTrainingData()
+  }, [])
+
+  const fetchTrainingData = async () => {
+    try {
+      setLoading(true)
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="card">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            🎯 Shooting Drills
-          </h3>
-          <div className="space-y-3">
-            <div className="p-3 bg-blue-50 rounded-lg">
-              <h4 className="font-medium text-blue-900">Corner 3-Point Practice</h4>
-              <p className="text-sm text-blue-700">30 reps, 3x per week</p>
+      // Fetch AI-powered training recommendations
+      const recommendationsResponse = await api.training.getRecommendations()
+      setRecommendations(recommendationsResponse.data || [])
+
+      // Fetch training progress
+      const progressResponse = await api.training.getProgress()
+      setProgress(progressResponse.data || null)
+
+      setLoading(false)
+    } catch (error: any) {
+      console.error('Error fetching training data:', error)
+      showToast('Failed to load training recommendations', 'error')
+      setLoading(false)
+    }
+  }
+
+  const getCategoryIcon = (category: string) => {
+    switch (category.toLowerCase()) {
+      case 'shooting':
+        return '🎯'
+      case 'conditioning':
+        return '💪'
+      case 'ball handling':
+        return '🏀'
+      case 'defense':
+        return '🛡️'
+      case 'mental':
+        return '🧠'
+      default:
+        return '🏃'
+    }
+  }
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'beginner':
+        return darkMode ? 'bg-green-900 text-green-300' : 'bg-green-100 text-green-800'
+      case 'intermediate':
+        return darkMode ? 'bg-yellow-900 text-yellow-300' : 'bg-yellow-100 text-yellow-800'
+      case 'advanced':
+        return darkMode ? 'bg-red-900 text-red-300' : 'bg-red-100 text-red-800'
+      default:
+        return darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const getPriorityColor = (priority: number) => {
+    if (priority >= 8) return darkMode ? 'text-red-400' : 'text-red-600'
+    if (priority >= 6) return darkMode ? 'text-orange-400' : 'text-orange-600'
+    return darkMode ? 'text-green-400' : 'text-green-600'
+  }
+
+  if (loading) {
+    return <LoadingSpinner size="lg" message="Loading AI training recommendations..." />
+  }
+
+  return (
+    <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg p-6`}>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
+                🤖 AI Training Recommendations
+              </h1>
+              <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Personalized training programs based on your performance analysis
+              </p>
             </div>
-            <div className="p-3 bg-green-50 rounded-lg">
-              <h4 className="font-medium text-green-900">Free Throw Routine</h4>
-              <p className="text-sm text-green-700">50 reps daily</p>
+            <div className="text-right">
+              <div className={`text-2xl font-bold ${darkMode ? 'text-orange-400' : 'text-orange-600'}`}>
+                {recommendations.length}
+              </div>
+              <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Active Programs
+              </div>
             </div>
           </div>
         </div>
-        
-        <div className="card">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            💪 Conditioning
-          </h3>
-          <div className="space-y-3">
-            <div className="p-3 bg-red-50 rounded-lg">
-              <h4 className="font-medium text-red-900">Sprint Intervals</h4>
-              <p className="text-sm text-red-700">10x 40-yard dashes</p>
+
+        {/* Progress Overview */}
+        {progress && (
+          <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg p-6`}>
+            <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4`}>
+              📊 Your Training Progress
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className={`text-3xl font-bold ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
+                  {progress.completion_rate}%
+                </div>
+                <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  Completion Rate
+                </div>
+              </div>
+              <div className="text-center">
+                <div className={`text-3xl font-bold ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                  {progress.weekly_goal}
+                </div>
+                <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  Weekly Goal
+                </div>
+              </div>
+              <div className="text-center">
+                <div className={`text-3xl font-bold ${darkMode ? 'text-purple-400' : 'text-purple-600'}`}>
+                  {progress.achievements.length}
+                </div>
+                <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  Achievements
+                </div>
+              </div>
             </div>
-            <div className="p-3 bg-purple-50 rounded-lg">
-              <h4 className="font-medium text-purple-900">Jump Training</h4>
-              <p className="text-sm text-purple-700">Plyometric exercises</p>
+            <div className="mt-6 space-y-2">
+              <div className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                <span className="font-medium">This week's focus:</span>
+                <span className="ml-2">{progress.current_focus}</span>
+              </div>
+              <div className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                <span className="font-medium">Next milestone:</span>
+                <span className="ml-2">{progress.next_milestone}</span>
+              </div>
             </div>
           </div>
+        )}
+
+        {/* Training Recommendations */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {recommendations.map((recommendation) => (
+            <div key={recommendation.id} className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg p-6`}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  {getCategoryIcon(recommendation.category)} {recommendation.title}
+                </h3>
+                <div className="flex items-center gap-2">
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(recommendation.difficulty)}`}>
+                    {recommendation.difficulty}
+                  </span>
+                  <span className={`text-sm font-bold ${getPriorityColor(recommendation.priority)}`}>
+                    P{recommendation.priority}
+                  </span>
+                </div>
+              </div>
+              
+              <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-4`}>
+                {recommendation.description}
+              </p>
+              
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Duration:</span>
+                  <span className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                    {recommendation.duration} minutes
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Frequency:</span>
+                  <span className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                    {recommendation.frequency}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Progress:</span>
+                  <span className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                    {recommendation.progress}%
+                  </span>
+                </div>
+              </div>
+              
+              <div className="mt-4">
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 h-2 rounded-full transition-all duration-500"
+                    style={{ width: `${recommendation.progress}%` }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
-        
-        <div className="card">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            🏀 Ball Handling
-          </h3>
-          <div className="space-y-3">
-            <div className="p-3 bg-yellow-50 rounded-lg">
-              <h4 className="font-medium text-yellow-900">Weak Hand Dribbling</h4>
-              <p className="text-sm text-yellow-700">20 minutes daily</p>
-            </div>
-            <div className="p-3 bg-indigo-50 rounded-lg">
-              <h4 className="font-medium text-indigo-900">Crossover Drills</h4>
-              <p className="text-sm text-indigo-700">15 minutes, 3x per week</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="card">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            📊 Progress Tracking
-          </h3>
-          <div className="space-y-3">
-            <div className="text-sm">
-              <span className="text-gray-600">This week's focus:</span>
-              <span className="font-medium ml-2">Shooting accuracy improvement</span>
-            </div>
-            <div className="text-sm">
-              <span className="text-gray-600">Next milestone:</span>
-              <span className="font-medium ml-2">85% free throw accuracy</span>
-            </div>
+
+        {/* Quick Actions */}
+        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg p-6`}>
+          <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4`}>
+            🚀 Quick Actions
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <button className={`${darkMode ? 'bg-orange-600 hover:bg-orange-700' : 'bg-orange-500 hover:bg-orange-600'} text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center`}>
+              <span className="mr-2">🎯</span>
+              Start Shooting Drill
+            </button>
+            <button className={`${darkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'} text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center`}>
+              <span className="mr-2">💪</span>
+              Begin Conditioning
+            </button>
+            <button className={`${darkMode ? 'bg-green-600 hover:bg-green-700' : 'bg-green-500 hover:bg-green-600'} text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center`}>
+              <span className="mr-2">📊</span>
+              View Progress
+            </button>
           </div>
         </div>
       </div>

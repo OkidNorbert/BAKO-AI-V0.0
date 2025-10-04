@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { useToast } from './Toast';
 import { LoadingSpinner } from './LoadingSpinner';
 
@@ -31,6 +32,7 @@ interface ActivitySummary {
 
 export const WearableData: React.FC = () => {
   const { user } = useAuth();
+  const { darkMode } = useTheme();
   const { showToast } = useToast();
   const [devices, setDevices] = useState<Device[]>([]);
   const [heartRateData, setHeartRateData] = useState<HeartRateData[]>([]);
@@ -131,13 +133,14 @@ export const WearableData: React.FC = () => {
   }
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Wearable Devices</h1>
-          <p className="text-gray-600">Monitor your health and fitness data in real-time</p>
-        </div>
+    <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <div className="space-y-8">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className={`text-4xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>Wearable Devices</h1>
+            <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Monitor your health and fitness data in real-time</p>
+          </div>
         <button
           onClick={() => setShowConnectModal(true)}
           className="px-6 py-3 bg-orange-600 text-white font-semibold rounded-lg hover:bg-orange-700 transition-colors flex items-center"
@@ -149,14 +152,14 @@ export const WearableData: React.FC = () => {
         </button>
       </div>
 
-      {/* Connected Devices */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Connected Devices</h2>
+        {/* Connected Devices */}
+        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-6`}>
+          <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4`}>Connected Devices</h2>
         <div className="space-y-4">
           {devices.map((device) => (
             <div
               key={device.id}
-              className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              className={`flex items-center justify-between p-4 border ${darkMode ? 'border-gray-700 hover:bg-gray-700' : 'border-gray-200 hover:bg-gray-50'} rounded-lg transition-colors`}
             >
               <div className="flex items-center">
                 <div className={`w-12 h-12 rounded-full ${device.status === 'connected' ? 'bg-green-100' : 'bg-gray-100'} flex items-center justify-center mr-4`}>
@@ -165,9 +168,9 @@ export const WearableData: React.FC = () => {
                   </svg>
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900">{device.device_type}</p>
-                  <p className="text-sm text-gray-600">{device.device_identifier}</p>
-                  <p className="text-xs text-gray-500">
+                  <p className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{device.device_type}</p>
+                  <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{device.device_identifier}</p>
+                  <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
                     Last sync: {new Date(device.last_sync).toLocaleString()}
                   </p>
                 </div>
@@ -178,10 +181,10 @@ export const WearableData: React.FC = () => {
                     <svg className={`w-5 h-5 mr-1 ${device.battery_level > 20 ? 'text-green-600' : 'text-red-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
-                    <span className="text-sm font-medium text-gray-700">{device.battery_level}%</span>
+                    <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{device.battery_level}%</span>
                   </div>
                 )}
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${device.status === 'connected' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${device.status === 'connected' ? (darkMode ? 'bg-green-900 text-green-300' : 'bg-green-100 text-green-800') : (darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-800')}`}>
                   {device.status}
                 </span>
               </div>
@@ -238,22 +241,22 @@ export const WearableData: React.FC = () => {
         </div>
       </div>
 
-      {/* Heart Rate Chart */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-gray-900">Heart Rate (24h)</h2>
+        {/* Heart Rate Chart */}
+        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-6`}>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Heart Rate (24h)</h2>
           <div className="flex items-center gap-4 text-sm">
             <div className="flex items-center">
               <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
-              <span className="text-gray-600">Avg: {activitySummary.heart_rate_avg} bpm</span>
+              <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Avg: {activitySummary.heart_rate_avg} bpm</span>
             </div>
             <div className="flex items-center">
               <div className="w-3 h-3 bg-orange-500 rounded-full mr-2"></div>
-              <span className="text-gray-600">Max: {activitySummary.heart_rate_max} bpm</span>
+              <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Max: {activitySummary.heart_rate_max} bpm</span>
             </div>
             <div className="flex items-center">
               <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
-              <span className="text-gray-600">Resting: {activitySummary.heart_rate_resting} bpm</span>
+              <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Resting: {activitySummary.heart_rate_resting} bpm</span>
             </div>
           </div>
         </div>
@@ -268,9 +271,9 @@ export const WearableData: React.FC = () => {
         </ResponsiveContainer>
       </div>
 
-      {/* Heart Rate Zones */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Heart Rate Zones</h2>
+        {/* Heart Rate Zones */}
+        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-6`}>
+          <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4`}>Heart Rate Zones</h2>
         <div className="space-y-3">
           {[
             { zone: 'Peak', range: '171-190 bpm', percentage: 15, color: 'bg-red-600' },
@@ -283,10 +286,10 @@ export const WearableData: React.FC = () => {
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center">
                   <div className={`w-4 h-4 ${zone.color} rounded mr-3`}></div>
-                  <span className="font-semibold text-gray-900">{zone.zone}</span>
-                  <span className="text-gray-600 ml-2 text-sm">({zone.range})</span>
+                  <span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{zone.zone}</span>
+                  <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} ml-2 text-sm`}>({zone.range})</span>
                 </div>
-                <span className="text-gray-900 font-medium">{zone.percentage}%</span>
+                <span className={`${darkMode ? 'text-white' : 'text-gray-900'} font-medium`}>{zone.percentage}%</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-3">
                 <div
@@ -299,35 +302,36 @@ export const WearableData: React.FC = () => {
         </div>
       </div>
 
-      {/* Connect Device Modal */}
-      {showConnectModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Connect Device</h2>
-            <p className="text-gray-600 mb-6">Select a device type to connect</p>
+        {/* Connect Device Modal */}
+        {showConnectModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg p-8 max-w-md w-full mx-4`}>
+              <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4`}>Connect Device</h2>
+              <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-6`}>Select a device type to connect</p>
             <div className="space-y-3">
               {['Apple Watch', 'Fitbit', 'Garmin', 'Samsung Galaxy Watch', 'Polar', 'Generic HR Monitor'].map((deviceType) => (
                 <button
                   key={deviceType}
                   onClick={() => connectDevice(deviceType)}
-                  className="w-full p-4 border-2 border-gray-300 rounded-lg hover:border-orange-600 hover:bg-orange-50 transition-colors text-left flex items-center"
+                  className={`w-full p-4 border-2 ${darkMode ? 'border-gray-600 hover:border-orange-500 hover:bg-orange-900' : 'border-gray-300 hover:border-orange-600 hover:bg-orange-50'} rounded-lg transition-colors text-left flex items-center`}
                 >
                   <svg className="w-6 h-6 text-orange-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span className="font-medium text-gray-900">{deviceType}</span>
+                  <span className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>{deviceType}</span>
                 </button>
               ))}
             </div>
             <button
               onClick={() => setShowConnectModal(false)}
-              className="w-full mt-6 px-4 py-2 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors"
+              className={`w-full mt-6 px-4 py-2 ${darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'} font-semibold rounded-lg transition-colors`}
             >
               Cancel
             </button>
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };
