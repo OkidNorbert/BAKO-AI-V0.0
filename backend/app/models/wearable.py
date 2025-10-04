@@ -37,7 +37,7 @@ class WearableDevice(Base):
     __tablename__ = "wearable_devices"
     
     id = Column(Integer, primary_key=True, index=True)
-    player_id = Column(Integer, ForeignKey("players.id"))
+    player_id = Column(Integer, ForeignKey("player_profiles.id"))
     device_type = Column(Enum(WearableType), nullable=False)
     device_name = Column(String, nullable=False)
     device_identifier = Column(String, unique=True, nullable=False)
@@ -56,12 +56,12 @@ class WearableData(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     device_id = Column(Integer, ForeignKey("wearable_devices.id"))
-    player_id = Column(Integer, ForeignKey("players.id"))
+    player_id = Column(Integer, ForeignKey("player_profiles.id"))
     data_type = Column(Enum(DataType), nullable=False)
     value = Column(Float, nullable=False)
     unit = Column(String, nullable=False)  # bpm, steps, calories, etc.
     timestamp = Column(DateTime(timezone=True), nullable=False)
-    metadata = Column(Text)  # JSON string for additional data
+    additional_data = Column(Text)  # JSON string for additional data
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     # Relationships
@@ -74,7 +74,7 @@ class WearableSession(Base):
     __tablename__ = "wearable_sessions"
     
     id = Column(Integer, primary_key=True, index=True)
-    player_id = Column(Integer, ForeignKey("players.id"))
+    player_id = Column(Integer, ForeignKey("player_profiles.id"))
     session_id = Column(Integer, ForeignKey("training_sessions.id"))
     device_id = Column(Integer, ForeignKey("wearable_devices.id"))
     start_time = Column(DateTime(timezone=True), nullable=False)

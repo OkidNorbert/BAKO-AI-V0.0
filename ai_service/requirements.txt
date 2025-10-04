@@ -19,6 +19,10 @@ requests==2.31.0
 # Data processing
 pandas==2.1.3
 scikit-learn==1.3.2
+joblib==1.3.2
+
+# Scheduling
+APScheduler==3.10.4
 
 # Configuration
 pydantic==2.5.0
