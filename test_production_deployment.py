@@ -42,12 +42,21 @@ def test_production_readiness():
     
     for k8s_file in k8s_files:
         try:
-            result = subprocess.run(['kubectl', 'apply', '--dry-run=client', '-f', k8s_file], 
-                                  capture_output=True, text=True, cwd='/home/okidi6/Documents/GitHub/Final Year Project')
+            # Check if kubectl is available
+            result = subprocess.run(['kubectl', 'version', '--client'], 
+                                  capture_output=True, text=True)
             if result.returncode == 0:
-                print(f"   ✅ {k8s_file} - Valid")
+                # kubectl is available, test the manifest
+                result = subprocess.run(['kubectl', 'apply', '--dry-run=client', '-f', k8s_file], 
+                                      capture_output=True, text=True, cwd='/home/okidi6/Documents/GitHub/Final Year Project')
+                if result.returncode == 0:
+                    print(f"   ✅ {k8s_file} - Valid")
+                else:
+                    print(f"   ❌ {k8s_file} - Invalid: {result.stderr}")
             else:
-                print(f"   ❌ {k8s_file} - Invalid: {result.stderr}")
+                print(f"   ⚠️ {k8s_file} - kubectl not available (expected in dev)")
+        except FileNotFoundError:
+            print(f"   ⚠️ {k8s_file} - kubectl not installed (expected in dev)")
         except Exception as e:
             print(f"   ❌ {k8s_file} - Error: {e}")
     
@@ -213,13 +222,21 @@ def test_production_scalability():
     # Test Auto-scaling
     print("\n2. Testing Auto-scaling Configuration...")
     try:
-        # Check if HPA is configured
-        result = subprocess.run(['kubectl', 'get', 'hpa', '-n', 'basketball-performance'], 
+        # Check if kubectl is available
+        result = subprocess.run(['kubectl', 'version', '--client'], 
                               capture_output=True, text=True)
-        if result.returncode == 0 and 'basketball-backend-hpa' in result.stdout:
-            print("   ✅ Horizontal Pod Autoscaler configured")
+        if result.returncode == 0:
+            # kubectl is available, check HPA
+            result = subprocess.run(['kubectl', 'get', 'hpa', '-n', 'basketball-performance'], 
+                                  capture_output=True, text=True)
+            if result.returncode == 0 and 'basketball-backend-hpa' in result.stdout:
+                print("   ✅ Horizontal Pod Autoscaler configured")
+            else:
+                print("   ⚠️ Horizontal Pod Autoscaler not configured")
         else:
-            print("   ⚠️ Horizontal Pod Autoscaler not configured")
+            print("   ⚠️ kubectl not available (expected in dev)")
+    except FileNotFoundError:
+        print("   ⚠️ kubectl not installed (expected in dev)")
     except Exception as e:
         print(f"   ❌ Auto-scaling test failed: {e}")
 
