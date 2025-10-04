@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from './Toast';
 
 export const AuthPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -12,6 +13,7 @@ export const AuthPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   
   const { login, signup } = useAuth();
+  const { showToast } = useToast();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -22,13 +24,17 @@ export const AuthPage: React.FC = () => {
     try {
       if (isLogin) {
         await login(email, password);
+        showToast('Welcome back! Login successful.', 'success');
         navigate('/dashboard');
       } else {
         await signup(email, password, fullName, role);
+        showToast('Account created successfully! Welcome to CourtVision AI.', 'success');
         navigate('/dashboard');
       }
     } catch (err) {
-      setError(isLogin ? 'Invalid email or password' : 'Signup failed. Please try again.');
+      const errorMessage = isLogin ? 'Invalid email or password' : 'Signup failed. Please try again.';
+      setError(errorMessage);
+      showToast(errorMessage, 'error');
       console.error('Auth error:', err);
     } finally {
       setLoading(false);

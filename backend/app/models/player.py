@@ -24,3 +24,5 @@ class PlayerProfile(Base):
     # Relationships
     user = relationship("User", back_populates="profile")
     team = relationship("Team", back_populates="players")
+    devices = relationship("WearableDevice", back_populates="player")
+    wearable_data = relationship("WearableData", back_populates="player")

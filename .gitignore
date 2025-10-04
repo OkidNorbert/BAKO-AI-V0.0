@@ -110,6 +110,12 @@ jspm_packages/
 .env.test.local
 .env.production.local
 
+# Credentials file (NEVER commit!)
+CREDENTIALS.md
+credentials.md
+CREDENTIALS.txt
+credentials.txt
+
 # Database
 *.db
 *.sqlite

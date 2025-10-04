@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from './Toast';
 
 interface UploadProgress {
   percentage: number;
@@ -10,6 +10,8 @@ interface UploadProgress {
 }
 
 export const VideoUpload: React.FC = () => {
+  const { user } = useAuth();
+  const { showToast } = useToast();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [progress, setProgress] = useState<UploadProgress>({
     percentage: 0,
@@ -55,24 +57,35 @@ export const VideoUpload: React.FC = () => {
 
     try {
       setProgress({
-        percentage: 0,
+        percentage: 10,
+        status: 'uploading',
+        message: 'Preparing upload...',
+      });
+
+      // Step 1: Get upload metadata (presigned URL)
+      const metadataResponse = await api.videos.getUploadMetadata(
+        1, // Default session ID - will be user-selectable in future
+        selectedFile.name,
+        selectedFile.size
+      );
+
+      const { video_id, upload_url } = metadataResponse.data;
+      showToast('Upload started...', 'info');
+
+      setProgress({
+        percentage: 20,
         status: 'uploading',
         message: 'Uploading video...',
       });
 
-      // Create form data
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-      formData.append('session_id', '1'); // In real app, get from context
-      formData.append('player_id', '1'); // In real app, get from context
-
-      // Upload file
-      const uploadResponse = await axios.post(`${API_URL}/api/v1/videos/upload`, formData, {
+      // Step 2: Upload file directly to storage (MinIO/S3)
+      const axios = await import('axios');
+      await axios.default.put(upload_url, selectedFile, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': selectedFile.type,
         },
         onUploadProgress: (progressEvent) => {
-          const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 1));
+          const percentCompleted = Math.round(20 + (progressEvent.loaded * 60) / (progressEvent.total || 1));
           setProgress({
             percentage: percentCompleted,
             status: 'uploading',
@@ -82,7 +95,17 @@ export const VideoUpload: React.FC = () => {
       });
 
       setProgress({
-        percentage: 100,
+        percentage: 85,
+        status: 'processing',
+        message: 'Confirming upload...',
+      });
+
+      // Step 3: Confirm upload
+      await api.videos.confirmUpload(video_id);
+      showToast('Upload confirmed, processing video...', 'success');
+
+      setProgress({
+        percentage: 90,
         status: 'processing',
         message: 'Processing video with AI...',
       });
@@ -97,7 +120,7 @@ export const VideoUpload: React.FC = () => {
 
         // Mock analysis results
         setAnalysisResult({
-          video_id: uploadResponse.data.video_id,
+          video_id,
           summary: {
             total_shots: 45,
             successful_shots: 35,
@@ -119,13 +142,15 @@ export const VideoUpload: React.FC = () => {
         });
       }, 3000);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Upload error:', error);
+      const errorMessage = error.response?.data?.detail || 'Upload failed. Please try again.';
       setProgress({
         percentage: 0,
         status: 'error',
-        message: 'Upload failed. Please try again.',
+        message: errorMessage,
       });
+      showToast(errorMessage, 'error');
     }
   };
 

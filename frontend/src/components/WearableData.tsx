@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from './Toast';
+import { LoadingSpinner } from './LoadingSpinner';
 
 interface Device {
   id: number;
@@ -29,6 +30,8 @@ interface ActivitySummary {
 }
 
 export const WearableData: React.FC = () => {
+  const { user } = useAuth();
+  const { showToast } = useToast();
   const [devices, setDevices] = useState<Device[]>([]);
   const [heartRateData, setHeartRateData] = useState<HeartRateData[]>([]);
   const [activitySummary, setActivitySummary] = useState<ActivitySummary>({
@@ -44,77 +47,87 @@ export const WearableData: React.FC = () => {
   const [showConnectModal, setShowConnectModal] = useState(false);
 
   useEffect(() => {
-    fetchWearableData();
-  }, []);
+    if (user) {
+      fetchWearableData();
+    }
+  }, [user]);
 
   const fetchWearableData = async () => {
+    if (!user) return;
+    
     try {
-      // Mock data for demonstration
-      setDevices([
-        {
-          id: 1,
-          device_type: 'Apple Watch Series 9',
-          device_identifier: 'AW-2024-001',
-          status: 'connected',
-          last_sync: new Date().toISOString(),
-          battery_level: 85,
-        },
-        {
-          id: 2,
-          device_type: 'Fitbit Charge 6',
-          device_identifier: 'FB-2024-002',
-          status: 'disconnected',
-          last_sync: new Date(Date.now() - 3600000).toISOString(),
-          battery_level: 42,
-        },
-      ]);
+      setLoading(true);
 
-      // Mock heart rate data
+      // Fetch real devices from backend
+      const devicesResponse = await api.wearables.getDevices();
+      const fetchedDevices = devicesResponse.data.map((device: any) => ({
+        id: device.id,
+        device_type: device.device_name,
+        device_identifier: device.device_identifier,
+        status: device.is_active ? 'connected' : 'disconnected',
+        last_sync: device.created_at,
+        battery_level: undefined,
+      }));
+      setDevices(fetchedDevices);
+
+      // Fetch real wearable metrics
+      const metricsResponse = await api.wearables.getMetrics(user.id);
+      const metrics = metricsResponse.data;
+
+      setActivitySummary({
+        steps: metrics.total_steps || 0,
+        distance: metrics.distance_covered || 0,
+        calories: metrics.calories_burned || 0,
+        active_minutes: metrics.active_minutes || 0,
+        heart_rate_avg: metrics.avg_heart_rate || 0,
+        heart_rate_max: metrics.max_heart_rate || 0,
+        heart_rate_resting: 60, // Calculate from HRV data when available
+      });
+
+      // Generate heart rate data (simplified - in production, fetch from backend)
       const mockHeartRate: HeartRateData[] = [];
       for (let i = 0; i < 24; i++) {
         mockHeartRate.push({
           timestamp: `${i}:00`,
-          value: 60 + Math.random() * 40,
+          value: metrics.avg_heart_rate ? metrics.avg_heart_rate + (Math.random() - 0.5) * 20 : 70,
         });
       }
       setHeartRateData(mockHeartRate);
 
-      // Mock activity summary
-      setActivitySummary({
-        steps: 12453,
-        distance: 8.7,
-        calories: 2156,
-        active_minutes: 87,
-        heart_rate_avg: 78,
-        heart_rate_max: 165,
-        heart_rate_resting: 62,
-      });
-
       setLoading(false);
-    } catch (error) {
+      showToast('Wearable data loaded successfully', 'success');
+    } catch (error: any) {
       console.error('Error fetching wearable data:', error);
+      showToast('Failed to load wearable data', 'error');
       setLoading(false);
     }
   };
 
   const connectDevice = async (deviceType: string) => {
+    if (!user) return;
+    
     try {
-      // In real app, this would initiate OAuth or Bluetooth pairing
-      console.log('Connecting to', deviceType);
+      // Create device in backend
+      const deviceIdentifier = `${deviceType.toLowerCase().replace(/\s+/g, '_')}_${Date.now()}`;
+      await api.wearables.createDevice(
+        deviceType.toLowerCase().replace(/\s+/g, '_'),
+        deviceType,
+        deviceIdentifier
+      );
+      
+      showToast(`${deviceType} connected successfully!`, 'success');
       setShowConnectModal(false);
+      
       // Refresh device list
       fetchWearableData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error connecting device:', error);
+      showToast(`Failed to connect ${deviceType}`, 'error');
     }
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
-      </div>
-    );
+    return <LoadingSpinner size="lg" message="Loading wearable data..." />;
   }
 
   return (

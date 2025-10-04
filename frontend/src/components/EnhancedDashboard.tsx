@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-
-const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from './Toast';
+import { LoadingSpinner } from './LoadingSpinner';
 
 interface Stats {
   total_videos: number;
@@ -20,6 +21,8 @@ interface RecentSession {
 }
 
 export const EnhancedDashboard: React.FC = () => {
+  const { user } = useAuth();
+  const { showToast } = useToast();
   const [stats, setStats] = useState<Stats>({
     total_videos: 0,
     total_sessions: 0,
@@ -28,36 +31,42 @@ export const EnhancedDashboard: React.FC = () => {
   });
   const [recentSessions, setRecentSessions] = useState<RecentSession[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    if (user) {
+      fetchDashboardData();
+    }
+  }, [user]);
 
   const fetchDashboardData = async () => {
+    if (!user) return;
+    
     try {
-      // Fetch user statistics
-      // const response = await axios.get(`${API_URL}/api/v1/players/1/stats`);
-      // setStats(response.data);
-      
-      // Mock data for demonstration
+      setLoading(true);
+      setError(null);
+
+      // Fetch real performance data from backend
+      const performanceResponse = await api.analytics.getPerformance(user.id, 30);
+      const performanceData = performanceResponse.data;
+
+      // Calculate stats from real data
       setStats({
-        total_videos: 45,
-        total_sessions: 120,
-        avg_accuracy: 78.5,
-        improvement_rate: 12.3,
+        total_videos: performanceData.total_sessions || 0,
+        total_sessions: performanceData.total_sessions || 0,
+        avg_accuracy: performanceData.shot_accuracy || 0,
+        improvement_rate: performanceData.avg_workload || 0,
       });
 
-      setRecentSessions([
-        { id: 1, date: '2024-01-15', duration: 45, performance_score: 85 },
-        { id: 2, date: '2024-01-14', duration: 60, performance_score: 82 },
-        { id: 3, date: '2024-01-13', duration: 50, performance_score: 79 },
-        { id: 4, date: '2024-01-12', duration: 55, performance_score: 88 },
-        { id: 5, date: '2024-01-11', duration: 40, performance_score: 76 },
-      ]);
+      // Fetch recent sessions (mock for now, will be implemented in backend)
+      // In production, you'd call: await api.sessions.getRecent(user.id);
+      setRecentSessions([]);
 
       setLoading(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching dashboard data:', error);
+      setError('Unable to load dashboard data. Please try again.');
+      showToast('Failed to load dashboard data', 'error');
       setLoading(false);
     }
   };
@@ -72,9 +81,22 @@ export const EnhancedDashboard: React.FC = () => {
   ];
 
   if (loading) {
+    return <LoadingSpinner size="lg" message="Loading your performance data..." />;
+  }
+
+  if (error) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+      <div className="flex flex-col items-center justify-center h-64">
+        <svg className="w-16 h-16 text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p className="text-gray-900 font-semibold mb-2">{error}</p>
+        <button
+          onClick={fetchDashboardData}
+          className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+        >
+          Try Again
+        </button>
       </div>
     );
   }

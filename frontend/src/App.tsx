@@ -1,5 +1,6 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { ToastProvider } from './components/Toast'
 import { Dashboard } from './components/Dashboard'
 import { EnhancedDashboard } from './components/EnhancedDashboard'
 import { AuthPage } from './components/AuthPage'
@@ -9,27 +10,28 @@ import { Training } from './components/Training'
 import { VideoUpload } from './components/VideoUpload'
 import { WearableData } from './components/WearableData'
 import { LiveStreaming } from './components/LiveStreaming'
-import { Navbar } from './components/Navbar'
+import { ImprovedNavbar } from './components/ImprovedNavbar'
+import { LoadingSpinner } from './components/LoadingSpinner'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
-      </div>
-    );
+    return <LoadingSpinner fullScreen message="Loading..." />;
   }
   
   return user ? <>{children}</> : <Navigate to="/login" />;
 }
 
 function AppContent() {
+  const { user } = useAuth();
+  const location = useLocation();
+  const isAuthPage = location.pathname === '/login';
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      <main className="container mx-auto px-4 py-8">
+      {!isAuthPage && <ImprovedNavbar />}
+      <main className={`${user && !isAuthPage ? 'container mx-auto px-4 py-8' : ''}`}>
         <Routes>
           <Route path="/login" element={<AuthPage />} />
           <Route path="/" element={<Dashboard />} />
@@ -98,9 +100,11 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <AppContent />
-      </Router>
+      <ToastProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </ToastProvider>
     </AuthProvider>
   )
 }
