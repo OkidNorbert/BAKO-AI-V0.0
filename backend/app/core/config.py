@@ -37,7 +37,16 @@ class Settings(BaseSettings):
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     
     # CORS
-    CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:8000"]
+    CORS_ORIGINS: List[str] = [
+        "http://localhost:3000",
+        "http://localhost:3001", 
+        "http://localhost:8000",
+        "http://10.7.17.177:3000",
+        "http://10.7.17.177:3001",
+        "http://172.19.0.1:3000",
+        "http://172.19.0.1:3001",
+        "*"  # Allow all origins in development
+    ]
     
     # File Upload
     MAX_FILE_SIZE: str = "500MB"

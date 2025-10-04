@@ -42,18 +42,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     try {
       const response = await axios.post(`${API_URL}/api/v1/auth/login`, {
-        username: email,
+        email,
         password,
       });
       
-      const { access_token, user: userData } = response.data;
+      const { access_token, user_id, role } = response.data;
+      const userData = { id: user_id, email, role };
+      
       localStorage.setItem('token', access_token);
       localStorage.setItem('user', JSON.stringify(userData));
       axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
       setUser(userData);
     } catch (error) {
       console.error('Login error:', error);
-      throw new Error('Login failed');
+      throw new Error('Invalid email or password');
     }
   };
 
