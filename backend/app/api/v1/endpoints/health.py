@@ -4,6 +4,7 @@ Health check endpoints.
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 from app.core.database import get_db
 from app.core.config import settings
 
@@ -26,7 +27,7 @@ async def database_health(db: Session = Depends(get_db)):
     """Database connectivity check."""
     try:
         # Simple query to test database connection
-        db.execute("SELECT 1")
+        db.execute(text("SELECT 1"))
         return {
             "status": "healthy",
             "database": "connected"

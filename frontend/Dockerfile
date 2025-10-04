@@ -12,21 +12,21 @@ RUN npm install
 # Install a simple HTTP server globally
 RUN npm install -g serve
 
-# Copy source code
-COPY . .
-
-# Build the application
-RUN npm run build
-
-# Create non-root user
+# Create non-root user first
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nextjs -u 1001
+
+# Copy source code
+COPY . .
 
 # Change ownership of the app directory
 RUN chown -R nextjs:nodejs /app
 
 # Switch to non-root user
 USER nextjs
+
+# Build the application
+RUN npm run build
 
 # Expose port
 EXPOSE 3000

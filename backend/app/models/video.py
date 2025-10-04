@@ -28,7 +28,8 @@ class Video(Base):
     file_size = Column(Integer)
     storage_url = Column(String)
     status = Column(Enum(VideoStatus), default=VideoStatus.UPLOADING)
-    analysis_result = Column(Text)  # JSON string
+    analysis_result = Column(Text)  # JSON string (legacy)
+    analysis_results = Column(Text)  # JSON string with AI analysis results
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
