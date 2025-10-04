@@ -3,7 +3,7 @@ API v1 router configuration.
 """
 
 from fastapi import APIRouter
-from app.api.v1.endpoints import health, auth, players, videos, events, jobs, wearables, analytics, streaming
+from app.api.v1.endpoints import health, auth, players, videos, events, jobs, wearables, analytics, streaming, metrics
 
 # Create main API router
 api_router = APIRouter()
@@ -18,3 +18,4 @@ api_router.include_router(jobs.router, prefix="/jobs", tags=["jobs"])
 api_router.include_router(wearables.router, prefix="/wearables", tags=["wearables"])
 api_router.include_router(analytics.router, prefix="/analytics", tags=["analytics"])
 api_router.include_router(streaming.router, prefix="/streaming", tags=["streaming"])
+api_router.include_router(metrics.router, prefix="/metrics", tags=["metrics"])
