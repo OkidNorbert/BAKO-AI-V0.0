@@ -86,15 +86,9 @@ export const WearableData: React.FC = () => {
         heart_rate_resting: 60, // Calculate from HRV data when available
       });
 
-      // Generate heart rate data (simplified - in production, fetch from backend)
-      const mockHeartRate: HeartRateData[] = [];
-      for (let i = 0; i < 24; i++) {
-        mockHeartRate.push({
-          timestamp: `${i}:00`,
-          value: metrics.avg_heart_rate ? metrics.avg_heart_rate + (Math.random() - 0.5) * 20 : 70,
-        });
-      }
-      setHeartRateData(mockHeartRate);
+      // Fetch real heart rate data from backend
+      const heartRateResponse = await api.wearables.getHeartRateData(user.id);
+      setHeartRateData(heartRateResponse.data || []);
 
       setLoading(false);
       showToast('Wearable data loaded successfully', 'success');

@@ -226,3 +226,115 @@ async def update_team_player(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update team player: {str(e)}"
         )
+
+@router.post("/team")
+async def add_team_player(
+    player_data: Dict[str, Any],
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Add a new player to the team
+    """
+    try:
+        # Check if user is a coach
+        if current_user.role != 'coach':
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only coaches can add team players"
+            )
+        
+        # First, create a user account for the player
+        user_query = """
+        INSERT INTO users (email, full_name, role, created_at)
+        VALUES (:email, :full_name, 'player', NOW())
+        RETURNING id
+        """
+        
+        user_result = db.execute(user_query, {
+            "email": player_data.get("email"),
+            "full_name": player_data.get("full_name")
+        })
+        user_id = user_result.fetchone()[0]
+        
+        # Then create the player profile
+        profile_query = """
+        INSERT INTO player_profiles (user_id, position, height_cm, weight_kg, team_id, created_at)
+        VALUES (:user_id, :position, :height_cm, :weight_kg, 1, NOW())
+        RETURNING id
+        """
+        
+        profile_result = db.execute(profile_query, {
+            "user_id": user_id,
+            "position": player_data.get("position"),
+            "height_cm": player_data.get("height_cm"),
+            "weight_kg": player_data.get("weight_kg")
+        })
+        profile_id = profile_result.fetchone()[0]
+        
+        db.commit()
+        
+        return {
+            "message": "Player added to team successfully",
+            "player_id": profile_id,
+            "user_id": user_id
+        }
+        
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error adding team player: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to add team player: {str(e)}"
+        )
+
+@router.delete("/team/{player_id}")
+async def remove_team_player(
+    player_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Remove a player from the team
+    """
+    try:
+        # Check if user is a coach
+        if current_user.role != 'coach':
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only coaches can remove team players"
+            )
+        
+        # Get the user_id first
+        user_query = "SELECT user_id FROM player_profiles WHERE id = :player_id"
+        user_result = db.execute(user_query, {"player_id": player_id}).fetchone()
+        
+        if not user_result:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Player not found"
+            )
+        
+        user_id = user_result[0]
+        
+        # Remove the player profile
+        profile_query = "DELETE FROM player_profiles WHERE id = :player_id"
+        db.execute(profile_query, {"player_id": player_id})
+        
+        # Remove the user account
+        user_delete_query = "DELETE FROM users WHERE id = :user_id"
+        db.execute(user_delete_query, {"user_id": user_id})
+        
+        db.commit()
+        
+        return {"message": "Player removed from team successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error removing team player {player_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to remove team player: {str(e)}"
+        )

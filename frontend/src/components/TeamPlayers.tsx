@@ -31,8 +31,17 @@ export const TeamPlayers: React.FC = () => {
   const [filterPosition, setFilterPosition] = useState('all');
   const [editingPlayer, setEditingPlayer] = useState<TeamPlayer | null>(null);
   const [showAddPlayer, setShowAddPlayer] = useState(false);
+  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  const [operationLoading, setOperationLoading] = useState<{ [key: string]: boolean }>({});
   useEffect(() => {
     fetchTeamPlayers();
+    
+    // Set up real-time refresh every 30 seconds
+    const interval = setInterval(() => {
+      fetchTeamPlayers();
+    }, 30000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   const fetchTeamPlayers = async () => {
@@ -40,6 +49,7 @@ export const TeamPlayers: React.FC = () => {
       setLoading(true);
       const response = await api.players.getTeamPlayers();
       setPlayers(response.data || []);
+      setLastRefresh(new Date());
       setLoading(false);
     } catch (error: any) {
       if (error.response?.status === 503 || error.name === 'SilentError') {
@@ -59,39 +69,73 @@ export const TeamPlayers: React.FC = () => {
   };
 
   const handleSavePlayer = async (updatedPlayer: TeamPlayer) => {
+    const operationKey = `update-${updatedPlayer.id}`;
     try {
-      // TODO: Implement API call to update player
+      setOperationLoading(prev => ({ ...prev, [operationKey]: true }));
+      await api.players.updateTeamPlayer(updatedPlayer.id, {
+        position: updatedPlayer.position,
+        height_cm: updatedPlayer.height_cm,
+        weight_kg: updatedPlayer.weight_kg
+      });
       showToast('Player updated successfully', 'success');
       setEditingPlayer(null);
       fetchTeamPlayers(); // Refresh the list
     } catch (error: any) {
-      console.error('Error updating player:', error);
-      showToast('Failed to update player', 'error');
+      if (error.response?.status === 503 || error.name === 'SilentError') {
+        showToast('Service temporarily unavailable', 'error');
+      } else {
+        console.error('Error updating player:', error);
+        showToast('Failed to update player', 'error');
+      }
+    } finally {
+      setOperationLoading(prev => ({ ...prev, [operationKey]: false }));
     }
   };
 
   const handleDeletePlayer = async (playerId: number) => {
     if (window.confirm('Are you sure you want to remove this player from the team?')) {
+      const operationKey = `delete-${playerId}`;
       try {
-        // TODO: Implement API call to remove player
+        setOperationLoading(prev => ({ ...prev, [operationKey]: true }));
+        await api.players.removeTeamPlayer(playerId);
         showToast('Player removed from team', 'success');
         fetchTeamPlayers(); // Refresh the list
       } catch (error: any) {
-        console.error('Error removing player:', error);
-        showToast('Failed to remove player', 'error');
+        if (error.response?.status === 503 || error.name === 'SilentError') {
+          showToast('Service temporarily unavailable', 'error');
+        } else {
+          console.error('Error removing player:', error);
+          showToast('Failed to remove player', 'error');
+        }
+      } finally {
+        setOperationLoading(prev => ({ ...prev, [operationKey]: false }));
       }
     }
   };
 
   const handleAddPlayer = async (newPlayer: Partial<TeamPlayer>) => {
+    const operationKey = 'add-player';
     try {
-      // TODO: Implement API call to add player
+      setOperationLoading(prev => ({ ...prev, [operationKey]: true }));
+      await api.players.addTeamPlayer({
+        full_name: newPlayer.full_name,
+        email: newPlayer.email,
+        position: newPlayer.position,
+        height_cm: newPlayer.height_cm,
+        weight_kg: newPlayer.weight_kg
+      });
       showToast('Player added to team successfully', 'success');
       setShowAddPlayer(false);
       fetchTeamPlayers(); // Refresh the list
     } catch (error: any) {
-      console.error('Error adding player:', error);
-      showToast('Failed to add player', 'error');
+      if (error.response?.status === 503 || error.name === 'SilentError') {
+        showToast('Service temporarily unavailable', 'error');
+      } else {
+        console.error('Error adding player:', error);
+        showToast('Failed to add player', 'error');
+      }
+    } finally {
+      setOperationLoading(prev => ({ ...prev, [operationKey]: false }));
     }
   };
 
@@ -121,17 +165,34 @@ export const TeamPlayers: React.FC = () => {
               <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                 Manage your team roster and track player development
               </p>
+              <p className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                Last updated: {lastRefresh.toLocaleTimeString()}
+              </p>
             </div>
-            <button
-              onClick={() => setShowAddPlayer(true)}
-              className={`px-6 py-3 rounded-lg font-semibold transition-all ${
-                darkMode
-                  ? 'bg-orange-600 hover:bg-orange-700 text-white'
-                  : 'bg-orange-500 hover:bg-orange-600 text-white'
-              }`}
-            >
-              + Add Player
-            </button>
+            <div className="flex space-x-3">
+              <button
+                onClick={fetchTeamPlayers}
+                disabled={loading}
+                className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                  darkMode
+                    ? 'bg-gray-700 hover:bg-gray-600 text-white disabled:opacity-50'
+                    : 'bg-gray-200 hover:bg-gray-300 text-gray-900 disabled:opacity-50'
+                }`}
+              >
+                {loading ? 'Refreshing...' : '🔄 Refresh'}
+              </button>
+              <button
+                onClick={() => setShowAddPlayer(true)}
+                disabled={operationLoading['add-player']}
+                className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+                  darkMode
+                    ? 'bg-orange-600 hover:bg-orange-700 text-white disabled:opacity-50'
+                    : 'bg-orange-500 hover:bg-orange-600 text-white disabled:opacity-50'
+                }`}
+              >
+                {operationLoading['add-player'] ? 'Adding...' : '+ Add Player'}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -252,23 +313,25 @@ export const TeamPlayers: React.FC = () => {
                 </Link>
                 <button
                   onClick={() => handleEditPlayer(player)}
+                  disabled={operationLoading[`update-${player.id}`] || operationLoading[`delete-${player.id}`]}
                   className={`flex-1 px-4 py-2 ${
                     darkMode 
-                      ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                      : 'bg-blue-500 text-white hover:bg-blue-600'
+                      ? 'bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50' 
+                      : 'bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50'
                   } text-center rounded-lg transition-colors text-sm font-medium`}
                 >
-                  Edit
+                  {operationLoading[`update-${player.id}`] ? 'Updating...' : 'Edit'}
                 </button>
                 <button
                   onClick={() => handleDeletePlayer(player.id)}
+                  disabled={operationLoading[`update-${player.id}`] || operationLoading[`delete-${player.id}`]}
                   className={`flex-1 px-4 py-2 ${
                     darkMode 
-                      ? 'bg-red-600 text-white hover:bg-red-700' 
-                      : 'bg-red-500 text-white hover:bg-red-600'
+                      ? 'bg-red-600 text-white hover:bg-red-700 disabled:opacity-50' 
+                      : 'bg-red-500 text-white hover:bg-red-600 disabled:opacity-50'
                   } text-center rounded-lg transition-colors text-sm font-medium`}
                 >
-                  Remove
+                  {operationLoading[`delete-${player.id}`] ? 'Removing...' : 'Remove'}
                 </button>
               </div>
             </div>
@@ -371,9 +434,10 @@ export const TeamPlayers: React.FC = () => {
                 <div className="flex space-x-3 mt-6">
                   <button
                     type="submit"
-                    className={`flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors`}
+                    disabled={operationLoading[`update-${editingPlayer.id}`]}
+                    className={`flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50`}
                   >
-                    Save Changes
+                    {operationLoading[`update-${editingPlayer.id}`] ? 'Saving...' : 'Save Changes'}
                   </button>
                   <button
                     type="button"
@@ -496,9 +560,10 @@ export const TeamPlayers: React.FC = () => {
                 <div className="flex space-x-3 mt-6">
                   <button
                     type="submit"
-                    className={`flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors`}
+                    disabled={operationLoading['add-player']}
+                    className={`flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50`}
                   >
-                    Add Player
+                    {operationLoading['add-player'] ? 'Adding...' : 'Add Player'}
                   </button>
                   <button
                     type="button"

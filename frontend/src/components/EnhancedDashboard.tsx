@@ -60,9 +60,13 @@ export const EnhancedDashboard: React.FC = () => {
         improvement_rate: performanceData.avg_workload || 0,
       });
 
-      // Fetch recent sessions (mock for now, will be implemented in backend)
-      // In production, you'd call: await api.sessions.getRecent(user.id);
-      setRecentSessions([]);
+      // Fetch recent sessions from backend
+      const sessionsResponse = await api.sessions.getRecent(user.id);
+      setRecentSessions(sessionsResponse.data || []);
+
+      // Fetch performance trends from backend
+      const performanceResponse = await api.analytics.getPerformanceTrends(user.id, 6);
+      setPerformanceData(performanceResponse.data || []);
 
       setLoading(false);
     } catch (error: any) {
@@ -73,14 +77,8 @@ export const EnhancedDashboard: React.FC = () => {
     }
   };
 
-  const performanceData = [
-    { month: 'Aug', accuracy: 65, speed: 70, stamina: 68 },
-    { month: 'Sep', accuracy: 68, speed: 72, stamina: 71 },
-    { month: 'Oct', accuracy: 72, speed: 75, stamina: 74 },
-    { month: 'Nov', accuracy: 75, speed: 78, stamina: 77 },
-    { month: 'Dec', accuracy: 78, speed: 80, stamina: 79 },
-    { month: 'Jan', accuracy: 82, speed: 83, stamina: 82 },
-  ];
+  // Performance data will be fetched from backend
+  const [performanceData, setPerformanceData] = useState([]);
 
   if (loading) {
     return <LoadingSpinner size="lg" message="Loading your performance data..." />;

@@ -153,39 +153,8 @@ TABLE_CREATION_SQL = {
     """
 }
 
-# Sample data to insert
-SAMPLE_DATA_SQL = [
-    """
-    INSERT INTO team_announcements (title, content, author, priority) 
-    VALUES ('Welcome to the Team!', 'Welcome to our basketball team. Let''s have a great season!', 'Coach John', 'high')
-    ON CONFLICT DO NOTHING;
-    """,
-    """
-    INSERT INTO team_announcements (title, content, author, priority) 
-    VALUES ('Practice Schedule', 'Practice will be held every Tuesday and Thursday at 6 PM.', 'Coach John', 'medium')
-    ON CONFLICT DO NOTHING;
-    """,
-    """
-    INSERT INTO team_events (title, description, start_time, end_time, location, event_type, created_by) 
-    VALUES ('Team Practice', 'Regular team practice session', NOW() + INTERVAL '1 day', NOW() + INTERVAL '1 day' + INTERVAL '2 hours', 'Main Court', 'practice', 'Coach John')
-    ON CONFLICT DO NOTHING;
-    """,
-    """
-    INSERT INTO team_events (title, description, start_time, end_time, location, event_type, created_by) 
-    VALUES ('Game vs Eagles', 'Championship game against Eagles', NOW() + INTERVAL '3 days', NOW() + INTERVAL '3 days' + INTERVAL '2 hours', 'Eagles Arena', 'game', 'Coach John')
-    ON CONFLICT DO NOTHING;
-    """,
-    """
-    INSERT INTO team_goals (title, description, category, target_value, unit, deadline, priority, created_by) 
-    VALUES ('Team Shooting Accuracy', 'Improve team shooting accuracy to 80%', 'performance', 80, '%', NOW() + INTERVAL '30 days', 'high', 'Coach John')
-    ON CONFLICT DO NOTHING;
-    """,
-    """
-    INSERT INTO team_notifications (title, message, type, priority) 
-    VALUES ('System Ready', 'Basketball Performance System is now ready for use!', 'success', 'low')
-    ON CONFLICT DO NOTHING;
-    """
-]
+# No sample data - system starts with empty database
+SAMPLE_DATA_SQL = []
 
 def check_table_exists(db: Session, table_name: str) -> bool:
     """Check if a table exists in the database."""
@@ -232,15 +201,8 @@ def initialize_database():
             if create_table_if_not_exists(db, table_name, sql):
                 tables_created += 1
         
-        # Insert sample data
-        logger.info("Inserting sample data...")
-        for sql in SAMPLE_DATA_SQL:
-            try:
-                db.execute(text(sql))
-                db.commit()
-            except Exception as e:
-                logger.warning(f"Could not insert sample data: {e}")
-                db.rollback()
+        # No sample data to insert - system starts clean
+        logger.info("Database initialized with empty tables - no sample data inserted")
         
         logger.info(f"Database initialization completed. Created {tables_created} new tables.")
         

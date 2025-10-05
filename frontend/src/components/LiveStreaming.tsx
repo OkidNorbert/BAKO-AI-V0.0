@@ -45,51 +45,59 @@ export const LiveStreaming: React.FC = () => {
   const startStreaming = () => {
     setIsStreaming(true);
     
-    // Simulate WebSocket connection
-    // In real app: wsRef.current = new WebSocket('ws://localhost:8000/ws/live/1');
+    // Real WebSocket connection
+    wsRef.current = new WebSocket('ws://localhost:8000/ws/live/1');
     
-    // Simulate real-time data updates
-    intervalRef.current = setInterval(() => {
-      const newMetric: LiveMetrics = {
-        timestamp: Date.now(),
-        heart_rate: 60 + Math.random() * 60,
-        speed: 10 + Math.random() * 10,
-        performance_score: 70 + Math.random() * 25,
-      };
+    wsRef.current.onopen = () => {
+      console.log('WebSocket connected');
+    };
+    
+    wsRef.current.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      
+      if (data.type === 'metrics') {
+        const newMetric: LiveMetrics = {
+          timestamp: data.timestamp,
+          heart_rate: data.heart_rate,
+          speed: data.speed,
+          performance_score: data.performance_score,
+        };
 
-      setLiveMetrics((prev) => {
-        const updated = [...prev, newMetric];
-        return updated.slice(-20); // Keep last 20 data points
-      });
+        setLiveMetrics((prev) => {
+          const updated = [...prev, newMetric];
+          return updated.slice(-20); // Keep last 20 data points
+        });
 
-      setCurrentMetrics((prev) => ({
-        heart_rate: Math.round(newMetric.heart_rate),
-        speed: Math.round(newMetric.speed * 10) / 10,
-        performance_score: Math.round(newMetric.performance_score),
-        duration: prev.duration + 1,
-      }));
-
-      // Randomly add coach feedback
-      if (Math.random() > 0.95) {
-        const feedbackMessages = [
-          { message: 'Great form on that shot!', type: 'success' as const },
-          { message: 'Increase your defensive intensity', type: 'warning' as const },
-          { message: 'Good footwork, keep it up', type: 'success' as const },
-          { message: 'Watch your spacing on offense', type: 'info' as const },
-          { message: 'Excellent transition defense!', type: 'success' as const },
-        ];
-        
-        const randomFeedback = feedbackMessages[Math.floor(Math.random() * feedbackMessages.length)];
+        setCurrentMetrics({
+          heart_rate: Math.round(data.heart_rate),
+          speed: Math.round(data.speed * 10) / 10,
+          performance_score: Math.round(data.performance_score),
+          duration: data.duration || 0,
+        });
+      }
+      
+      if (data.type === 'coach_feedback') {
         setCoachFeedback((prev) => [
           {
-            id: Date.now(),
-            timestamp: new Date().toLocaleTimeString(),
-            ...randomFeedback,
+            id: data.id,
+            timestamp: data.timestamp,
+            message: data.message,
+            type: data.feedback_type,
           },
           ...prev.slice(0, 9), // Keep last 10 feedback items
         ]);
       }
-    }, 1000);
+    };
+    
+    wsRef.current.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      setIsStreaming(false);
+    };
+    
+    wsRef.current.onclose = () => {
+      console.log('WebSocket disconnected');
+      setIsStreaming(false);
+    };
   };
 
   const stopStreaming = () => {

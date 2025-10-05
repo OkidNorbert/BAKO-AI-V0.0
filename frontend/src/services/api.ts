@@ -110,6 +110,10 @@ export const api = {
     getStats: (playerId: number, days: number = 30) =>
       axios.get(`/api/v1/analytics/performance/${playerId}?days=${days}`),
     getTeamPlayers: () => axios.get('/api/v1/team/players/'),
+    getTeamPlayer: (playerId: number) => axios.get(`/api/v1/team/players/team/${playerId}`),
+    updateTeamPlayer: (playerId: number, data: any) => axios.put(`/api/v1/team/players/team/${playerId}`, data),
+    addTeamPlayer: (data: any) => axios.post('/api/v1/team/players/team', data),
+    removeTeamPlayer: (playerId: number) => axios.delete(`/api/v1/team/players/team/${playerId}`),
   },
 
   // Sessions

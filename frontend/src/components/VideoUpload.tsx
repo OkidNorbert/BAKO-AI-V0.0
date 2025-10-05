@@ -112,37 +112,55 @@ export const VideoUpload: React.FC = () => {
         message: 'Processing video with AI...',
       });
 
-      // Simulate AI processing (in real app, poll for results)
-      setTimeout(() => {
-        setProgress({
-          percentage: 100,
-          status: 'complete',
-          message: 'Analysis complete!',
-        });
-
-        // Mock analysis results
-        setAnalysisResult({
-          video_id,
-          summary: {
-            total_shots: 45,
-            successful_shots: 35,
-            accuracy: 77.8,
-            avg_jump_height: 28.5,
-            avg_speed: 15.2,
-            total_distance: 1250,
-          },
-          events: [
-            { type: 'shot', timestamp: 12.5, success: true, form_score: 85 },
-            { type: 'dribble', timestamp: 18.2, effectiveness: 92 },
-            { type: 'jump', timestamp: 25.8, height: 32, form_score: 88 },
-          ],
-          recommendations: [
-            'Your shooting form is excellent, but consider adjusting your elbow angle slightly',
-            'Great footwork on defense, maintain this consistency',
-            'Increase your vertical jump training for better rebounding',
-          ],
-        });
-      }, 3000);
+      // Poll for AI processing results
+      const pollForResults = async () => {
+        const maxAttempts = 30; // 5 minutes max
+        let attempts = 0;
+        
+        const poll = async () => {
+          try {
+            const resultResponse = await api.videos.getAnalysisResult(video_id);
+            if (resultResponse.data.status === 'completed') {
+              setProgress({
+                percentage: 100,
+                status: 'complete',
+                message: 'Analysis complete!',
+              });
+              setAnalysisResult(resultResponse.data);
+            } else if (resultResponse.data.status === 'failed') {
+              setProgress({
+                percentage: 0,
+                status: 'error',
+                message: 'Analysis failed. Please try again.',
+              });
+            } else {
+              // Still processing, continue polling
+              attempts++;
+              if (attempts < maxAttempts) {
+                setTimeout(poll, 10000); // Poll every 10 seconds
+              } else {
+                setProgress({
+                  percentage: 0,
+                  status: 'error',
+                  message: 'Analysis timeout. Please try again.',
+                });
+              }
+            }
+          } catch (error) {
+            console.error('Error polling for results:', error);
+            setProgress({
+              percentage: 0,
+              status: 'error',
+              message: 'Failed to get analysis results.',
+            });
+          }
+        };
+        
+        // Start polling after a short delay
+        setTimeout(poll, 5000);
+      };
+      
+      pollForResults();
 
     } catch (error: any) {
       console.error('Upload error:', error);

@@ -32,35 +32,56 @@ export const Training: React.FC = () => {
   const [recommendations, setRecommendations] = useState<TrainingRecommendation[]>([])
   const [progress, setProgress] = useState<TrainingProgress | null>(null)
   const [loading, setLoading] = useState(true)
+  const [lastRefresh, setLastRefresh] = useState<Date>(new Date())
 
   useEffect(() => {
     if (user?.id) {
       fetchTrainingData()
+      
+      // Set up auto-refresh every 60 seconds
+      const interval = setInterval(() => {
+        fetchTrainingData()
+      }, 60000)
+      
+      return () => clearInterval(interval)
     }
   }, [user?.id])
 
   const fetchTrainingData = async () => {
     if (!user?.id) {
-      console.error('No user ID available')
+      console.error('No user ID available. User data:', user)
       setLoading(false)
       return
     }
+
+    console.log('Fetching training data for user ID:', user.id)
 
     try {
       setLoading(true)
       
       // Fetch AI-powered training recommendations
+      console.log('Fetching recommendations...')
       const recommendationsResponse = await api.training.getRecommendations(user.id, 30)
+      console.log('Recommendations response:', recommendationsResponse.data)
       setRecommendations(recommendationsResponse.data || [])
 
       // Fetch training progress
+      console.log('Fetching progress...')
       const progressResponse = await api.training.getTrainingProgress(user.id)
+      console.log('Progress response:', progressResponse.data)
       setProgress(progressResponse.data || null)
 
+      setLastRefresh(new Date())
       setLoading(false)
     } catch (error: any) {
-      console.error('Error fetching training data:', error)
-      showToast('Failed to load training recommendations', 'error')
+      if (error.response?.status === 503 || error.name === 'SilentError') {
+        // Service unavailable - show empty state silently
+        setRecommendations([])
+        setProgress(null)
+      } else {
+        console.error('Error fetching training data:', error)
+        showToast('Failed to load training recommendations', 'error')
+      }
       setLoading(false)
     }
   }
@@ -118,14 +139,35 @@ export const Training: React.FC = () => {
               <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                 Personalized training programs based on your performance analysis
               </p>
+              <p className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-500'} mt-1`}>
+                Last updated: {lastRefresh.toLocaleTimeString()}
+              </p>
+              {user && (
+                <p className={`text-xs ${darkMode ? 'text-gray-600' : 'text-gray-500'} mt-1`}>
+                  User: {user.full_name || user.email} (ID: {user.id})
+                </p>
+              )}
             </div>
-            <div className="text-right">
-              <div className={`text-2xl font-bold ${darkMode ? 'text-orange-400' : 'text-orange-600'}`}>
-                {recommendations.length}
+            <div className="flex items-center space-x-4">
+              <div className="text-right">
+                <div className={`text-2xl font-bold ${darkMode ? 'text-orange-400' : 'text-orange-600'}`}>
+                  {recommendations.length}
+                </div>
+                <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  Active Programs
+                </div>
               </div>
-              <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                Active Programs
-              </div>
+              <button
+                onClick={fetchTrainingData}
+                disabled={loading}
+                className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                  darkMode
+                    ? 'bg-gray-700 hover:bg-gray-600 text-white disabled:opacity-50'
+                    : 'bg-gray-200 hover:bg-gray-300 text-gray-900 disabled:opacity-50'
+                }`}
+              >
+                {loading ? 'Refreshing...' : '🔄 Refresh'}
+              </button>
             </div>
           </div>
         </div>
@@ -176,8 +218,9 @@ export const Training: React.FC = () => {
         )}
 
         {/* Training Recommendations */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {recommendations.map((recommendation) => (
+        {recommendations.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {recommendations.map((recommendation) => (
             <div key={recommendation.id} className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg p-6`}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
@@ -228,28 +271,41 @@ export const Training: React.FC = () => {
               </div>
             </div>
           ))}
-        </div>
-
-        {/* Quick Actions */}
-        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg p-6`}>
-          <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4`}>
-            🚀 Quick Actions
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <button className={`${darkMode ? 'bg-orange-600 hover:bg-orange-700' : 'bg-orange-500 hover:bg-orange-600'} text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center`}>
-              <span className="mr-2">🎯</span>
-              Start Shooting Drill
-            </button>
-            <button className={`${darkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'} text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center`}>
-              <span className="mr-2">💪</span>
-              Begin Conditioning
-            </button>
-            <button className={`${darkMode ? 'bg-green-600 hover:bg-green-700' : 'bg-green-500 hover:bg-green-600'} text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center`}>
-              <span className="mr-2">📊</span>
-              View Progress
-            </button>
           </div>
-        </div>
+        ) : (
+          <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg p-8 text-center`}>
+            <div className="text-6xl mb-4">🤖</div>
+            <h3 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
+              No Training Recommendations Available
+            </h3>
+            <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-4`}>
+              Start uploading videos and completing training sessions to get personalized AI recommendations
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button 
+                onClick={() => window.location.href = '/upload'}
+                className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+                  darkMode 
+                    ? 'bg-orange-600 hover:bg-orange-700 text-white' 
+                    : 'bg-orange-500 hover:bg-orange-600 text-white'
+                }`}
+              >
+                📤 Upload Training Video
+              </button>
+              <button 
+                onClick={() => window.location.href = '/live'}
+                className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+                  darkMode 
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                    : 'bg-blue-500 hover:bg-blue-600 text-white'
+                }`}
+              >
+                📹 Start Live Session
+              </button>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   )

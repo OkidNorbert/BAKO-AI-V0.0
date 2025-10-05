@@ -68,68 +68,33 @@ async def get_training_recommendations(
         if ai_data:
             return ai_data
         
-        # Fallback: Generate mock recommendations based on player data
-        logger.info(f"Using fallback recommendations for player {player_id}")
-        
-        recommendations = [
-            {
-                "id": 1,
-                "title": "Shooting Form Improvement",
-                "description": "Focus on shooting mechanics and follow-through to improve accuracy",
-                "category": "shooting",
-                "difficulty": "intermediate",
-                "duration": 30,
-                "frequency": "3x/week",
-                "priority": 8,
-                "progress": 25
-            },
-            {
-                "id": 2,
-                "title": "Cardio Conditioning",
-                "description": "Build endurance and stamina for better game performance",
-                "category": "conditioning",
-                "difficulty": "beginner",
-                "duration": 45,
-                "frequency": "4x/week",
-                "priority": 7,
-                "progress": 40
-            },
-            {
-                "id": 3,
-                "title": "Ball Handling Drills",
-                "description": "Improve dribbling skills and ball control",
-                "category": "ball handling",
-                "difficulty": "intermediate",
-                "duration": 25,
-                "frequency": "5x/week",
-                "priority": 6,
-                "progress": 60
-            },
-            {
-                "id": 4,
-                "title": "Defensive Positioning",
-                "description": "Learn proper defensive stance and footwork",
-                "category": "defense",
-                "difficulty": "advanced",
-                "duration": 35,
-                "frequency": "2x/week",
-                "priority": 5,
-                "progress": 15
-            },
-            {
-                "id": 5,
-                "title": "Mental Toughness Training",
-                "description": "Develop focus and confidence under pressure",
-                "category": "mental",
-                "difficulty": "intermediate",
-                "duration": 20,
-                "frequency": "3x/week",
-                "priority": 4,
-                "progress": 30
-            }
-        ]
-        
-        return recommendations
+        # Check if player has any training data
+        try:
+            # Query for player's training sessions/events
+            player_data_query = """
+            SELECT COUNT(*) as session_count, 
+                   MAX(timestamp) as last_session,
+                   AVG(CAST(meta->>'performance_score' AS FLOAT)) as avg_performance
+            FROM events 
+            WHERE player_id = :player_id
+            """
+            
+            player_data = db.execute(player_data_query, {"player_id": str(player_id)}).fetchone()
+            
+            # If player has no training data, return empty recommendations
+            if not player_data or player_data.session_count == 0:
+                logger.info(f"Player {player_id} has no training data, returning empty recommendations")
+                return []
+            
+            # If player has some data but AI service is unavailable, return empty
+            # (This ensures we don't show fake recommendations)
+            logger.info(f"Player {player_id} has {player_data.session_count} sessions but AI service unavailable")
+            return []
+            
+        except Exception as db_error:
+            logger.warning(f"Database query failed for player {player_id}: {db_error}")
+            # Return empty if we can't check player data
+            return []
         
     except Exception as e:
         logger.error(f"Error getting training recommendations: {e}")
@@ -153,22 +118,32 @@ async def get_training_progress(
         if ai_data:
             return ai_data
         
-        # Fallback: Generate mock progress data
-        logger.info(f"Using fallback progress data for player {player_id}")
-        
-        progress = {
-            "current_focus": "Shooting accuracy and free throw consistency",
-            "next_milestone": "Achieve 80% free throw accuracy",
-            "completion_rate": 65,
-            "weekly_goal": 5,
-            "achievements": [
-                "Completed 10 shooting sessions",
-                "Improved 3-point accuracy by 15%",
-                "Maintained 5-day training streak"
-            ]
-        }
-        
-        return progress
+        # Check if player has any training data
+        try:
+            # Query for player's training sessions/events
+            player_data_query = """
+            SELECT COUNT(*) as session_count, 
+                   MAX(timestamp) as last_session,
+                   AVG(CAST(meta->>'performance_score' AS FLOAT)) as avg_performance
+            FROM events 
+            WHERE player_id = :player_id
+            """
+            
+            player_data = db.execute(player_data_query, {"player_id": str(player_id)}).fetchone()
+            
+            # If player has no training data, return null
+            if not player_data or player_data.session_count == 0:
+                logger.info(f"Player {player_id} has no training data, returning null progress")
+                return None
+            
+            # If player has some data but AI service is unavailable, return null
+            logger.info(f"Player {player_id} has {player_data.session_count} sessions but AI service unavailable")
+            return None
+            
+        except Exception as db_error:
+            logger.warning(f"Database query failed for player {player_id}: {db_error}")
+            # Return null if we can't check player data
+            return None
         
     except Exception as e:
         logger.error(f"Error getting training progress: {e}")
