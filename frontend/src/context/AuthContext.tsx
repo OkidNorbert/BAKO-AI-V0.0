@@ -18,7 +18,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+const API_URL = (import.meta as any).env?.VITE_BACKEND_URL || 'http://localhost:8000';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -47,7 +47,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       
       const { access_token, user_id, role } = response.data;
-      const userData = { id: user_id, email, role };
+      const userData = { id: user_id, email, role, full_name: email };
       
       localStorage.setItem('token', access_token);
       localStorage.setItem('user', JSON.stringify(userData));

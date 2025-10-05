@@ -3,8 +3,8 @@ import axios from 'axios';
 // Auto-detect backend URL based on current host
 const getBackendUrl = () => {
   // If environment variable is set, use it
-  if (import.meta.env.VITE_BACKEND_URL) {
-    return import.meta.env.VITE_BACKEND_URL;
+  if ((import.meta as any).env?.VITE_BACKEND_URL) {
+    return (import.meta as any).env.VITE_BACKEND_URL;
   }
   
   // Auto-detect based on current host
@@ -20,7 +20,7 @@ const getBackendUrl = () => {
 };
 
 const API_URL = getBackendUrl();
-const AI_SERVICE_URL = import.meta.env.VITE_AI_SERVICE_URL || 'http://localhost:8001';
+const AI_SERVICE_URL = (import.meta as any).env?.VITE_AI_SERVICE_URL || 'http://localhost:8001';
 
 // Configure axios defaults
 axios.defaults.baseURL = API_URL;

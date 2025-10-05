@@ -61,12 +61,12 @@ export const EnhancedDashboard: React.FC = () => {
       });
 
       // Fetch recent sessions from backend
-      const sessionsResponse = await api.sessions.getRecent(user.id);
+      const sessionsResponse = await api.sessions.getPlayerSessions(user.id);
       setRecentSessions(sessionsResponse.data || []);
 
       // Fetch performance trends from backend
-      const performanceResponse = await api.analytics.getPerformanceTrends(user.id, 6);
-      setPerformanceData(performanceResponse.data || []);
+      const trendsResponse = await api.analytics.getPerformance(user.id, 30);
+      setPerformanceData(trendsResponse.data || []);
 
       setLoading(false);
     } catch (error: any) {

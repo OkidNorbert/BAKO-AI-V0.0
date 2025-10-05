@@ -1,9 +1,8 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider, useTheme } from './context/ThemeContext'
 import { ToastProvider } from './components/Toast'
 import { ModernHomepage } from './components/ModernHomepage'
-import { EnhancedDashboard } from './components/EnhancedDashboard'
 import { RoleBasedDashboard } from './components/RoleBasedDashboard'
 import { TeamPlayers } from './components/TeamPlayers'
 import { TeamAnalytics } from './components/TeamAnalytics'
@@ -43,7 +42,6 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function AppContent() {
   const { user } = useAuth();
   const { darkMode } = useTheme();
-  const location = useLocation();
 
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'} overflow-x-hidden`}>
