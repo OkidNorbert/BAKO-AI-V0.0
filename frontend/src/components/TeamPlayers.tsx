@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from './Toast';
 import { LoadingSpinner } from './LoadingSpinner';
+import { useAutoRefresh } from '../hooks/useAutoRefresh';
+import { SmartRefreshIndicator } from './SmartRefreshIndicator';
 import api from '../services/api';
 
 interface TeamPlayer {
@@ -22,7 +23,6 @@ interface TeamPlayer {
 }
 
 export const TeamPlayers: React.FC = () => {
-  const { user } = useAuth();
   const { darkMode } = useTheme();
   const { showToast } = useToast();
   const [players, setPlayers] = useState<TeamPlayer[]>([]);
@@ -31,25 +31,14 @@ export const TeamPlayers: React.FC = () => {
   const [filterPosition, setFilterPosition] = useState('all');
   const [editingPlayer, setEditingPlayer] = useState<TeamPlayer | null>(null);
   const [showAddPlayer, setShowAddPlayer] = useState(false);
-  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const [operationLoading, setOperationLoading] = useState<{ [key: string]: boolean }>({});
-  useEffect(() => {
-    fetchTeamPlayers();
-    
-    // Set up real-time refresh every 30 seconds
-    const interval = setInterval(() => {
-      fetchTeamPlayers();
-    }, 30000);
-    
-    return () => clearInterval(interval);
-  }, []);
 
+  // Declare fetchTeamPlayers function first
   const fetchTeamPlayers = async () => {
     try {
       setLoading(true);
       const response = await api.players.getTeamPlayers();
       setPlayers(response.data || []);
-      setLastRefresh(new Date());
       setLoading(false);
     } catch (error: any) {
       if (error.response?.status === 503 || error.name === 'SilentError') {
@@ -113,6 +102,23 @@ export const TeamPlayers: React.FC = () => {
     }
   };
 
+  // Smart auto-refresh with better UX
+  const { isRefreshing, lastRefresh, refresh } = useAutoRefresh({
+    interval: 60000, // 1 minute instead of 30 seconds
+    enabled: true,
+    onRefresh: fetchTeamPlayers,
+    onError: (error) => {
+      console.warn('Auto-refresh failed:', error)
+      // Don't show toast for auto-refresh failures to avoid being annoying
+    },
+    respectUserActivity: true, // Pause when user is active
+    respectVisibility: true, // Pause when tab is not visible
+  });
+
+  useEffect(() => {
+    fetchTeamPlayers();
+  }, []);
+
   const handleAddPlayer = async (newPlayer: Partial<TeamPlayer>) => {
     const operationKey = 'add-player';
     try {
@@ -154,6 +160,15 @@ export const TeamPlayers: React.FC = () => {
 
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      {/* Smart refresh indicator */}
+      <SmartRefreshIndicator
+        isRefreshing={isRefreshing}
+        lastRefresh={lastRefresh}
+        onManualRefresh={refresh}
+        showIndicator={true}
+        position="top-right"
+      />
+      
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -166,7 +181,7 @@ export const TeamPlayers: React.FC = () => {
                 Manage your team roster and track player development
               </p>
               <p className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
-                Last updated: {lastRefresh.toLocaleTimeString()}
+                Last updated: {lastRefresh ? lastRefresh.toLocaleTimeString() : 'Never'}
               </p>
             </div>
             <div className="flex space-x-3">

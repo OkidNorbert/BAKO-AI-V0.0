@@ -65,8 +65,8 @@ export const RoleBasedNavbar: React.FC = () => {
     <nav className={`${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg`}>
       <div className="w-full mx-auto px-2 sm:px-4 lg:px-8">
         <div className="flex justify-between h-12 sm:h-14 lg:h-16">
-          <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-1 sm:space-x-2">
+          <div className="flex items-center flex-1 min-w-0">
+            <Link to="/" className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
               <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-orange-600 to-orange-700 rounded-lg flex items-center justify-center">
                 <svg className="w-3 h-3 sm:w-5 sm:h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="2"/>
@@ -78,26 +78,59 @@ export const RoleBasedNavbar: React.FC = () => {
                   <circle cx="12" cy="18" r="2"/>
                 </svg>
               </div>
-              <span className={`text-sm sm:text-lg lg:text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} landscape-text-sm`}>
+              <span className={`text-sm sm:text-lg lg:text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} landscape:text-sm portrait:text-base`}>
                 CourtVision AI
               </span>
             </Link>
 
-            {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center space-x-1 ml-4 sm:ml-8">
+            {/* Desktop Navigation - More responsive */}
+            <div className="hidden xl:flex items-center space-x-1 ml-4 sm:ml-8 flex-1">
               {navItems.map((item) => (
                 <Link key={item.path} to={item.path} className={getNavLinkClass(item.path)}>
                   <div className="flex items-center space-x-1 sm:space-x-2">
                     <span className="text-sm sm:text-base">{item.icon}</span>
-                    <span className="text-xs sm:text-sm landscape-text-sm">{item.label}</span>
+                    <span className="text-xs sm:text-sm landscape:text-xs portrait:text-sm">{item.label}</span>
                   </div>
                 </Link>
               ))}
             </div>
+
+            {/* Tablet Navigation - Shows on landscape tablets */}
+            <div className="hidden lg:flex xl:hidden items-center space-x-1 ml-4 sm:ml-8 flex-1">
+              {navItems.slice(0, 4).map((item) => (
+                <Link key={item.path} to={item.path} className={getNavLinkClass(item.path)}>
+                  <div className="flex items-center space-x-1">
+                    <span className="text-sm">{item.icon}</span>
+                    <span className="text-xs landscape:text-xs portrait:text-sm">{item.label}</span>
+                  </div>
+                </Link>
+              ))}
+              {navItems.length > 4 && (
+                <div className="relative group">
+                  <button className={`px-2 py-1 rounded-md text-xs font-medium transition-colors ${
+                    darkMode
+                      ? 'text-gray-300 hover:text-white hover:bg-gray-700'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  }`}>
+                    More
+                  </button>
+                  <div className="absolute right-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-50 border border-gray-200 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                    {navItems.slice(4).map((item) => (
+                      <Link key={item.path} to={item.path} className="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <div className="flex items-center space-x-2">
+                          <span>{item.icon}</span>
+                          <span>{item.label}</span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* User Menu */}
-          <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4 mr-2 sm:mr-4">
+          {/* User Menu - More flexible */}
+          <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4 flex-shrink-0">
             {/* Dark Mode Toggle */}
             <button
               onClick={toggleDarkMode}
@@ -194,23 +227,26 @@ export const RoleBasedNavbar: React.FC = () => {
           </div>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Mobile Navigation - Responsive to orientation */}
         {isMenuOpen && (
           <div className="lg:hidden">
             <div className={`px-2 pt-2 pb-3 space-y-1 ${darkMode ? 'bg-gray-800' : 'bg-white'} border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-              {navItems.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={getMobileNavLinkClass(item.path)}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm sm:text-base">{item.icon}</span>
-                    <span className="text-sm sm:text-base landscape-text-sm">{item.label}</span>
-                  </div>
-                </Link>
-              ))}
+              {/* Grid layout for landscape mobile */}
+              <div className="landscape:grid landscape:grid-cols-2 landscape:gap-2 portrait:block">
+                {navItems.map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={getMobileNavLinkClass(item.path)}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm sm:text-base">{item.icon}</span>
+                      <span className="text-sm sm:text-base landscape:text-xs portrait:text-sm">{item.label}</span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
         )}
@@ -222,8 +258,8 @@ export const RoleBasedNavbar: React.FC = () => {
     <nav className={`${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg`}>
       <div className="w-full mx-auto px-2 sm:px-4 lg:px-8">
         <div className="flex justify-between h-12 sm:h-14 lg:h-16">
-          <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-1 sm:space-x-2">
+          <div className="flex items-center flex-1 min-w-0">
+            <Link to="/" className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
               <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-orange-600 to-orange-700 rounded-lg flex items-center justify-center">
                 <svg className="w-3 h-3 sm:w-5 sm:h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="2"/>
@@ -235,25 +271,25 @@ export const RoleBasedNavbar: React.FC = () => {
                   <circle cx="12" cy="18" r="2"/>
                 </svg>
               </div>
-              <span className={`text-sm sm:text-lg lg:text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} landscape-text-sm`}>
+              <span className={`text-sm sm:text-lg lg:text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} landscape:text-sm portrait:text-base`}>
                 CourtVision AI
               </span>
             </Link>
 
-            <div className="hidden md:flex items-center space-x-4 sm:space-x-8 ml-4 sm:ml-8">
+            <div className="hidden md:flex items-center space-x-2 sm:space-x-4 lg:space-x-8 ml-4 sm:ml-8 flex-1">
               <Link to="/features" className={getNavLinkClass('/features')}>
-                Features
+                <span className="landscape:text-sm portrait:text-base">Features</span>
               </Link>
               <Link to="/pricing" className={getNavLinkClass('/pricing')}>
-                Pricing
+                <span className="landscape:text-sm portrait:text-base">Pricing</span>
               </Link>
               <Link to="/about" className={getNavLinkClass('/about')}>
-                About
+                <span className="landscape:text-sm portrait:text-base">About</span>
               </Link>
             </div>
           </div>
 
-          <div className="flex items-center space-x-2 sm:space-x-4 mr-2 sm:mr-4">
+          <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
             <button
               onClick={toggleDarkMode}
               className={`p-1.5 sm:p-2 rounded-lg transition-colors ${

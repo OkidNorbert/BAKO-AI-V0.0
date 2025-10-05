@@ -14,6 +14,7 @@ class PlayerProfile(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    full_name = Column(String, nullable=False)
     height_cm = Column(Float)
     weight_kg = Column(Float)
     position = Column(String)  # PG, SG, SF, PF, C

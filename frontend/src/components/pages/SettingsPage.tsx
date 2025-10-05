@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../Toast';
+import { AutoRefreshSettings } from '../AutoRefreshSettings';
 
 export const SettingsPage: React.FC = () => {
   const { darkMode, toggleDarkMode } = useTheme();
@@ -85,6 +86,22 @@ export const SettingsPage: React.FC = () => {
               }`}
             />
           </button>
+        </div>
+      </div>
+
+      {/* Auto-refresh Settings */}
+      <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-6`}>
+        <h2 className={`text-2xl font-bold mb-6 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+          Auto-refresh
+        </h2>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>Auto-refresh Settings</p>
+            <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              Configure automatic data refresh behavior
+            </p>
+          </div>
+          <AutoRefreshSettings />
         </div>
       </div>
 

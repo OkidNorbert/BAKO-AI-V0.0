@@ -3,6 +3,8 @@ import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from './Toast'
 import { LoadingSpinner } from './LoadingSpinner'
+import { useAutoRefresh } from '../hooks/useAutoRefresh'
+import { SmartRefreshIndicator } from './SmartRefreshIndicator'
 import api from '../services/api'
 
 interface TrainingRecommendation {
@@ -32,18 +34,23 @@ export const Training: React.FC = () => {
   const [recommendations, setRecommendations] = useState<TrainingRecommendation[]>([])
   const [progress, setProgress] = useState<TrainingProgress | null>(null)
   const [loading, setLoading] = useState(true)
-  const [lastRefresh, setLastRefresh] = useState<Date>(new Date())
+
+  // Smart auto-refresh with better UX
+  const { isRefreshing, lastRefresh, refresh } = useAutoRefresh({
+    interval: 120000, // 2 minutes instead of 1 minute
+    enabled: !!user?.id,
+    onRefresh: fetchTrainingData,
+    onError: (error) => {
+      console.warn('Auto-refresh failed:', error)
+      // Don't show toast for auto-refresh failures to avoid being annoying
+    },
+    respectUserActivity: true, // Pause when user is active
+    respectVisibility: true, // Pause when tab is not visible
+  })
 
   useEffect(() => {
     if (user?.id) {
       fetchTrainingData()
-      
-      // Set up auto-refresh every 60 seconds
-      const interval = setInterval(() => {
-        fetchTrainingData()
-      }, 60000)
-      
-      return () => clearInterval(interval)
     }
   }, [user?.id])
 
@@ -128,6 +135,15 @@ export const Training: React.FC = () => {
 
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      {/* Smart refresh indicator */}
+      <SmartRefreshIndicator
+        isRefreshing={isRefreshing}
+        lastRefresh={lastRefresh}
+        onManualRefresh={refresh}
+        showIndicator={!!user?.id}
+        position="top-right"
+      />
+      
       <div className="space-y-6">
         {/* Header */}
         <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg p-6`}>

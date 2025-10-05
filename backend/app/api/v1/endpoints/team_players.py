@@ -6,6 +6,7 @@ from app.models.user import User
 from pydantic import BaseModel
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 from app.core.database import get_db
 
 logger = logging.getLogger(__name__)
@@ -43,7 +44,7 @@ async def get_team_players(
         
         # Get team players with their performance data
         try:
-            team_players_query = """
+            team_players_query = text("""
             SELECT 
                 pp.id,
                 pp.user_id,
@@ -64,7 +65,7 @@ async def get_team_players(
             GROUP BY pp.id, pp.user_id, u.full_name, u.email, pp.position, 
                      pp.height_cm, pp.weight_kg, pp.team_id, pp.created_at
             ORDER BY u.full_name
-            """
+            """)
             
             team_players = db.execute(team_players_query).fetchall()
         except Exception as e:
@@ -124,7 +125,7 @@ async def get_team_player(
             )
         
         # Get specific player with performance data
-        player_query = """
+        player_query = text("""
         SELECT 
             pp.id,
             pp.user_id,
@@ -144,7 +145,7 @@ async def get_team_player(
         WHERE pp.id = :player_id
         GROUP BY pp.id, pp.user_id, u.full_name, u.email, pp.position, 
                  pp.height_cm, pp.weight_kg, pp.team_id, pp.created_at
-        """
+        """)
         
         player = db.execute(player_query, {"player_id": player_id}).fetchone()
         
@@ -202,13 +203,13 @@ async def update_team_player(
             )
         
         # Update player information
-        update_query = """
+        update_query = text("""
         UPDATE player_profiles 
         SET position = :position,
             height_cm = :height_cm,
             weight_kg = :weight_kg
         WHERE id = :player_id
-        """
+        """)
         
         db.execute(update_query, {
             "player_id": player_id,
@@ -245,27 +246,27 @@ async def add_team_player(
             )
         
         # First, create a user account for the player
-        user_query = """
-        INSERT INTO users (email, full_name, role, created_at)
-        VALUES (:email, :full_name, 'player', NOW())
+        user_query = text("""
+        INSERT INTO users (email, role, created_at)
+        VALUES (:email, 'player', NOW())
         RETURNING id
-        """
+        """)
         
         user_result = db.execute(user_query, {
-            "email": player_data.get("email"),
-            "full_name": player_data.get("full_name")
+            "email": player_data.get("email")
         })
         user_id = user_result.fetchone()[0]
         
-        # Then create the player profile
-        profile_query = """
-        INSERT INTO player_profiles (user_id, position, height_cm, weight_kg, team_id, created_at)
-        VALUES (:user_id, :position, :height_cm, :weight_kg, 1, NOW())
+        # Then create the player profile with full_name
+        profile_query = text("""
+        INSERT INTO player_profiles (user_id, full_name, position, height_cm, weight_kg, team_id, created_at)
+        VALUES (:user_id, :full_name, :position, :height_cm, :weight_kg, 1, NOW())
         RETURNING id
-        """
+        """)
         
         profile_result = db.execute(profile_query, {
             "user_id": user_id,
+            "full_name": player_data.get("full_name"),
             "position": player_data.get("position"),
             "height_cm": player_data.get("height_cm"),
             "weight_kg": player_data.get("weight_kg")
@@ -306,7 +307,7 @@ async def remove_team_player(
             )
         
         # Get the user_id first
-        user_query = "SELECT user_id FROM player_profiles WHERE id = :player_id"
+        user_query = text("SELECT user_id FROM player_profiles WHERE id = :player_id")
         user_result = db.execute(user_query, {"player_id": player_id}).fetchone()
         
         if not user_result:
@@ -318,11 +319,11 @@ async def remove_team_player(
         user_id = user_result[0]
         
         # Remove the player profile
-        profile_query = "DELETE FROM player_profiles WHERE id = :player_id"
+        profile_query = text("DELETE FROM player_profiles WHERE id = :player_id")
         db.execute(profile_query, {"player_id": player_id})
         
         # Remove the user account
-        user_delete_query = "DELETE FROM users WHERE id = :user_id"
+        user_delete_query = text("DELETE FROM users WHERE id = :user_id")
         db.execute(user_delete_query, {"user_id": user_id})
         
         db.commit()

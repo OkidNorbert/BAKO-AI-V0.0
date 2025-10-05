@@ -16,6 +16,7 @@ TABLE_CREATION_SQL = {
         CREATE TABLE IF NOT EXISTS player_profiles (
             id SERIAL PRIMARY KEY,
             user_id INTEGER NOT NULL,
+            full_name VARCHAR(255) NOT NULL,
             position VARCHAR(50),
             height_cm INTEGER,
             weight_kg INTEGER,
@@ -188,6 +189,30 @@ def create_table_if_not_exists(db: Session, table_name: str, sql: str) -> bool:
         db.rollback()
         return False
 
+def add_full_name_column_if_missing(db: Session):
+    """Add full_name column to player_profiles if it doesn't exist."""
+    try:
+        # Check if full_name column exists
+        check_column_query = """
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'player_profiles' AND column_name = 'full_name'
+        """
+        result = db.execute(text(check_column_query)).fetchone()
+        
+        if not result:
+            logger.info("Adding full_name column to player_profiles table...")
+            alter_query = text("ALTER TABLE player_profiles ADD COLUMN full_name VARCHAR(255)")
+            db.execute(alter_query)
+            db.commit()
+            logger.info("Successfully added full_name column to player_profiles table")
+        else:
+            logger.info("full_name column already exists in player_profiles table")
+            
+    except Exception as e:
+        logger.warning(f"Could not add full_name column: {e}")
+        # Don't raise - this is not critical for basic functionality
+
 def initialize_database():
     """Initialize the database with all required tables."""
     logger.info("Starting database initialization...")
@@ -200,6 +225,9 @@ def initialize_database():
         for table_name, sql in TABLE_CREATION_SQL.items():
             if create_table_if_not_exists(db, table_name, sql):
                 tables_created += 1
+        
+        # Add full_name column if missing
+        add_full_name_column_if_missing(db)
         
         # No sample data to insert - system starts clean
         logger.info("Database initialized with empty tables - no sample data inserted")

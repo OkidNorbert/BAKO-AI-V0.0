@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider, useTheme } from './context/ThemeContext'
+import { AutoRefreshProvider } from './context/AutoRefreshContext'
 import { ToastProvider } from './components/Toast'
 import { ModernHomepage } from './components/ModernHomepage'
 import { RoleBasedDashboard } from './components/RoleBasedDashboard'
@@ -209,11 +210,13 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <ToastProvider>
-          <Router>
-            <AppContent />
-          </Router>
-        </ToastProvider>
+        <AutoRefreshProvider>
+          <ToastProvider>
+            <Router>
+              <AppContent />
+            </Router>
+          </ToastProvider>
+        </AutoRefreshProvider>
       </AuthProvider>
     </ThemeProvider>
   )
