@@ -65,8 +65,8 @@ export const EnhancedDashboard: React.FC = () => {
       setRecentSessions(sessionsResponse.data || []);
 
       // Fetch performance trends from backend
-      const trendsResponse = await api.analytics.getPerformance(user.id, 30);
-      setPerformanceData(trendsResponse.data || []);
+      const trendsData = await api.analytics.getPerformance(user.id, 30);
+      setPerformanceData(trendsData.data || []);
 
       setLoading(false);
     } catch (error: any) {
