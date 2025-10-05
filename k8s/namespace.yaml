@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: basketball-performance
-  labels:
-    name: basketball-performance
-    app: basketball-performance-system
