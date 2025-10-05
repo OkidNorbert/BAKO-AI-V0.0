@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { useToast } from './Toast';
 
 interface UploadProgress {
@@ -11,6 +12,7 @@ interface UploadProgress {
 
 export const VideoUpload: React.FC = () => {
   const { user } = useAuth();
+  const { darkMode } = useTheme();
   const { showToast } = useToast();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [progress, setProgress] = useState<UploadProgress>({
@@ -161,21 +163,26 @@ export const VideoUpload: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">Video Analysis</h1>
-        <p className="text-gray-600">Upload your training footage for AI-powered performance analysis</p>
-      </div>
+    <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <div className="max-w-4xl mx-auto space-y-8">
+        <div>
+          <h1 className={`text-4xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>Video Analysis</h1>
+          <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Upload your training footage for AI-powered performance analysis</p>
+        </div>
 
-      {!analysisResult ? (
-        <div className="bg-white rounded-lg shadow-md p-8">
-          {/* Upload Area */}
-          <div
-            className={`relative border-2 border-dashed rounded-lg p-12 text-center transition-colors ${
-              dragActive
-                ? 'border-orange-600 bg-orange-50'
-                : 'border-gray-300 hover:border-gray-400'
-            }`}
+        {!analysisResult ? (
+          <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-8`}>
+            {/* Upload Area */}
+            <div
+              className={`relative border-2 border-dashed rounded-lg p-12 text-center transition-colors ${
+                dragActive
+                  ? darkMode 
+                    ? 'border-orange-500 bg-orange-900' 
+                    : 'border-orange-600 bg-orange-50'
+                  : darkMode
+                    ? 'border-gray-600 hover:border-gray-500'
+                    : 'border-gray-300 hover:border-gray-400'
+              }`}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
@@ -192,7 +199,7 @@ export const VideoUpload: React.FC = () => {
             {progress.status === 'idle' && !selectedFile && (
               <label htmlFor="video-upload" className="cursor-pointer">
                 <svg
-                  className="mx-auto h-16 w-16 text-gray-400 mb-4"
+                  className={`mx-auto h-16 w-16 ${darkMode ? 'text-gray-500' : 'text-gray-400'} mb-4`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -204,11 +211,11 @@ export const VideoUpload: React.FC = () => {
                     d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
                   />
                 </svg>
-                <p className="text-xl font-semibold text-gray-900 mb-2">
+                <p className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
                   Drag and drop your video here
                 </p>
-                <p className="text-gray-600 mb-4">or click to browse files</p>
-                <p className="text-sm text-gray-500">
+                <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-4`}>or click to browse files</p>
+                <p className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
                   Supported formats: MP4, MOV, AVI (max 500MB)
                 </p>
               </label>
@@ -229,8 +236,8 @@ export const VideoUpload: React.FC = () => {
                     d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                <p className="text-xl font-semibold text-gray-900 mb-2">{selectedFile.name}</p>
-                <p className="text-gray-600 mb-4">
+                <p className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>{selectedFile.name}</p>
+                <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-4`}>
                   {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
                 </p>
                 <div className="flex justify-center gap-4">
@@ -242,7 +249,7 @@ export const VideoUpload: React.FC = () => {
                   </button>
                   <button
                     onClick={() => setSelectedFile(null)}
-                    className="px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors"
+                    className={`px-6 py-3 ${darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'} font-semibold rounded-lg transition-colors`}
                   >
                     Choose Different File
                   </button>
@@ -253,14 +260,14 @@ export const VideoUpload: React.FC = () => {
             {(progress.status === 'uploading' || progress.status === 'processing') && (
               <div>
                 <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-orange-600 mx-auto mb-4"></div>
-                <p className="text-xl font-semibold text-gray-900 mb-2">{progress.message}</p>
-                <div className="w-full bg-gray-200 rounded-full h-3 mb-4 max-w-md mx-auto">
+                <p className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>{progress.message}</p>
+                <div className={`w-full ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-full h-3 mb-4 max-w-md mx-auto`}>
                   <div
                     className="bg-orange-600 h-3 rounded-full transition-all duration-300"
                     style={{ width: `${progress.percentage}%` }}
                   ></div>
                 </div>
-                <p className="text-gray-600">{progress.percentage}%</p>
+                <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{progress.percentage}%</p>
               </div>
             )}
 
@@ -290,83 +297,84 @@ export const VideoUpload: React.FC = () => {
             )}
           </div>
         </div>
-      ) : (
-        /* Analysis Results */
-        <div className="space-y-6">
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-gray-900">Analysis Results</h2>
-              <button
-                onClick={resetUpload}
-                className="px-4 py-2 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors"
-              >
-                Upload Another Video
-              </button>
-            </div>
-
-            {/* Summary Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-              <div className="bg-orange-50 rounded-lg p-4">
-                <p className="text-gray-600 text-sm">Shot Accuracy</p>
-                <p className="text-3xl font-bold text-orange-600">{analysisResult.summary.accuracy}%</p>
+        ) : (
+          /* Analysis Results */
+          <div className="space-y-6">
+            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-6`}>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Analysis Results</h2>
+                <button
+                  onClick={resetUpload}
+                  className={`px-4 py-2 ${darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'} font-semibold rounded-lg transition-colors`}
+                >
+                  Upload Another Video
+                </button>
               </div>
-              <div className="bg-blue-50 rounded-lg p-4">
-                <p className="text-gray-600 text-sm">Avg Jump Height</p>
-                <p className="text-3xl font-bold text-blue-600">{analysisResult.summary.avg_jump_height}"</p>
-              </div>
-              <div className="bg-green-50 rounded-lg p-4">
-                <p className="text-gray-600 text-sm">Avg Speed</p>
-                <p className="text-3xl font-bold text-green-600">{analysisResult.summary.avg_speed} mph</p>
-              </div>
-            </div>
 
-            {/* Recommendations */}
-            <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Recommendations</h3>
-              <ul className="space-y-2">
-                {analysisResult.recommendations.map((rec: string, index: number) => (
-                  <li key={index} className="flex items-start">
-                    <svg
-                      className="w-6 h-6 text-orange-600 mr-2 flex-shrink-0 mt-0.5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    <span className="text-gray-700">{rec}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          {/* Event Timeline */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Event Timeline</h3>
-            <div className="space-y-3">
-              {analysisResult.events.map((event: any, index: number) => (
-                <div key={index} className="flex items-center border-l-4 border-orange-600 pl-4 py-2">
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-900 capitalize">{event.type}</p>
-                    <p className="text-sm text-gray-600">
-                      {event.timestamp}s
-                      {event.success !== undefined && ` • ${event.success ? 'Success' : 'Miss'}`}
-                      {event.form_score && ` • Form Score: ${event.form_score}%`}
-                      {event.height && ` • Height: ${event.height}"`}
-                    </p>
-                  </div>
+              {/* Summary Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                <div className={`${darkMode ? 'bg-orange-900' : 'bg-orange-50'} rounded-lg p-4`}>
+                  <p className={`${darkMode ? 'text-orange-200' : 'text-gray-600'} text-sm`}>Shot Accuracy</p>
+                  <p className="text-3xl font-bold text-orange-600">{analysisResult.summary.accuracy}%</p>
                 </div>
-              ))}
+                <div className={`${darkMode ? 'bg-blue-900' : 'bg-blue-50'} rounded-lg p-4`}>
+                  <p className={`${darkMode ? 'text-blue-200' : 'text-gray-600'} text-sm`}>Avg Jump Height</p>
+                  <p className="text-3xl font-bold text-blue-600">{analysisResult.summary.avg_jump_height}"</p>
+                </div>
+                <div className={`${darkMode ? 'bg-green-900' : 'bg-green-50'} rounded-lg p-4`}>
+                  <p className={`${darkMode ? 'text-green-200' : 'text-gray-600'} text-sm`}>Avg Speed</p>
+                  <p className="text-3xl font-bold text-green-600">{analysisResult.summary.avg_speed} mph</p>
+                </div>
+              </div>
+
+              {/* Recommendations */}
+              <div>
+                <h3 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-3`}>Recommendations</h3>
+                <ul className="space-y-2">
+                  {analysisResult.recommendations.map((rec: string, index: number) => (
+                    <li key={index} className="flex items-start">
+                      <svg
+                        className="w-6 h-6 text-orange-600 mr-2 flex-shrink-0 mt-0.5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{rec}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+          </div>
+
+            {/* Event Timeline */}
+            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-6`}>
+              <h3 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4`}>Event Timeline</h3>
+              <div className="space-y-3">
+                {analysisResult.events.map((event: any, index: number) => (
+                  <div key={index} className="flex items-center border-l-4 border-orange-600 pl-4 py-2">
+                    <div className="flex-1">
+                      <p className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} capitalize`}>{event.type}</p>
+                      <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                        {event.timestamp}s
+                        {event.success !== undefined && ` • ${event.success ? 'Success' : 'Miss'}`}
+                        {event.form_score && ` • Form Score: ${event.form_score}%`}
+                        {event.height && ` • Height: ${event.height}"`}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

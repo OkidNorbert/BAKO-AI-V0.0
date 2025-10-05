@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useTheme } from '../context/ThemeContext';
 
 interface LiveMetrics {
   timestamp: number;
@@ -16,6 +17,7 @@ interface CoachFeedback {
 }
 
 export const LiveStreaming: React.FC = () => {
+  const { darkMode } = useTheme();
   const [isStreaming, setIsStreaming] = useState(false);
   const [liveMetrics, setLiveMetrics] = useState<LiveMetrics[]>([]);
   const [currentMetrics, setCurrentMetrics] = useState({
@@ -107,13 +109,14 @@ export const LiveStreaming: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Live Training Session</h1>
-          <p className="text-gray-600">Real-time performance monitoring and coaching</p>
-        </div>
+    <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className={`text-4xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>Live Training Session</h1>
+            <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Real-time performance monitoring and coaching</p>
+          </div>
         {!isStreaming ? (
           <button
             onClick={startStreaming}
@@ -137,39 +140,39 @@ export const LiveStreaming: React.FC = () => {
         )}
       </div>
 
-      {!isStreaming ? (
-        /* Pre-stream view */
-        <div className="bg-white rounded-lg shadow-md p-12 text-center">
-          <svg className="w-24 h-24 text-gray-400 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-          </svg>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Ready to Start Your Live Session?</h2>
-          <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
-            Connect your wearable device and prepare for your training session. Your coach can monitor your performance in real-time and provide instant feedback.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
-            <div className="p-6 bg-orange-50 rounded-lg">
-              <svg className="w-12 h-12 text-orange-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <h3 className="font-semibold text-gray-900 mb-2">Real-time Metrics</h3>
-              <p className="text-sm text-gray-600">Heart rate, speed, and performance scores updated every second</p>
+        {!isStreaming ? (
+          /* Pre-stream view */
+          <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-12 text-center`}>
+            <svg className={`w-24 h-24 ${darkMode ? 'text-gray-500' : 'text-gray-400'} mx-auto mb-6`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4`}>Ready to Start Your Live Session?</h2>
+            <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-8 max-w-2xl mx-auto`}>
+              Connect your wearable device and prepare for your training session. Your coach can monitor your performance in real-time and provide instant feedback.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
+              <div className={`p-6 ${darkMode ? 'bg-orange-900' : 'bg-orange-50'} rounded-lg`}>
+                <svg className="w-12 h-12 text-orange-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3 className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>Real-time Metrics</h3>
+                <p className={`text-sm ${darkMode ? 'text-orange-200' : 'text-gray-600'}`}>Heart rate, speed, and performance scores updated every second</p>
+              </div>
+              <div className={`p-6 ${darkMode ? 'bg-blue-900' : 'bg-blue-50'} rounded-lg`}>
+                <svg className="w-12 h-12 text-blue-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                <h3 className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>Coach Feedback</h3>
+                <p className={`text-sm ${darkMode ? 'text-blue-200' : 'text-gray-600'}`}>Receive instant feedback from your coach during training</p>
+              </div>
+              <div className={`p-6 ${darkMode ? 'bg-green-900' : 'bg-green-50'} rounded-lg`}>
+                <svg className="w-12 h-12 text-green-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                <h3 className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>Performance Tracking</h3>
+                <p className={`text-sm ${darkMode ? 'text-green-200' : 'text-gray-600'}`}>All session data is saved for later analysis</p>
+              </div>
             </div>
-            <div className="p-6 bg-blue-50 rounded-lg">
-              <svg className="w-12 h-12 text-blue-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
-              <h3 className="font-semibold text-gray-900 mb-2">Coach Feedback</h3>
-              <p className="text-sm text-gray-600">Receive instant feedback from your coach during training</p>
-            </div>
-            <div className="p-6 bg-green-50 rounded-lg">
-              <svg className="w-12 h-12 text-green-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              <h3 className="font-semibold text-gray-900 mb-2">Performance Tracking</h3>
-              <p className="text-sm text-gray-600">All session data is saved for later analysis</p>
-            </div>
-          </div>
         </div>
       ) : (
         /* Live streaming view */
@@ -228,8 +231,8 @@ export const LiveStreaming: React.FC = () => {
           {/* Live Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Heart Rate Chart */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-6`}>
+              <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4 flex items-center`}>
                 <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse mr-2"></div>
                 Heart Rate (Live)
               </h2>
@@ -245,8 +248,8 @@ export const LiveStreaming: React.FC = () => {
             </div>
 
             {/* Performance Score Chart */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-6`}>
+              <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4 flex items-center`}>
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></div>
                 Performance Score (Live)
               </h2>
@@ -263,8 +266,8 @@ export const LiveStreaming: React.FC = () => {
           </div>
 
           {/* Coach Feedback */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+          <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-6`}>
+            <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4 flex items-center`}>
               <svg className="w-6 h-6 text-orange-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
@@ -272,21 +275,27 @@ export const LiveStreaming: React.FC = () => {
             </h2>
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {coachFeedback.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">Waiting for coach feedback...</p>
+                <p className={`${darkMode ? 'text-gray-500' : 'text-gray-500'} text-center py-8`}>Waiting for coach feedback...</p>
               ) : (
                 coachFeedback.map((feedback) => (
                   <div
                     key={feedback.id}
                     className={`p-4 rounded-lg border-l-4 ${
                       feedback.type === 'success'
-                        ? 'bg-green-50 border-green-600'
+                        ? darkMode 
+                          ? 'bg-green-900 border-green-600' 
+                          : 'bg-green-50 border-green-600'
                         : feedback.type === 'warning'
-                        ? 'bg-yellow-50 border-yellow-600'
-                        : 'bg-blue-50 border-blue-600'
+                        ? darkMode
+                          ? 'bg-yellow-900 border-yellow-600'
+                          : 'bg-yellow-50 border-yellow-600'
+                        : darkMode
+                          ? 'bg-blue-900 border-blue-600'
+                          : 'bg-blue-50 border-blue-600'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs text-gray-600">{feedback.timestamp}</span>
+                      <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{feedback.timestamp}</span>
                       <span className={`text-xs font-medium ${
                         feedback.type === 'success'
                           ? 'text-green-600'
@@ -297,14 +306,15 @@ export const LiveStreaming: React.FC = () => {
                         {feedback.type.toUpperCase()}
                       </span>
                     </div>
-                    <p className="text-gray-900">{feedback.message}</p>
+                    <p className={`${darkMode ? 'text-white' : 'text-gray-900'}`}>{feedback.message}</p>
                   </div>
                 ))
               )}
             </div>
           </div>
         </>
-      )}
+        )}
+      </div>
     </div>
   );
 };

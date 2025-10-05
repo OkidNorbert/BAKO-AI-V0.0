@@ -37,10 +37,10 @@ export const ModernHomepage: React.FC = () => {
 
   const fetchSystemStats = async () => {
     try {
-      // Fetch real-time system statistics from backend
+      // Fetch real-time system statistics from backend (using backend as proxy)
       const [publicStatsResponse, aiModelsResponse] = await Promise.all([
         axios.get(`${API_URL}/api/v1/stats/public/stats`),
-        axios.get(`${AI_SERVICE_URL}/api/v1/training/models/status`)
+        axios.get(`${API_URL}/api/v1/training/models/status`) // Use backend proxy instead of direct AI service
       ]);
 
       const publicStats = publicStatsResponse.data;

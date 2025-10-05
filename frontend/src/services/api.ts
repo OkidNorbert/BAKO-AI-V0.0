@@ -45,6 +45,17 @@ export const api = {
     get: (playerId: number) => axios.get(`/api/v1/players/${playerId}`),
     getStats: (playerId: number, days: number = 30) =>
       axios.get(`/api/v1/analytics/performance/${playerId}?days=${days}`),
+    getTeamPlayers: () => axios.get('/api/v1/players/team'),
+  },
+
+  // Sessions
+  sessions: {
+    getPlayerSessions: (playerId: number) => 
+      axios.get(`/api/v1/events/player/${playerId}`),
+    getSessionDetails: (sessionId: number) =>
+      axios.get(`/api/v1/events/session/${sessionId}`),
+    getTeamSessions: () =>
+      axios.get('/api/v1/events/team/sessions'),
   },
 
   // Videos
@@ -69,6 +80,8 @@ export const api = {
       axios.post('/api/v1/analytics/analyze', { player_id: playerId, days }),
     compareWithBenchmarks: (playerId: number) =>
       axios.get(`/api/v1/analytics/comparison/${playerId}`),
+    getTeamStats: () =>
+      axios.get('/api/v1/analytics/team/stats'),
   },
 
   // Wearables
@@ -114,16 +127,22 @@ export const api = {
       axios.get('/api/v1/feedback/analytics/summary', { params: { days } }),
   },
 
-  // Training (AI Service)
+  // Training (AI Service) - Use backend as proxy to avoid CORS issues
   training: {
     triggerTraining: (trainingType: string = 'incremental') =>
-      axios.post(`${AI_SERVICE_URL}/api/v1/training/train/manual`, null, { params: { training_type: trainingType } }),
+      axios.post('/api/v1/training/train/manual', null, { params: { training_type: trainingType } }),
     getStatus: () =>
-      axios.get(`${AI_SERVICE_URL}/api/v1/training/status`),
+      axios.get('/api/v1/training/status'),
     getModelsStatus: () =>
-      axios.get(`${AI_SERVICE_URL}/api/v1/training/models/status`),
+      axios.get('/api/v1/training/models/status'),
     getMetrics: () =>
-      axios.get(`${AI_SERVICE_URL}/api/v1/training/metrics`),
+      axios.get('/api/v1/training/metrics'),
+    getRecommendations: (playerId: number, days: number = 30) =>
+      axios.get(`/api/v1/training/recommendations/${playerId}?days=${days}`),
+    getTrainingProgress: (playerId: number) =>
+      axios.get(`/api/v1/training/progress/${playerId}`),
+    getTeamPlans: () =>
+      axios.get('/api/v1/training/team/plans'),
   },
 };
 

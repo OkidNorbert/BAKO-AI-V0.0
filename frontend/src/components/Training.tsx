@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useTheme } from '../context/ThemeContext'
+import { useAuth } from '../context/AuthContext'
 import { useToast } from './Toast'
 import { LoadingSpinner } from './LoadingSpinner'
 import api from '../services/api'
@@ -26,25 +27,34 @@ interface TrainingProgress {
 
 export const Training: React.FC = () => {
   const { darkMode } = useTheme()
+  const { user } = useAuth()
   const { showToast } = useToast()
   const [recommendations, setRecommendations] = useState<TrainingRecommendation[]>([])
   const [progress, setProgress] = useState<TrainingProgress | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchTrainingData()
-  }, [])
+    if (user?.id) {
+      fetchTrainingData()
+    }
+  }, [user?.id])
 
   const fetchTrainingData = async () => {
+    if (!user?.id) {
+      console.error('No user ID available')
+      setLoading(false)
+      return
+    }
+
     try {
       setLoading(true)
       
       // Fetch AI-powered training recommendations
-      const recommendationsResponse = await api.training.getRecommendations()
+      const recommendationsResponse = await api.training.getRecommendations(user.id, 30)
       setRecommendations(recommendationsResponse.data || [])
 
       // Fetch training progress
-      const progressResponse = await api.training.getProgress()
+      const progressResponse = await api.training.getTrainingProgress(user.id)
       setProgress(progressResponse.data || null)
 
       setLoading(false)

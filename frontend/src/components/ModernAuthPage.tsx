@@ -13,6 +13,7 @@ export const ModernAuthPage: React.FC = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [totalUsers, setTotalUsers] = useState(0);
+  const [role, setRole] = useState('player');
   
   const { login, signup } = useAuth();
   const { showToast } = useToast();
@@ -45,8 +46,8 @@ export const ModernAuthPage: React.FC = () => {
 
     try {
       if (isSignUp) {
-        await signup(email, password, email.split('@')[0], 'player');
-        showToast('Welcome to CourtVision AI! 🎉', 'success');
+        await signup(email, password, email.split('@')[0], role);
+        showToast(`Welcome to CourtVision AI! 🎉`, 'success');
       } else {
         await login(email, password);
         showToast('Welcome back! 🏀', 'success');
@@ -195,6 +196,59 @@ export const ModernAuthPage: React.FC = () => {
               )}
             </div>
 
+            {isSignUp && (
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  I am a...
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setRole('player')}
+                    className={`p-4 rounded-lg border-2 transition-all ${
+                      role === 'player'
+                        ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20'
+                        : darkMode
+                        ? 'border-gray-700 bg-gray-800 hover:border-gray-600'
+                        : 'border-gray-300 bg-white hover:border-gray-400'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <div className="text-2xl mb-2">🏀</div>
+                      <div className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                        Player
+                      </div>
+                      <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                        Track your performance
+                      </div>
+                    </div>
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => setRole('coach')}
+                    className={`p-4 rounded-lg border-2 transition-all ${
+                      role === 'coach'
+                        ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20'
+                        : darkMode
+                        ? 'border-gray-700 bg-gray-800 hover:border-gray-600'
+                        : 'border-gray-300 bg-white hover:border-gray-400'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <div className="text-2xl mb-2">👨‍🏫</div>
+                      <div className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                        Coach
+                      </div>
+                      <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                        Manage your team
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            )}
+
             <button
               type="submit"
               disabled={loading}
@@ -233,6 +287,7 @@ export const ModernAuthPage: React.FC = () => {
                 setIsSignUp(!isSignUp);
                 setEmail('');
                 setPassword('');
+                setRole('player'); // Reset to default role
               }}
               className={`mt-4 w-full py-3 px-4 ${
                 darkMode 
