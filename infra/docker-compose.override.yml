@@ -1,0 +1,30 @@
+# Docker Compose override for development
+# This file extends the main docker-compose.yml with additional configurations
+
+services:
+  backend:
+    environment:
+      # Ensure database initialization runs
+      - DATABASE_INIT=true
+      - DEBUG=True
+    volumes:
+      # Mount the database init script
+      - ../backend:/app
+      - ./database_init.sh:/docker-entrypoint-initdb.d/init.sh
+    command: >
+      sh -c "
+        echo 'Waiting for database to be ready...' &&
+        sleep 10 &&
+        echo 'Starting backend with database initialization...' &&
+        python -c 'from app.core.database_init import startup_database_init; startup_database_init()' &&
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      "
+
+  postgres:
+    environment:
+      # Enable logging for debugging
+      - POSTGRES_LOG_STATEMENT=all
+      - POSTGRES_LOG_MIN_DURATION_STATEMENT=0
+    volumes:
+      # Add initialization script
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql

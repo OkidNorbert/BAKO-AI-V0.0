@@ -11,6 +11,7 @@ from contextlib import asynccontextmanager
 
 from app.core.config import settings
 from app.core.database import engine, Base
+from app.core.database_init import startup_database_init
 from app.api.v1.api import api_router
 from app.models import *  # Import all models to ensure they're registered
 
@@ -21,9 +22,12 @@ async def lifespan(app: FastAPI):
     # Startup
     print("🚀 Starting Basketball Performance System Backend...")
     
-    # Create database tables
+    # Create database tables using SQLAlchemy models
     Base.metadata.create_all(bind=engine)
-    print("✅ Database tables created")
+    print("✅ SQLAlchemy database tables created")
+    
+    # Initialize additional tables and sample data
+    startup_database_init()
     
     yield
     

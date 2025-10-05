@@ -6,6 +6,58 @@
   html {
     font-family: 'Inter', system-ui, sans-serif;
   }
+  
+  body {
+    overflow-x: hidden;
+  }
+  
+  * {
+    box-sizing: border-box;
+  }
+}
+
+@layer utilities {
+  /* Orientation-specific styles */
+  @media (orientation: landscape) and (max-height: 500px) {
+    .landscape-compact {
+      padding: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .landscape-text-sm {
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+    }
+    
+    .landscape-grid-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  
+  @media (orientation: portrait) {
+    .portrait-stack {
+      flex-direction: column;
+    }
+    
+    .portrait-full-width {
+      width: 100%;
+    }
+  }
+  
+  /* Responsive breakpoints for better orientation handling */
+  @media (max-width: 640px) {
+    .mobile-compact {
+      padding: 0.5rem;
+      gap: 0.5rem;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .desktop-spacious {
+      padding: 2rem;
+      gap: 1.5rem;
+    }
+  }
 }
 
 @layer components {

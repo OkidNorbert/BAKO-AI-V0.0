@@ -63,12 +63,12 @@ export const RoleBasedNavbar: React.FC = () => {
 
   const userNav = (
     <nav className={`${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+      <div className="w-full mx-auto px-2 sm:px-4 lg:px-8">
+        <div className="flex justify-between h-12 sm:h-14 lg:h-16">
           <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-orange-600 to-orange-700 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+            <Link to="/" className="flex items-center space-x-1 sm:space-x-2">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-orange-600 to-orange-700 rounded-lg flex items-center justify-center">
+                <svg className="w-3 h-3 sm:w-5 sm:h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="2"/>
                   <circle cx="12" cy="6" r="2"/>
                   <circle cx="6" cy="9" r="2"/>
@@ -78,18 +78,18 @@ export const RoleBasedNavbar: React.FC = () => {
                   <circle cx="12" cy="18" r="2"/>
                 </svg>
               </div>
-              <span className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              <span className={`text-sm sm:text-lg lg:text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} landscape-text-sm`}>
                 CourtVision AI
               </span>
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-1 ml-8">
+            <div className="hidden lg:flex items-center space-x-1 ml-4 sm:ml-8">
               {navItems.map((item) => (
                 <Link key={item.path} to={item.path} className={getNavLinkClass(item.path)}>
-                  <div className="flex items-center space-x-2">
-                    <span>{item.icon}</span>
-                    <span>{item.label}</span>
+                  <div className="flex items-center space-x-1 sm:space-x-2">
+                    <span className="text-sm sm:text-base">{item.icon}</span>
+                    <span className="text-xs sm:text-sm landscape-text-sm">{item.label}</span>
                   </div>
                 </Link>
               ))}
@@ -97,22 +97,22 @@ export const RoleBasedNavbar: React.FC = () => {
           </div>
 
           {/* User Menu */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4 mr-2 sm:mr-4">
             {/* Dark Mode Toggle */}
             <button
               onClick={toggleDarkMode}
-              className={`p-2 rounded-lg transition-colors ${
+              className={`p-1.5 sm:p-2 rounded-lg transition-colors ${
                 darkMode
                   ? 'text-gray-400 hover:text-white hover:bg-gray-700'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
               }`}
             >
               {darkMode ? (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                 </svg>
               ) : (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                 </svg>
               )}
@@ -122,21 +122,21 @@ export const RoleBasedNavbar: React.FC = () => {
             <div className="relative">
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className={`flex items-center space-x-2 p-2 rounded-lg transition-colors ${
+                className={`flex items-center space-x-1 sm:space-x-2 p-1.5 sm:p-2 rounded-lg transition-colors ${
                   darkMode
                     ? 'text-gray-300 hover:text-white hover:bg-gray-700'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                 }`}
               >
-                <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm font-semibold">
+                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs sm:text-sm font-semibold">
                     {user?.full_name?.charAt(0) || user?.email?.charAt(0) || 'U'}
                   </span>
                 </div>
-                <span className="hidden md:block text-sm font-medium">
+                <span className="hidden sm:block text-xs sm:text-sm font-medium landscape-text-sm">
                   {user?.full_name || user?.email}
                 </span>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
@@ -181,13 +181,13 @@ export const RoleBasedNavbar: React.FC = () => {
             {/* Mobile menu button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className={`md:hidden p-2 rounded-lg transition-colors ${
+              className={`lg:hidden p-1.5 sm:p-2 rounded-lg transition-colors ${
                 darkMode
                   ? 'text-gray-400 hover:text-white hover:bg-gray-700'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
               }`}
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
@@ -196,7 +196,7 @@ export const RoleBasedNavbar: React.FC = () => {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <div className={`px-2 pt-2 pb-3 space-y-1 ${darkMode ? 'bg-gray-800' : 'bg-white'} border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
               {navItems.map((item) => (
                 <Link
@@ -206,8 +206,8 @@ export const RoleBasedNavbar: React.FC = () => {
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <div className="flex items-center space-x-2">
-                    <span>{item.icon}</span>
-                    <span>{item.label}</span>
+                    <span className="text-sm sm:text-base">{item.icon}</span>
+                    <span className="text-sm sm:text-base landscape-text-sm">{item.label}</span>
                   </div>
                 </Link>
               ))}
@@ -220,12 +220,12 @@ export const RoleBasedNavbar: React.FC = () => {
 
   const publicNav = (
     <nav className={`${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+      <div className="w-full mx-auto px-2 sm:px-4 lg:px-8">
+        <div className="flex justify-between h-12 sm:h-14 lg:h-16">
           <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-orange-600 to-orange-700 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+            <Link to="/" className="flex items-center space-x-1 sm:space-x-2">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-orange-600 to-orange-700 rounded-lg flex items-center justify-center">
+                <svg className="w-3 h-3 sm:w-5 sm:h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="2"/>
                   <circle cx="12" cy="6" r="2"/>
                   <circle cx="6" cy="9" r="2"/>
@@ -235,12 +235,12 @@ export const RoleBasedNavbar: React.FC = () => {
                   <circle cx="12" cy="18" r="2"/>
                 </svg>
               </div>
-              <span className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              <span className={`text-sm sm:text-lg lg:text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} landscape-text-sm`}>
                 CourtVision AI
               </span>
             </Link>
 
-            <div className="hidden md:flex items-center space-x-8 ml-8">
+            <div className="hidden md:flex items-center space-x-4 sm:space-x-8 ml-4 sm:ml-8">
               <Link to="/features" className={getNavLinkClass('/features')}>
                 Features
               </Link>
@@ -253,21 +253,21 @@ export const RoleBasedNavbar: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4 mr-2 sm:mr-4">
             <button
               onClick={toggleDarkMode}
-              className={`p-2 rounded-lg transition-colors ${
+              className={`p-1.5 sm:p-2 rounded-lg transition-colors ${
                 darkMode
                   ? 'text-gray-400 hover:text-white hover:bg-gray-700'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
               }`}
             >
               {darkMode ? (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                 </svg>
               ) : (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                 </svg>
               )}
@@ -275,7 +275,7 @@ export const RoleBasedNavbar: React.FC = () => {
 
             <Link
               to="/login"
-              className="px-4 py-2 bg-gradient-to-r from-orange-600 to-orange-700 text-white font-semibold rounded-lg hover:from-orange-700 hover:to-orange-800 transition-all"
+              className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-orange-600 to-orange-700 text-white text-sm sm:text-base font-semibold rounded-lg hover:from-orange-700 hover:to-orange-800 transition-all"
             >
               Sign In
             </Link>

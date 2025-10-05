@@ -1,6 +1,25 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+// Auto-detect backend URL based on current host
+const getBackendUrl = () => {
+  // If environment variable is set, use it
+  if (import.meta.env.VITE_BACKEND_URL) {
+    return import.meta.env.VITE_BACKEND_URL;
+  }
+  
+  // Auto-detect based on current host
+  const currentHost = window.location.hostname;
+  
+  // If accessing via localhost, use localhost for backend
+  if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+    return 'http://localhost:8000';
+  }
+  
+  // If accessing via network IP, use the same IP for backend
+  return `http://${currentHost}:8000`;
+};
+
+const API_URL = getBackendUrl();
 const AI_SERVICE_URL = import.meta.env.VITE_AI_SERVICE_URL || 'http://localhost:8001';
 
 // Configure axios defaults
@@ -90,7 +109,7 @@ export const api = {
     get: (playerId: number) => axios.get(`/api/v1/players/${playerId}`),
     getStats: (playerId: number, days: number = 30) =>
       axios.get(`/api/v1/analytics/performance/${playerId}?days=${days}`),
-    getTeamPlayers: () => axios.get('/api/v1/team/players/team'),
+    getTeamPlayers: () => axios.get('/api/v1/team/players/'),
   },
 
   // Sessions
@@ -100,7 +119,7 @@ export const api = {
     getSessionDetails: (sessionId: number) =>
       axios.get(`/api/v1/events/session/${sessionId}`),
     getTeamSessions: () =>
-      axios.get('/api/v1/team/sessions/team/sessions'),
+      axios.get('/api/v1/team/sessions/sessions'),
   },
 
   // Videos
@@ -126,7 +145,7 @@ export const api = {
     compareWithBenchmarks: (playerId: number) =>
       axios.get(`/api/v1/analytics/comparison/${playerId}`),
     getTeamStats: () =>
-      axios.get('/api/v1/team/analytics/team/stats'),
+      axios.get('/api/v1/team/analytics/stats'),
   },
 
   // Wearables
@@ -187,7 +206,7 @@ export const api = {
     getTrainingProgress: (playerId: number) =>
       axios.get(`/api/v1/training/progress/${playerId}`),
     getTeamPlans: () =>
-      axios.get('/api/v1/team/training/team/plans'),
+      axios.get('/api/v1/team/training/plans'),
   },
 
   // Team Communication

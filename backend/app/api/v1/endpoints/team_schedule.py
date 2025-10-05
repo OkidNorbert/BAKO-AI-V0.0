@@ -36,7 +36,7 @@ class CreateEventRequest(BaseModel):
     event_type: str
     participants: List[str] = []
 
-@router.get("/team/events", response_model=List[TeamEventResponse])
+@router.get("/events", response_model=List[TeamEventResponse])
 async def get_team_events(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -65,7 +65,7 @@ async def get_team_events(
             detail=f"Failed to fetch team events: {str(e)}"
         )
 
-@router.post("/team/events", response_model=TeamEventResponse)
+@router.post("/events", response_model=TeamEventResponse)
 async def create_team_event(
     event_data: CreateEventRequest,
     current_user: User = Depends(get_current_user),
@@ -106,7 +106,7 @@ async def create_team_event(
             detail=f"Failed to create team event: {str(e)}"
         )
 
-@router.put("/team/events/{event_id}")
+@router.put("/events/{event_id}")
 async def update_team_event(
     event_id: int,
     event_data: Dict[str, Any],
@@ -136,7 +136,7 @@ async def update_team_event(
             detail=f"Failed to update team event: {str(e)}"
         )
 
-@router.delete("/team/events/{event_id}")
+@router.delete("/events/{event_id}")
 async def delete_team_event(
     event_id: int,
     current_user: User = Depends(get_current_user),

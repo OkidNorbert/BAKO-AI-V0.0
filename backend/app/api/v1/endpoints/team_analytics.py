@@ -21,7 +21,7 @@ class TeamStatsResponse(BaseModel):
     position_breakdown: List[Dict[str, Any]]
     recent_trends: List[Dict[str, Any]]
 
-@router.get("/team/stats", response_model=TeamStatsResponse)
+@router.get("/stats", response_model=TeamStatsResponse)
 async def get_team_stats(
     days: int = Query(30, ge=1, le=365),
     current_user: User = Depends(get_current_user),
@@ -60,10 +60,17 @@ async def get_team_stats(
                 "end_date": end_date.timestamp()
             }).fetchall()
         except Exception as e:
-            logger.error(f"Database query failed: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Team analytics service is currently unavailable. Please try again later."
+            logger.warning(f"Database query failed, returning empty data: {e}")
+            # Return empty data instead of 503 error
+            return TeamStatsResponse(
+                total_players=0,
+                active_sessions=0,
+                avg_performance=0.0,
+                team_rank=0,
+                improvement_rate=0.0,
+                top_performers=[],
+                position_breakdown=[],
+                recent_trends=[]
             )
         
         # Calculate team statistics

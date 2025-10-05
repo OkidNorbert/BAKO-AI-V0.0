@@ -41,7 +41,7 @@ class SendMessageRequest(BaseModel):
     recipient: str
     content: str
 
-@router.get("/team/announcements", response_model=List[TeamAnnouncementResponse])
+@router.get("/announcements", response_model=List[TeamAnnouncementResponse])
 async def get_team_announcements(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -70,7 +70,7 @@ async def get_team_announcements(
             detail=f"Failed to fetch team announcements: {str(e)}"
         )
 
-@router.post("/team/announcements", response_model=TeamAnnouncementResponse)
+@router.post("/announcements", response_model=TeamAnnouncementResponse)
 async def create_team_announcement(
     announcement_data: CreateAnnouncementRequest,
     current_user: User = Depends(get_current_user),
@@ -108,7 +108,7 @@ async def create_team_announcement(
             detail=f"Failed to create team announcement: {str(e)}"
         )
 
-@router.get("/team/messages", response_model=List[TeamMessageResponse])
+@router.get("/messages", response_model=List[TeamMessageResponse])
 async def get_team_messages(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -137,7 +137,7 @@ async def get_team_messages(
             detail=f"Failed to fetch team messages: {str(e)}"
         )
 
-@router.post("/team/messages", response_model=TeamMessageResponse)
+@router.post("/messages", response_model=TeamMessageResponse)
 async def send_team_message(
     message_data: SendMessageRequest,
     current_user: User = Depends(get_current_user),

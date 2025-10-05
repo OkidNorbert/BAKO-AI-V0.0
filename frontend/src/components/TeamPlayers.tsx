@@ -31,7 +31,6 @@ export const TeamPlayers: React.FC = () => {
   const [filterPosition, setFilterPosition] = useState('all');
   const [editingPlayer, setEditingPlayer] = useState<TeamPlayer | null>(null);
   const [showAddPlayer, setShowAddPlayer] = useState(false);
-
   useEffect(() => {
     fetchTeamPlayers();
   }, []);
