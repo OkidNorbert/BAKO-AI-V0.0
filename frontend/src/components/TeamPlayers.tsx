@@ -41,8 +41,14 @@ export const TeamPlayers: React.FC = () => {
       setPlayers(response.data || []);
       setLoading(false);
     } catch (error: any) {
-      console.error('Error fetching team players:', error);
-      showToast('Failed to load team players', 'error');
+      if (error.response?.status === 503 || error.name === 'SilentError') {
+        // Service unavailable - show empty state silently
+        setPlayers([]);
+      } else {
+        // Only log and show toast for unexpected errors
+        console.error('Error fetching team players:', error);
+        showToast('Failed to load team players', 'error');
+      }
       setLoading(false);
     }
   };

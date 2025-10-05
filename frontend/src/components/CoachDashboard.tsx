@@ -48,8 +48,15 @@ export const CoachDashboard: React.FC = () => {
 
       setLoading(false);
     } catch (error: any) {
-      console.error('Error fetching team data:', error);
-      showToast('Failed to load team data', 'error');
+      if (error.response?.status === 503 || error.name === 'SilentError') {
+        // Service unavailable - show empty state silently
+        setTeamStats(null);
+        setPlayers([]);
+      } else {
+        // Only log and show toast for unexpected errors
+        console.error('Error fetching team data:', error);
+        showToast('Failed to load team data', 'error');
+      }
       setLoading(false);
     }
   };
@@ -288,42 +295,14 @@ export const CoachDashboard: React.FC = () => {
             Recent Team Activity
           </h2>
           <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg p-6`}>
-            <div className="space-y-4">
-              <div className="flex items-center space-x-4">
-                <div className="text-2xl">🏀</div>
-                <div>
-                  <p className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                    John Smith completed shooting drill
-                  </p>
-                  <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    2 hours ago • 85% accuracy
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex items-center space-x-4">
-                <div className="text-2xl">💪</div>
-                <div>
-                  <p className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                    Team conditioning session completed
-                  </p>
-                  <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    4 hours ago • 8 players participated
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex items-center space-x-4">
-                <div className="text-2xl">📊</div>
-                <div>
-                  <p className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                    Weekly performance report generated
-                  </p>
-                  <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    1 day ago • Team average: 78%
-                  </p>
-                </div>
-              </div>
+            <div className="text-center py-8">
+              <div className="text-4xl mb-4">📊</div>
+              <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                No recent activity to display
+              </p>
+              <p className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-500'} mt-2`}>
+                Activity will appear here once players start training sessions
+              </p>
             </div>
           </div>
         </div>

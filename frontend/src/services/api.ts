@@ -15,7 +15,20 @@ axios.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle auth errors
+// Suppress console logging for 503 errors globally
+const originalConsoleError = console.error;
+console.error = (...args) => {
+  // Check if the error is a 503 Service Unavailable
+  const errorMessage = args[0];
+  if (typeof errorMessage === 'string' && errorMessage.includes('503 (Service Unavailable)')) {
+    // Don't log 503 errors to console
+    return;
+  }
+  // Log all other errors normally
+  originalConsoleError.apply(console, args);
+};
+
+// Handle auth errors and service unavailable errors
 axios.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -24,6 +37,13 @@ axios.interceptors.response.use(
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
+    }
+    // Don't log 503 errors to console - they're expected when services are unavailable
+    if (error.response?.status === 503) {
+      // Return a custom error that won't be logged by the browser
+      const silentError = new Error('Service unavailable');
+      silentError.name = 'SilentError';
+      return Promise.reject(silentError);
     }
     return Promise.reject(error);
   }

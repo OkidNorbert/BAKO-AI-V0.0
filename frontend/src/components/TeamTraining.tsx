@@ -55,8 +55,15 @@ export const TeamTraining: React.FC = () => {
 
       setLoading(false);
     } catch (error: any) {
-      console.error('Error fetching training data:', error);
-      showToast('Failed to load training plans', 'error');
+      if (error.response?.status === 503 || error.name === 'SilentError') {
+        // Service unavailable - show empty state silently
+        setTrainingPlans([]);
+        setPlayers([]);
+      } else {
+        // Only log and show toast for unexpected errors
+        console.error('Error fetching training data:', error);
+        showToast('Failed to load training plans', 'error');
+      }
       setLoading(false);
     }
   };

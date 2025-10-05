@@ -42,8 +42,14 @@ export const TeamSessions: React.FC = () => {
       setSessions(response.data || []);
       setLoading(false);
     } catch (error: any) {
-      console.error('Error fetching team sessions:', error);
-      showToast('Failed to load team sessions', 'error');
+      if (error.response?.status === 503 || error.name === 'SilentError') {
+        // Service unavailable - show empty state silently
+        setSessions([]);
+      } else {
+        // Only log and show toast for unexpected errors
+        console.error('Error fetching team sessions:', error);
+        showToast('Failed to load team sessions', 'error');
+      }
       setLoading(false);
     }
   };
