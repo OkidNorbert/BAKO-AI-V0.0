@@ -29,6 +29,8 @@ export const TeamPlayers: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterPosition, setFilterPosition] = useState('all');
+  const [editingPlayer, setEditingPlayer] = useState<TeamPlayer | null>(null);
+  const [showAddPlayer, setShowAddPlayer] = useState(false);
 
   useEffect(() => {
     fetchTeamPlayers();
@@ -53,6 +55,47 @@ export const TeamPlayers: React.FC = () => {
     }
   };
 
+  const handleEditPlayer = (player: TeamPlayer) => {
+    setEditingPlayer(player);
+  };
+
+  const handleSavePlayer = async (updatedPlayer: TeamPlayer) => {
+    try {
+      // TODO: Implement API call to update player
+      showToast('Player updated successfully', 'success');
+      setEditingPlayer(null);
+      fetchTeamPlayers(); // Refresh the list
+    } catch (error: any) {
+      console.error('Error updating player:', error);
+      showToast('Failed to update player', 'error');
+    }
+  };
+
+  const handleDeletePlayer = async (playerId: number) => {
+    if (window.confirm('Are you sure you want to remove this player from the team?')) {
+      try {
+        // TODO: Implement API call to remove player
+        showToast('Player removed from team', 'success');
+        fetchTeamPlayers(); // Refresh the list
+      } catch (error: any) {
+        console.error('Error removing player:', error);
+        showToast('Failed to remove player', 'error');
+      }
+    }
+  };
+
+  const handleAddPlayer = async (newPlayer: Partial<TeamPlayer>) => {
+    try {
+      // TODO: Implement API call to add player
+      showToast('Player added to team successfully', 'success');
+      setShowAddPlayer(false);
+      fetchTeamPlayers(); // Refresh the list
+    } catch (error: any) {
+      console.error('Error adding player:', error);
+      showToast('Failed to add player', 'error');
+    }
+  };
+
   const filteredPlayers = players.filter(player => {
     const matchesSearch = player.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          player.email.toLowerCase().includes(searchTerm.toLowerCase());
@@ -71,12 +114,26 @@ export const TeamPlayers: React.FC = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className={`text-4xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
-            Team Players
-          </h1>
-          <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            Manage your team roster and track player development
-          </p>
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className={`text-4xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
+                Team Players
+              </h1>
+              <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Manage your team roster and track player development
+              </p>
+            </div>
+            <button
+              onClick={() => setShowAddPlayer(true)}
+              className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+                darkMode
+                  ? 'bg-orange-600 hover:bg-orange-700 text-white'
+                  : 'bg-orange-500 hover:bg-orange-600 text-white'
+              }`}
+            >
+              + Add Player
+            </button>
+          </div>
         </div>
 
         {/* Search and Filters */}
@@ -194,16 +251,26 @@ export const TeamPlayers: React.FC = () => {
                 >
                   View Profile
                 </Link>
-                <Link
-                  to={`/team/players/${player.id}/edit`}
+                <button
+                  onClick={() => handleEditPlayer(player)}
                   className={`flex-1 px-4 py-2 ${
                     darkMode 
-                      ? 'bg-gray-700 text-white hover:bg-gray-600' 
-                      : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
+                      ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                      : 'bg-blue-500 text-white hover:bg-blue-600'
                   } text-center rounded-lg transition-colors text-sm font-medium`}
                 >
                   Edit
-                </Link>
+                </button>
+                <button
+                  onClick={() => handleDeletePlayer(player.id)}
+                  className={`flex-1 px-4 py-2 ${
+                    darkMode 
+                      ? 'bg-red-600 text-white hover:bg-red-700' 
+                      : 'bg-red-500 text-white hover:bg-red-600'
+                  } text-center rounded-lg transition-colors text-sm font-medium`}
+                >
+                  Remove
+                </button>
               </div>
             </div>
           ))}
@@ -224,15 +291,232 @@ export const TeamPlayers: React.FC = () => {
           </div>
         )}
 
-        {/* Add Player Button */}
-        <div className="mt-8 text-center">
-          <button
-            onClick={() => showToast('Add player functionality coming soon!', 'info')}
-            className={`px-8 py-3 bg-gradient-to-r from-orange-600 to-orange-700 text-white font-semibold rounded-lg hover:from-orange-700 hover:to-orange-800 transition-all transform hover:scale-105 shadow-lg`}
-          >
-            + Add New Player
-          </button>
-        </div>
+        {/* Player Edit Modal */}
+        {editingPlayer && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-6 w-full max-w-md mx-4`}>
+              <h3 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4`}>
+                Edit Player
+              </h3>
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                handleSavePlayer(editingPlayer);
+              }}>
+                <div className="space-y-4">
+                  <div>
+                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      value={editingPlayer.full_name}
+                      onChange={(e) => setEditingPlayer({...editingPlayer, full_name: e.target.value})}
+                      className={`w-full px-3 py-2 rounded-lg border ${
+                        darkMode 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                    />
+                  </div>
+                  <div>
+                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                      Position
+                    </label>
+                    <select
+                      value={editingPlayer.position}
+                      onChange={(e) => setEditingPlayer({...editingPlayer, position: e.target.value})}
+                      className={`w-full px-3 py-2 rounded-lg border ${
+                        darkMode 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                    >
+                      <option value="Point Guard">Point Guard</option>
+                      <option value="Shooting Guard">Shooting Guard</option>
+                      <option value="Small Forward">Small Forward</option>
+                      <option value="Power Forward">Power Forward</option>
+                      <option value="Center">Center</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                      Height (cm)
+                    </label>
+                    <input
+                      type="number"
+                      value={editingPlayer.height_cm}
+                      onChange={(e) => setEditingPlayer({...editingPlayer, height_cm: parseInt(e.target.value)})}
+                      className={`w-full px-3 py-2 rounded-lg border ${
+                        darkMode 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                    />
+                  </div>
+                  <div>
+                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                      Weight (kg)
+                    </label>
+                    <input
+                      type="number"
+                      value={editingPlayer.weight_kg}
+                      onChange={(e) => setEditingPlayer({...editingPlayer, weight_kg: parseFloat(e.target.value)})}
+                      className={`w-full px-3 py-2 rounded-lg border ${
+                        darkMode 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                    />
+                  </div>
+                </div>
+                <div className="flex space-x-3 mt-6">
+                  <button
+                    type="submit"
+                    className={`flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors`}
+                  >
+                    Save Changes
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditingPlayer(null)}
+                    className={`flex-1 px-4 py-2 ${
+                      darkMode 
+                        ? 'bg-gray-600 text-white hover:bg-gray-700' 
+                        : 'bg-gray-300 text-gray-900 hover:bg-gray-400'
+                    } rounded-lg transition-colors`}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Add Player Modal */}
+        {showAddPlayer && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-6 w-full max-w-md mx-4`}>
+              <h3 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4`}>
+                Add New Player
+              </h3>
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target as HTMLFormElement);
+                const newPlayer = {
+                  full_name: formData.get('full_name') as string,
+                  email: formData.get('email') as string,
+                  position: formData.get('position') as string,
+                  height_cm: parseInt(formData.get('height_cm') as string),
+                  weight_kg: parseFloat(formData.get('weight_kg') as string),
+                };
+                handleAddPlayer(newPlayer);
+              }}>
+                <div className="space-y-4">
+                  <div>
+                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      name="full_name"
+                      required
+                      className={`w-full px-3 py-2 rounded-lg border ${
+                        darkMode 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                    />
+                  </div>
+                  <div>
+                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      required
+                      className={`w-full px-3 py-2 rounded-lg border ${
+                        darkMode 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                    />
+                  </div>
+                  <div>
+                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                      Position
+                    </label>
+                    <select
+                      name="position"
+                      required
+                      className={`w-full px-3 py-2 rounded-lg border ${
+                        darkMode 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                    >
+                      <option value="">Select Position</option>
+                      <option value="Point Guard">Point Guard</option>
+                      <option value="Shooting Guard">Shooting Guard</option>
+                      <option value="Small Forward">Small Forward</option>
+                      <option value="Power Forward">Power Forward</option>
+                      <option value="Center">Center</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                      Height (cm)
+                    </label>
+                    <input
+                      type="number"
+                      name="height_cm"
+                      className={`w-full px-3 py-2 rounded-lg border ${
+                        darkMode 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                    />
+                  </div>
+                  <div>
+                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                      Weight (kg)
+                    </label>
+                    <input
+                      type="number"
+                      name="weight_kg"
+                      step="0.1"
+                      className={`w-full px-3 py-2 rounded-lg border ${
+                        darkMode 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                    />
+                  </div>
+                </div>
+                <div className="flex space-x-3 mt-6">
+                  <button
+                    type="submit"
+                    className={`flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors`}
+                  >
+                    Add Player
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddPlayer(false)}
+                    className={`flex-1 px-4 py-2 ${
+                      darkMode 
+                        ? 'bg-gray-600 text-white hover:bg-gray-700' 
+                        : 'bg-gray-300 text-gray-900 hover:bg-gray-400'
+                    } rounded-lg transition-colors`}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

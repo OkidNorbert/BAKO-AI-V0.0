@@ -3,7 +3,7 @@ API v1 router configuration.
 """
 
 from fastapi import APIRouter
-from app.api.v1.endpoints import health, auth, players, videos, events, jobs, wearables, analytics, streaming, metrics, feedback, stats, training, team_analytics, team_players, team_training, team_sessions
+from app.api.v1.endpoints import health, auth, players, videos, events, jobs, wearables, analytics, streaming, metrics, feedback, stats, training, team_analytics, team_players, team_training, team_sessions, team_communication, team_schedule
 
 # Create main API router
 api_router = APIRouter()
@@ -24,7 +24,9 @@ api_router.include_router(stats.router, prefix="/stats", tags=["statistics"])
 api_router.include_router(training.router, prefix="/training", tags=["training"])
 
 # Team management endpoints for coaches
-api_router.include_router(team_analytics.router, prefix="/analytics", tags=["team-analytics"])
-api_router.include_router(team_players.router, prefix="/players", tags=["team-players"])
-api_router.include_router(team_training.router, prefix="/training", tags=["team-training"])
-api_router.include_router(team_sessions.router, prefix="/events", tags=["team-sessions"])
+api_router.include_router(team_analytics.router, prefix="/team/analytics", tags=["team-analytics"])
+api_router.include_router(team_players.router, prefix="/team/players", tags=["team-players"])
+api_router.include_router(team_training.router, prefix="/team/training", tags=["team-training"])
+api_router.include_router(team_sessions.router, prefix="/team/sessions", tags=["team-sessions"])
+api_router.include_router(team_communication.router, prefix="/team", tags=["team-communication"])
+api_router.include_router(team_schedule.router, prefix="/team", tags=["team-schedule"])

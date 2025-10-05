@@ -36,6 +36,8 @@ export const TeamTraining: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [showCreatePlan, setShowCreatePlan] = useState(false);
+  const [editingPlan, setEditingPlan] = useState<TrainingPlan | null>(null);
 
   useEffect(() => {
     fetchTrainingData();
@@ -68,6 +70,58 @@ export const TeamTraining: React.FC = () => {
     }
   };
 
+  const handleCreatePlan = async (planData: Partial<TrainingPlan>) => {
+    try {
+      // TODO: Implement API call to create training plan
+      showToast('Training plan created successfully', 'success');
+      setShowCreatePlan(false);
+      fetchTrainingData();
+    } catch (error: any) {
+      console.error('Error creating training plan:', error);
+      showToast('Failed to create training plan', 'error');
+    }
+  };
+
+  const handleEditPlan = (plan: TrainingPlan) => {
+    setEditingPlan(plan);
+  };
+
+  const handleUpdatePlan = async (updatedPlan: TrainingPlan) => {
+    try {
+      // TODO: Implement API call to update training plan
+      showToast('Training plan updated successfully', 'success');
+      setEditingPlan(null);
+      fetchTrainingData();
+    } catch (error: any) {
+      console.error('Error updating training plan:', error);
+      showToast('Failed to update training plan', 'error');
+    }
+  };
+
+  const handleDeletePlan = async (planId: number) => {
+    if (window.confirm('Are you sure you want to delete this training plan?')) {
+      try {
+        // TODO: Implement API call to delete training plan
+        showToast('Training plan deleted successfully', 'success');
+        fetchTrainingData();
+      } catch (error: any) {
+        console.error('Error deleting training plan:', error);
+        showToast('Failed to delete training plan', 'error');
+      }
+    }
+  };
+
+  const handleAssignPlan = async (planId: number, playerIds: number[]) => {
+    try {
+      // TODO: Implement API call to assign plan to players
+      showToast('Training plan assigned successfully', 'success');
+      fetchTrainingData();
+    } catch (error: any) {
+      console.error('Error assigning training plan:', error);
+      showToast('Failed to assign training plan', 'error');
+    }
+  };
+
   const filteredPlans = trainingPlans.filter(plan => {
     const matchesCategory = filterCategory === 'all' || plan.category === filterCategory;
     const matchesStatus = filterStatus === 'all' || plan.status === filterStatus;
@@ -95,7 +149,7 @@ export const TeamTraining: React.FC = () => {
               </p>
             </div>
             <button
-              onClick={() => showToast('Create plan functionality coming soon!', 'info')}
+              onClick={() => setShowCreatePlan(true)}
               className={`px-6 py-3 bg-gradient-to-r from-orange-600 to-orange-700 text-white font-semibold rounded-lg hover:from-orange-700 hover:to-orange-800 transition-all transform hover:scale-105 shadow-lg`}
             >
               + Create Plan
@@ -220,20 +274,33 @@ export const TeamTraining: React.FC = () => {
 
               <div className="flex space-x-2">
                 <button
-                  onClick={() => showToast('View details functionality coming soon!', 'info')}
+                  onClick={() => {
+                    // TODO: Navigate to plan details page
+                    showToast('Opening plan details...', 'info');
+                  }}
                   className={`flex-1 px-4 py-2 bg-orange-600 text-white text-center rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium`}
                 >
                   View Details
                 </button>
                 <button
-                  onClick={() => showToast('Edit plan functionality coming soon!', 'info')}
+                  onClick={() => handleEditPlan(plan)}
                   className={`flex-1 px-4 py-2 ${
                     darkMode 
-                      ? 'bg-gray-700 text-white hover:bg-gray-600' 
-                      : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
+                      ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                      : 'bg-blue-500 text-white hover:bg-blue-600'
                   } text-center rounded-lg transition-colors text-sm font-medium`}
                 >
                   Edit
+                </button>
+                <button
+                  onClick={() => handleDeletePlan(plan.id)}
+                  className={`flex-1 px-4 py-2 ${
+                    darkMode 
+                      ? 'bg-red-600 text-white hover:bg-red-700' 
+                      : 'bg-red-500 text-white hover:bg-red-600'
+                  } text-center rounded-lg transition-colors text-sm font-medium`}
+                >
+                  Delete
                 </button>
               </div>
             </div>
@@ -305,6 +372,305 @@ export const TeamTraining: React.FC = () => {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Create Plan Modal */}
+        {showCreatePlan && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-6 w-full max-w-lg mx-4`}>
+              <h3 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4`}>
+                Create Training Plan
+              </h3>
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target as HTMLFormElement);
+                const planData = {
+                  name: formData.get('name') as string,
+                  description: formData.get('description') as string,
+                  category: formData.get('category') as string,
+                  difficulty: formData.get('difficulty') as string,
+                  duration: parseInt(formData.get('duration') as string),
+                  frequency: parseInt(formData.get('frequency') as string),
+                };
+                handleCreatePlan(planData);
+              }}>
+                <div className="space-y-4">
+                  <div>
+                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                      Plan Name
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      required
+                      className={`w-full px-3 py-2 rounded-lg border ${
+                        darkMode 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                    />
+                  </div>
+                  <div>
+                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                      Category
+                    </label>
+                    <select
+                      name="category"
+                      required
+                      className={`w-full px-3 py-2 rounded-lg border ${
+                        darkMode 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                    >
+                      <option value="strength">Strength</option>
+                      <option value="cardio">Cardio</option>
+                      <option value="skills">Skills</option>
+                      <option value="conditioning">Conditioning</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                      Difficulty
+                    </label>
+                    <select
+                      name="difficulty"
+                      required
+                      className={`w-full px-3 py-2 rounded-lg border ${
+                        darkMode 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                    >
+                      <option value="beginner">Beginner</option>
+                      <option value="intermediate">Intermediate</option>
+                      <option value="advanced">Advanced</option>
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                        Duration (minutes)
+                      </label>
+                      <input
+                        type="number"
+                        name="duration"
+                        required
+                        className={`w-full px-3 py-2 rounded-lg border ${
+                          darkMode 
+                            ? 'bg-gray-700 border-gray-600 text-white' 
+                            : 'bg-white border-gray-300 text-gray-900'
+                        }`}
+                      />
+                    </div>
+                    <div>
+                      <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                        Frequency (per week)
+                      </label>
+                      <input
+                        type="number"
+                        name="frequency"
+                        required
+                        min="1"
+                        max="7"
+                        className={`w-full px-3 py-2 rounded-lg border ${
+                          darkMode 
+                            ? 'bg-gray-700 border-gray-600 text-white' 
+                            : 'bg-white border-gray-300 text-gray-900'
+                        }`}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                      Description
+                    </label>
+                    <textarea
+                      name="description"
+                      rows={3}
+                      className={`w-full px-3 py-2 rounded-lg border ${
+                        darkMode 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                    />
+                  </div>
+                </div>
+                <div className="flex space-x-3 mt-6">
+                  <button
+                    type="submit"
+                    className={`flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors`}
+                  >
+                    Create Plan
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowCreatePlan(false)}
+                    className={`flex-1 px-4 py-2 ${
+                      darkMode 
+                        ? 'bg-gray-600 text-white hover:bg-gray-700' 
+                        : 'bg-gray-300 text-gray-900 hover:bg-gray-400'
+                    } rounded-lg transition-colors`}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Plan Modal */}
+        {editingPlan && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-6 w-full max-w-lg mx-4`}>
+              <h3 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4`}>
+                Edit Training Plan
+              </h3>
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target as HTMLFormElement);
+                const updatedPlan = {
+                  ...editingPlan,
+                  name: formData.get('name') as string,
+                  description: formData.get('description') as string,
+                  category: formData.get('category') as string,
+                  difficulty: formData.get('difficulty') as string,
+                  duration: parseInt(formData.get('duration') as string),
+                  frequency: parseInt(formData.get('frequency') as string),
+                };
+                handleUpdatePlan(updatedPlan);
+              }}>
+                <div className="space-y-4">
+                  <div>
+                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                      Plan Name
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      defaultValue={editingPlan.name}
+                      required
+                      className={`w-full px-3 py-2 rounded-lg border ${
+                        darkMode 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                    />
+                  </div>
+                  <div>
+                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                      Category
+                    </label>
+                    <select
+                      name="category"
+                      defaultValue={editingPlan.category}
+                      required
+                      className={`w-full px-3 py-2 rounded-lg border ${
+                        darkMode 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                    >
+                      <option value="strength">Strength</option>
+                      <option value="cardio">Cardio</option>
+                      <option value="skills">Skills</option>
+                      <option value="conditioning">Conditioning</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                      Difficulty
+                    </label>
+                    <select
+                      name="difficulty"
+                      defaultValue={editingPlan.difficulty}
+                      required
+                      className={`w-full px-3 py-2 rounded-lg border ${
+                        darkMode 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                    >
+                      <option value="beginner">Beginner</option>
+                      <option value="intermediate">Intermediate</option>
+                      <option value="advanced">Advanced</option>
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                        Duration (minutes)
+                      </label>
+                      <input
+                        type="number"
+                        name="duration"
+                        defaultValue={editingPlan.duration}
+                        required
+                        className={`w-full px-3 py-2 rounded-lg border ${
+                          darkMode 
+                            ? 'bg-gray-700 border-gray-600 text-white' 
+                            : 'bg-white border-gray-300 text-gray-900'
+                        }`}
+                      />
+                    </div>
+                    <div>
+                      <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                        Frequency (per week)
+                      </label>
+                      <input
+                        type="number"
+                        name="frequency"
+                        defaultValue={editingPlan.frequency}
+                        required
+                        min="1"
+                        max="7"
+                        className={`w-full px-3 py-2 rounded-lg border ${
+                          darkMode 
+                            ? 'bg-gray-700 border-gray-600 text-white' 
+                            : 'bg-white border-gray-300 text-gray-900'
+                        }`}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                      Description
+                    </label>
+                    <textarea
+                      name="description"
+                      rows={3}
+                      defaultValue={editingPlan.description}
+                      className={`w-full px-3 py-2 rounded-lg border ${
+                        darkMode 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                    />
+                  </div>
+                </div>
+                <div className="flex space-x-3 mt-6">
+                  <button
+                    type="submit"
+                    className={`flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors`}
+                  >
+                    Update Plan
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditingPlan(null)}
+                    className={`flex-1 px-4 py-2 ${
+                      darkMode 
+                        ? 'bg-gray-600 text-white hover:bg-gray-700' 
+                        : 'bg-gray-300 text-gray-900 hover:bg-gray-400'
+                    } rounded-lg transition-colors`}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

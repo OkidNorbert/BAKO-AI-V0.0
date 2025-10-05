@@ -51,6 +51,12 @@ export const RoleBasedNavbar: React.FC = () => {
     { path: '/team/analytics', label: 'Analytics', icon: '📊' },
     { path: '/team/training', label: 'Training Plans', icon: '🏋️' },
     { path: '/team/sessions', label: 'Sessions', icon: '📹' },
+    { path: '/team/communication', label: 'Communication', icon: '💬' },
+    { path: '/team/schedule', label: 'Schedule', icon: '📅' },
+    { path: '/team/reports', label: 'Reports', icon: '📊' },
+    { path: '/team/notifications', label: 'Notifications', icon: '🔔' },
+    { path: '/team/goals', label: 'Goals', icon: '🎯' },
+    { path: '/team/video-analysis', label: 'Video Analysis', icon: '🎥' },
   ];
 
   const navItems = user?.role === 'coach' ? coachNavItems : playerNavItems;

@@ -15,17 +15,42 @@ axios.interceptors.request.use((config) => {
   return config;
 });
 
-// Suppress console logging for 503 errors globally
+// Suppress console logging for 503 errors and SilentError globally
 const originalConsoleError = console.error;
-console.error = (...args) => {
-  // Check if the error is a 503 Service Unavailable
+const originalConsoleLog = console.log;
+const originalConsoleWarn = console.warn;
+
+// Override console methods to filter out service unavailable errors
+const filterServiceErrors = (...args) => {
   const errorMessage = args[0];
-  if (typeof errorMessage === 'string' && errorMessage.includes('503 (Service Unavailable)')) {
-    // Don't log 503 errors to console
-    return;
+  if (typeof errorMessage === 'string') {
+    // Check for various patterns of service unavailable errors
+    if (errorMessage.includes('503 (Service Unavailable)') ||
+        errorMessage.includes('SilentError: Service unavailable') ||
+        errorMessage.includes('Service unavailable') ||
+        errorMessage.includes('503') && errorMessage.includes('Service Unavailable')) {
+      // Don't log service unavailable errors
+      return;
+    }
   }
   // Log all other errors normally
   originalConsoleError.apply(console, args);
+};
+
+console.error = filterServiceErrors;
+console.log = (...args) => {
+  const message = args[0];
+  if (typeof message === 'string' && message.includes('503')) {
+    return; // Don't log 503 errors
+  }
+  originalConsoleLog.apply(console, args);
+};
+console.warn = (...args) => {
+  const message = args[0];
+  if (typeof message === 'string' && message.includes('503')) {
+    return; // Don't log 503 errors
+  }
+  originalConsoleWarn.apply(console, args);
 };
 
 // Handle auth errors and service unavailable errors
@@ -65,7 +90,7 @@ export const api = {
     get: (playerId: number) => axios.get(`/api/v1/players/${playerId}`),
     getStats: (playerId: number, days: number = 30) =>
       axios.get(`/api/v1/analytics/performance/${playerId}?days=${days}`),
-    getTeamPlayers: () => axios.get('/api/v1/players/team'),
+    getTeamPlayers: () => axios.get('/api/v1/team/players/team'),
   },
 
   // Sessions
@@ -75,7 +100,7 @@ export const api = {
     getSessionDetails: (sessionId: number) =>
       axios.get(`/api/v1/events/session/${sessionId}`),
     getTeamSessions: () =>
-      axios.get('/api/v1/events/team/sessions'),
+      axios.get('/api/v1/team/sessions/team/sessions'),
   },
 
   // Videos
@@ -101,7 +126,7 @@ export const api = {
     compareWithBenchmarks: (playerId: number) =>
       axios.get(`/api/v1/analytics/comparison/${playerId}`),
     getTeamStats: () =>
-      axios.get('/api/v1/analytics/team/stats'),
+      axios.get('/api/v1/team/analytics/team/stats'),
   },
 
   // Wearables
@@ -162,7 +187,23 @@ export const api = {
     getTrainingProgress: (playerId: number) =>
       axios.get(`/api/v1/training/progress/${playerId}`),
     getTeamPlans: () =>
-      axios.get('/api/v1/training/team/plans'),
+      axios.get('/api/v1/team/training/team/plans'),
+  },
+
+  // Team Communication
+  communication: {
+    getAnnouncements: () => axios.get('/api/v1/team/announcements'),
+    createAnnouncement: (data: any) => axios.post('/api/v1/team/announcements', data),
+    getMessages: () => axios.get('/api/v1/team/messages'),
+    sendMessage: (data: any) => axios.post('/api/v1/team/messages', data),
+  },
+
+  // Team Schedule
+  schedule: {
+    getEvents: () => axios.get('/api/v1/team/events'),
+    createEvent: (data: any) => axios.post('/api/v1/team/events', data),
+    updateEvent: (eventId: number, data: any) => axios.put(`/api/v1/team/events/${eventId}`, data),
+    deleteEvent: (eventId: number) => axios.delete(`/api/v1/team/events/${eventId}`),
   },
 };
 

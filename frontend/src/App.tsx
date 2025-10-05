@@ -9,6 +9,12 @@ import { TeamPlayers } from './components/TeamPlayers'
 import { TeamAnalytics } from './components/TeamAnalytics'
 import { TeamTraining } from './components/TeamTraining'
 import { TeamSessions } from './components/TeamSessions'
+import { TeamCommunication } from './components/TeamCommunication'
+import { TeamSchedule } from './components/TeamSchedule'
+import { TeamReports } from './components/TeamReports'
+import { TeamNotifications } from './components/TeamNotifications'
+import { TeamGoals } from './components/TeamGoals'
+import { TeamVideoAnalysis } from './components/TeamVideoAnalysis'
 import { ModernAuthPage } from './components/ModernAuthPage'
 import { PlayerProfile } from './components/PlayerProfile'
 import { SessionView } from './components/SessionView'
@@ -136,6 +142,54 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <TeamSessions />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/team/communication"
+            element={
+              <ProtectedRoute>
+                <TeamCommunication />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/team/schedule"
+            element={
+              <ProtectedRoute>
+                <TeamSchedule />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/team/reports"
+            element={
+              <ProtectedRoute>
+                <TeamReports />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/team/notifications"
+            element={
+              <ProtectedRoute>
+                <TeamNotifications />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/team/goals"
+            element={
+              <ProtectedRoute>
+                <TeamGoals />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/team/video-analysis"
+            element={
+              <ProtectedRoute>
+                <TeamVideoAnalysis />
               </ProtectedRoute>
             }
           />

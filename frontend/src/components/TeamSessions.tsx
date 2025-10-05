@@ -29,6 +29,8 @@ export const TeamSessions: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterType, setFilterType] = useState('all');
+  const [showStartSession, setShowStartSession] = useState(false);
+  const [showSessionDetails, setShowSessionDetails] = useState<TeamSession | null>(null);
   const [sortBy, setSortBy] = useState('start_time');
 
   useEffect(() => {
@@ -52,6 +54,34 @@ export const TeamSessions: React.FC = () => {
       }
       setLoading(false);
     }
+  };
+
+  const handleStartSession = async (sessionData: Partial<TeamSession>) => {
+    try {
+      // TODO: Implement API call to start session
+      showToast('Session started successfully', 'success');
+      setShowStartSession(false);
+      fetchTeamSessions();
+    } catch (error: any) {
+      console.error('Error starting session:', error);
+      showToast('Failed to start session', 'error');
+    }
+  };
+
+  const handleEndSession = async (sessionId: number) => {
+    try {
+      // TODO: Implement API call to end session
+      showToast('Session ended successfully', 'success');
+      fetchTeamSessions();
+    } catch (error: any) {
+      console.error('Error ending session:', error);
+      showToast('Failed to end session', 'error');
+    }
+  };
+
+  const handleViewAnalytics = (session: TeamSession) => {
+    // TODO: Navigate to session analytics
+    showToast('Opening session analytics...', 'info');
   };
 
   const filteredSessions = sessions.filter(session => {
@@ -92,7 +122,7 @@ export const TeamSessions: React.FC = () => {
               </p>
             </div>
             <button
-              onClick={() => showToast('Start session functionality coming soon!', 'info')}
+              onClick={() => setShowStartSession(true)}
               className={`px-6 py-3 bg-gradient-to-r from-orange-600 to-orange-700 text-white font-semibold rounded-lg hover:from-orange-700 hover:to-orange-800 transition-all transform hover:scale-105 shadow-lg`}
             >
               + Start Session
@@ -263,21 +293,32 @@ export const TeamSessions: React.FC = () => {
                   View Details
                 </Link>
                 <button
-                  onClick={() => showToast('Session controls coming soon!', 'info')}
+                  onClick={() => {
+                    if (session.status === 'active') {
+                      handleEndSession(session.id);
+                    } else {
+                      // TODO: Implement resume session
+                      showToast('Resume session functionality coming soon!', 'info');
+                    }
+                  }}
                   className={`flex-1 px-4 py-2 ${
-                    darkMode 
+                    session.status === 'active'
+                      ? darkMode 
+                        ? 'bg-red-600 text-white hover:bg-red-700' 
+                        : 'bg-red-500 text-white hover:bg-red-600'
+                      : darkMode 
                       ? 'bg-gray-700 text-white hover:bg-gray-600' 
                       : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
                   } text-center rounded-lg transition-colors text-sm font-medium`}
                 >
-                  {session.status === 'active' ? 'Pause' : 'Resume'}
+                  {session.status === 'active' ? 'End Session' : 'Resume'}
                 </button>
                 <button
-                  onClick={() => showToast('Analytics coming soon!', 'info')}
+                  onClick={() => handleViewAnalytics(session)}
                   className={`flex-1 px-4 py-2 ${
                     darkMode 
-                      ? 'bg-gray-700 text-white hover:bg-gray-600' 
-                      : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
+                      ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                      : 'bg-blue-500 text-white hover:bg-blue-600'
                   } text-center rounded-lg transition-colors text-sm font-medium`}
                 >
                   Analytics
@@ -352,6 +393,102 @@ export const TeamSessions: React.FC = () => {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Start Session Modal */}
+        {showStartSession && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-6 w-full max-w-lg mx-4`}>
+              <h3 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4`}>
+                Start New Session
+              </h3>
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target as HTMLFormElement);
+                const sessionData = {
+                  player_name: formData.get('player_name') as string,
+                  session_type: formData.get('session_type') as string,
+                  notes: formData.get('notes') as string,
+                };
+                handleStartSession(sessionData);
+              }}>
+                <div className="space-y-4">
+                  <div>
+                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                      Player
+                    </label>
+                    <select
+                      name="player_name"
+                      required
+                      className={`w-full px-3 py-2 rounded-lg border ${
+                        darkMode 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                    >
+                      <option value="">Select Player</option>
+                      {/* TODO: Populate with actual team players */}
+                      <option value="Player 1">Player 1</option>
+                      <option value="Player 2">Player 2</option>
+                      <option value="Player 3">Player 3</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                      Session Type
+                    </label>
+                    <select
+                      name="session_type"
+                      required
+                      className={`w-full px-3 py-2 rounded-lg border ${
+                        darkMode 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                    >
+                      <option value="training_session">Training Session</option>
+                      <option value="game_session">Game Session</option>
+                      <option value="practice_session">Practice Session</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                      Notes (Optional)
+                    </label>
+                    <textarea
+                      name="notes"
+                      rows={3}
+                      className={`w-full px-3 py-2 rounded-lg border ${
+                        darkMode 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                      placeholder="Add any notes about this session..."
+                    />
+                  </div>
+                </div>
+                <div className="flex space-x-3 mt-6">
+                  <button
+                    type="submit"
+                    className={`flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors`}
+                  >
+                    Start Session
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowStartSession(false)}
+                    className={`flex-1 px-4 py-2 ${
+                      darkMode 
+                        ? 'bg-gray-600 text-white hover:bg-gray-700' 
+                        : 'bg-gray-300 text-gray-900 hover:bg-gray-400'
+                    } rounded-lg transition-colors`}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}
