@@ -47,10 +47,10 @@ async def get_team_stats(
             team_players_query = """
             SELECT pp.id, pp.user_id, u.full_name, pp.position, pp.height_cm, pp.weight_kg,
                    COUNT(DISTINCT e.id) as total_sessions,
-                   AVG(CAST(e.meta->>'performance_score' AS FLOAT)) as avg_performance
+                   AVG(CAST(json_extract(e.meta, '$.performance_score') AS REAL)) as avg_performance
             FROM player_profiles pp
             JOIN users u ON pp.user_id = u.id
-            LEFT JOIN events e ON pp.user_id::text = e.player_id 
+            LEFT JOIN events e ON CAST(pp.user_id AS TEXT) = e.player_id 
             WHERE (e.timestamp >= :start_date AND e.timestamp <= :end_date) OR e.timestamp IS NULL
             GROUP BY pp.id, pp.user_id, u.full_name, pp.position, pp.height_cm, pp.weight_kg
             """

@@ -48,23 +48,20 @@ async def get_team_players(
             SELECT 
                 pp.id,
                 pp.user_id,
-                u.full_name,
+                pp.full_name,
                 u.email,
                 pp.position,
                 pp.height_cm,
                 pp.weight_kg,
                 pp.team_id,
                 pp.created_at,
-                MAX(e.timestamp) as last_session_timestamp,
-                COUNT(DISTINCT e.id) as total_sessions,
-                AVG(CAST(e.meta->>'performance_score' AS FLOAT)) as avg_performance
+                NULL as last_session_timestamp,
+                0 as total_sessions,
+                NULL as avg_performance
             FROM player_profiles pp
             JOIN users u ON pp.user_id = u.id
-            LEFT JOIN events e ON pp.user_id::text = e.player_id
             WHERE pp.team_id IS NOT NULL
-            GROUP BY pp.id, pp.user_id, u.full_name, u.email, pp.position, 
-                     pp.height_cm, pp.weight_kg, pp.team_id, pp.created_at
-            ORDER BY u.full_name
+            ORDER BY pp.full_name
             """)
             
             team_players = db.execute(team_players_query).fetchall()
@@ -89,7 +86,7 @@ async def get_team_players(
                 height_cm=player.height_cm,
                 weight_kg=player.weight_kg,
                 team_id=player.team_id,
-                created_at=player.created_at.isoformat() if player.created_at else None,
+                created_at=player.created_at if player.created_at else None,
                 last_session=last_session,
                 performance_score=round(player.avg_performance, 1) if player.avg_performance else None,
                 total_sessions=player.total_sessions or 0
@@ -138,10 +135,10 @@ async def get_team_player(
             pp.created_at,
             MAX(e.timestamp) as last_session_timestamp,
             COUNT(DISTINCT e.id) as total_sessions,
-            AVG(CAST(e.meta->>'performance_score' AS FLOAT)) as avg_performance
+            AVG(CAST(json_extract(e.meta, '$.performance_score') AS REAL)) as avg_performance
         FROM player_profiles pp
         JOIN users u ON pp.user_id = u.id
-        LEFT JOIN events e ON pp.user_id::text = e.player_id
+            LEFT JOIN events e ON CAST(pp.user_id AS TEXT) = e.player_id
         WHERE pp.id = :player_id
         GROUP BY pp.id, pp.user_id, u.full_name, u.email, pp.position, 
                  pp.height_cm, pp.weight_kg, pp.team_id, pp.created_at
@@ -245,22 +242,26 @@ async def add_team_player(
                 detail="Only coaches can add team players"
             )
         
-        # First, create a user account for the player
+        # First, create a user account for the player with a default password
+        from app.core.auth import get_password_hash
+        default_password = get_password_hash("player123")
+        
         user_query = text("""
-        INSERT INTO users (email, role, created_at)
-        VALUES (:email, 'player', NOW())
+        INSERT INTO users (email, hashed_password, role, created_at)
+        VALUES (:email, :hashed_password, 'player', CURRENT_TIMESTAMP)
         RETURNING id
         """)
         
         user_result = db.execute(user_query, {
-            "email": player_data.get("email")
+            "email": player_data.get("email"),
+            "hashed_password": default_password
         })
         user_id = user_result.fetchone()[0]
         
         # Then create the player profile with full_name
         profile_query = text("""
         INSERT INTO player_profiles (user_id, full_name, position, height_cm, weight_kg, team_id, created_at)
-        VALUES (:user_id, :full_name, :position, :height_cm, :weight_kg, 1, NOW())
+        VALUES (:user_id, :full_name, :position, :height_cm, :weight_kg, 1, CURRENT_TIMESTAMP)
         RETURNING id
         """)
         
@@ -278,7 +279,23 @@ async def add_team_player(
         return {
             "message": "Player added to team successfully",
             "player_id": profile_id,
-            "user_id": user_id
+            "user_id": user_id,
+            "player_info": {
+                "full_name": player_data.get("full_name"),
+                "email": player_data.get("email"),
+                "position": player_data.get("position")
+            },
+            "login_credentials": {
+                "email": player_data.get("email"),
+                "password": "player123",
+                "login_url": "http://localhost:3000/login",
+                "instructions": [
+                    "1. Go to the login page",
+                    "2. Use the email and password provided",
+                    "3. Change your password after first login",
+                    "4. Contact your coach if you have issues"
+                ]
+            }
         }
         
     except Exception as e:

@@ -15,236 +15,291 @@ This system democratizes elite-level sports analytics by making advanced perform
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Docker and Docker Compose
-- Node.js 18+ (for local development)
-- Python 3.11+ (for local development)
+- Node.js 18+ (for frontend development)
+- Python 3.11+ (for backend development)
+- SQLite (included with Python)
 
 ### Development Setup
 
 1. **Clone and setup:**
 ```bash
 git clone <your-repo-url>
-cd basketball-performance-system
-cp .env.example .env
+cd "Final Year Project"
 ```
 
-2. **Start all services:**
+2. **Start Backend:**
 ```bash
-make up
+cd backend
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-3. **Access the application:**
+3. **Start Frontend:**
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+4. **Access the application:**
 - Frontend: http://localhost:3000
 - Backend API: http://localhost:8000
-- AI Service: http://localhost:8001
-- MinIO Console: http://localhost:9001
+- Backend Health: http://localhost:8000/health
 
 ### Development Commands
 
 ```bash
-# Start all services
-make up
+# Start Backend (in backend directory)
+source venv/bin/activate
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
-# Stop all services  
-make down
+# Start Frontend (in frontend directory)
+npm run dev
 
-# Run tests
-make test
+# Install Backend Dependencies
+cd backend && pip install -r requirements.txt
 
-# View logs
-make logs
+# Install Frontend Dependencies
+cd frontend && npm install
 
-# Clean up
-make clean
+# Test Backend Health
+curl http://localhost:8000/health
+
+# Test Frontend
+curl http://localhost:3000
 ```
 
 ## 📁 Project Structure
 
 ```
-basketball-performance-system/
+Final Year Project/
 ├── backend/                 # FastAPI backend service
 │   ├── app/
+│   │   ├── api/v1/endpoints/  # API endpoints
+│   │   ├── core/              # Core functionality (database, config)
+│   │   ├── models/            # SQLAlchemy models
+│   │   └── main.py            # FastAPI application
 │   ├── requirements.txt
-│   ├── Dockerfile
-│   └── tests/
-├── ai_service/              # AI/ML microservice for video analysis
-│   ├── service/
-│   ├── requirements.txt
-│   ├── Dockerfile
-│   └── tests/
+│   └── venv/                  # Python virtual environment
 ├── frontend/                # React frontend application
 │   ├── src/
+│   │   ├── components/        # React components
+│   │   ├── services/          # API services
+│   │   ├── contexts/          # React contexts
+│   │   └── App.tsx            # Main application
 │   ├── package.json
-│   ├── Dockerfile
-│   └── tests/
+│   └── node_modules/          # Node.js dependencies
 ├── infra/                   # Infrastructure and deployment
-│   ├── docker-compose.yml
-│   └── k8s/
-├── docs/                    # Documentation
-│   ├── architecture.md
-│   └── api_contracts.md
-├── ci/                      # CI/CD workflows
-│   └── .github/workflows/
-├── Makefile
-├── .env.example
+│   └── docker-compose.yml
 └── README.md
 ```
 
 ## 🛠 Technology Stack
 
-- **Backend:** FastAPI + PostgreSQL + Redis
-- **AI/ML:** MediaPipe, YOLOv8, PyTorch/TensorFlow
-- **Frontend:** React + Vite + TailwindCSS
-- **Infrastructure:** Docker + Kubernetes
-- **Wearables:** Apple HealthKit, Google Fit, BLE
+- **Backend:** FastAPI + SQLite + SQLAlchemy
+- **Frontend:** React + Vite + TailwindCSS + TypeScript
+- **Authentication:** JWT tokens with role-based access
+- **Database:** SQLite with automatic table creation
+- **API:** RESTful API with comprehensive endpoints
+- **UI/UX:** Responsive design with dark/light mode support
 
-## 📋 Development Phases
+## 📋 Current Status
 
-- **Phase 0:** Project scaffold and dev environment ✅
-- **Phase 1:** Backend API with authentication and models ✅
-- **Phase 2:** Video upload and background processing ✅
-- **Phase 3:** AI video analysis microservice ✅
-- **Phase 4:** Wearable data integration ✅
-- **Phase 5:** Analytics and recommendation engine ✅
-- **Phase 6:** Frontend dashboard and visualization ✅
-- **Phase 7:** Real-time streaming capabilities ✅
-- **Phase 8:** Model training and improvement pipeline ✅
-- **Phase 9:** Production deployment and CI/CD ✅
-- **Phase 10:** Pilot program and validation ✅
+### ✅ **Completed Features**
+- **Backend API:** FastAPI server with authentication and database models
+- **Database:** SQLite with automatic table creation and migrations
+- **Authentication:** JWT-based login/register with role-based access (Player/Coach)
+- **Frontend:** React application with responsive design and dark/light mode
+- **User Management:** Player and coach dashboards with different functionalities
+- **Team Management:** Coach can add, edit, and manage team players
+- **Real-time Updates:** Auto-refresh functionality for live data
+- **API Integration:** Comprehensive REST API with error handling
 
-**🎉 ALL PHASES 100% COMPLETE - PRODUCTION READY!**
+### 🔧 **Recently Fixed Issues**
+- **Database Connection:** Switched from PostgreSQL to SQLite for easier setup
+- **Dependencies:** Installed all required Python packages
+- **SQL Compatibility:** Fixed SQLite-specific query issues
+- **Storage Manager:** Implemented lazy initialization to prevent startup errors
+- **Login Issues:** Resolved authentication and session management
+- **CORS Issues:** Fixed cross-origin requests between frontend and backend
+
+### 🚀 **Currently Working**
+- **Frontend:** http://localhost:3000 (Vite development server)
+- **Backend:** http://localhost:8000 (FastAPI server)
+- **Database:** SQLite with all tables created automatically
+- **Authentication:** Login/register system fully functional
+- **Role-based Access:** Player and coach dashboards working
+
+### ⚠️ **Known Issues & Limitations**
+- **SQLite Compatibility:** Some complex SQL queries may need optimization for SQLite
+- **Mock Data Removed:** All mock data has been removed - features show empty states when no real data exists
+- **AI Service:** Video analysis features are not yet connected to AI services
+- **Wearable Integration:** Wearable device integration is not yet implemented
+- **File Uploads:** Video upload functionality needs MinIO or alternative storage setup
+
+### 🔄 **In Progress**
+- Optimizing SQLite queries for better performance
+- Implementing proper error handling for empty data states
+- Adding more comprehensive team management features
+- Improving responsive design for mobile devices
 
 ## ✨ Key Features
 
-### **🎬 AI-Powered Video Analysis**
-- MediaPipe pose detection with 33 keypoint tracking
-- YOLOv8 object detection for basketball, players, and court elements
-- Automated event detection (shots, jumps, sprints, dribbles)
-- Form analysis and technique evaluation
-- Performance metrics calculation from video
+### **🔐 Authentication & User Management**
+- JWT-based authentication system
+- Role-based access control (Player/Coach)
+- Secure login and registration
+- User profile management
+- Session management with auto-refresh
 
-### **⌚ Multi-Device Wearable Integration**
-- Apple HealthKit API integration
-- Google Fit API support
-- BLE heart rate monitor connectivity
-- Real-time physiological data collection
-- Sleep and recovery tracking
-- Heart rate zones analysis
-
-### **📊 Advanced Analytics Engine**
-- Comprehensive performance metrics
-- Shooting accuracy by zone
-- Jump height and vertical tracking
-- Sprint speed and agility metrics
-- Workload and fatigue monitoring
+### **👥 Player Dashboard**
+- Personal performance metrics
+- Training recommendations
+- Video upload and analysis
+- Wearable data integration
 - Progress tracking over time
-- Comparative analysis with benchmarks
+- Dark/light mode support
 
-### **💡 Personalized Training Recommendations**
-- AI-driven training plan generation
-- Weakness identification and targeting
-- Position-specific drill recommendations
-- Age-appropriate training programs
-- Weekly workout scheduling
-- Expected improvement predictions
+### **🏀 Coach Dashboard**
+- Team management interface
+- Player roster management
+- Team analytics and statistics
+- Training plan creation and management
+- Session scheduling and monitoring
+- Communication tools (announcements, messages)
+- Event scheduling and calendar
 
-### **📡 Real-time Streaming**
-- WebSocket-based live monitoring
-- Real-time heart rate display
-- Live performance scoring
-- Instant coach feedback
-- Multi-player tracking
-- Session recording and playback
+### **📊 Analytics & Reporting**
+- Real-time performance metrics
+- Team statistics and comparisons
+- Player progress tracking
+- Training effectiveness analysis
+- Export capabilities for reports
 
-### **🤖 Automated Model Training**
-- Continuous model improvement pipeline
-- Automated daily training (2 AM)
-- Weekly full retraining (Sunday 3 AM)
-- Model evaluation every 6 hours
-- Data quality checks every 4 hours
-- Performance metrics tracking
-- Model deployment and versioning
+### **🔄 Real-time Features**
+- Auto-refresh functionality
+- Live data updates
+- Real-time notifications
+- Smart refresh indicators
+- Responsive design for all devices
 
-### **🏭 Production Infrastructure**
-- Docker containerization for all services
-- Kubernetes deployment manifests
-- Horizontal pod autoscaling (3-10 replicas)
-- CI/CD pipeline with GitHub Actions
-- Prometheus + Grafana monitoring
-- Security headers and HTTPS
-- Secrets management
-- Automated backups
+### **🎨 User Interface**
+- Modern, responsive design
+- Dark and light mode themes
+- Mobile-friendly interface
+- Intuitive navigation
+- Role-based menu systems
+- Loading states and error handling
 
-### **👥 User Features**
-- Multi-role support (Player, Coach, Admin)
-- User authentication with JWT
-- Profile management
-- Team collaboration
-- Progress sharing
-- Export data and reports
-- Mobile responsive design
+### **🔧 Technical Features**
+- RESTful API architecture
+- SQLite database with automatic migrations
+- Comprehensive error handling
+- CORS support for cross-origin requests
+- TypeScript for type safety
+- TailwindCSS for styling
 
-### **📱 Cross-Platform**
-- Web application (React)
-- iOS companion app (SwiftUI + HealthKit)
-- BLE reader for Linux
-- API for third-party integrations
+## 🔧 Configuration
 
-## 🔧 Environment Variables
+### Backend Configuration
+The backend uses SQLite database with automatic table creation. No additional configuration is required for basic setup.
 
-Copy `.env.example` to `.env` and configure:
+### Frontend Configuration
+The frontend automatically detects the backend URL based on the current host:
+- Local development: `http://localhost:8000`
+- Network access: `http://10.7.11.79:8000` (or your network IP)
+
+### Environment Variables (Optional)
+Create a `.env` file in the frontend directory if you need custom configuration:
 
 ```bash
-# Database
-POSTGRES_DB=basketball_performance
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=password
-
-# Redis
-REDIS_URL=redis://redis:6379
-
-# MinIO
-MINIO_ROOT_USER=minioadmin
-MINIO_ROOT_PASSWORD=minioadmin
-
-# JWT
-JWT_SECRET_KEY=your-secret-key-here
-JWT_ALGORITHM=HS256
-
-# API URLs
-BACKEND_URL=http://localhost:8000
-AI_SERVICE_URL=http://localhost:8001
+# Frontend .env
+VITE_BACKEND_URL=http://localhost:8000
 ```
 
 ## 🧪 Testing
 
+### Backend Testing
 ```bash
-# Run all tests
-make test
-
-# Run specific service tests
-make test-backend
-make test-ai-service
-make test-frontend
-
-# Run with coverage
-make test-coverage
+cd backend
+source venv/bin/activate
+python -m pytest tests/
 ```
 
-## 📚 Documentation
+### Frontend Testing
+```bash
+cd frontend
+npm test
+```
 
-- [Architecture Overview](docs/architecture.md)
-- [API Documentation](docs/api_contracts.md)
-- [Development Guide](docs/development.md)
+### Manual Testing
+```bash
+# Test backend health
+curl http://localhost:8000/health
 
-## 🤝 Contributing
+# Test authentication
+curl -X POST http://localhost:8000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"testpass"}'
 
-1. Create a feature branch: `git checkout -b feat/your-feature`
-2. Make your changes and add tests
-3. Run tests: `make test`
-4. Commit: `git commit -m "feat: add your feature"`
-5. Push and create a Pull Request
+# Test frontend
+curl http://localhost:3000
+```
+
+## 🚀 Getting Started
+
+### First Time Setup
+1. **Clone the repository**
+2. **Start the backend:**
+   ```bash
+   cd backend
+   python -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
+   python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+   ```
+3. **Start the frontend:**
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
+4. **Open your browser** and go to `http://localhost:3000`
+
+### Creating Your First Account
+1. Click "Sign Up" on the login page
+2. Choose your role: "Player" or "Coach"
+3. Fill in your details and create an account
+4. Login and explore the dashboard
+
+### For Coaches
+- Access team management features
+- Add and manage team players
+- View team analytics and reports
+- Create training plans and sessions
+- Use communication tools
+
+### For Players
+- View personal performance metrics
+- Access training recommendations
+- Upload videos for analysis
+- Track progress over time
+
+## 🐛 Troubleshooting
+
+### Common Issues
+- **Backend won't start:** Make sure all dependencies are installed with `pip install -r requirements.txt`
+- **Frontend won't start:** Run `npm install` in the frontend directory
+- **Database errors:** The SQLite database is created automatically on first run
+- **CORS errors:** The backend is configured to allow requests from the frontend
+
+### Getting Help
+- Check the terminal output for error messages
+- Ensure both backend (port 8000) and frontend (port 3000) are running
+- Test the backend health endpoint: `curl http://localhost:8000/health`
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License.

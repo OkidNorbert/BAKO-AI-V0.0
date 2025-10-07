@@ -65,7 +65,7 @@ async def get_team_sessions(
                 CASE WHEN v.id IS NOT NULL THEN true ELSE false END as video_uploaded,
                 e.notes
             FROM events e
-            JOIN users u ON e.player_id = u.id::text
+            JOIN users u ON e.player_id = CAST(u.id AS TEXT)
             LEFT JOIN events e2 ON e.id = e2.session_id
             LEFT JOIN videos v ON e.id = v.session_id
             WHERE e.timestamp >= :start_date 

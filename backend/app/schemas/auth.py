@@ -26,3 +26,9 @@ class TokenResponse(BaseModel):
     token_type: str
     user_id: int
     role: UserRole
+
+
+class PasswordChange(BaseModel):
+    """Password change schema."""
+    current_password: str
+    new_password: str
