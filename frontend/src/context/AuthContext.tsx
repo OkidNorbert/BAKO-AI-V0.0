@@ -1,6 +1,35 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
+// Utility function to safely parse JSON from localStorage
+const safeParseJSON = (value: string | null): any => {
+  if (!value || value === 'undefined' || value === 'null') {
+    return null;
+  }
+  try {
+    return JSON.parse(value);
+  } catch (error) {
+    console.error('Error parsing JSON:', error);
+    return null;
+  }
+};
+
+// Utility function to safely clear authentication data
+const clearAuthData = () => {
+  try {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    delete axios.defaults.headers.common['Authorization'];
+  } catch (error) {
+    console.error('Error clearing auth data:', error);
+  }
+};
+
+// Global function to clear all auth data (for debugging)
+if (typeof window !== 'undefined') {
+  (window as any).clearAuthData = clearAuthData;
+}
+
 interface User {
   id: number;
   email: string;
@@ -32,8 +61,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       // In a real app, verify token with backend
       const savedUser = localStorage.getItem('user');
-      if (savedUser) {
-        setUser(JSON.parse(savedUser));
+      const parsedUser = safeParseJSON(savedUser);
+      if (parsedUser) {
+        setUser(parsedUser);
+      } else {
+        // Clear corrupted data
+        clearAuthData();
       }
     }
     setLoading(false);
@@ -49,12 +82,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { access_token, user_id, role } = response.data;
       const userData = { id: user_id, email, role, full_name: email };
       
+      // Safely store data in localStorage
       localStorage.setItem('token', access_token);
       localStorage.setItem('user', JSON.stringify(userData));
       axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
       setUser(userData);
     } catch (error) {
       console.error('Login error:', error);
+      // Clear any potentially corrupted data
+      clearAuthData();
       throw new Error('Invalid email or password');
     }
   };
@@ -69,20 +105,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       
       const { access_token, user: userData } = response.data;
+      // Safely store data in localStorage
       localStorage.setItem('token', access_token);
       localStorage.setItem('user', JSON.stringify(userData));
       axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
       setUser(userData);
     } catch (error) {
       console.error('Signup error:', error);
+      // Clear any potentially corrupted data
+      clearAuthData();
       throw new Error('Signup failed');
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    delete axios.defaults.headers.common['Authorization'];
+    clearAuthData();
     setUser(null);
   };
 

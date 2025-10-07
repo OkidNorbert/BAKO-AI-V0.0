@@ -39,12 +39,29 @@ export const CoachDashboard: React.FC = () => {
       setLoading(true);
       
       // Fetch team statistics
-      const statsResponse = await api.analytics.getTeamStats();
-      setTeamStats(statsResponse.data);
+      try {
+        const statsResponse = await api.analytics.getTeamStats();
+        setTeamStats(statsResponse.data);
+      } catch (error) {
+        console.warn('Failed to fetch team stats:', error);
+        // Set default stats
+        setTeamStats({
+          total_players: 0,
+          active_sessions: 0,
+          avg_performance: 0,
+          team_rank: 0
+        });
+      }
 
       // Fetch team players
-      const playersResponse = await api.players.getTeamPlayers();
-      setPlayers(playersResponse.data || []);
+      try {
+        const playersResponse = await api.players.getTeamPlayers();
+        setPlayers(playersResponse.data || []);
+      } catch (error) {
+        console.warn('Failed to fetch team players:', error);
+        // Set empty array as fallback
+        setPlayers([]);
+      }
 
       setLoading(false);
     } catch (error: any) {
@@ -228,13 +245,13 @@ export const CoachDashboard: React.FC = () => {
                           <div className="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10">
                             <div className={`h-8 w-8 sm:h-10 sm:w-10 rounded-full ${darkMode ? 'bg-gray-600' : 'bg-gray-300'} flex items-center justify-center`}>
                               <span className={`text-xs sm:text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                                {player.name.charAt(0)}
+                                {player.name?.charAt(0) || '?'}
                               </span>
                             </div>
                           </div>
                           <div className="ml-2 sm:ml-4">
                             <div className={`text-xs sm:text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                              {player.name}
+                              {player.name || 'Unknown Player'}
                             </div>
                             <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} sm:hidden`}>
                               {player.position}

@@ -5,6 +5,7 @@ from .team import Team
 from .session import TrainingSession
 from .video import Video, VideoStatus
 from .event import Event
+from .wearable import WearableDevice, WearableData, WearableSession, WearableType, DataType
 
 __all__ = [
     "User",
@@ -14,5 +15,10 @@ __all__ = [
     "TrainingSession",
     "Video",
     "VideoStatus",
-    "Event"
+    "Event",
+    "WearableDevice",
+    "WearableData", 
+    "WearableSession",
+    "WearableType",
+    "DataType"
 ]
