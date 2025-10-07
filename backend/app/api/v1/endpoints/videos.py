@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
-from app.core.storage import storage_manager
+from app.core.storage import get_storage_manager
 from app.core.config import settings
 from app.models.user import User
 from app.models.video import Video, VideoStatus
@@ -62,6 +62,7 @@ async def get_upload_metadata(
         db.refresh(video)
         
         # Generate presigned upload URL
+        storage_manager = get_storage_manager()
         upload_url = storage_manager.generate_presigned_upload_url(
             object_name,
             expires=timedelta(hours=1)
@@ -110,6 +111,7 @@ async def confirm_upload(
             )
         
         # Verify file exists in storage
+        storage_manager = get_storage_manager()
         if not storage_manager.object_exists(video.storage_url):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -121,6 +123,7 @@ async def confirm_upload(
         db.commit()
         
         # Generate download URL for processing
+        storage_manager = get_storage_manager()
         video_url = storage_manager.generate_presigned_download_url(
             video.storage_url,
             expires=timedelta(hours=24)
@@ -200,6 +203,7 @@ async def get_download_url(
                 detail="Video file not available"
             )
         
+        storage_manager = get_storage_manager()
         download_url = storage_manager.generate_presigned_download_url(
             video.storage_url,
             expires=timedelta(hours=1)

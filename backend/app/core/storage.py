@@ -102,6 +102,13 @@ class StorageManager:
             return False
 
 
-# Global storage manager instance
-storage_manager = StorageManager()
+# Global storage manager instance - lazy initialization
+storage_manager = None
+
+def get_storage_manager():
+    """Get or create storage manager instance."""
+    global storage_manager
+    if storage_manager is None:
+        storage_manager = StorageManager()
+    return storage_manager
 

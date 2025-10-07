@@ -14,16 +14,8 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     LOG_LEVEL: str = "INFO"
     
-    # Database
-    POSTGRES_DB: str = "basketball_performance"
-    POSTGRES_USER: str = "postgres"
-    POSTGRES_PASSWORD: str = "password"
-    POSTGRES_HOST: str = "postgres"
-    POSTGRES_PORT: int = 5432
-    
-    @property
-    def DATABASE_URL(self) -> str:
-        return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+    # Database - Using SQLite for development
+    DATABASE_URL: str = "sqlite:///./basketball_performance.db"
     
     # Redis
     REDIS_URL: str = "redis://redis:6379"

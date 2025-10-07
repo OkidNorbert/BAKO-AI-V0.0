@@ -160,14 +160,12 @@ SAMPLE_DATA_SQL = []
 def check_table_exists(db: Session, table_name: str) -> bool:
     """Check if a table exists in the database."""
     try:
+        # SQLite-compatible table check
         result = db.execute(text(f"""
-            SELECT EXISTS (
-                SELECT FROM information_schema.tables 
-                WHERE table_schema = 'public' 
-                AND table_name = '{table_name}'
-            );
+            SELECT name FROM sqlite_master 
+            WHERE type='table' AND name='{table_name}';
         """))
-        return result.scalar()
+        return result.fetchone() is not None
     except Exception as e:
         logger.warning(f"Could not check if table {table_name} exists: {e}")
         return False
@@ -192,15 +190,16 @@ def create_table_if_not_exists(db: Session, table_name: str, sql: str) -> bool:
 def add_full_name_column_if_missing(db: Session):
     """Add full_name column to player_profiles if it doesn't exist."""
     try:
-        # Check if full_name column exists
+        # SQLite-compatible column check
         check_column_query = """
-        SELECT column_name 
-        FROM information_schema.columns 
-        WHERE table_name = 'player_profiles' AND column_name = 'full_name'
+        PRAGMA table_info(player_profiles)
         """
-        result = db.execute(text(check_column_query)).fetchone()
+        result = db.execute(text(check_column_query)).fetchall()
         
-        if not result:
+        # Check if full_name column exists
+        has_full_name = any(row[1] == 'full_name' for row in result)
+        
+        if not has_full_name:
             logger.info("Adding full_name column to player_profiles table...")
             alter_query = text("ALTER TABLE player_profiles ADD COLUMN full_name VARCHAR(255)")
             db.execute(alter_query)
