@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider, useTheme } from './context/ThemeContext'
 import { AutoRefreshProvider } from './context/AutoRefreshContext'
 import { ToastProvider } from './components/Toast'
+import ErrorBoundary from './components/ErrorBoundary'
 import { ModernHomepage } from './components/ModernHomepage'
 import { RoleBasedDashboard } from './components/RoleBasedDashboard'
 import { TeamPlayers } from './components/TeamPlayers'
@@ -209,15 +210,17 @@ function AppContent() {
 function App() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <AutoRefreshProvider>
-          <ToastProvider>
-            <Router>
-              <AppContent />
-            </Router>
-          </ToastProvider>
-        </AutoRefreshProvider>
-      </AuthProvider>
+      <ToastProvider>
+        <ErrorBoundary>
+          <AuthProvider>
+            <AutoRefreshProvider>
+              <Router>
+                <AppContent />
+              </Router>
+            </AutoRefreshProvider>
+          </AuthProvider>
+        </ErrorBoundary>
+      </ToastProvider>
     </ThemeProvider>
   )
 }

@@ -17,6 +17,8 @@ from app.models.video import Video, VideoStatus
 from app.models.session import TrainingSession
 from app.schemas.video import VideoUploadRequest, VideoUploadResponse, VideoConfirmRequest
 from app.tasks import process_video
+from app.core.exceptions import NotFoundError, DatabaseError, ExternalServiceError
+from sqlalchemy.exc import SQLAlchemyError
 
 router = APIRouter()
 
@@ -39,10 +41,7 @@ async def get_upload_metadata(
         ).first()
         
         if not session:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Training session not found"
-            )
+            raise NotFoundError("Training session", request.session_id)
         
         # Generate unique object name
         file_extension = os.path.splitext(request.filename)[1]
@@ -75,12 +74,17 @@ async def get_upload_metadata(
             expires_in=3600  # 1 hour in seconds
         )
         
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise DatabaseError(f"Failed to create video record: {e}", operation="create_video")
+    except NotFoundError:
+        raise
     except Exception as e:
         db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error creating upload metadata: {str(e)}"
-        )
+        raise ExternalServiceError(
+            service="MinIO/Storage", 
+            message=f"Error generating presigned URL: {str(e)}",
+            details={})
 
 @router.post("/{video_id}/confirm-upload")
 async def confirm_upload(

@@ -9,9 +9,12 @@ from fastapi.security import HTTPBearer
 import os
 from contextlib import asynccontextmanager
 
+from app.middleware.request_tracking import RequestTrackingMiddleware
+
 from app.core.config import settings
 from app.core.database import engine, Base
 from app.core.database_init import startup_database_init
+from app.core.error_handlers import setup_error_handlers
 from app.api.v1.api import api_router
 from app.models import *  # Import all models to ensure they're registered
 
@@ -45,6 +48,9 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Add request tracking middleware
+app.add_middleware(RequestTrackingMiddleware)
+
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -53,6 +59,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Setup error handlers
+setup_error_handlers(app)
 
 # Include API routes
 app.include_router(api_router, prefix="/api/v1")

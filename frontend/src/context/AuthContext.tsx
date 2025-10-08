@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import { useErrorHandler } from '../hooks/useErrorHandler';
 
 // Utility function to safely parse JSON from localStorage
 const safeParseJSON = (value: string | null): any => {
@@ -52,6 +53,7 @@ const API_URL = (import.meta as any).env?.VITE_BACKEND_URL || 'http://localhost:
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const { handleApiError } = useErrorHandler();
 
   useEffect(() => {
     // Check if user is logged in
@@ -88,10 +90,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
       setUser(userData);
     } catch (error) {
-      console.error('Login error:', error);
       // Clear any potentially corrupted data
       clearAuthData();
-      throw new Error('Invalid email or password');
+      
+      // Use enhanced error handling
+      const errorDetails = handleApiError(error, 'Login', {
+        fallbackMessage: 'Login failed. Please check your credentials.',
+        onError: (error) => {
+          console.error('Login error details:', error);
+        }
+      });
+      
+      throw new Error(errorDetails.message);
     }
   };
 
@@ -111,10 +121,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
       setUser(userData);
     } catch (error) {
-      console.error('Signup error:', error);
       // Clear any potentially corrupted data
       clearAuthData();
-      throw new Error('Signup failed');
+      
+      // Use enhanced error handling
+      const errorDetails = handleApiError(error, 'Signup', {
+        fallbackMessage: 'Signup failed. Please try again.',
+        onError: (error) => {
+          console.error('Signup error details:', error);
+        }
+      });
+      
+      throw new Error(errorDetails.message);
     }
   };
 

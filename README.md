@@ -303,3 +303,58 @@ curl http://localhost:3000
 ## 📄 License
 
 This project is licensed under the MIT License.
+
+## 📝 API Flow Diagrams
+
+Here are some diagrams illustrating the key API interactions and data flows within the Basketball Performance System.
+
+### 🔐 User Authentication Flow
+
+```mermaid
+graph TD
+    subgraph "User Authentication Flow"
+        A[Frontend] -->|1. POST /api/v1/auth/signup or login| B(Backend API)
+        B -->|2. Validates credentials, generates JWT| C{Database (Users)}
+        C -->|3. Stores/Retrieves User| B
+        B -->|4. Returns JWT Token + User Info| A
+        A -->|5. Stores JWT locally, Sets Auth Header| A
+    end
+```
+
+### 🎬 Video Upload & Analysis Flow
+
+```mermaid
+graph TD
+    subgraph "Video Upload & Analysis Flow"
+        D[Frontend (VideoUpload)] -->|1. POST /api/v1/videos/upload-metadata| E(Backend API)
+        E -->|2. Generates MinIO Presigned URL| F{MinIO (Object Storage)}
+        F -->|3. Returns Presigned URL| E
+        E -->|4. Returns Presigned URL + Video ID| D
+        D -->|5. PUT Video File to Presigned URL| F
+        F -->|6. Video Stored| F
+        D -->|7. POST /api/v1/videos/{id}/confirm-upload| E
+        E -->|8. Triggers Background AI Analysis Task| G(Celery/Redis Queue)
+        G -->|9. AI Service Polls Queue| H[AI Service]
+        H -->|10. GET Video from MinIO| F
+        F -->|11. Returns Video Stream| H
+        H -->|12. Performs Pose Detection, Object Detection, Event Classification| H
+        H -->|13. POST Analysis Results to Backend| E
+        E -->|14. Stores Analysis Results| C{Database}
+        E -->|15. Notifies Frontend (via WebSocket/Polling)| D
+        D -->|16. Displays Analysis Results| D
+    end
+```
+
+### 📊 Player/Team Analytics Flow
+
+```mermaid
+graph TD
+    subgraph "Player/Team Analytics Flow"
+        I[Frontend (Dashboard)] -->|1. GET /api/v1/analytics/performance/{player_id}| J(Backend API)
+        J -->|2. Queries Player Performance Data| C{Database}
+        C -->|3. Returns Raw Data| J
+        J -->|4. Processes Metrics & Generates Recommendations| J
+        J -->|5. Returns Performance Metrics + Recommendations| I
+        I -->|6. Displays Analytics| I
+    end
+```
