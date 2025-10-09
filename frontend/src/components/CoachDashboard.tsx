@@ -23,7 +23,7 @@ interface Player {
 }
 
 export const CoachDashboard: React.FC = () => {
-  const { user } = useAuth();
+  const {  } = useAuth();
   const { darkMode } = useTheme();
   const { showToast } = useToast();
   const [teamStats, setTeamStats] = useState<TeamStats | null>(null);

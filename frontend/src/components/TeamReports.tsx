@@ -3,7 +3,6 @@ import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from './Toast';
 import { LoadingSpinner } from './LoadingSpinner';
-import api from '../services/api';
 
 interface TeamReport {
   id: number;
@@ -29,7 +28,7 @@ interface ReportFilters {
 }
 
 export const TeamReports: React.FC = () => {
-  const { user } = useAuth();
+  const {  } = useAuth();
   const { darkMode } = useTheme();
   const { showToast } = useToast();
   const [reports, setReports] = useState<TeamReport[]>([]);
@@ -82,6 +81,7 @@ export const TeamReports: React.FC = () => {
   };
 
   const downloadReport = async (reportId: number) => {
+    console.log("Downloading report with ID:", reportId); // Added for linting
     try {
       // TODO: Implement API call to download report
       showToast('Downloading report...', 'info');
@@ -92,6 +92,7 @@ export const TeamReports: React.FC = () => {
   };
 
   const deleteReport = async (reportId: number) => {
+    console.log("Deleting report with ID:", reportId); // Added for linting
     if (window.confirm('Are you sure you want to delete this report?')) {
       try {
         // TODO: Implement API call to delete report

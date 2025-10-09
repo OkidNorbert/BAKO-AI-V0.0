@@ -160,5 +160,6 @@ export const useAutoRefresh = (options: AutoRefreshOptions = {}) => {
     refresh,
     pause,
     resume,
+    setLastRefresh, // Export setLastRefresh
   };
 };

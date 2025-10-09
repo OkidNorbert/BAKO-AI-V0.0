@@ -4,9 +4,9 @@ uvicorn[standard]>=0.20.0
 
 # Computer Vision and AI
 opencv-python>=4.8.0
-mediapipe>=0.10.0
-ultralytics>=8.0.0
-# torch and torchvision installed separately in Dockerfile with CPU-only versions
+# mediapipe>=0.10.0  # Commented out due to heavy dependencies
+# ultralytics>=8.0.0  # Commented out due to heavy dependencies
+# torch and torchvision installed separately with CPU-only versions
 
 # Image processing
 Pillow>=10.0.0

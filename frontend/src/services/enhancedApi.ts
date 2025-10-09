@@ -1,5 +1,18 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 
+declare module 'axios' {
+  export interface AxiosRequestConfig {
+    metadata?: { 
+      requestId: string; 
+      startTime: number 
+    };
+  }
+}
+
+interface CustomError extends Error {
+  details?: any;
+}
+
 // Enhanced API configuration
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
 
@@ -63,53 +76,55 @@ apiClient.interceptors.response.use(
     });
 
     // Handle specific error types
-    if (error.response?.status === 401) {
-      // Token expired or invalid - redirect to login
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
-      return Promise.reject(error);
-    }
-
-    if (error.response?.status === 403) {
-      // Forbidden - user doesn't have permission
-      const silentError = new Error('Access denied');
-      silentError.name = 'AuthorizationError';
-      return Promise.reject(silentError);
-    }
-
-    if (error.response?.status === 404) {
-      // Not found - resource doesn't exist
-      const silentError = new Error('Resource not found');
-      silentError.name = 'NotFoundError';
-      return Promise.reject(silentError);
-    }
-
-    if (error.response?.status === 422) {
-      // Validation error - show specific validation messages
-      const validationError = new Error('Validation failed');
-      validationError.name = 'ValidationError';
-      validationError.details = error.response.data;
-      return Promise.reject(validationError);
-    }
-
-    if (error.response?.status === 429) {
-      // Rate limited
-      const rateLimitError = new Error('Too many requests. Please try again later.');
-      rateLimitError.name = 'RateLimitError';
-      return Promise.reject(rateLimitError);
-    }
-
-    if (error.response?.status >= 500) {
-      // Server error
-      const serverError = new Error('Server error. Please try again later.');
-      serverError.name = 'ServerError';
-      return Promise.reject(serverError);
+    if (error.response) {
+      if (error.response.status === 401) {
+        // Token expired or invalid - redirect to login
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+        return Promise.reject(error);
+      }
+  
+      if (error.response.status === 403) {
+        // Forbidden - user doesn't have permission
+        const silentError: CustomError = new Error('Access denied');
+        silentError.name = 'AuthorizationError';
+        return Promise.reject(silentError);
+      }
+  
+      if (error.response.status === 404) {
+        // Not found - resource doesn't exist
+        const silentError: CustomError = new Error('Resource not found');
+        silentError.name = 'NotFoundError';
+        return Promise.reject(silentError);
+      }
+  
+      if (error.response.status === 422) {
+        // Validation error - show specific validation messages
+        const validationError: CustomError = new Error('Validation failed');
+        validationError.name = 'ValidationError';
+        validationError.details = error.response.data;
+        return Promise.reject(validationError);
+      }
+  
+      if (error.response.status === 429) {
+        // Rate limited
+        const rateLimitError: CustomError = new Error('Too many requests. Please try again later.');
+        rateLimitError.name = 'RateLimitError';
+        return Promise.reject(rateLimitError);
+      }
+  
+      if (error.response.status >= 500) {
+        // Server error
+        const serverError: CustomError = new Error('Server error. Please try again later.');
+        serverError.name = 'ServerError';
+        return Promise.reject(serverError);
+      }
     }
 
     if (error.code === 'NETWORK_ERROR' || error.code === 'ECONNABORTED') {
       // Network error
-      const networkError = new Error('Network error. Please check your connection.');
+      const networkError: CustomError = new Error('Network error. Please check your connection.');
       networkError.name = 'NetworkError';
       return Promise.reject(networkError);
     }

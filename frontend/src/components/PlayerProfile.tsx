@@ -300,7 +300,7 @@ export const PlayerProfile: React.FC = () => {
                       <div className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'} mt-1`}>
                         {Object.entries(event.meta).slice(0, 2).map(([key, value]) => (
                           <span key={key} className="mr-2">
-                            {key}: {typeof value === 'number' ? value.toFixed(1) : value}
+                            {key}: {value !== null && value !== undefined ? (typeof value === 'number' ? value.toFixed(1) : String(value)) : 'N/A'}
                           </span>
                         ))}
                       </div>

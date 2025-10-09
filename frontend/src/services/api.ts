@@ -20,7 +20,6 @@ const getBackendUrl = () => {
 };
 
 const API_URL = getBackendUrl();
-const AI_SERVICE_URL = (import.meta as any).env?.VITE_AI_SERVICE_URL || 'http://localhost:8001';
 
 // Configure axios defaults
 axios.defaults.baseURL = API_URL;
@@ -40,7 +39,7 @@ const originalConsoleLog = console.log;
 const originalConsoleWarn = console.warn;
 
 // Override console methods to filter out service unavailable errors
-const filterServiceErrors = (...args) => {
+const filterServiceErrors = (...args: any[]) => {
   const errorMessage = args[0];
   if (typeof errorMessage === 'string') {
     // Check for various patterns of service unavailable errors
@@ -57,14 +56,14 @@ const filterServiceErrors = (...args) => {
 };
 
 console.error = filterServiceErrors;
-console.log = (...args) => {
+console.log = (...args: any[]) => {
   const message = args[0];
   if (typeof message === 'string' && message.includes('503')) {
     return; // Don't log 503 errors
   }
   originalConsoleLog.apply(console, args);
 };
-console.warn = (...args) => {
+console.warn = (...args: any[]) => {
   const message = args[0];
   if (typeof message === 'string' && message.includes('503')) {
     return; // Don't log 503 errors
@@ -136,6 +135,8 @@ export const api = {
       axios.get(`/api/v1/videos/${videoId}/status`),
     getDownloadUrl: (videoId: number) =>
       axios.get(`/api/v1/videos/${videoId}/download-url`),
+    getAnalysisResult: (videoId: number) =>
+      axios.get(`/api/v1/videos/${videoId}/analysis-result`),
   },
 
   // Analytics
@@ -163,6 +164,8 @@ export const api = {
       axios.post('/api/v1/wearables/ble/sync', { player_id: playerId, device_identifier: deviceIdentifier, heart_rate: heartRate, timestamp }),
     getMetrics: (playerId: number, startDate?: string, endDate?: string) =>
       axios.get(`/api/v1/wearables/metrics/${playerId}`, { params: { start_date: startDate, end_date: endDate } }),
+    getHeartRateData: (playerId: number) =>
+      axios.get(`/api/v1/wearables/heart-rate/${playerId}`),
   },
 
   // Events

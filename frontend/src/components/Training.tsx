@@ -35,25 +35,6 @@ export const Training: React.FC = () => {
   const [progress, setProgress] = useState<TrainingProgress | null>(null)
   const [loading, setLoading] = useState(true)
 
-  // Smart auto-refresh with better UX
-  const { isRefreshing, lastRefresh, refresh } = useAutoRefresh({
-    interval: 120000, // 2 minutes instead of 1 minute
-    enabled: !!user?.id,
-    onRefresh: fetchTrainingData,
-    onError: (error) => {
-      console.warn('Auto-refresh failed:', error)
-      // Don't show toast for auto-refresh failures to avoid being annoying
-    },
-    respectUserActivity: true, // Pause when user is active
-    respectVisibility: true, // Pause when tab is not visible
-  })
-
-  useEffect(() => {
-    if (user?.id) {
-      fetchTrainingData()
-    }
-  }, [user?.id])
-
   const fetchTrainingData = async () => {
     if (!user?.id) {
       console.error('No user ID available. User data:', user)
@@ -92,6 +73,25 @@ export const Training: React.FC = () => {
       setLoading(false)
     }
   }
+
+  // Smart auto-refresh with better UX
+  const { isRefreshing, lastRefresh, refresh, setLastRefresh } = useAutoRefresh({
+    interval: 120000, // 2 minutes instead of 1 minute
+    enabled: !!user?.id,
+    onRefresh: fetchTrainingData,
+    onError: (error) => {
+      console.warn('Auto-refresh failed:', error)
+      // Don't show toast for auto-refresh failures to avoid being annoying
+    },
+    respectUserActivity: true, // Pause when user is active
+    respectVisibility: true, // Pause when tab is not visible
+  })
+
+  useEffect(() => {
+    if (user?.id) {
+      fetchTrainingData()
+    }
+  }, [user?.id, fetchTrainingData])
 
   const getCategoryIcon = (category: string) => {
     switch (category.toLowerCase()) {
@@ -156,7 +156,7 @@ export const Training: React.FC = () => {
                 Personalized training programs based on your performance analysis
               </p>
               <p className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-500'} mt-1`}>
-                Last updated: {lastRefresh.toLocaleTimeString()}
+                Last updated: {lastRefresh?.toLocaleTimeString() || 'N/A'}
               </p>
               {user && (
                 <p className={`text-xs ${darkMode ? 'text-gray-600' : 'text-gray-500'} mt-1`}>

@@ -25,7 +25,7 @@ interface TeamMessage {
 }
 
 export const TeamCommunication: React.FC = () => {
-  const { user } = useAuth();
+  const {  } = useAuth();
   const { darkMode } = useTheme();
   const { showToast } = useToast();
   const [announcements, setAnnouncements] = useState<TeamAnnouncement[]>([]);

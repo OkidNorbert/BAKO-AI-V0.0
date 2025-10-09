@@ -3,7 +3,6 @@ import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from './Toast';
 import { LoadingSpinner } from './LoadingSpinner';
-import api from '../services/api';
 
 interface TeamNotification {
   id: number;
@@ -27,7 +26,7 @@ interface NotificationSettings {
 }
 
 export const TeamNotifications: React.FC = () => {
-  const { user } = useAuth();
+  const {  } = useAuth();
   const { darkMode } = useTheme();
   const { showToast } = useToast();
   const [notifications, setNotifications] = useState<TeamNotification[]>([]);

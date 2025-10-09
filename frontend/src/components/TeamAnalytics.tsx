@@ -31,7 +31,7 @@ interface TeamAnalytics {
 }
 
 export const TeamAnalytics: React.FC = () => {
-  const { user } = useAuth();
+  const {  } = useAuth();
   const { darkMode } = useTheme();
   const { showToast } = useToast();
   const [analytics, setAnalytics] = useState<TeamAnalytics | null>(null);

@@ -11,7 +11,7 @@ interface UploadProgress {
 }
 
 export const VideoUpload: React.FC = () => {
-  const { user } = useAuth();
+  const {  } = useAuth();
   const { darkMode } = useTheme();
   const { showToast } = useToast();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);

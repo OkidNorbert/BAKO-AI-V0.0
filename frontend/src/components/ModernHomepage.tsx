@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
-import api from '../services/api';
 import axios from 'axios';
 
 interface SystemStats {
@@ -12,9 +11,6 @@ interface SystemStats {
   system_uptime: number;
   ai_model_accuracy: number;
 }
-
-const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
-const AI_SERVICE_URL = import.meta.env.VITE_AI_SERVICE_URL || 'http://localhost:8001';
 
 export const ModernHomepage: React.FC = () => {
   const { darkMode } = useTheme();
@@ -39,8 +35,8 @@ export const ModernHomepage: React.FC = () => {
     try {
       // Fetch real-time system statistics from backend (using backend as proxy)
       const [publicStatsResponse, aiModelsResponse] = await Promise.all([
-        axios.get(`${API_URL}/api/v1/stats/public/stats`),
-        axios.get(`${API_URL}/api/v1/training/models/status`) // Use backend proxy instead of direct AI service
+        axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/v1/stats/public/stats`),
+        axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/v1/training/models/status`) // Use backend proxy instead of direct AI service
       ]);
 
       const publicStats = publicStatsResponse.data;

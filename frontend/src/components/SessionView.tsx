@@ -48,7 +48,7 @@ export const SessionView: React.FC = () => {
       setLoading(true)
       
       // Fetch session data from backend
-      const sessionResponse = await api.sessions.getSession(parseInt(id!))
+      const sessionResponse = await api.sessions.getSessionDetails(parseInt(id!))
       const session = sessionResponse.data
       
       setSessionData({

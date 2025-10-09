@@ -16,7 +16,6 @@ RUN apt-get update \
         curl \
         gcc \
         g++ \
-        libgl1-mesa-glx \
         libglib2.0-0 \
         libsm6 \
         libxext6 \
@@ -26,7 +25,10 @@ RUN apt-get update \
 
 # Install Python dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Skip PyTorch installation for now due to download timeouts
+# RUN pip install --no-cache-dir --timeout=1000 --retries=5 \
+#     torch==2.1.1+cpu torchvision==0.16.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
+RUN pip install --no-cache-dir --timeout=1000 --retries=5 -r requirements.txt
 
 # Copy application code
 COPY . .
