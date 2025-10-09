@@ -3,7 +3,7 @@ Application configuration settings.
 """
 
 import os
-from typing import List
+from typing import List, Optional
 from pydantic_settings import BaseSettings
 
 
@@ -45,10 +45,11 @@ class Settings(BaseSettings):
     ALLOWED_VIDEO_EXTENSIONS: List[str] = ["mp4", "mov", "avi", "mkv"]
     
     # MinIO
-    MINIO_ROOT_USER: str = "minioadmin"
-    MINIO_ROOT_PASSWORD: str = "minioadmin"
+    MINIO_ACCESS_KEY: str = "minioadmin"
+    MINIO_SECRET_KEY: str = "minioadmin"
     MINIO_ENDPOINT: str = "minio:9000"
     MINIO_BUCKET: str = "basketball-videos"
+    MINIO_EXTERNAL_ENDPOINT: Optional[str] = None
     
     # AI Service
     AI_SERVICE_URL: str = "http://ai-service:8001"

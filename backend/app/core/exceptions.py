@@ -33,10 +33,13 @@ class ValidationError(BasketballPerformanceException):
     """Validation error for input data."""
     
     def __init__(self, message: str, field: Optional[str] = None, details: Optional[Dict[str, Any]] = None):
+        base_details = details or {}
+        if field:
+            base_details = {**base_details, "field": field}
         super().__init__(
             message=message,
             error_code="VALIDATION_ERROR",
-            details={**details, "field": field} if field else details,
+            details=base_details,
             status_code=400
         )
 
@@ -72,7 +75,7 @@ class NotFoundError(BasketballPerformanceException):
         super().__init__(
             message=f"{resource} with id '{resource_id}' not found",
             error_code="NOT_FOUND_ERROR",
-            details={**details, "resource": resource, "resource_id": resource_id},
+            details={**(details or {}), "resource": resource, "resource_id": resource_id},
             status_code=404
         )
 
@@ -84,7 +87,7 @@ class DatabaseError(BasketballPerformanceException):
         super().__init__(
             message=message,
             error_code="DATABASE_ERROR",
-            details={**details, "operation": operation},
+            details={**(details or {}), "operation": operation},
             status_code=500
         )
 
@@ -96,7 +99,7 @@ class ExternalServiceError(BasketballPerformanceException):
         super().__init__(
             message=f"External service '{service}' error: {message}",
             error_code="EXTERNAL_SERVICE_ERROR",
-            details={**details, "service": service},
+            details={**(details or {}), "service": service},
             status_code=502
         )
 

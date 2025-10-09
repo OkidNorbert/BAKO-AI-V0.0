@@ -8,6 +8,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer
 import os
 from contextlib import asynccontextmanager
+import logging # Import logging module
+
+# Configure root logger for maximum verbosity
+logging.basicConfig(level=logging.DEBUG)
 
 from app.middleware.request_tracking import RequestTrackingMiddleware
 

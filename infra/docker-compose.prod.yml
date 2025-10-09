@@ -10,12 +10,15 @@ services:
     restart: unless-stopped
     environment:
       - ENVIRONMENT=production
+      - LOG_LEVEL=DEBUG # Set log level to DEBUG
       - DATABASE_URL=postgresql://basketball_user:${POSTGRES_PASSWORD}@basketball-postgres-prod:5432/basketball_prod
       - REDIS_URL=redis://basketball-redis-prod:6379/0
       - AI_SERVICE_URL=http://basketball-ai-service-prod:8001
       - MINIO_ENDPOINT=basketball-minio-prod:9000
       - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
       - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_BUCKET=${MINIO_BUCKET}
+      - MINIO_EXTERNAL_ENDPOINT=${MINIO_EXTERNAL_ENDPOINT} # Pass external MinIO endpoint
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - CORS_ORIGINS=${CORS_ORIGINS}
     ports:
@@ -123,25 +126,25 @@ services:
 
   # Production MinIO
   basketball-minio-prod:
-    image: minio/minio:latest
+    image: quay.io/minio/minio:latest
     container_name: basketball-minio-prod
     restart: unless-stopped
-    command: server /data --console-address ":9001"
+    command: minio server /data --console-address ":9001"
     environment:
-      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY}
-      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY}
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
     volumes:
-      - basketball-minio-data:/data
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    networks:
-      - basketball-prod
+      - minio-data-prod:/data
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s
-      timeout: 10s
+      timeout: 20s
       retries: 3
+    ports:
+      - "9000:9000"  # Expose MinIO API port
+      - "9001:9001"  # Expose MinIO Console port
+    networks:
+      - basketball-prod
 
   # Production Celery Worker
   basketball-celery-worker-prod:
@@ -247,7 +250,7 @@ networks:
 volumes:
   basketball-postgres-data:
   basketball-redis-data:
-  basketball-minio-data:
+  minio-data-prod:
   basketball-backend-logs:
   basketball-ai-models:
   basketball-ai-data:

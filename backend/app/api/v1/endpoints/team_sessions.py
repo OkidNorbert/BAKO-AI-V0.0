@@ -6,6 +6,7 @@ from app.models.user import User
 from pydantic import BaseModel
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 from app.core.database import get_db
 
 logger = logging.getLogger(__name__)
@@ -24,6 +25,12 @@ class TeamSessionResponse(BaseModel):
     events_count: int
     video_uploaded: bool
     notes: Optional[str]
+
+
+class CreateTeamSessionRequest(BaseModel):
+    team_id: Optional[int] = None
+    date: Optional[float] = None  # epoch seconds; defaults to now if not provided
+    notes: Optional[str] = ""
 
 @router.get("/sessions", response_model=List[TeamSessionResponse])
 async def get_team_sessions(
@@ -132,6 +139,51 @@ async def get_team_sessions(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to fetch team sessions: {str(e)}"
+        )
+
+
+@router.post("/create")
+async def create_team_session(
+    payload: CreateTeamSessionRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Create a training session row and return its id.
+    Only coaches can create sessions.
+    """
+    try:
+        if current_user.role != 'coach':
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only coaches can create sessions"
+            )
+
+        insert_sql = text("""
+            INSERT INTO training_sessions (team_id, date, notes)
+            VALUES (:team_id, to_timestamp(:date_epoch), :notes)
+            RETURNING id
+        """)
+
+        date_epoch = payload.date if payload.date else datetime.now().timestamp()
+        result = db.execute(insert_sql, {
+            "team_id": payload.team_id,
+            "date_epoch": date_epoch,
+            "notes": payload.notes or ""
+        }).fetchone()
+        db.commit()
+
+        # Row can be accessed by index across SQLAlchemy versions
+        new_id = result[0] if result is not None else None
+        return {"id": new_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error creating training session: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create training session: {str(e)}"
         )
 
 @router.get("/team/sessions/{session_id}", response_model=TeamSessionResponse)

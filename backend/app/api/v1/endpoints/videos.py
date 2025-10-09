@@ -19,6 +19,9 @@ from app.schemas.video import VideoUploadRequest, VideoUploadResponse, VideoConf
 from app.tasks import process_video
 from app.core.exceptions import NotFoundError, DatabaseError, ExternalServiceError
 from sqlalchemy.exc import SQLAlchemyError
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -81,10 +84,14 @@ async def get_upload_metadata(
         raise
     except Exception as e:
         db.rollback()
+        logger.error(f"Unexpected error in get_upload_metadata: Type={type(e)}, Value={e}, Details={e.args if hasattr(e, 'args') else 'N/A'}")
+        # Ensure 'e' is a string or has a sensible representation before passing it
+        error_message = str(e) if e is not None else "Unknown error"
         raise ExternalServiceError(
             service="MinIO/Storage", 
-            message=f"Error generating presigned URL: {str(e)}",
-            details={})
+            message=f"Error generating presigned URL: {error_message}",
+            details={}
+        )
 
 @router.post("/{video_id}/confirm-upload")
 async def confirm_upload(

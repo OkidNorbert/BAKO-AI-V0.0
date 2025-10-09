@@ -7,6 +7,7 @@ import logging
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 from app.core.database import get_db
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -158,14 +159,13 @@ TABLE_CREATION_SQL = {
 SAMPLE_DATA_SQL = []
 
 def check_table_exists(db: Session, table_name: str) -> bool:
-    """Check if a table exists in the database."""
+    """Check if a table exists in the database (PostgreSQL-compatible)."""
     try:
-        # SQLite-compatible table check
+        # PostgreSQL-compatible table check
         result = db.execute(text(f"""
-            SELECT name FROM sqlite_master 
-            WHERE type='table' AND name='{table_name}';
+            SELECT to_regclass('{table_name}');
         """))
-        return result.fetchone() is not None
+        return result.scalar() is not None
     except Exception as e:
         logger.warning(f"Could not check if table {table_name} exists: {e}")
         return False
@@ -188,16 +188,17 @@ def create_table_if_not_exists(db: Session, table_name: str, sql: str) -> bool:
         return False
 
 def add_full_name_column_if_missing(db: Session):
-    """Add full_name column to player_profiles if it doesn't exist."""
+    """Add full_name column to player_profiles if it doesn't exist (PostgreSQL-compatible)."""
     try:
-        # SQLite-compatible column check
-        check_column_query = """
-        PRAGMA table_info(player_profiles)
-        """
-        result = db.execute(text(check_column_query)).fetchall()
+        # PostgreSQL-compatible column check using information_schema
+        check_column_query = text("""
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_name = 'player_profiles' AND column_name = 'full_name';
+        """)
+        result = db.execute(check_column_query).fetchone()
         
-        # Check if full_name column exists
-        has_full_name = any(row[1] == 'full_name' for row in result)
+        has_full_name = result is not None
         
         if not has_full_name:
             logger.info("Adding full_name column to player_profiles table...")
@@ -228,8 +229,26 @@ def initialize_database():
         # Add full_name column if missing
         add_full_name_column_if_missing(db)
         
-        # No sample data to insert - system starts clean
-        logger.info("Database initialized with empty tables - no sample data inserted")
+        # Seed a default training session if none exist
+        try:
+            count = db.execute(text("SELECT COUNT(*) FROM training_sessions")).scalar() or 0
+            if count == 0:
+                logger.info("No training_sessions found. Seeding a default session...")
+                db.execute(text("""
+                    INSERT INTO training_sessions (team_id, date, notes)
+                    VALUES (:team_id, :date, :notes)
+                """), {
+                    "team_id": None,
+                    "date": datetime.now(),
+                    "notes": "Seeded default session"
+                })
+                db.commit()
+                logger.info("Seeded a default training session.")
+        except Exception as e:
+            logger.warning(f"Could not seed default training session: {e}")
+            db.rollback()
+        
+        logger.info("Database initialized with empty tables (plus optional seed)")
         
         logger.info(f"Database initialization completed. Created {tables_created} new tables.")
         
