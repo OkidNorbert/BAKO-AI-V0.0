@@ -22,7 +22,7 @@ class StorageManager:
         logger.debug(f"MinIO __init__: Endpoint Type={type(settings.MINIO_ENDPOINT)}, AccessKey Type={type(settings.MINIO_ACCESS_KEY)}, SecretKey Type={type(settings.MINIO_SECRET_KEY)}")
         
         self.client = Minio(
-            settings.MINIO_ENDPOINT,
+            endpoint=settings.MINIO_ENDPOINT,
             access_key=settings.MINIO_ACCESS_KEY,
             secret_key=settings.MINIO_SECRET_KEY,
             secure=False  # Set to True for HTTPS
