@@ -6,6 +6,9 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
+# Copy all source code
+COPY . .
+
 # Install dependencies
 RUN npm install
 
@@ -16,9 +19,6 @@ RUN npm install -g serve
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nextjs -u 1001
 
-# Copy source code
-COPY . .
-
 # Change ownership of the app directory
 RUN chown -R nextjs:nodejs /app
 
@@ -27,6 +27,10 @@ USER nextjs
 
 # Build the application
 RUN npm run build
+
+# Debug: List contents of /app and /app/dist
+RUN ls -l /app
+RUN ls -l /app/dist
 
 # Expose port
 EXPOSE 3000

@@ -15,60 +15,109 @@ This system democratizes elite-level sports analytics by making advanced perform
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ (for frontend development)
-- Python 3.11+ (for backend development)
-- SQLite (included with Python)
+- Docker and Docker Compose
+- Git
 
-### Development Setup
+### Automated Setup (Recommended)
 
-1. **Clone and setup:**
+Use our automated setup script for the fastest setup:
+
 ```bash
+# Clone the repository
 git clone <your-repo-url>
 cd "Final Year Project"
+
+# Run the automated setup script
+chmod +x setup.sh
+./setup.sh
 ```
 
-2. **Start Backend:**
+The setup script will:
+- ✅ Check and install Docker if needed
+- ✅ Create environment configuration files
+- ✅ Start all services automatically
+- ✅ Run health checks
+- ✅ Display access URLs and credentials
+
+### Manual Docker Setup
+
+1. **Install Docker (if not already installed):**
 ```bash
-cd backend
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+# On Ubuntu/Debian
+sudo apt update
+sudo apt install docker.io docker-compose
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo usermod -aG docker $USER
+# Log out and back in for group changes to take effect
+
+# On Kali Linux
+sudo apt update
+sudo apt install docker.io docker-compose
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo usermod -aG docker $USER
 ```
 
-3. **Start Frontend:**
+2. **Start the application:**
 ```bash
-cd frontend
-npm install
-npm run dev
+# For development environment
+sudo docker-compose -f infra/docker-compose.yml up --build -d
+
+# For production environment (recommended)
+sudo docker-compose --env-file .env -f infra/docker-compose.prod.yml up -d
 ```
 
-4. **Access the application:**
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:8000
-- Backend Health: http://localhost:8000/health
+3. **Access the application:**
+- **Frontend:** http://localhost:3000
+- **Backend API:** http://localhost:8000
+- **AI Service:** http://localhost:8001
+- **MinIO Console:** http://localhost:9001
+- **Grafana (Production):** http://localhost:3001
+- **Prometheus (Production):** http://localhost:9090
 
-### Development Commands
+### Docker Commands
 
 ```bash
-# Start Backend (in backend directory)
-source venv/bin/activate
-python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+# Start all services (development)
+sudo docker-compose -f infra/docker-compose.yml up --build -d
 
-# Start Frontend (in frontend directory)
-npm run dev
+# Start all services (production)
+sudo docker-compose --env-file .env -f infra/docker-compose.prod.yml up -d
 
-# Install Backend Dependencies
-cd backend && pip install -r requirements.txt
+# Stop all services
+sudo docker-compose -f infra/docker-compose.yml down
+sudo docker-compose -f infra/docker-compose.prod.yml down
 
-# Install Frontend Dependencies
-cd frontend && npm install
+# View service logs
+sudo docker-compose -f infra/docker-compose.yml logs [service-name]
+sudo docker-compose -f infra/docker-compose.prod.yml logs [service-name]
 
+# Check service status
+sudo docker-compose -f infra/docker-compose.yml ps
+sudo docker-compose -f infra/docker-compose.prod.yml ps
+
+# Rebuild specific service
+sudo docker-compose -f infra/docker-compose.yml up --build -d [service-name]
+
+# Access service shell
+sudo docker-compose -f infra/docker-compose.yml exec [service-name] /bin/bash
+```
+
+### Health Checks
+
+```bash
 # Test Backend Health
 curl http://localhost:8000/health
 
 # Test Frontend
 curl http://localhost:3000
+
+# Test AI Service
+curl http://localhost:8001/health
+
+# Test MinIO
+curl http://localhost:9001
 ```
 
 ## 📁 Project Structure
@@ -82,7 +131,7 @@ Final Year Project/
 │   │   ├── models/            # SQLAlchemy models
 │   │   └── main.py            # FastAPI application
 │   ├── requirements.txt
-│   └── venv/                  # Python virtual environment
+│   └── Dockerfile            # Backend Docker configuration
 ├── frontend/                # React frontend application
 │   ├── src/
 │   │   ├── components/        # React components
@@ -90,18 +139,32 @@ Final Year Project/
 │   │   ├── contexts/          # React contexts
 │   │   └── App.tsx            # Main application
 │   ├── package.json
-│   └── node_modules/          # Node.js dependencies
+│   └── Dockerfile            # Frontend Docker configuration
+├── ai_service/              # AI/ML service for video analysis
+│   ├── service/
+│   ├── requirements.txt
+│   └── Dockerfile            # AI service Docker configuration
 ├── infra/                   # Infrastructure and deployment
-│   └── docker-compose.yml
+│   ├── docker-compose.yml    # Development environment
+│   ├── docker-compose.prod.yml # Production environment
+│   └── nginx.conf           # Nginx configuration
+├── setup.sh                 # Automated setup script
+├── .env                     # Environment variables
 └── README.md
 ```
 
 ## 🛠 Technology Stack
 
-- **Backend:** FastAPI + SQLite + SQLAlchemy
+- **Backend:** FastAPI + PostgreSQL + SQLAlchemy
 - **Frontend:** React + Vite + TailwindCSS + TypeScript
+- **AI Service:** Python + MediaPipe + OpenCV
+- **Database:** PostgreSQL (production) / SQLite (development)
 - **Authentication:** JWT tokens with role-based access
-- **Database:** SQLite with automatic table creation
+- **Storage:** MinIO for file storage
+- **Queue:** Redis + Celery for background tasks
+- **Containerization:** Docker + Docker Compose
+- **Reverse Proxy:** Nginx (production)
+- **Monitoring:** Grafana + Prometheus (production)
 - **API:** RESTful API with comprehensive endpoints
 - **UI/UX:** Responsive design with dark/light mode support
 
@@ -118,32 +181,39 @@ Final Year Project/
 - **API Integration:** Comprehensive REST API with error handling
 
 ### 🔧 **Recently Fixed Issues**
-- **Database Connection:** Switched from PostgreSQL to SQLite for easier setup
-- **Dependencies:** Installed all required Python packages
-- **SQL Compatibility:** Fixed SQLite-specific query issues
-- **Storage Manager:** Implemented lazy initialization to prevent startup errors
-- **Login Issues:** Resolved authentication and session management
-- **CORS Issues:** Fixed cross-origin requests between frontend and backend
+- **Docker Setup:** Implemented complete Docker containerization for all services
+- **Frontend 404 Issues:** Fixed frontend serving with proper Nginx configuration
+- **Dependency Conflicts:** Resolved Python 3.13 compatibility issues with Docker
+- **Port Conflicts:** Implemented production-ready service orchestration
+- **Database Connection:** Switched to PostgreSQL for production with SQLite fallback
+- **Storage Integration:** Added MinIO for file storage and video uploads
+- **AI Service:** Integrated MediaPipe and OpenCV for video analysis
+- **Monitoring:** Added Grafana and Prometheus for production monitoring
 
 ### 🚀 **Currently Working**
-- **Frontend:** http://localhost:3000 (Vite development server)
-- **Backend:** http://localhost:8000 (FastAPI server)
-- **Database:** SQLite with all tables created automatically
-- **Authentication:** Login/register system fully functional
+- **Frontend:** http://localhost:3000 (Nginx-served production build)
+- **Backend:** http://localhost:8000 (FastAPI server with PostgreSQL)
+- **AI Service:** http://localhost:8001 (Video analysis with MediaPipe)
+- **MinIO Console:** http://localhost:9001 (File storage management)
+- **Database:** PostgreSQL with automatic table creation and migrations
+- **Authentication:** JWT-based login/register system fully functional
 - **Role-based Access:** Player and coach dashboards working
+- **Monitoring:** Grafana (http://localhost:3001) and Prometheus (http://localhost:9090)
 
 ### ⚠️ **Known Issues & Limitations**
-- **SQLite Compatibility:** Some complex SQL queries may need optimization for SQLite
 - **Mock Data Removed:** All mock data has been removed - features show empty states when no real data exists
-- **AI Service:** Video analysis features are not yet connected to AI services
 - **Wearable Integration:** Wearable device integration is not yet implemented
-- **File Uploads:** Video upload functionality needs MinIO or alternative storage setup
+- **AI Model Training:** Pre-trained models need to be downloaded on first AI service startup
+- **Production Secrets:** Default credentials should be changed for production deployment
+- **Resource Requirements:** Docker setup requires sufficient system resources (4GB+ RAM recommended)
 
 ### 🔄 **In Progress**
-- Optimizing SQLite queries for better performance
+- Optimizing PostgreSQL queries for better performance
 - Implementing proper error handling for empty data states
 - Adding more comprehensive team management features
 - Improving responsive design for mobile devices
+- Enhancing AI video analysis accuracy
+- Implementing real-time WebSocket connections
 
 ## ✨ Key Features
 
@@ -250,9 +320,36 @@ curl http://localhost:3000
 
 ## 🚀 Getting Started
 
-### First Time Setup
-1. **Clone the repository**
-2. **Start the backend:**
+### First Time Setup (Docker - Recommended)
+
+1. **Clone the repository:**
+   ```bash
+   git clone <your-repo-url>
+   cd "Final Year Project"
+   ```
+
+2. **Run the automated setup:**
+   ```bash
+   chmod +x setup.sh
+   ./setup.sh
+   ```
+
+3. **Or manually start the services:**
+   ```bash
+   # For production (recommended)
+   sudo docker-compose --env-file .env -f infra/docker-compose.prod.yml up -d
+   
+   # For development
+   sudo docker-compose -f infra/docker-compose.yml up --build -d
+   ```
+
+4. **Open your browser** and go to `http://localhost:3000`
+
+### First Time Setup (Local Development - Alternative)
+
+If you prefer to run services locally without Docker:
+
+1. **Start the backend:**
    ```bash
    cd backend
    python -m venv venv
@@ -260,13 +357,15 @@ curl http://localhost:3000
    pip install -r requirements.txt
    python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
    ```
-3. **Start the frontend:**
+
+2. **Start the frontend:**
    ```bash
    cd frontend
    npm install
    npm run dev
    ```
-4. **Open your browser** and go to `http://localhost:3000`
+
+3. **Open your browser** and go to `http://localhost:3000`
 
 ### Creating Your First Account
 1. Click "Sign Up" on the login page
@@ -289,16 +388,40 @@ curl http://localhost:3000
 
 ## 🐛 Troubleshooting
 
+### Docker Issues
+- **Port conflicts:** If you get "port already allocated" errors, stop existing services:
+  ```bash
+  sudo docker-compose -f infra/docker-compose.yml down
+  sudo docker-compose -f infra/docker-compose.prod.yml down
+  ```
+- **Permission denied:** Add your user to the docker group:
+  ```bash
+  sudo usermod -aG docker $USER
+  # Log out and back in
+  ```
+- **Docker not running:** Start Docker service:
+  ```bash
+  sudo systemctl start docker
+  sudo systemctl enable docker
+  ```
+- **Service won't start:** Check logs for specific errors:
+  ```bash
+  sudo docker-compose -f infra/docker-compose.yml logs [service-name]
+  ```
+
 ### Common Issues
-- **Backend won't start:** Make sure all dependencies are installed with `pip install -r requirements.txt`
-- **Frontend won't start:** Run `npm install` in the frontend directory
-- **Database errors:** The SQLite database is created automatically on first run
+- **Backend won't start:** Check if all Docker services are running with `sudo docker-compose ps`
+- **Frontend 404 errors:** Ensure the frontend service is healthy and the `dist` directory is built
+- **Database connection errors:** Verify PostgreSQL container is running and healthy
 - **CORS errors:** The backend is configured to allow requests from the frontend
 
 ### Getting Help
-- Check the terminal output for error messages
-- Ensure both backend (port 8000) and frontend (port 3000) are running
-- Test the backend health endpoint: `curl http://localhost:8000/health`
+- Check Docker service status: `sudo docker-compose ps`
+- View service logs: `sudo docker-compose logs [service-name]`
+- Test service health endpoints:
+  - Backend: `curl http://localhost:8000/health`
+  - Frontend: `curl http://localhost:3000`
+  - AI Service: `curl http://localhost:8001/health`
 
 ## 📄 License
 
