@@ -191,12 +191,12 @@ start_services() {
     
     # Stop any existing services to avoid port conflicts
     print_status "Stopping any existing services..."
-    sudo docker-compose -f infra/docker-compose.yml down 2>/dev/null || true
-    sudo docker-compose -f infra/docker-compose.prod.yml down 2>/dev/null || true
+    sudo docker compose -f infra/docker-compose.yml down 2>/dev/null || true
+    sudo docker compose -f infra/docker-compose.prod.yml down 2>/dev/null || true
     
     # Start production services (recommended)
     print_status "Starting production services..."
-    sudo docker-compose --env-file .env -f infra/docker-compose.prod.yml up --build -d
+    sudo docker compose --env-file .env -f infra/docker-compose.prod.yml up --build -d
     
     # Wait for services to start
     print_status "Waiting for services to start..."
@@ -204,7 +204,7 @@ start_services() {
     
     # Check service status
     print_status "Checking service status..."
-    sudo docker-compose -f infra/docker-compose.prod.yml ps
+    sudo docker compose -f infra/docker-compose.prod.yml ps
     
     print_success "Services started successfully!"
 }
@@ -228,10 +228,10 @@ show_access_info() {
     echo "    Password: minioadmin123"
     echo ""
     echo -e "${GREEN}Useful Commands:${NC}"
-    echo "  View logs:          sudo docker-compose -f infra/docker-compose.prod.yml logs [service]"
-    echo "  Stop services:      sudo docker-compose -f infra/docker-compose.prod.yml down"
-    echo "  Restart services:   sudo docker-compose -f infra/docker-compose.prod.yml restart"
-    echo "  Check status:       sudo docker-compose -f infra/docker-compose.prod.yml ps"
+    echo "  View logs:          sudo docker compose -f infra/docker-compose.prod.yml logs [service]"
+    echo "  Stop services:      sudo docker compose -f infra/docker-compose.prod.yml down"
+    echo "  Restart services:   sudo docker compose -f infra/docker-compose.prod.yml restart"
+    echo "  Check status:       sudo docker compose -f infra/docker-compose.prod.yml ps"
     echo ""
 }
 

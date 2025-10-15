@@ -15,8 +15,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl gcc g++ li
 
 # Install Python dependencies
 COPY requirements.txt .
-RUN sed -i '/^minio==/d' requirements.txt && pip install --no-cache-dir -r requirements.txt
-RUN pip install git+https://github.com/minio/minio-py.git#egg=minio
+RUN sed -i '/^minio==/d' requirements.txt && pip install --no-cache-dir --timeout=1000 --retries=5 -r requirements.txt
+RUN pip install --timeout=1000 --retries=5 git+https://github.com/minio/minio-py.git#egg=minio
 
 # Copy application code
 COPY . .
