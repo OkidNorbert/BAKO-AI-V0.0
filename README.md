@@ -1,22 +1,24 @@
-# Basketball Performance Analysis System
+# 🏀 AI Basketball Performance Analysis System
 
-A comprehensive AI-powered basketball performance tracking and analysis platform that combines real-time video analysis, wearable data integration, and personalized training recommendations.
+A full-stack, AI-powered basketball analytics platform integrating real-time **pose detection**, **YOLOv3 object detection**, video analysis, and AI-based training recommendations with automated skill improvement suggestions via YouTube scraping.
 
 ## 🏀 Project Overview
 
 This system democratizes elite-level sports analytics by making advanced performance tracking accessible to youth academies, schools, and individual players. It combines:
 
-- **Real-time Video Analysis** - Computer vision for pose detection and movement tracking
-- **Wearable Integration** - Apple Watch/HealthKit data for physiological metrics  
-- **AI-Powered Analytics** - Performance tracking and weakness detection
-- **Recommendation Engine** - Personalized training programs
-- **Interactive Dashboards** - For coaches and players
+- **Real-time Video Analysis** – Pose detection (MediaPipe) + Object detection (YOLOv3)
+- **Wearable Integration** – Apple Watch/HealthKit data (future extension)
+- **AI-Powered Analytics** – Detect weaknesses & generate personalized feedback
+- **Recommendation Engine** – Fetches YouTube training videos to improve skills
+- **Interactive Dashboards** – Web UI for coaches and players built with React
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 - Docker and Docker Compose
 - Git
+- **For AI Service (Optional):** NVIDIA GPU with CUDA support for enhanced performance
+- **System Requirements:** 4GB+ RAM, 2GB+ free disk space
 
 ### Automated Setup (Recommended)
 
@@ -120,6 +122,18 @@ curl http://localhost:8001/health
 curl http://localhost:9001
 ```
 
+## 🧠 System Architecture
+
+```
+Frontend (React + Vite + TailwindCSS)
+   ↕
+Backend (FastAPI + PostgreSQL + MinIO)
+   ↕
+AI Service (TensorFlow + MediaPipe + YOLOv3 + OpenCV)
+   ↕
+Recommendation Engine (YouTube Scraper/API)
+```
+
 ## 📁 Project Structure
 
 ```
@@ -142,8 +156,20 @@ Final Year Project/
 │   └── Dockerfile            # Frontend Docker configuration
 ├── ai_service/              # AI/ML service for video analysis
 │   ├── service/
+│   │   ├── model_loader.py    # Load pose and YOLOv3 models
+│   │   ├── inference.py      # Video analysis inference
+│   │   ├── yolo_detection.py # YOLOv3 object detection
+│   │   └── scraper.py        # YouTube recommendation scraper
+│   ├── model/                # AI model files
+│   │   ├── finetuned_pose_model.h5
+│   │   └── yolov3.weights
 │   ├── requirements.txt
 │   └── Dockerfile            # AI service Docker configuration
+├── Basketball-Action-Recognition/  # Model training and datasets
+│   ├── dataset/              # Training datasets
+│   ├── model_checkpoints/    # Trained model checkpoints
+│   ├── train.py              # Model training scripts
+│   └── inference.py          # Model inference scripts
 ├── infra/                   # Infrastructure and deployment
 │   ├── docker-compose.yml    # Development environment
 │   ├── docker-compose.prod.yml # Production environment
@@ -155,18 +181,21 @@ Final Year Project/
 
 ## 🛠 Technology Stack
 
-- **Backend:** FastAPI + PostgreSQL + SQLAlchemy
-- **Frontend:** React + Vite + TailwindCSS + TypeScript
-- **AI Service:** Python + MediaPipe + OpenCV
-- **Database:** PostgreSQL (production) / SQLite (development)
-- **Authentication:** JWT tokens with role-based access
-- **Storage:** MinIO for file storage
-- **Queue:** Redis + Celery for background tasks
-- **Containerization:** Docker + Docker Compose
-- **Reverse Proxy:** Nginx (production)
-- **Monitoring:** Grafana + Prometheus (production)
-- **API:** RESTful API with comprehensive endpoints
-- **UI/UX:** Responsive design with dark/light mode support
+| Layer | Technology |
+|-------|-------------|
+| **Frontend** | React, Vite, TailwindCSS, TypeScript |
+| **Backend** | FastAPI, PostgreSQL, SQLAlchemy |
+| **AI Service** | Python, TensorFlow, MediaPipe, YOLOv3, OpenCV |
+| **Storage** | MinIO for video and pose data |
+| **Queue** | Redis + Celery for background tasks |
+| **Monitoring** | Grafana + Prometheus |
+| **Deployment** | Docker + Docker Compose |
+| **Recommendation Engine** | BeautifulSoup / YouTube Data API |
+| **Authentication** | JWT tokens with role-based access |
+| **Database** | PostgreSQL (production) / SQLite (development) |
+| **Reverse Proxy** | Nginx (production) |
+| **API** | RESTful API with comprehensive endpoints |
+| **UI/UX** | Responsive design with dark/light mode support |
 
 ## 📋 Current Status
 
@@ -179,6 +208,9 @@ Final Year Project/
 - **Team Management:** Coach can add, edit, and manage team players
 - **Real-time Updates:** Auto-refresh functionality for live data
 - **API Integration:** Comprehensive REST API with error handling
+- **AI Service:** MediaPipe pose detection and YOLOv3 object detection
+- **Video Analysis:** Frame-by-frame analysis with pose and object tracking
+- **Recommendation Engine:** YouTube scraping for personalized training videos
 
 ### 🔧 **Recently Fixed Issues**
 - **Docker Setup:** Implemented complete Docker containerization for all services
@@ -206,14 +238,18 @@ Final Year Project/
 - **AI Model Training:** Pre-trained models need to be downloaded on first AI service startup
 - **Production Secrets:** Default credentials should be changed for production deployment
 - **Resource Requirements:** Docker setup requires sufficient system resources (4GB+ RAM recommended)
+- **GPU Support:** GPU acceleration is optional but recommended for real-time video analysis
+- **Model Download:** YOLOv3 weights and pose detection models are downloaded on first startup
 
 ### 🔄 **In Progress**
 - Optimizing PostgreSQL queries for better performance
 - Implementing proper error handling for empty data states
 - Adding more comprehensive team management features
 - Improving responsive design for mobile devices
-- Enhancing AI video analysis accuracy
+- Enhancing AI video analysis accuracy with YOLOv3 integration
 - Implementing real-time WebSocket connections
+- Fine-tuning pose detection models for basketball-specific actions
+- Improving object detection accuracy for basketball, hoop, and court elements
 
 ## ✨ Key Features
 
@@ -242,7 +278,11 @@ Final Year Project/
 - Event scheduling and calendar
 
 ### **📊 Analytics & Reporting**
-- Real-time performance metrics
+- Real-time player metrics (jump height, release speed, etc.)
+- Ball trajectory, shot accuracy, and hoop contact detection
+- Court zone detection via YOLOv3
+- Skill improvement tracking
+- Automated training feedback
 - Team statistics and comparisons
 - Player progress tracking
 - Training effectiveness analysis
@@ -270,6 +310,15 @@ Final Year Project/
 - CORS support for cross-origin requests
 - TypeScript for type safety
 - TailwindCSS for styling
+
+### **🧠 AI & Computer Vision Features**
+- **Pose Detection:** MediaPipe for real-time human pose estimation
+- **Object Detection:** YOLOv3 for basketball, hoop, and court detection
+- **Action Classification:** Custom trained models for basketball actions
+- **Video Analysis:** Frame-by-frame analysis with pose and object tracking
+- **Performance Metrics:** Jump height, release speed, shot accuracy
+- **Recommendation Engine:** YouTube scraping for personalized training videos
+- **Real-time Processing:** Live video analysis with immediate feedback
 
 ## 🔧 Configuration
 
@@ -316,6 +365,105 @@ curl -X POST http://localhost:8000/api/v1/auth/login \
 
 # Test frontend
 curl http://localhost:3000
+
+# Test AI Service
+curl -X POST http://localhost:8001/analyze -F "video=@test.mp4"
+```
+
+### 🏀 Object Detection Testing (YOLOv3)
+```bash
+python detect.py --weights yolov3.weights --source videos/test.mp4 --output results/
+```
+
+Example output:
+```
+Detected: person(0.98), sports ball(0.91), hoop(0.87)
+```
+
+## 🧠 Model Training & AI Development
+
+### Dataset Preparation
+1. **Collect videos** (shooting, dribbling, defending, passing)
+2. **Extract frames** using OpenCV
+3. **Organize dataset structure:**
+   ```
+   dataset/
+   ├── shoot/
+   ├── dribble/
+   ├── defend/
+   ├── pass/
+   ```
+
+### Pose Extraction
+```python
+import mediapipe as mp
+# Extract 33 joints per frame
+```
+
+### Object Detection (YOLOv3)
+- Detect players, basketballs, hoops, and court lines
+- Train YOLOv3 or fine-tune pre-trained weights
+- **Detected Classes:**
+  - `person` → Player
+  - `sports ball` → Basketball
+  - `hoop` → Rim/Backboard
+  - `court line` → Key/Court boundary
+
+### Model Integration
+- Save models: `finetuned_pose_model.h5` and `yolov3.weights`
+- Place both models inside `ai_service/model/`
+- Test via FastAPI endpoint `/analyze`
+
+## 🚀 Enhanced Development Workflow
+
+### Phase 1: Environment & System Setup
+```bash
+# Clone and setup
+git clone <your-repo-url>
+cd basketball-performance-analysis
+docker-compose -f infra/docker-compose.yml up --build -d
+
+# Verify endpoints
+curl http://localhost:8000/health  # Backend
+curl http://localhost:3000         # Frontend
+curl http://localhost:8001/health  # AI Service
+```
+
+### Phase 2: AI Model Training
+```bash
+# Prepare dataset
+python scripts/prepare_dataset.py --input videos/ --output dataset/
+
+# Train pose detection model
+python scripts/train_pose_model.py --dataset dataset/ --epochs 20
+
+# Train YOLOv3 object detection
+python scripts/train_yolo.py --weights yolov3.weights --data basketball.yaml
+```
+
+### Phase 3: AI Service Integration
+```bash
+# Test pose detection
+curl -X POST http://localhost:8001/analyze -F "video=@test.mp4"
+
+# Test object detection
+python detect.py --weights yolov3.weights --source videos/test.mp4 --output results/
+
+# Test recommendation engine
+curl -X POST http://localhost:8001/recommend -H "Content-Type: application/json" -d '{"skill": "shooting"}'
+```
+
+### Phase 4: Full System Testing
+```bash
+# Test complete video analysis pipeline
+curl -X POST http://localhost:8000/api/v1/videos/upload-metadata \
+  -H "Authorization: Bearer $JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"filename": "test.mp4", "content_type": "video/mp4"}'
+
+# Test YouTube recommendations
+curl -X GET http://localhost:8000/api/v1/recommendations/shooting \
+  -H "Authorization: Bearer $JWT_TOKEN"
 ```
 
 ## 🚀 Getting Started
@@ -460,7 +608,7 @@ graph TD
         G -->|9. AI Service Polls Queue| H[AI Service]
         H -->|10. GET Video from MinIO| F
         F -->|11. Returns Video Stream| H
-        H -->|12. Performs Pose Detection, Object Detection, Event Classification| H
+        H -->|12. Performs Pose Detection (MediaPipe), Object Detection (YOLOv3), Event Classification| H
         H -->|13. POST Analysis Results to Backend| E
         E -->|14. Stores Analysis Results| C{Database}
         E -->|15. Notifies Frontend (via WebSocket/Polling)| D
@@ -479,5 +627,22 @@ graph TD
         J -->|4. Processes Metrics & Generates Recommendations| J
         J -->|5. Returns Performance Metrics + Recommendations| I
         I -->|6. Displays Analytics| I
+    end
+```
+
+### 🌐 YouTube Recommendation Flow
+
+```mermaid
+graph TD
+    subgraph "YouTube Recommendation Flow"
+        K[Frontend (Player Dashboard)] -->|1. GET /api/v1/recommendations/{skill}| L(Backend API)
+        L -->|2. Queries AI Analysis Results| C{Database}
+        C -->|3. Returns Player Weaknesses| L
+        L -->|4. POST /recommend to AI Service| M[AI Service]
+        M -->|5. Scrapes YouTube for Training Videos| N[YouTube API/Scraper]
+        N -->|6. Returns Video Links + Metadata| M
+        M -->|7. Returns Personalized Recommendations| L
+        L -->|8. Returns YouTube Links + Descriptions| K
+        K -->|9. Displays Training Videos| K
     end
 ```

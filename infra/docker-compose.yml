@@ -124,20 +124,32 @@ services:
     container_name: basketball-ai-service
     environment:
       - BACKEND_URL=http://backend:8000
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-minioadmin}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-minioadmin}
       - DEBUG=${DEBUG:-True}
     ports:
       - "8001:8001"
     depends_on:
       - backend
+      - minio
     volumes:
       - ../ai_service:/app
       - ai_models:/app/models
+      - ../Basketball-Action-Recognition:/app/datasets
     command: uvicorn service.main:app --host 0.0.0.0 --port 8001 --reload
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
       interval: 30s
       timeout: 10s
       retries: 3
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
   # Frontend
   frontend:

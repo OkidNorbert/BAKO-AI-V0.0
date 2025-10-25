@@ -20,7 +20,7 @@ services:
       - MINIO_BUCKET=${MINIO_BUCKET}
       - MINIO_EXTERNAL_ENDPOINT=${MINIO_EXTERNAL_ENDPOINT} # Pass external MinIO endpoint
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-      - CORS_ORIGINS=${CORS_ORIGINS}
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:8000,http://localhost
     ports:
       - "8000:8000"
     depends_on:
@@ -74,8 +74,8 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=production
-      - REACT_APP_API_URL=${REACT_APP_API_URL}
-      - REACT_APP_AI_SERVICE_URL=${REACT_APP_AI_SERVICE_URL}
+      - VITE_BACKEND_URL=http://localhost
+      - VITE_AI_SERVICE_URL=http://localhost/ai
     ports:
       - "3000:80"
     networks:

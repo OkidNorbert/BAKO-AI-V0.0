@@ -29,16 +29,12 @@ class Settings(BaseSettings):
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     
     # CORS
-    CORS_ORIGINS: List[str] = [
-        "http://localhost:3000",
-        "http://localhost:3001", 
-        "http://localhost:8000",
-        "http://10.7.17.177:3000",
-        "http://10.7.17.177:3001",
-        "http://172.19.0.1:3000",
-        "http://172.19.0.1:3001",
-        "*"  # Allow all origins in development
-    ]
+    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:3001,http://localhost:8000,http://10.7.17.177:3000,http://10.7.17.177:3001,http://172.19.0.1:3000,http://172.19.0.1:3001,*"
+    
+    @property
+    def cors_origins_list(self) -> List[str]:
+        """Convert comma-separated CORS origins to list."""
+        return [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
     
     # File Upload
     MAX_FILE_SIZE: str = "500MB"
