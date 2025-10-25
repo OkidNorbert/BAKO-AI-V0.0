@@ -2,24 +2,36 @@
 
 ## System Overview
 
-The Basketball Performance System is a comprehensive AI-powered platform that combines real-time video analysis, wearable data integration, and performance analytics to provide personalized training recommendations for basketball players.
+The AI Basketball Performance Analysis System is a comprehensive, full-stack platform that integrates real-time **pose detection**, **YOLOv3 object detection**, video analysis, and AI-based training recommendations with automated skill improvement suggestions via YouTube scraping. The system democratizes elite-level sports analytics by making advanced performance tracking accessible to youth academies, schools, and individual players.
 
 ## Architecture Diagram
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   Frontend      │    │   Backend API   │    │   AI Service    │
-│   (React)       │◄──►│   (FastAPI)     │◄──►│   (Python)      │
-│   Port: 3000    │    │   Port: 8000    │    │   Port: 8001    │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                       │                       │
+│   (React +      │◄──►│   (FastAPI +    │◄──►│   (TensorFlow + │
+│   Vite +        │    │   PostgreSQL +   │    │   MediaPipe +    │
+│   TailwindCSS)  │    │   MinIO)        │    │   YOLOv3 +      │
+│   Port: 3000    │    │   Port: 8000    │    │   OpenCV)       │
+└─────────────────┘    └─────────────────┘    │   Port: 8001    │
+         │                       │              └─────────────────┘
          │                       │                       │
          ▼                       ▼                       ▼
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   MinIO         │    │   PostgreSQL    │    │   Redis         │
-│   (Object       │    │   (Database)    │    │   (Cache/Queue) │
-│   Storage)      │    │   Port: 5432    │    │   Port: 6379    │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
+│   MinIO         │    │   PostgreSQL    │    │   Redis +       │
+│   (Object       │    │   (Database)    │    │   Celery        │
+│   Storage)      │    │   Port: 5432    │    │   (Cache/Queue) │
+│   Port: 9000    │    └─────────────────┘    │   Port: 6379    │
+└─────────────────┘                           └─────────────────┘
+         │                                              │
+         │                                              │
+         ▼                                              ▼
+┌─────────────────┐                           ┌─────────────────┐
+│   YouTube       │                           │   Monitoring    │
+│   Scraper/API   │                           │   (Grafana +    │
+│   (Recommendation│                           │   Prometheus)   │
+│   Engine)       │                           │   Port: 3001    │
+└─────────────────┘                           └─────────────────┘
 ```
 
 ## Components
@@ -43,14 +55,16 @@ The Basketball Performance System is a comprehensive AI-powered platform that co
   - Player and team management
   - Analytics and recommendations
 
-### 3. AI Service (Python)
-- **Technology**: MediaPipe, YOLOv8, OpenCV, PyTorch
-- **Purpose**: Computer vision and machine learning
+### 3. AI Service (Enhanced Python)
+- **Technology**: TensorFlow, MediaPipe, YOLOv3, OpenCV, BeautifulSoup
+- **Purpose**: Advanced computer vision, machine learning, and recommendation engine
 - **Features**:
-  - Pose detection and tracking
-  - Object detection (ball, hoop, players)
-  - Event classification (shots, jumps, sprints)
-  - Performance metrics extraction
+  - **Pose Detection**: MediaPipe for real-time human pose estimation (33 joints)
+  - **Object Detection**: YOLOv3 for basketball, hoop, court, and player detection
+  - **Action Classification**: Custom trained models for basketball actions
+  - **Performance Metrics**: Jump height, release speed, shot accuracy, ball trajectory
+  - **Recommendation Engine**: YouTube scraping for personalized training videos
+  - **Real-time Processing**: Live video analysis with immediate feedback
 
 ### 4. Database (PostgreSQL)
 - **Purpose**: Persistent data storage
@@ -77,19 +91,24 @@ The Basketball Performance System is a comprehensive AI-powered platform that co
 
 ## Data Flow
 
-### 1. Video Analysis Pipeline
+### 1. Enhanced Video Analysis Pipeline
 ```
-Video Upload → MinIO Storage → AI Service → Pose Detection → Event Classification → Database Storage
-```
-
-### 2. Wearable Data Integration
-```
-Apple Watch/HealthKit → Backend API → Time-series Storage → Analytics Engine
+Video Upload → MinIO Storage → AI Service → Pose Detection (MediaPipe) + Object Detection (YOLOv3) → Event Classification → Performance Metrics → Database Storage
 ```
 
-### 3. Real-time Processing
+### 2. AI-Powered Recommendation Flow
 ```
-Camera Stream → WebRTC → AI Service → Event Detection → Backend API → Frontend Dashboard
+Player Weakness Detection → AI Analysis → YouTube Scraper → Personalized Training Videos → Frontend Dashboard
+```
+
+### 3. Real-time Processing with YOLOv3
+```
+Camera Stream → AI Service → Pose Detection + Object Detection → Event Detection → Performance Metrics → Backend API → Frontend Dashboard
+```
+
+### 4. Model Training Pipeline
+```
+Dataset Collection → Frame Extraction → Pose Extraction → YOLOv3 Training → Model Evaluation → AI Service Integration
 ```
 
 ## Security
@@ -147,8 +166,10 @@ Camera Stream → WebRTC → AI Service → Event Detection → Backend API → 
 
 ### AI/ML
 - **Computer Vision**: MediaPipe, OpenCV
-- **Object Detection**: YOLOv8
-- **Deep Learning**: PyTorch, TensorFlow
+- **Object Detection**: YOLOv3 (basketball, hoop, court, players)
+- **Pose Detection**: MediaPipe (33 joint tracking)
+- **Deep Learning**: TensorFlow, PyTorch
+- **Recommendation Engine**: BeautifulSoup, YouTube Data API
 - **Edge Inference**: TensorFlow Lite, ONNX
 
 ### Infrastructure
@@ -179,8 +200,9 @@ Camera Stream → WebRTC → AI Service → Event Detection → Backend API → 
 - `GET /api/v1/events/player/{id}` - Get player events
 
 ### AI Service
-- `POST /api/v1/analyze` - Analyze video
-- `GET /api/v1/health/models` - Check model status
+- `POST /api/v1/analyze` - Analyze video (pose + object detection)
+- `POST /api/v1/recommend` - Get YouTube training recommendations
+- `GET /api/v1/health` - Check model status and GPU availability
 
 ## Future Enhancements
 

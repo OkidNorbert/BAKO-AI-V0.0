@@ -273,7 +273,7 @@ Authorization: Bearer {access_token}
 
 ## AI Service
 
-### Analyze Video
+### Analyze Video (Enhanced with YOLOv3)
 ```http
 POST /api/v1/analyze
 Content-Type: application/json
@@ -282,7 +282,8 @@ Content-Type: application/json
   "video_url": "http://minio:9000/basketball-videos/1/training_session.mp4",
   "session_id": 1,
   "video_id": 1,
-  "fps": 10
+  "fps": 10,
+  "analysis_type": "full"  // "pose_only", "object_only", "full"
 }
 ```
 
@@ -298,10 +299,11 @@ Content-Type: application/json
         {
           "id": "player_1",
           "keypoints": {
-            "0": [100, 150],
-            "11": [120, 140],
-            "12": [80, 140]
-          }
+            "0": [100, 150],  // nose
+            "11": [120, 140], // left shoulder
+            "12": [80, 140]   // right shoulder
+          },
+          "confidence": 0.95
         }
       ]
     }
@@ -311,9 +313,22 @@ Content-Type: application/json
       "time": 2.1,
       "objects": [
         {
-          "label": "ball",
+          "label": "person",
+          "bbox": [50, 100, 200, 300],
+          "confidence": 0.98,
+          "class": "player"
+        },
+        {
+          "label": "sports ball",
           "bbox": [200, 100, 50, 50],
-          "confidence": 0.92
+          "confidence": 0.92,
+          "class": "basketball"
+        },
+        {
+          "label": "hoop",
+          "bbox": [300, 50, 100, 80],
+          "confidence": 0.87,
+          "class": "basketball_hoop"
         }
       ]
     }
@@ -324,11 +339,84 @@ Content-Type: application/json
       "type": "shot_attempt",
       "confidence": 0.78,
       "meta": {
-        "player": "player_1"
+        "player": "player_1",
+        "shot_probability": 0.78,
+        "jump_height": 0.65,
+        "release_angle": 45.2
       }
     }
   ],
+  "performance_metrics": {
+    "jump_height_avg": 0.65,
+    "release_speed_avg": 8.2,
+    "shot_accuracy": 0.75,
+    "ball_handling_time": 2.3
+  },
   "status": "completed"
+}
+```
+
+### Get YouTube Recommendations
+```http
+POST /api/v1/recommend
+Content-Type: application/json
+
+{
+  "skill": "shooting",
+  "player_id": 1,
+  "weakness_areas": ["jump_shot_form", "free_throw_consistency"]
+}
+```
+
+**Response:**
+```json
+{
+  "recommendations": [
+    {
+      "title": "Perfect Your Jump Shot Form",
+      "url": "https://www.youtube.com/watch?v=example1",
+      "description": "Learn proper shooting mechanics and form",
+      "duration": "8:45",
+      "skill_focus": "jump_shot_form",
+      "difficulty": "intermediate"
+    },
+    {
+      "title": "Free Throw Mastery",
+      "url": "https://www.youtube.com/watch?v=example2",
+      "description": "Improve your free throw consistency",
+      "duration": "12:30",
+      "skill_focus": "free_throw_consistency",
+      "difficulty": "beginner"
+    }
+  ],
+  "total_results": 5,
+  "search_query": "basketball shooting training"
+}
+```
+
+### Health Check with Model Status
+```http
+GET /api/v1/health
+```
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "models": {
+    "pose_detection": {
+      "status": "loaded",
+      "version": "MediaPipe 0.10.0",
+      "accuracy": 0.95
+    },
+    "object_detection": {
+      "status": "loaded",
+      "version": "YOLOv3",
+      "accuracy": 0.92
+    }
+  },
+  "gpu_available": true,
+  "memory_usage": "2.1GB / 8GB"
 }
 ```
 
