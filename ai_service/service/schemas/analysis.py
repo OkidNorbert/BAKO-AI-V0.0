@@ -34,6 +34,26 @@ class EventData(BaseModel):
     meta: Dict[str, Any]
 
 
+class PerformanceMetrics(BaseModel):
+    """Performance metrics schema."""
+    total_movement: Optional[float] = None
+    shot_attempts: Optional[int] = None
+    jumps: Optional[int] = None
+    sprints: Optional[int] = None
+    average_event_confidence: Optional[float] = None
+    pose_stability: Optional[float] = None
+    activity_intensity: Optional[float] = None
+
+
+class AnalysisMetadata(BaseModel):
+    """Analysis metadata schema."""
+    total_frames: int
+    processed_frames: int
+    video_duration: float
+    analysis_fps: int
+    processing_time: float
+
+
 class AnalysisResponse(BaseModel):
     """Video analysis response schema."""
     video_id: int
@@ -41,4 +61,6 @@ class AnalysisResponse(BaseModel):
     keypoints: List[KeypointData]
     detections: List[DetectionData]
     events: List[EventData]
+    performance_metrics: Optional[PerformanceMetrics] = None
+    metadata: Optional[AnalysisMetadata] = None
     status: str

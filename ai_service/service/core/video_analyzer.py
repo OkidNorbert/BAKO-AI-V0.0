@@ -91,7 +91,8 @@ class BasketballVideoAnalyzer:
         self.shot_detector = ShotDetector()
         self.jump_detector = JumpDetector()
         self.sprint_detector = SprintDetector()
-        logger.info("✅ Basketball event detectors initialized")
+        self.metrics_calculator = PerformanceMetricsCalculator()
+        logger.info("✅ Basketball event detectors and metrics calculator initialized")
     
     def analyze_video(self, video_url: str, session_id: int, video_id: int, fps: int = 10) -> Dict[str, Any]:
         """
@@ -118,8 +119,19 @@ class BasketballVideoAnalyzer:
             events_data = []
             
             cap = cv2.VideoCapture(temp_video_path)
+            if not cap.isOpened():
+                raise ValueError(f"Could not open video file: {temp_video_path}")
+            
             frame_count = 0
-            fps_interval = int(cap.get(cv2.CAP_PROP_FPS) / fps)
+            total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            video_fps = cap.get(cv2.CAP_PROP_FPS)
+            fps_interval = max(1, int(video_fps / fps))
+            
+            logger.info(f"Video info: {total_frames} frames, {video_fps:.2f} FPS, analyzing every {fps_interval} frames")
+            
+            # Progress tracking
+            processed_frames = 0
+            last_progress = 0
             
             while True:
                 ret, frame = cap.read()
@@ -131,25 +143,51 @@ class BasketballVideoAnalyzer:
                     frame_count += 1
                     continue
                 
-                timestamp = frame_count / cap.get(cv2.CAP_PROP_FPS)
+                timestamp = frame_count / video_fps
                 
-                # Analyze frame
-                frame_keypoints = self._analyze_pose(frame, timestamp)
-                frame_detections = self._analyze_objects(frame, timestamp)
-                frame_events = self._detect_events(frame, timestamp, frame_keypoints, frame_detections)
-                
-                if frame_keypoints:
-                    keypoints_data.append(frame_keypoints)
-                if frame_detections:
-                    detections_data.append(frame_detections)
-                if frame_events:
-                    events_data.extend(frame_events)
+                try:
+                    # Analyze frame
+                    frame_keypoints = self._analyze_pose(frame, timestamp)
+                    frame_detections = self._analyze_objects(frame, timestamp)
+                    frame_events = self._detect_events(frame, timestamp, frame_keypoints, frame_detections)
+                    
+                    if frame_keypoints:
+                        keypoints_data.append(frame_keypoints)
+                    if frame_detections:
+                        detections_data.append(frame_detections)
+                    if frame_events:
+                        events_data.extend(frame_events)
+                    
+                    processed_frames += 1
+                    
+                    # Progress logging
+                    progress = int((frame_count / total_frames) * 100)
+                    if progress >= last_progress + 10:  # Log every 10%
+                        logger.info(f"Analysis progress: {progress}% ({processed_frames} frames processed)")
+                        last_progress = progress
+                        
+                except Exception as e:
+                    logger.warning(f"Error processing frame {frame_count}: {e}")
+                    continue
                 
                 frame_count += 1
             
             cap.release()
             
-            logger.info(f"✅ Video analysis completed: {len(keypoints_data)} keypoint frames, {len(detections_data)} detection frames, {len(events_data)} events")
+            # Calculate performance metrics
+            total_duration = total_frames / video_fps
+            analysis_duration = processed_frames / fps
+            performance_metrics = self.metrics_calculator.calculate_performance_metrics(
+                keypoints_data, events_data
+            )
+            
+            logger.info(f"✅ Video analysis completed:")
+            logger.info(f"  - Duration: {total_duration:.2f}s")
+            logger.info(f"  - Analyzed: {analysis_duration:.2f}s ({processed_frames} frames)")
+            logger.info(f"  - Keypoints: {len(keypoints_data)} frames")
+            logger.info(f"  - Detections: {len(detections_data)} frames")
+            logger.info(f"  - Events: {len(events_data)} total")
+            logger.info(f"  - Performance metrics calculated: {len(performance_metrics)} metrics")
             
             return {
                 "video_id": video_id,
@@ -157,9 +195,20 @@ class BasketballVideoAnalyzer:
                 "keypoints": [kp.__dict__ for kp in keypoints_data],
                 "detections": [det.__dict__ for det in detections_data],
                 "events": [ev.__dict__ for ev in events_data],
-                "status": "completed"
+                "performance_metrics": performance_metrics,
+                "status": "completed",
+                "metadata": {
+                    "total_frames": total_frames,
+                    "processed_frames": processed_frames,
+                    "video_duration": total_duration,
+                    "analysis_fps": fps,
+                    "processing_time": analysis_duration
+                }
             }
             
+        except Exception as e:
+            logger.error(f"❌ Video analysis failed: {e}")
+            raise
         finally:
             # Clean up temporary file
             if os.path.exists(temp_video_path):
@@ -169,15 +218,59 @@ class BasketballVideoAnalyzer:
         """Download video from URL to temporary file."""
         import requests
         
-        response = requests.get(video_url, stream=True)
-        response.raise_for_status()
+        logger.info(f"📥 Downloading video from: {video_url}")
         
-        # Create temporary file
-        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp4')
-        temp_file.write(response.content)
-        temp_file.close()
-        
-        return temp_file.name
+        try:
+            # Set timeout and headers for better reliability
+            headers = {
+                'User-Agent': 'Basketball-Performance-Analyzer/1.0'
+            }
+            
+            response = requests.get(
+                video_url, 
+                stream=True, 
+                timeout=30,
+                headers=headers
+            )
+            response.raise_for_status()
+            
+            # Check content type
+            content_type = response.headers.get('content-type', '')
+            if not any(video_type in content_type for video_type in ['video/', 'application/octet-stream']):
+                logger.warning(f"Unexpected content type: {content_type}")
+            
+            # Create temporary file
+            temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp4')
+            
+            # Download with progress tracking
+            total_size = int(response.headers.get('content-length', 0))
+            downloaded = 0
+            
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    temp_file.write(chunk)
+                    downloaded += len(chunk)
+                    
+                    if total_size > 0:
+                        progress = (downloaded / total_size) * 100
+                        if downloaded % (1024 * 1024) == 0:  # Log every MB
+                            logger.info(f"Download progress: {progress:.1f}% ({downloaded / (1024*1024):.1f}MB)")
+            
+            temp_file.close()
+            
+            # Verify file was created and has content
+            if os.path.getsize(temp_file.name) == 0:
+                raise ValueError("Downloaded file is empty")
+            
+            logger.info(f"✅ Video downloaded successfully: {os.path.getsize(temp_file.name) / (1024*1024):.1f}MB")
+            return temp_file.name
+            
+        except requests.exceptions.RequestException as e:
+            logger.error(f"❌ Failed to download video: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"❌ Unexpected error during download: {e}")
+            raise
     
     def _analyze_pose(self, frame: np.ndarray, timestamp: float) -> Optional[KeypointData]:
         """Analyze pose using MediaPipe."""
@@ -459,3 +552,136 @@ class SprintDetector:
                     )
         
         return None
+
+
+class PerformanceMetricsCalculator:
+    """Calculate performance metrics from analysis data."""
+    
+    def __init__(self):
+        self.logger = logging.getLogger(__name__)
+    
+    def calculate_performance_metrics(self, keypoints_data: List[KeypointData], 
+                                    events_data: List[EventData]) -> Dict[str, Any]:
+        """Calculate performance metrics from analysis data."""
+        if not keypoints_data:
+            return {}
+        
+        metrics = {}
+        
+        # Calculate movement metrics
+        total_movement = self._calculate_total_movement(keypoints_data)
+        metrics['total_movement'] = total_movement
+        
+        # Calculate activity metrics
+        shot_attempts = len([e for e in events_data if e.event_type == "shot_attempt"])
+        jumps = len([e for e in events_data if e.event_type == "jump"])
+        sprints = len([e for e in events_data if e.event_type == "sprint"])
+        
+        metrics['shot_attempts'] = shot_attempts
+        metrics['jumps'] = jumps
+        metrics['sprints'] = sprints
+        
+        # Calculate average confidence
+        if events_data:
+            avg_confidence = sum(e.confidence for e in events_data) / len(events_data)
+            metrics['average_event_confidence'] = avg_confidence
+        
+        # Calculate pose stability
+        pose_stability = self._calculate_pose_stability(keypoints_data)
+        metrics['pose_stability'] = pose_stability
+        
+        # Calculate activity intensity
+        activity_intensity = self._calculate_activity_intensity(events_data)
+        metrics['activity_intensity'] = activity_intensity
+        
+        return metrics
+    
+    def _calculate_total_movement(self, keypoints_data: List[KeypointData]) -> float:
+        """Calculate total movement distance from keypoints."""
+        if len(keypoints_data) < 2:
+            return 0.0
+        
+        total_distance = 0.0
+        for i in range(1, len(keypoints_data)):
+            prev_kp = keypoints_data[i-1]
+            curr_kp = keypoints_data[i]
+            
+            # Calculate center of mass movement
+            prev_center = self._get_center_of_mass(prev_kp.keypoints)
+            curr_center = self._get_center_of_mass(curr_kp.keypoints)
+            
+            if prev_center and curr_center:
+                distance = np.sqrt(
+                    (curr_center[0] - prev_center[0])**2 + 
+                    (curr_center[1] - prev_center[1])**2
+                )
+                total_distance += distance
+        
+        return total_distance
+    
+    def _get_center_of_mass(self, keypoints: Dict[int, Dict[str, float]]) -> Optional[Tuple[float, float]]:
+        """Calculate center of mass from keypoints."""
+        valid_points = []
+        for kp in keypoints.values():
+            if kp.get('visibility', 0) > 0.5:
+                valid_points.append([kp['x'], kp['y']])
+        
+        if not valid_points:
+            return None
+        
+        return np.mean(valid_points, axis=0)
+    
+    def _calculate_pose_stability(self, keypoints_data: List[KeypointData]) -> float:
+        """Calculate pose stability (lower is more stable)."""
+        if len(keypoints_data) < 2:
+            return 0.0
+        
+        stability_scores = []
+        for i in range(1, len(keypoints_data)):
+            prev_kp = keypoints_data[i-1]
+            curr_kp = keypoints_data[i]
+            
+            # Calculate keypoint variance
+            variance = 0.0
+            count = 0
+            
+            for landmark_id in prev_kp.keypoints:
+                if landmark_id in curr_kp.keypoints:
+                    prev_point = prev_kp.keypoints[landmark_id]
+                    curr_point = curr_kp.keypoints[landmark_id]
+                    
+                    if (prev_point.get('visibility', 0) > 0.5 and 
+                        curr_point.get('visibility', 0) > 0.5):
+                        
+                        distance = np.sqrt(
+                            (curr_point['x'] - prev_point['x'])**2 + 
+                            (curr_point['y'] - prev_point['y'])**2
+                        )
+                        variance += distance
+                        count += 1
+            
+            if count > 0:
+                stability_scores.append(variance / count)
+        
+        return np.mean(stability_scores) if stability_scores else 0.0
+    
+    def _calculate_activity_intensity(self, events_data: List[EventData]) -> float:
+        """Calculate activity intensity based on events."""
+        if not events_data:
+            return 0.0
+        
+        # Weight different event types
+        event_weights = {
+            'shot_attempt': 1.0,
+            'jump': 0.8,
+            'sprint': 1.2,
+            'dribble': 0.6,
+            'pass': 0.4
+        }
+        
+        total_intensity = 0.0
+        for event in events_data:
+            weight = event_weights.get(event.event_type, 0.5)
+            total_intensity += event.confidence * weight
+        
+        return total_intensity

@@ -4,7 +4,7 @@ Video analysis endpoints.
 
 import logging
 from fastapi import APIRouter, HTTPException, status
-from service.schemas.analysis import AnalysisRequest, AnalysisResponse
+from service.schemas.analysis import AnalysisRequest, AnalysisResponse, PerformanceMetrics, AnalysisMetadata
 from service.core.video_analyzer import BasketballVideoAnalyzer
 
 logger = logging.getLogger(__name__)
@@ -46,6 +46,8 @@ async def analyze_video(request: AnalysisRequest):
             keypoints=results["keypoints"],
             detections=results["detections"],
             events=results["events"],
+            performance_metrics=PerformanceMetrics(**results.get("performance_metrics", {})),
+            metadata=AnalysisMetadata(**results.get("metadata", {})) if results.get("metadata") else None,
             status=results["status"]
         )
         
