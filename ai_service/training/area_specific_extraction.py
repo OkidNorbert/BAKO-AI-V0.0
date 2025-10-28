@@ -36,35 +36,35 @@ class AreaSpecificBasketballExtractor:
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
-        # Basketball areas and their characteristics
+        # Basketball areas and their characteristics (NOTE: These are defaults, actual max_frames will come from UI)
         self.basketball_areas = {
             "ball": {
                 "description": "Basketball object",
                 "color_range": [(0, 100, 100), (20, 255, 255)],  # Orange color range
                 "size_range": (0.01, 0.1),  # Relative size range
                 "motion_threshold": 0.05,  # Ball moves frequently
-                "extraction_interval": 15  # Extract every 15th frame for ball
+                "extraction_interval": 5  # Reduced to every 5th frame for ball
             },
             "player": {
                 "description": "Basketball player",
                 "color_range": None,  # Players have varied colors
                 "size_range": (0.1, 0.4),  # Players are larger
                 "motion_threshold": 0.1,  # Players move actively
-                "extraction_interval": 20  # Extract every 20th frame for players
+                "extraction_interval": 10  # Reduced to every 10th frame for players
             },
             "court_lines": {
                 "description": "Court boundary lines",
                 "color_range": [(0, 0, 200), (180, 30, 255)],  # White/light colors
                 "size_range": (0.05, 0.3),  # Lines can be various sizes
                 "motion_threshold": 0.02,  # Lines are mostly static
-                "extraction_interval": 50  # Extract every 50th frame for lines
+                "extraction_interval": 25  # Reduced to every 25th frame for lines
             },
             "hoop": {
                 "description": "Basketball hoop/rim",
                 "color_range": [(0, 0, 0), (180, 255, 50)],  # Dark colors (rim)
                 "size_range": (0.05, 0.2),  # Hoops are medium-sized
                 "motion_threshold": 0.01,  # Hoops are static
-                "extraction_interval": 100  # Extract every 100th frame for hoops
+                "extraction_interval": 50  # Reduced to every 50th frame for hoops
             }
         }
         
@@ -111,7 +111,7 @@ class AreaSpecificBasketballExtractor:
                 orange_ratio = orange_pixels / total_pixels
                 
                 # If significant orange detected, likely has basketball
-                if orange_ratio > 0.001:  # 0.1% of frame is orange
+                if orange_ratio > 0.0005:  # Lowered threshold to 0.05% of frame is orange
                     # Resize frame
                     frame_resized = cv2.resize(frame, (640, 640))
                     
@@ -175,7 +175,7 @@ class AreaSpecificBasketballExtractor:
                         aspect_ratio = h / w
                         
                         # Players typically have height > width
-                        if aspect_ratio > 1.2 and area > 2000:
+                        if aspect_ratio > 1.0 and area > 1500: # Slightly more lenient aspect ratio and smaller min area
                             has_player = True
                             break
                 
@@ -220,8 +220,8 @@ class AreaSpecificBasketballExtractor:
             if not ret:
                 break
             
-            # Extract every 50th frame for court line detection
-            if frame_idx % 50 == 0:
+            # Extract frames based on configured interval
+            if frame_idx % self.basketball_areas["court_lines"]["extraction_interval"] == 0:
                 # Convert to grayscale
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 
@@ -232,7 +232,7 @@ class AreaSpecificBasketballExtractor:
                 lines = cv2.HoughLinesP(edges, 1, np.pi/180, threshold=100, minLineLength=100, maxLineGap=10)
                 
                 # Count significant lines
-                if lines is not None and len(lines) > 5:  # Court has many lines
+                if lines is not None and len(lines) > 3:  # Lowered line count threshold slightly
                     # Resize frame
                     frame_resized = cv2.resize(frame, (640, 640))
                     
@@ -273,15 +273,15 @@ class AreaSpecificBasketballExtractor:
             if not ret:
                 break
             
-            # Extract every 100th frame for hoop detection
-            if frame_idx % 100 == 0:
+            # Extract frames based on configured interval
+            if frame_idx % self.basketball_areas["hoop"]["extraction_interval"] == 0:
                 # Convert to grayscale
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 
                 # Detect circles (hoop rims)
                 circles = cv2.HoughCircles(
                     gray, cv2.HOUGH_GRADIENT, 1, 20,
-                    param1=50, param2=30, minRadius=20, maxRadius=100
+                    param1=50, param2=25, minRadius=15, maxRadius=80 # Adjusted parameters for better hoop detection
                 )
                 
                 # Check for hoop-like structures
@@ -289,8 +289,8 @@ class AreaSpecificBasketballExtractor:
                 if circles is not None:
                     circles = np.round(circles[0, :]).astype("int")
                     for (x, y, r) in circles:
-                        # Hoops are typically in upper portion of frame
-                        if y < frame.shape[0] * 0.6 and r > 20:
+                        # Hoops are typically in upper portion of frame and reasonable size
+                        if y < frame.shape[0] * 0.7 and r > 15 and r < 80: # Adjusted y-position and radius range
                             has_hoop = True
                             break
                 
@@ -315,26 +315,26 @@ class AreaSpecificBasketballExtractor:
         logger.info(f"✅ Extracted {hoop_frames_found} hoop-specific frames")
         return extracted_frames
     
-    def extract_all_areas(self, video_path: str, areas: List[str] = None) -> Dict[str, List[str]]:
+    def extract_all_areas(self, video_path: str, areas: List[str] = None, max_frames_per_area: int = 100) -> Dict[str, List[str]]:
         """
         Extract frames for all specified basketball areas.
         """
         if areas is None:
             areas = list(self.basketball_areas.keys())
         
-        logger.info(f"🎬 Starting area-specific extraction for: {areas}")
+        logger.info(f"🎬 Starting area-specific extraction for: {areas} (Max frames per area: {max_frames_per_area})")
         
         results = {}
         
         for area in areas:
             if area == "ball":
-                results[area] = self.extract_ball_frames(video_path, max_frames=100)
+                results[area] = self.extract_ball_frames(video_path, max_frames=max_frames_per_area)
             elif area == "player":
-                results[area] = self.extract_player_frames(video_path, max_frames=100)
+                results[area] = self.extract_player_frames(video_path, max_frames=max_frames_per_area)
             elif area == "court_lines":
-                results[area] = self.extract_court_line_frames(video_path, max_frames=50)
+                results[area] = self.extract_court_line_frames(video_path, max_frames=max_frames_per_area)
             elif area == "hoop":
-                results[area] = self.extract_hoop_frames(video_path, max_frames=50)
+                results[area] = self.extract_hoop_frames(video_path, max_frames=max_frames_per_area)
         
         return results
     
@@ -441,7 +441,7 @@ def main():
     
     try:
         # Extract frames for all specified areas
-        results = extractor.extract_all_areas(args.input, areas)
+        results = extractor.extract_all_areas(args.input, areas, args.max_frames)
         
         # Create annotation templates
         extractor.create_annotation_templates(results)
