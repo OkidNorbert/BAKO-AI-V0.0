@@ -108,6 +108,8 @@ class TrainingScheduler:
         self.training_status = "retraining"
         
         try:
+            await self.run_data_quality_check()
+
             # Run full retraining with more data
             results = self.training_pipeline.run_training_pipeline()
             

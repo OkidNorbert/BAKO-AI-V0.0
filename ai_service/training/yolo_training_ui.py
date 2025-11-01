@@ -31,8 +31,6 @@ from pydantic import BaseModel, Field
 import uvicorn
 from minio import Minio
 from minio.error import S3Error
-from ultralytics import YOLO
-from ai_service.service.core.training_scheduler import training_scheduler
 
 try:
     from PIL import Image
@@ -183,8 +181,6 @@ class YOLOTrainingManager:
             2: "court_lines",
             3: "hoop"
         }
-
-        self.training_thread = None
 
         # Ensure the single global MinIO bucket exists on startup
         self._ensure_bucket_exists(MINIO_BUCKET)
@@ -493,10 +489,9 @@ class YOLOTrainingManager:
     
     def start_training(self, config: TrainingConfig):
         """Initiate the training process in a separate thread."""
-        if training_scheduler.is_running:
-            logger.info("ℹ️ Training is already in progress. Skipping new request.")
-            status = training_scheduler.get_training_status()
-            return {"status": "busy", "message": status.get("message", "Training already in progress"), "detail": status}
+        if self.training_thread and self.training_thread.is_alive():
+            logger.warning("⚠️ Training is already in progress.")
+            return {"success": False, "message": "Training already in progress.", "status": self.get_training_status()}
 
         logger.info(f"Starting training with config: {config.model_dump()}")
         
@@ -1530,9 +1525,9 @@ async def get_ui():
             <div class="tabs">
                 <button class="tab active" onclick="showTab('upload', this)">📹 Video Upload</button>
                 <button class="tab" onclick="showTab('extraction', this)">🎬 Frame Extraction</button>
-                <button class="tab" onclick="showTab('cleaning', this)">🧹 Dataset Cleaning</button>
                 <button class="tab" onclick="showTab('training', this)">🏋️ Training</button>
                 <button class="tab" onclick="showTab('testing', this)">🧪 Testing</button>
+                <button class="tab" onclick="showTab('cleaning', this)">🧹 Dataset Cleaning</button>
             </div>
 
             <!-- Video Upload Tab -->
@@ -1601,7 +1596,7 @@ async def get_ui():
 
             <!-- Frame Extraction Tab -->
             <div id="extraction" class="tab-content">
-                <h2 class="section-title">🎬 Extract Frames from Videos</h2>
+                <h2 class="section-title">🎬 Frame Extraction</h2>
                 <div class="grid">
                     <div class="card">
                         <h3>Select Video & Areas</h3>
@@ -1658,86 +1653,9 @@ async def get_ui():
                 </div>
             </div>
 
-            <!-- Dataset Cleaning Tab -->
-            <div id="cleaning" class="tab-content">
-                <h2 class="section-title">🧹 Dataset Cleaning Tools</h2>
-                <p>Tools to clean and refine your extracted frames and annotations.</p>
-
-                <div class="grid">
-                    <div class="card">
-                        <h3>Duplicate Frame Cleaner</h3>
-                        <p style="font-size: 0.9em; color: var(--text-light); margin-bottom: 15px;">
-                            Remove near-duplicate images from your dataset based on perceptual hashing.
-                        </p>
-                        <div class="form-group">
-                            <label for="duplicate-cleaner-area-tag-select">Area Tag:</label>
-                            <select id="duplicate-cleaner-area-tag-select" class="form-control">
-                                <option value="">Select an Area Tag</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="duplicate-hash-size">Hash Size (e.g., 8, 16):</label>
-                            <input type="number" id="duplicate-hash-size" class="form-control" value="8" min="4" max="64">
-                        </div>
-                        <div class="form-group">
-                            <label for="duplicate-tolerance">Tolerance (0 for exact match, e.g., 5):</label>
-                            <input type="number" id="duplicate-tolerance" class="form-control" value="5" min="0" max="63">
-                        </div>
-                        <div class="form-check" style="margin-bottom: 15px;">
-                            <input type="checkbox" class="form-check-input" id="duplicate-dry-run">
-                            <label class="form-check-label" for="duplicate-dry-run">Dry Run (only report, don't delete)</label>
-                        </div>
-                        <button class="btn btn-primary" onclick="runDuplicateCleaner()">🗑️ Run Duplicate Cleaner</button>
-                        <div id="duplicate-cleaner-status" class="status-message"></div>
-                    </div>
-
-                    <div class="card">
-                        <h3>Blurry Frame Cleaner</h3>
-                        <p style="font-size: 0.9em; color: var(--text-light); margin-bottom: 15px;">
-                            Remove blurry images from your dataset using Laplacian variance.
-                        </p>
-                        <div class="form-group">
-                            <label for="blur-cleaner-area-tag-select">Area Tag:</label>
-                            <select id="blur-cleaner-area-tag-select" class="form-control">
-                                <option value="">Select an Area Tag</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="blur-threshold">Laplacian Variance Threshold (e.g., 100):</label>
-                            <input type="number" id="blur-threshold" class="form-control" value="100" min="0">
-                        </div>
-                        <div class="form-check" style="margin-bottom: 15px;">
-                            <input type="checkbox" class="form-check-input" id="blur-dry-run">
-                            <label class="form-check-label" for="blur-dry-run">Dry Run (only report, don't delete)</label>
-                        </div>
-                        <button class="btn btn-primary" onclick="runBlurCleaner()">🗑️ Run Blur Cleaner</button>
-                        <div id="blur-cleaner-status" class="status-message"></div>
-                    </div>
-
-                    <div class="card">
-                        <h3>Empty Label Cleaner</h3>
-                        <p style="font-size: 0.9em; color: var(--text-light); margin-bottom: 15px;">
-                            Remove image and label files where the label file is empty (no detected objects).
-                        </p>
-                        <div class="form-group">
-                            <label for="empty-label-cleaner-area-tag-select">Area Tag:</label>
-                            <select id="empty-label-cleaner-area-tag-select" class="form-control">
-                                <option value="">Select an Area Tag</option>
-                            </select>
-                        </div>
-                        <div class="form-check" style="margin-bottom: 15px;">
-                            <input type="checkbox" class="form-check-input" id="empty-label-dry-run">
-                            <label class="form-check-label" for="empty-label-dry-run">Dry Run (only report, don't delete)</label>
-                        </div>
-                        <button class="btn btn-primary" onclick="runEmptyLabelCleaner()">🗑️ Run Empty Label Cleaner</button>
-                        <div id="empty-label-cleaner-status" class="status-message"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Model Training Tab -->
+            <!-- Training Tab -->
             <div id="training" class="tab-content">
-                <h2 class="section-title">🏋️ Train YOLOv8 Model</h2>
+                <h2 class="section-title">🏋️ YOLOv8 Training</h2>
                 <div class="grid">
                     <div class="card">
                         <h3>Training Configuration</h3>
@@ -1833,6 +1751,84 @@ async def get_ui():
                     </div>
                 </div>
             </div>
+
+            <!-- Dataset Cleaning Tab -->
+            <div id="cleaning" class="tab-content">
+                <h2 class="section-title">🧹 Dataset Cleaning Tools</h2>
+                <p>Tools to clean and refine your extracted frames and annotations.</p>
+
+                <div class="grid">
+                    <div class="card">
+                        <h3>Duplicate Frame Cleaner</h3>
+                        <p style="font-size: 0.9em; color: var(--text-light); margin-bottom: 15px;">
+                            Remove near-duplicate images from your dataset based on perceptual hashing.
+                        </p>
+                        <div class="form-group">
+                            <label for="duplicate-cleaner-area-tag-select">Area Tag:</label>
+                            <select id="duplicate-cleaner-area-tag-select" class="form-control">
+                                <option value="">Select an Area Tag</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="duplicate-hash-size">Hash Size (e.g., 8, 16):</label>
+                            <input type="number" id="duplicate-hash-size" class="form-control" value="8" min="4" max="64">
+                        </div>
+                        <div class="form-group">
+                            <label for="duplicate-tolerance">Tolerance (0 for exact match, e.g., 5):</label>
+                            <input type="number" id="duplicate-tolerance" class="form-control" value="5" min="0" max="63">
+                        </div>
+                        <div class="form-check" style="margin-bottom: 15px;">
+                            <input type="checkbox" class="form-check-input" id="duplicate-dry-run">
+                            <label class="form-check-label" for="duplicate-dry-run">Dry Run (only report, don't delete)</label>
+                        </div>
+                        <button class="btn btn-primary" onclick="runDuplicateCleaner()">🗑️ Run Duplicate Cleaner</button>
+                        <div id="duplicate-cleaner-status" class="status-message"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Blurry Frame Cleaner</h3>
+                        <p style="font-size: 0.9em; color: var(--text-light); margin-bottom: 15px;">
+                            Remove blurry images from your dataset using Laplacian variance.
+                        </p>
+                        <div class="form-group">
+                            <label for="blur-cleaner-area-tag-select">Area Tag:</label>
+                            <select id="blur-cleaner-area-tag-select" class="form-control">
+                                <option value="">Select an Area Tag</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="blur-threshold">Laplacian Variance Threshold (e.g., 100):</label>
+                            <input type="number" id="blur-threshold" class="form-control" value="100" min="0">
+                        </div>
+                        <div class="form-check" style="margin-bottom: 15px;">
+                            <input type="checkbox" class="form-check-input" id="blur-dry-run">
+                            <label class="form-check-label" for="blur-dry-run">Dry Run (only report, don't delete)</label>
+                        </div>
+                        <button class="btn btn-primary" onclick="runBlurCleaner()">🗑️ Run Blur Cleaner</button>
+                        <div id="blur-cleaner-status" class="status-message"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Empty Label Cleaner</h3>
+                        <p style="font-size: 0.9em; color: var(--text-light); margin-bottom: 15px;">
+                            Remove image and label files where the label file is empty (no detected objects).
+                        </p>
+                        <div class="form-group">
+                            <label for="empty-label-cleaner-area-tag-select">Area Tag:</label>
+                            <select id="empty-label-cleaner-area-tag-select" class="form-control">
+                                <option value="">Select an Area Tag</option>
+                            </select>
+                        </div>
+                        <div class="form-check" style="margin-bottom: 15px;">
+                            <input type="checkbox" class="form-check-input" id="empty-label-dry-run">
+                            <label class="form-check-label" for="empty-label-dry-run">Dry Run (only report, don't delete)</label>
+                        </div>
+                        <button class="btn btn-primary" onclick="runEmptyLabelCleaner()">🗑️ Run Empty Label Cleaner</button>
+                        <div id="empty-label-cleaner-status" class="status-message"></div>
+                    </div>
+                </div>
+            </div>
+
         </div> <!-- End of container -->
 
         <script>
