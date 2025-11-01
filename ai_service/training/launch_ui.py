@@ -84,7 +84,7 @@ def launch_ui():
         
         # Launch the UI
         subprocess.run([
-            sys.executable, "yolo_training_ui.py"
+            sys.executable, "training/yolo_training_ui.py"
         ])
         
     except KeyboardInterrupt:

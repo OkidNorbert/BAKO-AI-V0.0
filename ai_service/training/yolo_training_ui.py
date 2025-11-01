@@ -58,7 +58,7 @@ class VideoUploadResponse(BaseModel):
     video_url: Optional[str] = None
 
 class FrameExtractionRequest(BaseModel):
-    video_id: str
+    video_ids: List[str]
     strategy: str = "area_specific"
     areas: List[str] = ["ball", "player", "court_lines", "hoop"]
     max_frames_per_area: int = 1000
@@ -221,71 +221,90 @@ class YOLOTrainingManager:
             raise HTTPException(status_code=500, detail=f"Failed to download video: {str(e)}")
         
     def extract_frames(self, request: FrameExtractionRequest) -> Dict[str, Any]:
-        """Extract frames from video using MinIO storage."""
-        try:
-            logger.info(f"🎬 Starting frame extraction for video: {request.video_id}")
-            
-            # Download video from MinIO
-            video_path = self.download_video_from_minio(request.video_id)
-            
-            # Build command for area-specific extraction
-            cmd = [
-                "python", "training/area_specific_extraction.py",
-                "--input", video_path,
-                "--output", "training/datasets/basketball/area_frames"
-            ]
-            
-            # Add areas
-            if request.areas:
-                areas_str = ",".join(request.areas)
-                cmd.extend(["--areas", areas_str])
-            
-            # Add max frames per area
-            cmd.extend(["--max-frames", str(request.max_frames_per_area)])
-            
-            # Run area-specific extraction
-            result = subprocess.run(cmd, capture_output=True, text=True, cwd=".")
-            
-            # Clean up temporary video file
+        """Extract frames from multiple videos using MinIO storage."""
+        all_extraction_results = []
+        overall_success = True
+        overall_message = ""
+        
+        for video_id in request.video_ids:
             try:
-                os.remove(video_path)
-            except:
-                pass
-            
-            if result.returncode == 0:
-                # Count extracted frames for each area
-                area_frames_dir = Path("training/datasets/basketball/area_frames")
-                total_frames = 0
-                area_breakdown = {}
+                logger.info(f"🎬 Starting frame extraction for video: {video_id}")
                 
-                for area in request.areas:
-                    area_dir = area_frames_dir / area / "images"
-                    if area_dir.exists():
-                        frame_count = len(list(area_dir.glob("*.jpg")))
-                        area_breakdown[area] = frame_count
-                        total_frames += frame_count
+                # Download video from MinIO
+                video_path = self.download_video_from_minio(video_id)
                 
-                return {
-                    "success": True,
-                    "message": f"Successfully extracted {total_frames} area-specific frames",
-                    "frame_count": total_frames,
-                    "area_breakdown": area_breakdown,
-                    "output_dir": str(area_frames_dir)
-                }
-            else:
-                return {
+                # Build command for area-specific extraction
+                cmd = [
+                    "python", "training/area_specific_extraction.py",
+                    "--input", video_path,
+                    "--output", "training/datasets/basketball/area_frames"
+                ]
+                
+                # Add areas
+                if request.areas:
+                    areas_str = ",".join(request.areas)
+                    cmd.extend(["--areas", areas_str])
+                
+                # Add max frames per area
+                cmd.extend(["--max-frames", str(request.max_frames_per_area)])
+                
+                # Run area-specific extraction
+                result = subprocess.run(cmd, capture_output=True, text=True, cwd=".")
+                
+                # Clean up temporary video file
+                try:
+                    os.remove(video_path)
+                except:
+                    pass
+                
+                if result.returncode == 0:
+                    # Count extracted frames for each area
+                    area_frames_dir = Path("training/datasets/basketball/area_frames")
+                    total_frames = 0
+                    area_breakdown = {}
+                    
+                    for area in request.areas:
+                        area_dir = area_frames_dir / area / "images"
+                        if area_dir.exists():
+                            frame_count = len(list(area_dir.glob("*.jpg")))
+                            area_breakdown[area] = frame_count
+                            total_frames += frame_count
+                    
+                    all_extraction_results.append({
+                        "video_id": video_id,
+                        "success": True,
+                        "message": f"Successfully extracted {total_frames} area-specific frames",
+                        "frame_count": total_frames,
+                        "area_breakdown": area_breakdown,
+                        "output_dir": str(area_frames_dir)
+                    })
+                    overall_message += f"✅ Frames extracted for {video_id}. "
+                else:
+                    overall_success = False
+                    all_extraction_results.append({
+                        "video_id": video_id,
+                        "success": False,
+                        "message": f"Area-specific extraction failed for {video_id}: {result.stderr}",
+                        "error": result.stderr
+                    })
+                    overall_message += f"❌ Extraction failed for {video_id}. "
+                    
+            except Exception as e:
+                overall_success = False
+                logger.error(f"❌ Frame extraction error for {video_id}: {e}")
+                all_extraction_results.append({
+                    "video_id": video_id,
                     "success": False,
-                    "message": f"Area-specific extraction failed: {result.stderr}",
-                    "error": result.stderr
-                }
-                
-        except Exception as e:
-            logger.error(f"❌ Frame extraction error: {e}")
-            return {
-                "success": False,
-                "message": f"Frame extraction error: {str(e)}",
-                "error": str(e)
-            }
+                    "message": f"Frame extraction error for {video_id}: {str(e)}",
+                    "error": str(e)
+                })
+                overall_message += f"❌ Error for {video_id}: {str(e)}. "
+        
+        return {
+            "overall_success": overall_success,
+            "overall_message": overall_message.strip(),
+            "results": all_extraction_results
+        }
     
     
     def get_dataset_stats(self) -> DatasetStats:
@@ -1074,9 +1093,9 @@ async def get_ui():
                     <div class="card">
                         <h3>Select Video & Areas</h3>
                         <div class="form-group">
-                            <label for="video-select-extraction">Choose uploaded video:</label>
-                            <select id="video-select-extraction" class="form-control">
-                                <option value="">Select a video...</option>
+                            <label for="video-select-extraction">Choose uploaded video(s):</label>
+                            <select id="video-select-extraction" class="form-control" multiple size="5">
+                                <option value="" disabled>Select videos...</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -1377,7 +1396,7 @@ async def get_ui():
                     uploadedVideos = videos;
 
                     const select = document.getElementById('video-select-extraction');
-                    select.innerHTML = '<option value="">Select a video...</option>';
+                    select.innerHTML = '<option value="" disabled>Select videos...</option>';
 
                     if (videos.length === 0) {
                         select.innerHTML += '<option value="" disabled>No videos available</option>';
@@ -1401,9 +1420,11 @@ async def get_ui():
             
             // Frame extraction
             async function extractFrames() {
-                const videoId = document.getElementById('video-select-extraction').value;
-                if (!videoId) {
-                    showStatus('extraction-status', 'Please select a video first.', 'error');
+                const videoSelect = document.getElementById('video-select-extraction');
+                const videoIds = Array.from(videoSelect.selectedOptions).map(option => option.value);
+
+                if (videoIds.length === 0) {
+                    showStatus('extraction-status', 'Please select at least one video first.', 'error');
                     return;
                 }
 
@@ -1426,7 +1447,7 @@ async def get_ui():
 
                 try {
                     const requestBody = {
-                        video_id: videoId,
+                        video_ids: videoIds,
                         strategy: 'area_specific',
                         areas: selectedAreas,
                         max_frames_per_area: parseInt(maxFrames)
@@ -1440,23 +1461,26 @@ async def get_ui():
 
                     const result = await response.json();
                     
-                    if (result.success) {
-                        showStatus('extraction-status', `✅ ${result.message}`, 'success');
+                    if (result.overall_success) {
+                        showStatus('extraction-status', `✅ ${result.overall_message}`, 'success');
                         document.getElementById('extraction-progress-bar').style.width = '100%';
                         document.getElementById('extraction-progress-bar').textContent = '100%';
                         
                         let resultsHtml = '<strong>Extracted Frames Summary:</strong>';
-                        if (result.area_breakdown) {
-                            for (const [area, count] of Object.entries(result.area_breakdown)) {
-                                resultsHtml += `<div class="file-item"><span>🏀 ${area.replace('_', ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}:</span><span>${count} frames</span></div>`;
-                            }
-                            resultsHtml += `<div class="file-item" style="font-weight: 600;"><span>Total Extracted:</span><span>${result.frame_count} frames</span></div>`;
+                        if (result.results) {
+                            result.results.forEach(videoResult => {
+                                if (videoResult.success) {
+                                    resultsHtml += `<div class="file-item"><span>✅ ${videoResult.video_id.split('_')[0]}...</span><span>${videoResult.message}</span></div>`;
+                                } else {
+                                    resultsHtml += `<div class="file-item"><span>❌ ${videoResult.video_id.split('_')[0]}...</span><span>${videoResult.message}</span></div>`;
+                                }
+                            });
                         } else {
                             resultsHtml += `<p class="status-message info">No detailed breakdown available.</p>`;
                         }
                         document.getElementById('extraction-results-display').innerHTML = resultsHtml;
                     } else {
-                        showStatus('extraction-status', `❌ Extraction failed: ${result.message}`, 'error');
+                        showStatus('extraction-status', `❌ Extraction failed: ${result.overall_message}`, 'error');
                         document.getElementById('extraction-progress-bar').style.width = '0%';
                         document.getElementById('extraction-progress-bar').textContent = 'Error';
                     }
