@@ -27,35 +27,52 @@ from fastapi import FastAPI, HTTPException, UploadFile, File, Form, BackgroundTa
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import uvicorn
 from minio import Minio
 from minio.error import S3Error
+from ultralytics import YOLO
+from ai_service.service.core.training_scheduler import training_scheduler
 
-# Setup logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+try:
+    from PIL import Image
+except ImportError:
+    logging.error("❌ 'Pillow' library not found. Please install it: pip install Pillow")
+    # Exit is not good in a FastAPI app, so we'll log and handle gracefully
+    Image = None
 
-# MinIO Configuration
-MINIO_ENDPOINT = "localhost:9000"
-MINIO_ACCESS_KEY = "minioadmin"
-MINIO_SECRET_KEY = "minioadmin"
-MINIO_BUCKET = "basketball-videos"
+try:
+    import imagehash
+except ImportError:
+    logging.error("❌ 'imagehash' library not found. Please install it: pip install imagehash")
+    # Exit is not good in a FastAPI app, so we'll log and handle gracefully
+    imagehash = None
 
-# Initialize MinIO client
-minio_client = Minio(
-    MINIO_ENDPOINT,
-    access_key=MINIO_ACCESS_KEY,
-    secret_key=MINIO_SECRET_KEY,
-    secure=False
-)
+try:
+    import cv2
+    import numpy as np
+except ImportError:
+    logging.error("❌ 'opencv-python' library not found. Please install it: pip install opencv-python")
+    # Exit is not good in a FastAPI app, so we'll log and handle gracefully
+    cv2 = None
+    np = None
 
-# Pydantic models
+# Pydantic Models
+class TrainingConfig(BaseModel):
+    model_name: str = Field("yolov8n.pt", description="Base YOLOv8 model to use for training (e.g., yolov8n.pt, yolov8s.pt)")
+    epochs: int = Field(50, description="Number of training epochs")
+    batch_size: int = Field(16, description="Batch size for training")
+    img_size: int = Field(640, description="Image size for training and inference")
+    data_yaml_path: str = Field("datasets/basketball/basketball_data.yaml", description="Path to the data.yaml file")
+    patience: int = Field(50, description="Epochs to wait for no improvement before stopping early")
+    project_name: str = Field("yolov8_basketball", description="Name of the training project")
+
 class VideoUploadResponse(BaseModel):
     success: bool
     message: str
     video_id: Optional[str] = None
     video_url: Optional[str] = None
+    area_tag: Optional[str] = None
 
 class FrameExtractionRequest(BaseModel):
     video_ids: List[str]
@@ -93,6 +110,24 @@ class DatasetStats(BaseModel):
     train_frames: int
     val_frames: int
     test_frames: int
+
+# Setup logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+# MinIO Configuration
+MINIO_ENDPOINT = "localhost:9000"
+MINIO_ACCESS_KEY = "minioadmin"
+MINIO_SECRET_KEY = "minioadmin"
+MINIO_BUCKET = "basketball-videos" # Reintroduced global MinIO bucket
+
+# Initialize MinIO client
+minio_client = Minio(
+    MINIO_ENDPOINT,
+    access_key=MINIO_ACCESS_KEY,
+    secret_key=MINIO_SECRET_KEY,
+    secure=False
+)
 
 # Global state
 training_status = TrainingStatus(
@@ -148,45 +183,70 @@ class YOLOTrainingManager:
             2: "court_lines",
             3: "hoop"
         }
-        
-        # Ensure MinIO bucket exists
-        self._ensure_bucket_exists()
+
+        self.training_thread = None
+
+        # Ensure the single global MinIO bucket exists on startup
+        self._ensure_bucket_exists(MINIO_BUCKET)
     
-    def _ensure_bucket_exists(self):
+    def _ensure_bucket_exists(self, bucket_name: str):
         """Ensure the MinIO bucket exists."""
         try:
-            if not minio_client.bucket_exists(MINIO_BUCKET):
-                minio_client.make_bucket(MINIO_BUCKET)
-                logger.info(f"✅ Created MinIO bucket: {MINIO_BUCKET}")
+            if not minio_client.bucket_exists(bucket_name):
+                minio_client.make_bucket(bucket_name)
+                logger.info(f"✅ Created MinIO bucket: {bucket_name}")
             else:
-                logger.info(f"✅ MinIO bucket exists: {MINIO_BUCKET}")
+                logger.info(f"✅ MinIO bucket exists: {bucket_name}")
         except Exception as e:
             logger.warning(f"⚠️ MinIO not available: {e}")
             logger.warning("App will work in local mode without MinIO storage")
     
-    def upload_video(self, file: UploadFile) -> VideoUploadResponse:
-        """Upload video to local storage (fallback if MinIO not available)."""
+    def upload_video(self, file: UploadFile, area_tag: Optional[str] = None) -> VideoUploadResponse:
+        """Upload video to MinIO storage."""
+        # Ensure the main bucket exists (done in __init__)
+        
+        # If no area_tag, default to 'unspecified'
+        effective_area_tag = area_tag if area_tag else "unspecified"
+        
         try:
-            # Generate unique video ID
-            video_id = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{file.filename}"
+            # Generate unique video ID (just filename portion)
+            video_filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{file.filename}"
             
-            # Create uploads directory
-            uploads_dir = self.base_dir / "uploads"
-            uploads_dir.mkdir(exist_ok=True)
+            # MinIO object name will be {area_tag}/{video_filename}
+            minio_object_name = f"{effective_area_tag}/{video_filename}"
+            
+            # Full video ID for UI will be {area_tag}/{video_filename}
+            full_video_id = minio_object_name
+
+            # Create local uploads directory for this area_tag within the main bucket structure
+            uploads_dir_for_area = self.base_dir / "uploads" / MINIO_BUCKET / effective_area_tag
+            uploads_dir_for_area.mkdir(parents=True, exist_ok=True)
             
             # Save file locally
-            video_path = uploads_dir / video_id
-            with open(video_path, "wb") as buffer:
+            local_video_path = uploads_dir_for_area / video_filename
+            file.file.seek(0) # Ensure file pointer is at the beginning for local save
+            with open(local_video_path, "wb") as buffer:
                 content = file.file.read()
                 buffer.write(content)
             
-            logger.info(f"✅ Video uploaded locally: {video_id}")
+            logger.info(f"✅ Video uploaded locally to {MINIO_BUCKET}/{minio_object_name}")
             
+            # Upload to MinIO
+            try:
+                file.file.seek(0) # Reset file pointer for MinIO upload again
+                minio_client.put_object(MINIO_BUCKET, minio_object_name, file.file, length=-1, part_size=10*1024*1024)
+                logger.info(f"✅ Video uploaded to MinIO: {MINIO_BUCKET}/{minio_object_name}")
+                video_url = f"http://{MINIO_ENDPOINT}/{MINIO_BUCKET}/{minio_object_name}"
+            except Exception as minio_e:
+                logger.warning(f"⚠️ MinIO upload failed for {MINIO_BUCKET}/{minio_object_name}: {minio_e}. Video remains in local storage only.")
+                video_url = f"file://{local_video_path}"
+
             return VideoUploadResponse(
                 success=True,
-                message=f"Video uploaded successfully: {file.filename}",
-                video_id=video_id,
-                video_url=f"file://{video_path}"
+                message=f"Video uploaded successfully to {effective_area_tag}: {file.filename}",
+                video_id=full_video_id,
+                video_url=video_url,
+                area_tag=effective_area_tag
             )
             
         except Exception as e:
@@ -196,30 +256,46 @@ class YOLOTrainingManager:
                 message=f"Video upload failed: {str(e)}"
             )
     
-    def download_video_from_minio(self, video_id: str) -> str:
+    def download_video_from_minio(self, bucket_name: str, video_id: str) -> str:
         """Get video path (local storage fallback)."""
+        # video_id is now expected to be in format 'area_tag/video_filename'
+        parts = video_id.split('/', 1)
+        if len(parts) == 2:
+            area_tag = parts[0]
+            video_filename = parts[1]
+        else:
+            # Fallback for old format or if area_tag is not present in video_id
+            area_tag = "unspecified"
+            video_filename = video_id
+
+        # Use the global MINIO_BUCKET
+        effective_bucket = MINIO_BUCKET
+
         try:
             # Check local uploads directory first
-            uploads_dir = self.base_dir / "uploads"
-            local_video_path = uploads_dir / video_id
+            uploads_dir = self.base_dir / "uploads" / effective_bucket / area_tag
+            local_video_path = uploads_dir / video_filename
             
             if local_video_path.exists():
-                logger.info(f"✅ Video found locally: {video_id}")
+                logger.info(f"✅ Video found locally: {effective_bucket}/{area_tag}/{video_filename}")
                 return str(local_video_path)
             
             # Try MinIO if available
+            minio_object_name = f"{area_tag}/{video_filename}"
             try:
-                temp_video_path = self.temp_dir / video_id
-                minio_client.fget_object(MINIO_BUCKET, video_id, str(temp_video_path))
-                logger.info(f"✅ Video downloaded from MinIO: {video_id}")
+                temp_video_path = self.temp_dir / video_filename # Use only filename for temp storage
+                minio_client.fget_object(effective_bucket, minio_object_name, str(temp_video_path))
+                logger.info(f"✅ Video downloaded from MinIO: {effective_bucket}/{minio_object_name}")
                 return str(temp_video_path)
-            except:
-                raise FileNotFoundError(f"Video not found: {video_id}")
+            except S3Error as e:
+                raise FileNotFoundError(f"Video not found in MinIO {effective_bucket}/{minio_object_name}: {e.code}")
+            except Exception as e:
+                raise FileNotFoundError(f"Video not found: {effective_bucket}/{minio_object_name}: {e}")
             
         except Exception as e:
-            logger.error(f"❌ Video download error: {e}")
-            raise HTTPException(status_code=500, detail=f"Failed to download video: {str(e)}")
-        
+            logger.error(f"❌ Video download error for {video_id}: {e}")
+            raise HTTPException(status_code=500, detail=f"Failed to download video {video_id}: {str(e)}")
+    
     def extract_frames(self, request: FrameExtractionRequest) -> Dict[str, Any]:
         """Extract frames from multiple videos using MinIO storage."""
         all_extraction_results = []
@@ -230,8 +306,20 @@ class YOLOTrainingManager:
             try:
                 logger.info(f"🎬 Starting frame extraction for video: {video_id}")
                 
+                # The video_id is now in the format area_tag/video_filename
+                # We need to extract the area_tag and video_filename for correct MinIO pathing
+                parts = video_id.split('/', 1)
+                if len(parts) == 2:
+                    area_tag = parts[0]
+                    actual_video_id = parts[1] # This is the video_filename
+                else:
+                    # Fallback if not in expected format, treat entire video_id as filename
+                    area_tag = "unspecified" # Default area tag
+                    actual_video_id = video_id
+
                 # Download video from MinIO
-                video_path = self.download_video_from_minio(video_id)
+                # Pass the global MINIO_BUCKET and the parsed video_id (which is area_tag/video_filename)
+                video_path = self.download_video_from_minio(MINIO_BUCKET, video_id)
                 
                 # Build command for area-specific extraction
                 cmd = [
@@ -403,43 +491,35 @@ class YOLOTrainingManager:
                 "error": str(e)
             }
     
-    def start_training(self, request: TrainingRequest) -> Dict[str, Any]:
-        """Start YOLOv8 training in background."""
-        try:
-            logger.info(f"🏋️ Starting YOLOv8 training: {request.model_name}")
-            
-            # Update training status
-            global training_status
-            training_status.status = "starting"
-            training_status.progress = 0.0
-            training_status.current_epoch = 0
-            training_status.total_epochs = request.epochs
-            training_status.start_time = datetime.now().isoformat()
-            training_status.message = "Initializing training..."
-            
-            # Start training in background thread
-            training_thread = threading.Thread(
-                target=self._run_training,
-                args=(request,),
-                daemon=True
-            )
-            training_thread.start()
-            
-            return {
-                "success": True,
-                "message": "Training started successfully",
-                "training_id": request.model_name
-            }
-            
-        except Exception as e:
-            logger.error(f"❌ Error starting training: {e}")
-            return {
-                "success": False,
-                "message": f"Error starting training: {str(e)}",
-                "error": str(e)
-            }
+    def start_training(self, config: TrainingConfig):
+        """Initiate the training process in a separate thread."""
+        if training_scheduler.is_running:
+            logger.info("ℹ️ Training is already in progress. Skipping new request.")
+            status = training_scheduler.get_training_status()
+            return {"status": "busy", "message": status.get("message", "Training already in progress"), "detail": status}
+
+        logger.info(f"Starting training with config: {config.model_dump()}")
+        
+        # Reset training status
+        global training_status
+        training_status.status = "running"
+        training_status.progress = 0.0
+        training_status.current_epoch = 0
+        training_status.total_epochs = config.epochs
+        training_status.loss = 0.0
+        training_status.mAP = 0.0
+        training_status.message = "Initializing training..."
+        training_status.start_time = datetime.now().isoformat()
+        training_status.estimated_completion = "Calculating..."
+
+        self.training_thread = threading.Thread(
+            target=self._run_training,
+            args=(config.model_name, config.data_yaml_path, config.epochs, config.batch_size, config.img_size, config.patience, config.project_name)
+        )
+        self.training_thread.start()
+        logger.info("Training thread started.")
     
-    def _run_training(self, request: TrainingRequest):
+    def _run_training(self, model_name, data_yaml, epochs, batch_size, img_size, patience, project_name):
         """Run YOLOv8 training (background thread)."""
         global training_status
         try:
@@ -449,12 +529,12 @@ class YOLOTrainingManager:
             # Build training command
             cmd = [
                 "python", "training/train_basketball_yolo.py",
-                "--epochs", str(request.epochs),
-                "--batch_size", str(request.batch_size),
-                "--img_size", str(request.img_size),
-                "--device", request.device,
-                "--data_yaml", request.data_yaml,
-                "--name", request.model_name
+                "--epochs", str(epochs),
+                "--batch_size", str(batch_size),
+                "--img_size", str(img_size),
+                "--device", "cpu",
+                "--data_yaml", data_yaml,
+                "--name", model_name
             ]
             
             # Run training
@@ -641,6 +721,403 @@ print(json.dumps(detections))
         except Exception as e:
             logger.error(f"❌ Error getting models: {e}")
             return []
+
+    def delete_videos_by_area(self, area_tag: str) -> Dict[str, Any]:
+        """Delete videos from MinIO and local storage based on area tag (folder prefix)."""
+        deleted_count = 0
+        errors = []
+        
+        effective_area_tag = area_tag if area_tag else "unspecified"
+        minio_prefix = f"{effective_area_tag}/"
+
+        # Delete from local storage
+        uploads_dir_for_area = self.base_dir / "uploads" / MINIO_BUCKET / effective_area_tag
+        if uploads_dir_for_area.exists():
+            for video_file in uploads_dir_for_area.glob("*"):
+                if video_file.is_file():
+                    try:
+                        os.remove(video_file)
+                        deleted_count += 1
+                        logger.info(f"🗑️ Deleted local video: {video_file.name} from {MINIO_BUCKET}/{effective_area_tag}")
+                    except Exception as e:
+                        errors.append(f"Failed to delete local video {video_file.name}: {str(e)}")
+                        logger.error(f"❌ Error deleting local video {video_file.name}: {e}")
+            
+            # Attempt to remove the local area_tag directory if it's empty
+            try:
+                if not any(uploads_dir_for_area.iterdir()): 
+                    shutil.rmtree(uploads_dir_for_area)
+                    logger.info(f"🗑️ Deleted empty local folder: {uploads_dir_for_area}")
+            except Exception as e:
+                errors.append(f"Failed to remove local area folder {uploads_dir_for_area}: {str(e)}")
+                logger.error(f"❌ Error removing local area folder {uploads_dir_for_area}: {e}")
+
+        # Delete from MinIO
+        try:
+            objects_to_delete = minio_client.list_objects(MINIO_BUCKET, prefix=minio_prefix, recursive=True)
+            for obj in objects_to_delete:
+                try:
+                    minio_client.remove_object(MINIO_BUCKET, obj.object_name)
+                    deleted_count += 1
+                    logger.info(f"🗑️ Deleted MinIO object: {MINIO_BUCKET}/{obj.object_name}")
+                except S3Error as e:
+                    errors.append(f"Failed to delete MinIO object {MINIO_BUCKET}/{obj.object_name}: {e.code}")
+                    logger.error(f"❌ Error deleting MinIO object {MINIO_BUCKET}/{obj.object_name}: {e}")
+        except S3Error as e:
+            errors.append(f"Failed to list MinIO objects in bucket {MINIO_BUCKET} with prefix {minio_prefix}: {e.code}")
+            logger.error(f"❌ Error listing MinIO objects in bucket {MINIO_BUCKET} with prefix {minio_prefix}: {e}")
+        except Exception as e:
+            errors.append(f"Generic error listing MinIO objects in bucket {MINIO_BUCKET} with prefix {minio_prefix}: {str(e)}")
+            logger.error(f"❌ Generic error listing MinIO objects in bucket {MINIO_BUCKET} with prefix {minio_prefix}: {e}")
+            
+        if not errors:
+            return {"success": True, "message": f"Successfully deleted {deleted_count} videos from area tag '{area_tag}'."}
+        else:
+            return {"success": False, "message": f"Deleted {deleted_count} videos, but encountered errors: {', '.join(errors)}", "errors": errors}
+
+    def get_uploaded_videos(self, area_tag: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Get list of uploaded videos from MinIO and local storage, with optional area tag filter."""
+        videos = []
+        unique_video_ids = set()
+
+        minio_prefix = f"{area_tag}/" if area_tag else ""
+
+        # Fetch from MinIO
+        try:
+            objects = minio_client.list_objects(MINIO_BUCKET, prefix=minio_prefix, recursive=True)
+            for obj in objects:
+                # Object name is expected to be 'area_tag/video_filename'
+                parts = obj.object_name.split('/', 1)
+                if len(parts) == 2:
+                    current_area_tag = parts[0]
+                    video_filename = parts[1]
+                else:
+                    current_area_tag = "unspecified" # Fallback if no area tag in path
+                    video_filename = obj.object_name
+
+                full_video_id_with_path = f"{current_area_tag}/{video_filename}"
+
+                if full_video_id_with_path not in unique_video_ids:
+                    videos.append({
+                        "id": full_video_id_with_path, # Store as area_tag/video_filename
+                        "name": video_filename, # Display just the filename
+                        "size": obj.size,
+                        "last_modified": obj.last_modified.isoformat(),
+                        "area_tag": current_area_tag
+                    })
+                    unique_video_ids.add(full_video_id_with_path)
+        except S3Error as e:
+            if e.code == "NoSuchBucket":
+                logger.info(f"MinIO bucket '{MINIO_BUCKET}' does not exist.")
+            else:
+                logger.error(f"❌ Error listing MinIO objects in bucket {MINIO_BUCKET}: {e}")
+        except Exception as e:
+            logger.error(f"❌ Generic error listing MinIO objects in bucket {MINIO_BUCKET}: {e}")
+
+        # Fetch from local storage
+        local_base_dir = self.base_dir / "uploads" / MINIO_BUCKET
+        if local_base_dir.exists():
+            # Iterate through area_tag subdirectories or directly in base if no area_tag filter
+            if area_tag:
+                local_area_dir = local_base_dir / area_tag
+                if local_area_dir.exists():
+                    self._add_local_videos_from_dir(local_area_dir, area_tag, videos, unique_video_ids)
+            else:
+                for sub_dir in local_base_dir.iterdir():
+                    if sub_dir.is_dir():
+                        self._add_local_videos_from_dir(sub_dir, sub_dir.name, videos, unique_video_ids)
+                    elif sub_dir.is_file(): # Handle files directly in MINIO_BUCKET if they exist (unspecified)
+                        video_id = sub_dir.name
+                        video_name = video_id.split('_', 1)[1] if '_' in video_id else video_id
+                        full_video_id_with_path = f"unspecified/{video_id}" # Default to unspecified
+
+                        if full_video_id_with_path not in unique_video_ids:
+                            videos.append({
+                                "id": full_video_id_with_path,
+                                "name": video_name,
+                                "size": sub_dir.stat().st_size,
+                                "last_modified": datetime.fromtimestamp(sub_dir.stat().st_mtime).isoformat(),
+                                "area_tag": "unspecified"
+                            })
+                            unique_video_ids.add(full_video_id_with_path)
+        
+        return videos
+
+    def _add_local_videos_from_dir(self, directory: Path, area_tag: str, videos: List[Dict[str, Any]], unique_video_ids: set):
+        """Helper to add videos from a local directory to the list."""
+        for video_file in directory.glob("*"):
+            if video_file.is_file():
+                video_id = video_file.name
+                video_name = video_id.split('_', 1)[1] if '_' in video_id else video_id
+                full_video_id_with_path = f"{area_tag}/{video_id}"
+
+                if full_video_id_with_path not in unique_video_ids:
+                    videos.append({
+                        "id": full_video_id_with_path,
+                        "name": video_name,
+                        "size": video_file.stat().st_size,
+                        "last_modified": datetime.fromtimestamp(video_file.stat().st_mtime).isoformat(),
+                        "area_tag": area_tag
+                    })
+                    unique_video_ids.add(full_video_id_with_path)
+
+    def get_minio_bucket_names(self) -> List[str]:
+        """Get list of unique area tags (folder prefixes) from the main MinIO bucket."""
+        area_tags = set()
+        try:
+            objects = minio_client.list_objects(MINIO_BUCKET, recursive=True, prefix="") # List all objects
+            for obj in objects:
+                if '/' in obj.object_name:
+                    area_tags.add(obj.object_name.split('/')[0])
+                else:
+                    # Objects directly in the bucket with no prefix are 'unspecified'
+                    area_tags.add("unspecified")
+            
+            # Also check local storage for area tags
+            local_base_dir = self.base_dir / "uploads" / MINIO_BUCKET
+            if local_base_dir.exists():
+                for sub_dir in local_base_dir.iterdir():
+                    if sub_dir.is_dir():
+                        area_tags.add(sub_dir.name)
+                    elif sub_dir.is_file():
+                        area_tags.add("unspecified")
+
+            return sorted(list(area_tags))
+        except S3Error as e:
+            if e.code == "NoSuchBucket":
+                logger.info(f"MinIO bucket '{MINIO_BUCKET}' does not exist.")
+                # Still try to get local tags even if MinIO bucket is missing
+                local_tags = set()
+                local_base_dir = self.base_dir / "uploads" / MINIO_BUCKET
+                if local_base_dir.exists():
+                    for sub_dir in local_base_dir.iterdir():
+                        if sub_dir.is_dir():
+                            local_tags.add(sub_dir.name)
+                        elif sub_dir.is_file():
+                            local_tags.add("unspecified")
+                return sorted(list(local_tags))
+            else:
+                logger.error(f"❌ Error listing MinIO objects in bucket {MINIO_BUCKET}: {e}")
+                return []
+        except Exception as e:
+            logger.error(f"❌ Generic error listing MinIO area tags: {e}")
+            return []
+
+    def find_and_remove_duplicates_from_area(self, area_tag: str, hash_size: int = 8, tolerance: int = 5, delete_duplicates: bool = True) -> Dict[str, Any]:
+        """Finds and optionally removes duplicate images from a specific area_tag using perceptual hashing."""
+        if Image is None or imagehash is None:
+            return {"success": False, "message": "Pillow or imagehash library not installed. Cannot perform duplicate cleaning."}
+
+        effective_area_tag = area_tag if area_tag else "unspecified"
+        input_dir = self.base_dir / "datasets" / "basketball" / "area_frames" / effective_area_tag / "images"
+        
+        if not input_dir.is_dir():
+            return {"success": False, "message": f"Input directory for area '{effective_area_tag}' not found: {input_dir}"}
+
+        logger.info(f"🔍 Scanning {input_dir} for duplicate frames (Hash Size: {hash_size}, Tolerance: {tolerance})...")
+
+        hashes = {}
+        duplicates_found = []
+        images_processed = 0
+        
+        image_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff'}
+
+        for img_path in input_dir.iterdir():
+            if img_path.is_file() and img_path.suffix.lower() in image_extensions:
+                images_processed += 1
+                try:
+                    img = Image.open(img_path)
+                    current_hash = imagehash.average_hash(img, hash_size=hash_size)
+                    
+                    is_duplicate = False
+                    for existing_hash, original_path in hashes.items():
+                        if abs(current_hash - existing_hash) <= tolerance:
+                            is_duplicate = True
+                            duplicates_found.append({"duplicate": str(img_path), "original": str(original_path), "hash_diff": abs(current_hash - existing_hash)})
+                            logger.info(f"  ⚠️ Duplicate found: {img_path.name} is similar to {original_path.name} (Diff: {abs(current_hash - existing_hash)}) ")
+                            if delete_duplicates:
+                                os.remove(img_path)
+                                logger.info(f"  🗑️ Deleted duplicate: {img_path.name}")
+                            break
+                    
+                    if not is_duplicate:
+                        hashes[current_hash] = img_path
+
+                except Exception as e:
+                    logger.warning(f"Skipping {img_path.name} due to error: {e}")
+
+        logger.info(f"✅ Finished scanning. Processed {images_processed} images.")
+        logger.info(f"Found {len(duplicates_found)} near-duplicate frames.")
+        if delete_duplicates:
+            logger.info(f"Deleted {len(duplicates_found)} duplicate frames.")
+
+        return {
+            "success": True,
+            "total_images_processed": images_processed,
+            "duplicates_found": len(duplicates_found),
+            "duplicates_deleted": len(duplicates_found) if delete_duplicates else 0,
+            "details": duplicates_found,
+            "message": f"Duplicate frame detection and removal completed for area '{effective_area_tag}'."
+        }
+
+    def find_and_remove_blurry_frames_from_area(self, area_tag: str, threshold: float = 100.0, delete_blurry: bool = True) -> Dict[str, Any]:
+        """Finds and optionally removes blurry images from a specific area_tag using Laplacian variance."""
+        if cv2 is None or np is None:
+            return {"success": False, "message": "opencv-python or numpy library not installed. Cannot perform blur cleaning."}
+
+        effective_area_tag = area_tag if area_tag else "unspecified"
+        input_dir = self.base_dir / "datasets" / "basketball" / "area_frames" / effective_area_tag / "images"
+        
+        if not input_dir.is_dir():
+            return {"success": False, "message": f"Input directory for area '{effective_area_tag}' not found: {input_dir}"}
+
+        logger.info(f"🔍 Scanning {input_dir} for blurry frames (Threshold: {threshold})...")
+
+        blurry_frames_found = []
+        images_processed = 0
+        
+        image_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff'}
+
+        for img_path in input_dir.iterdir():
+            if img_path.is_file() and img_path.suffix.lower() in image_extensions:
+                images_processed += 1
+                try:
+                    img = cv2.imread(str(img_path))
+                    if img is None:
+                        logger.warning(f"Skipping {img_path.name}: Could not read image.")
+                        continue
+
+                    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                    fm = cv2.Laplacian(gray, cv2.CV_64F).var()
+                    
+                    if fm < threshold:
+                        blurry_frames_found.append({"path": str(img_path), "laplacian_variance": fm})
+                        logger.info(f"  ⚠️ Blurry frame found: {img_path.name} (Laplacian Variance: {fm:.2f}) ")
+                        if delete_blurry:
+                            os.remove(img_path)
+                            logger.info(f"  🗑️ Deleted blurry frame: {img_path.name}")
+
+                except Exception as e:
+                    logger.warning(f"Skipping {img_path.name} due to error: {e}")
+
+        logger.info(f"✅ Finished scanning. Processed {images_processed} images.")
+        logger.info(f"Found {len(blurry_frames_found)} blurry frames.")
+        if delete_blurry:
+            logger.info(f"Deleted {len(blurry_frames_found)} blurry frames.")
+
+        return {
+            "success": True,
+            "total_images_processed": images_processed,
+            "blurry_frames_found": len(blurry_frames_found),
+            "blurry_frames_deleted": len(blurry_frames_found) if delete_blurry else 0,
+            "details": blurry_frames_found,
+            "message": f"Blurry frame detection and removal completed for area '{effective_area_tag}'."
+        }
+
+    def find_and_remove_empty_labels_from_area(self, area_tag: str, delete_files: bool = True) -> Dict[str, Any]:
+        """Finds and optionally removes images and their empty label files for a specific area_tag."""
+        effective_area_tag = area_tag if area_tag else "unspecified"
+        input_images_dir = self.base_dir / "datasets" / "basketball" / "area_frames" / effective_area_tag / "images"
+        input_labels_dir = self.base_dir / "datasets" / "basketball" / "area_frames" / effective_area_tag / "labels"
+        
+        if not input_images_dir.is_dir():
+            return {"success": False, "message": f"Input images directory for area '{effective_area_tag}' not found: {input_images_dir}"}
+        if not input_labels_dir.is_dir():
+            return {"success": False, "message": f"Input labels directory for area '{effective_area_tag}' not found: {input_labels_dir}"}
+
+        logger.info(f"🔍 Scanning {input_labels_dir} for empty label files for area '{effective_area_tag}'...")
+
+        empty_labels_found = []
+        files_processed = 0
+        
+        image_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff'}
+
+        for label_path in input_labels_dir.glob("*.txt"):
+            files_processed += 1
+            try:
+                if label_path.stat().st_size == 0: # Check if file is empty
+                    empty_labels_found.append(str(label_path))
+                    logger.info(f"  ⚠️ Empty label found: {label_path.name}")
+                    
+                    if delete_files:
+                        os.remove(label_path)
+                        logger.info(f"  🗑️ Deleted empty label file: {label_path.name}")
+
+                        image_stem = label_path.stem
+                        deleted_image = False
+                        for ext in image_extensions:
+                            image_path = input_images_dir / f"{image_stem}{ext}"
+                            if image_path.is_file():
+                                os.remove(image_path)
+                                logger.info(f"  🗑️ Deleted corresponding image: {image_path.name}")
+                                deleted_image = True
+                                break
+                        if not deleted_image:
+                            logger.warning(f"  Could not find corresponding image for {label_path.name} in {input_images_dir}")
+
+            except Exception as e:
+                logger.warning(f"Skipping {label_path.name} due to error: {e}")
+
+        logger.info(f"✅ Finished scanning. Processed {files_processed} label files.")
+        logger.info(f"Found and {('deleted' if delete_files else 'reported')} {len(empty_labels_found)} empty label files and their images for area '{effective_area_tag}'.")
+
+        return {
+            "success": True,
+            "total_label_files_processed": files_processed,
+            "empty_labels_found": len(empty_labels_found),
+            "empty_labels_deleted": len(empty_labels_found) if delete_files else 0,
+            "details": empty_labels_found,
+            "message": f"Empty label detection and removal completed for area '{effective_area_tag}'."
+        }
+
+    def import_local_videos(self, source_directory: str, area_tag: str) -> Dict[str, Any]:
+        """Imports videos from a local directory into the MinIO/local storage system."""
+        source_path = Path(source_directory)
+        if not source_path.exists():
+            return {"success": False, "message": f"Source directory not found: {source_directory}"}
+        if not source_path.is_dir():
+            return {"success": False, "message": f"Source path is not a directory: {source_directory}"}
+
+        imported_count = 0
+        errors = []
+
+        effective_area_tag = area_tag if area_tag else "unspecified"
+
+        # Ensure the main bucket exists
+        self._ensure_bucket_exists(MINIO_BUCKET)
+
+        # Create local uploads directory for this area_tag within the main bucket structure
+        uploads_dir_for_area = self.base_dir / "uploads" / MINIO_BUCKET / effective_area_tag
+        uploads_dir_for_area.mkdir(parents=True, exist_ok=True)
+
+        video_extensions = {'.mp4', '.avi', '.mov', '.mkv', '.webm'}
+
+        for video_file in source_path.iterdir():
+            if video_file.is_file() and video_file.suffix.lower() in video_extensions:
+                try:
+                    video_filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{video_file.name}"
+                    minio_object_name = f"{effective_area_tag}/{video_filename}"
+                    full_video_id = minio_object_name
+
+                    # Copy to local storage
+                    local_target_path = uploads_dir_for_area / video_filename
+                    shutil.copy2(video_file, local_target_path)
+                    logger.info(f"✅ Copied video locally: {local_target_path}")
+
+                    # Upload to MinIO
+                    with open(video_file, "rb") as data:
+                        minio_client.put_object(MINIO_BUCKET, minio_object_name, data, length=video_file.stat().st_size, part_size=10*1024*1024)
+                    logger.info(f"✅ Uploaded to MinIO: {MINIO_BUCKET}/{minio_object_name}")
+
+                    imported_count += 1
+                except Exception as e:
+                    errors.append(f"Failed to import {video_file.name}: {str(e)}")
+                    logger.error(f"❌ Error importing {video_file.name}: {e}")
+
+        if not errors:
+            return {"success": True, "message": f"Successfully imported {imported_count} videos into area '{effective_area_tag}'."}
+        else:
+            return {"success": False, "message": f"Imported {imported_count} videos, but encountered errors: {', '.join(errors)}", "errors": errors}
 
 # Initialize training manager
 training_manager = YOLOTrainingManager()
@@ -1053,6 +1530,7 @@ async def get_ui():
             <div class="tabs">
                 <button class="tab active" onclick="showTab('upload', this)">📹 Video Upload</button>
                 <button class="tab" onclick="showTab('extraction', this)">🎬 Frame Extraction</button>
+                <button class="tab" onclick="showTab('cleaning', this)">🧹 Dataset Cleaning</button>
                 <button class="tab" onclick="showTab('training', this)">🏋️ Training</button>
                 <button class="tab" onclick="showTab('testing', this)">🧪 Testing</button>
             </div>
@@ -1070,11 +1548,46 @@ async def get_ui():
                             <p style="font-size: 0.8em; color: var(--secondary-color);">✅ Videos are stored locally (MinIO fallback available)</p>
                         </div>
                         <input type="file" id="video-file-input" multiple accept="video/*" style="display: none;" onchange="handleVideoUpload(event)">
+                        <div class="form-group">
+                            <label for="upload-area-tag-select">Area Tag (optional):</label>
+                            <select id="upload-area-tag-select" class="form-control" onchange="handleAreaTagSelectChange()">
+                                <option value="">None</option>
+                                <option value="create-new">Create New Area Tag...</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="new-area-tag-input-group" style="display: none;">
+                            <label for="new-area-tag">New Area Tag Name:</label>
+                            <input type="text" id="new-area-tag" class="form-control" placeholder="Enter new area tag (e.g., 'game1', 'practice')">
+                        </div>
                         <div id="video-list" class="file-list">
                             <strong>Selected Videos:</strong>
                             <p class="status-message info">No videos selected yet.</p>
                         </div>
                         <div id="upload-status" class="status-message"></div>
+
+                        <hr style="margin: 30px 0; border-color: var(--border-color);">
+
+                        <h3>Import Videos from Local Directory</h3>
+                        <p style="font-size: 0.9em; color: var(--text-light); margin-bottom: 15px;">
+                            Scan a local directory for video files and import them to the selected Area Tag.
+                        </p>
+                        <div class="form-group">
+                            <label for="local-import-dir">Local Directory Path:</label>
+                            <input type="text" id="local-import-dir" class="form-control" placeholder="e.g., /home/user/downloads/bal_videos">
+                        </div>
+                        <div class="form-group">
+                            <label for="local-import-area-tag-select">Area Tag for Imported Videos:</label>
+                            <select id="local-import-area-tag-select" class="form-control" onchange="handleLocalImportAreaTagSelectChange()">
+                                <option value="">None</option>
+                                <option value="create-new">Create New Area Tag...</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="new-local-import-area-tag-input-group" style="display: none;">
+                            <label for="new-local-import-area-tag">New Area Tag Name:</label>
+                            <input type="text" id="new-local-import-area-tag" class="form-control" placeholder="Enter new area tag (e.g., 'game1', 'practice')">
+                        </div>
+                        <button class="btn btn-success" onclick="importLocalVideos()">📁 Import Videos</button>
+                        <div id="import-status" class="status-message"></div>
                     </div>
                     <div class="card">
                         <h3>Uploaded Videos</h3>
@@ -1088,10 +1601,22 @@ async def get_ui():
 
             <!-- Frame Extraction Tab -->
             <div id="extraction" class="tab-content">
-                <h2 class="section-title">🎬 Frame Extraction</h2>
+                <h2 class="section-title">🎬 Extract Frames from Videos</h2>
                 <div class="grid">
                     <div class="card">
                         <h3>Select Video & Areas</h3>
+                        <div class="form-group">
+                            <label for="area-filter-extraction">Filter by Area Tag:</label>
+                            <select id="area-filter-extraction" class="form-control" onchange="loadUploadedVideosForExtraction()">
+                                <option value="">All Areas</option>
+                                <option value="ball">Ball</option>
+                                <option value="player">Player</option>
+                                <option value="court_lines">Court Lines</option>
+                                <option value="hoop">Hoop</option>
+                                <option value="unspecified">Unspecified</option>
+                            </select>
+                            <button class="btn btn-danger" style="margin-top: 10px;" onclick="confirmAndDeleteVideosByArea()">🗑️ Clear Videos by Selected Area</button>
+                        </div>
                         <div class="form-group">
                             <label for="video-select-extraction">Choose uploaded video(s):</label>
                             <select id="video-select-extraction" class="form-control" multiple size="5">
@@ -1133,9 +1658,86 @@ async def get_ui():
                 </div>
             </div>
 
-            <!-- Training Tab -->
+            <!-- Dataset Cleaning Tab -->
+            <div id="cleaning" class="tab-content">
+                <h2 class="section-title">🧹 Dataset Cleaning Tools</h2>
+                <p>Tools to clean and refine your extracted frames and annotations.</p>
+
+                <div class="grid">
+                    <div class="card">
+                        <h3>Duplicate Frame Cleaner</h3>
+                        <p style="font-size: 0.9em; color: var(--text-light); margin-bottom: 15px;">
+                            Remove near-duplicate images from your dataset based on perceptual hashing.
+                        </p>
+                        <div class="form-group">
+                            <label for="duplicate-cleaner-area-tag-select">Area Tag:</label>
+                            <select id="duplicate-cleaner-area-tag-select" class="form-control">
+                                <option value="">Select an Area Tag</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="duplicate-hash-size">Hash Size (e.g., 8, 16):</label>
+                            <input type="number" id="duplicate-hash-size" class="form-control" value="8" min="4" max="64">
+                        </div>
+                        <div class="form-group">
+                            <label for="duplicate-tolerance">Tolerance (0 for exact match, e.g., 5):</label>
+                            <input type="number" id="duplicate-tolerance" class="form-control" value="5" min="0" max="63">
+                        </div>
+                        <div class="form-check" style="margin-bottom: 15px;">
+                            <input type="checkbox" class="form-check-input" id="duplicate-dry-run">
+                            <label class="form-check-label" for="duplicate-dry-run">Dry Run (only report, don't delete)</label>
+                        </div>
+                        <button class="btn btn-primary" onclick="runDuplicateCleaner()">🗑️ Run Duplicate Cleaner</button>
+                        <div id="duplicate-cleaner-status" class="status-message"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Blurry Frame Cleaner</h3>
+                        <p style="font-size: 0.9em; color: var(--text-light); margin-bottom: 15px;">
+                            Remove blurry images from your dataset using Laplacian variance.
+                        </p>
+                        <div class="form-group">
+                            <label for="blur-cleaner-area-tag-select">Area Tag:</label>
+                            <select id="blur-cleaner-area-tag-select" class="form-control">
+                                <option value="">Select an Area Tag</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="blur-threshold">Laplacian Variance Threshold (e.g., 100):</label>
+                            <input type="number" id="blur-threshold" class="form-control" value="100" min="0">
+                        </div>
+                        <div class="form-check" style="margin-bottom: 15px;">
+                            <input type="checkbox" class="form-check-input" id="blur-dry-run">
+                            <label class="form-check-label" for="blur-dry-run">Dry Run (only report, don't delete)</label>
+                        </div>
+                        <button class="btn btn-primary" onclick="runBlurCleaner()">🗑️ Run Blur Cleaner</button>
+                        <div id="blur-cleaner-status" class="status-message"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Empty Label Cleaner</h3>
+                        <p style="font-size: 0.9em; color: var(--text-light); margin-bottom: 15px;">
+                            Remove image and label files where the label file is empty (no detected objects).
+                        </p>
+                        <div class="form-group">
+                            <label for="empty-label-cleaner-area-tag-select">Area Tag:</label>
+                            <select id="empty-label-cleaner-area-tag-select" class="form-control">
+                                <option value="">Select an Area Tag</option>
+                            </select>
+                        </div>
+                        <div class="form-check" style="margin-bottom: 15px;">
+                            <input type="checkbox" class="form-check-input" id="empty-label-dry-run">
+                            <label class="form-check-label" for="empty-label-dry-run">Dry Run (only report, don't delete)</label>
+                        </div>
+                        <button class="btn btn-primary" onclick="runEmptyLabelCleaner()">🗑️ Run Empty Label Cleaner</button>
+                        <div id="empty-label-cleaner-status" class="status-message"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Model Training Tab -->
             <div id="training" class="tab-content">
-                <h2 class="section-title">🏋️ YOLOv8 Training</h2>
+                <h2 class="section-title">🏋️ Train YOLOv8 Model</h2>
                 <div class="grid">
                     <div class="card">
                         <h3>Training Configuration</h3>
@@ -1231,7 +1833,7 @@ async def get_ui():
                     </div>
                 </div>
             </div>
-        </div>
+        </div> <!-- End of container -->
 
         <script>
             let currentVideoId = '';
@@ -1315,6 +1917,30 @@ async def get_ui():
                 
                 showStatus('upload-status', `Uploading ${files.length} videos...`, 'info');
 
+                const selectedAreaTagOption = document.getElementById('upload-area-tag-select').value;
+                let areaTag = '';
+
+                if (selectedAreaTagOption === 'create-new') {
+                    areaTag = document.getElementById('new-area-tag').value.trim();
+                    if (!areaTag) {
+                        showStatus('upload-status', 'Please enter a new area tag name.', 'error');
+                        return;
+                    }
+                    // Basic validation for area tag name (should not contain '/')
+                    if (areaTag.includes('/')) {
+                        showStatus('upload-status', 'New area tag cannot contain slashes.', 'error');
+                        return;
+                    }
+                } else {
+                    areaTag = selectedAreaTagOption;
+                }
+
+                // Removed frontend validation for empty areaTag as backend handles 'unspecified'
+                // if (!areaTag) {
+                //     showStatus('upload-status', 'Please select or create an area tag.', 'error');
+                //     return;
+                // }
+
                 let successCount = 0;
                 let errorCount = 0;
 
@@ -1323,6 +1949,9 @@ async def get_ui():
                     try {
                         const formData = new FormData();
                         formData.append('file', file);
+                        if (areaTag) {
+                            formData.append('area_tag', areaTag);
+                        }
 
                         const response = await fetch('/api/upload-video', {
                             method: 'POST',
@@ -1336,7 +1965,8 @@ async def get_ui():
                             uploadedVideos.push({
                                 id: result.video_id,
                                 name: file.name,
-                                url: result.video_url
+                                url: result.video_url,
+                                area_tag: result.area_tag
                             });
                         } else {
                             errorCount++;
@@ -1351,10 +1981,104 @@ async def get_ui():
                 if (successCount > 0) {
                     showStatus('upload-status', `✅ Uploaded ${successCount} videos successfully${errorCount > 0 ? `, ${errorCount} failed.` : '.'}`, 'success');
                     refreshUploadedVideos();
+                    populateAreaTagDropdowns(); // Refresh dropdowns after new tag might be created
                 } else {
                     showStatus('upload-status', '❌ All uploads failed.', 'error');
                 }
                 uploadListDiv.innerHTML = '<strong>Selected Videos:</strong><p class="status-message info">No videos selected yet.</p>'; // Clear selection list
+                // Clear new area tag input if it was used
+                if (selectedAreaTagOption === 'create-new') {
+                    document.getElementById('new-area-tag').value = '';
+                    document.getElementById('new-area-tag-input-group').style.display = 'none';
+                    document.getElementById('upload-area-tag-select').value = ''; // Reset dropdown
+                }
+            }
+
+            // Function to handle change in Area Tag select dropdown
+            function handleAreaTagSelectChange() {
+                const select = document.getElementById('upload-area-tag-select');
+                const newAreaTagInputGroup = document.getElementById('new-area-tag-input-group');
+                if (select.value === 'create-new') {
+                    newAreaTagInputGroup.style.display = 'block';
+                } else {
+                    newAreaTagInputGroup.style.display = 'none';
+                }
+            }
+
+            // Function to handle change in Local Import Area Tag select dropdown
+            function handleLocalImportAreaTagSelectChange() {
+                const select = document.getElementById('local-import-area-tag-select');
+                const newAreaTagInputGroup = document.getElementById('new-local-import-area-tag-input-group');
+                if (select.value === 'create-new') {
+                    newAreaTagInputGroup.style.display = 'block';
+                } else {
+                    newAreaTagInputGroup.style.display = 'none';
+                }
+            }
+
+            // Import local videos function
+            async function importLocalVideos() {
+                const sourceDirectoryInput = document.getElementById('local-import-dir');
+                const sourceDirectory = sourceDirectoryInput.value.trim();
+                if (!sourceDirectory) {
+                    showStatus('import-status', 'Please enter a local directory path.', 'error');
+                    return;
+                }
+
+                const selectedAreaTagOption = document.getElementById('local-import-area-tag-select').value;
+                let areaTag = '';
+
+                if (selectedAreaTagOption === 'create-new') {
+                    areaTag = document.getElementById('new-local-import-area-tag').value.trim();
+                    if (!areaTag) {
+                        showStatus('import-status', 'Please enter a new area tag name.', 'error');
+                        return;
+                    }
+                    if (areaTag.includes('/')) {
+                        showStatus('import-status', 'New area tag cannot contain slashes.', 'error');
+                        return;
+                    }
+                } else {
+                    areaTag = selectedAreaTagOption;
+                }
+
+                if (!areaTag) {
+                    showStatus('import-status', 'Please select or create an area tag for imported videos.', 'error');
+                    return;
+                }
+
+                showStatus('import-status', `Importing videos from '${sourceDirectory}' to area '${areaTag}'...`, 'info');
+
+                try {
+                    const formData = new FormData();
+                    formData.append('source_directory', sourceDirectory);
+                    if (areaTag) {
+                        formData.append('area_tag', areaTag);
+                    }
+
+                    const response = await fetch('/api/import-local-videos', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        showStatus('import-status', `✅ ${result.message}`, 'success');
+                        refreshUploadedVideos();
+                        populateAreaTagDropdowns(); // Refresh dropdowns after new tag might be created
+                    } else {
+                        showStatus('import-status', `❌ Import failed: ${result.message}`, 'error');
+                    }
+                } catch (error) {
+                    showStatus('import-status', `❌ Error during import: ${error.message}`, 'error');
+                } finally {
+                    // Clear inputs after attempt
+                    sourceDirectoryInput.value = '';
+                    document.getElementById('new-local-import-area-tag').value = '';
+                    document.getElementById('new-local-import-area-tag-input-group').style.display = 'none';
+                    document.getElementById('local-import-area-tag-select').value = '';
+                }
             }
 
             // Load uploaded videos for display in the upload tab
@@ -1375,9 +2099,10 @@ async def get_ui():
                             div.className = 'card uploaded-video-item'; // Add a specific class for styling
                             div.innerHTML = `
                                 <h4>${video.name}</h4>
-                                <p><strong>ID:</strong> ${video.id.split('_')[0]}...</p>
+                                <p><strong>ID:</strong> ${video.id.split('/')[1].split('_')[0]}...</p>
                                 <p><strong>Size:</strong> ${(video.size / (1024 * 1024)).toFixed(2)} MB</p>
                                 <p><strong>Uploaded:</strong> ${new Date(video.last_modified).toLocaleString()}</p>
+                                <p><strong>Area Tag:</strong> ${video.area_tag || 'N/A'}</p>
                             `;
                             container.appendChild(div);
                         });
@@ -1390,8 +2115,13 @@ async def get_ui():
 
             // Load uploaded videos specifically for the extraction select dropdown
             async function loadUploadedVideosForExtraction() {
+                const selectedArea = document.getElementById('area-filter-extraction').value;
+                let url = '/api/videos';
+                if (selectedArea) {
+                    url += `?area_tag=${selectedArea}`;
+                }
                 try {
-                    const response = await fetch('/api/videos');
+                    const response = await fetch(url);
                     const videos = await response.json();
                     uploadedVideos = videos;
 
@@ -1403,8 +2133,8 @@ async def get_ui():
                     } else {
                         videos.forEach(video => {
                             const option = document.createElement('option');
-                            option.value = video.id;
-                            option.textContent = video.name;
+                            option.value = video.id; // video.id is now bucket_name/video_id
+                            option.textContent = `${video.name} (Area: ${video.area_tag || 'N/A'})`;
                             select.appendChild(option);
                         });
                     }
@@ -1687,11 +2417,247 @@ async def get_ui():
                 }
             }
 
+            async function confirmAndDeleteVideosByArea() {
+                const selectedArea = document.getElementById('area-filter-extraction').value;
+                if (!selectedArea) {
+                    showStatus('extraction-status', 'Please select an area tag to clear.', 'error');
+                    return;
+                }
+
+                if (confirm(`Are you sure you want to delete all videos with area tag "${selectedArea}"? This action cannot be undone.`)) {
+                    try {
+                        const response = await fetch('/api/delete-videos-by-area', {
+                            method: 'DELETE',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            body: `area_tag=${selectedArea}`
+                        });
+                        const result = await response.json();
+
+                        if (result.success) {
+                            showStatus('extraction-status', result.message, 'success');
+                            refreshUploadedVideos(); // Refresh the list to show updated count
+                            loadUploadedVideosForExtraction(); // Reload filtered list
+                        } else {
+                            showStatus('extraction-status', `❌ Failed to delete videos: ${result.message}`, 'error');
+                        }
+                    } catch (error) {
+                        showStatus('extraction-status', `❌ Error deleting videos: ${error.message}`, 'error');
+                    }
+                }
+            }
+
             // Initialize on DOMContentLoaded
             document.addEventListener('DOMContentLoaded', function() {
                 showTab('upload'); // Set initial active tab
                 loadUploadedVideos(); // Load videos for the upload tab initially
+                populateAreaTagDropdowns(); // Populate area tag dropdowns
             });
+
+            // Function to populate Area Tag dropdowns
+            async function populateAreaTagDropdowns() {
+                try {
+                    const response = await fetch('/api/area-tags');
+                    const areaTags = await response.json();
+
+                    const uploadSelect = document.getElementById('upload-area-tag-select');
+                    const extractionFilterSelect = document.getElementById('area-filter-extraction');
+
+                    // Clear existing options, keep 'None' and 'Create New'
+                    uploadSelect.innerHTML = '<option value="">None</option><option value="create-new">Create New Area Tag...</option>';
+                    extractionFilterSelect.innerHTML = '<option value="">All Areas</option>';
+
+                    areaTags.forEach(tag => {
+                        const option1 = document.createElement('option');
+                        option1.value = tag;
+                        option1.textContent = tag;
+                        uploadSelect.appendChild(option1);
+
+                        const option2 = document.createElement('option');
+                        option2.value = tag;
+                        option2.textContent = tag;
+                        extractionFilterSelect.appendChild(option2);
+
+                        // Populate local import area tag dropdown
+                        const localImportSelect = document.getElementById('local-import-area-tag-select');
+                        if (localImportSelect) {
+                            const option3 = document.createElement('option');
+                            option3.value = tag;
+                            option3.textContent = tag;
+                            localImportSelect.appendChild(option3);
+                        }
+
+                        // Populate duplicate cleaner area tag dropdown
+                        const duplicateCleanerSelect = document.getElementById('duplicate-cleaner-area-tag-select');
+                        if (duplicateCleanerSelect) {
+                            const option4 = document.createElement('option');
+                            option4.value = tag;
+                            option4.textContent = tag;
+                            duplicateCleanerSelect.appendChild(option4);
+                        }
+
+                        // Populate blur cleaner area tag dropdown
+                        const blurCleanerSelect = document.getElementById('blur-cleaner-area-tag-select');
+                        if (blurCleanerSelect) {
+                            const option5 = document.createElement('option');
+                            option5.value = tag;
+                            option5.textContent = tag;
+                            blurCleanerSelect.appendChild(option5);
+                        }
+
+                        // Populate empty label cleaner area tag dropdown
+                        const emptyLabelCleanerSelect = document.getElementById('empty-label-cleaner-area-tag-select');
+                        if (emptyLabelCleanerSelect) {
+                            const option6 = document.createElement('option');
+                            option6.value = tag;
+                            option6.textContent = tag;
+                            emptyLabelCleanerSelect.appendChild(option6);
+                        }
+                    });
+                } catch (error) {
+                    console.error('Error populating area tag dropdowns:', error);
+                }
+            }
+
+            // Run Duplicate Cleaner function
+            async function runDuplicateCleaner() {
+                const areaTagSelect = document.getElementById('duplicate-cleaner-area-tag-select');
+                const areaTag = areaTagSelect.value;
+                const hashSize = parseInt(document.getElementById('duplicate-hash-size').value);
+                const tolerance = parseInt(document.getElementById('duplicate-tolerance').value);
+                const dryRun = document.getElementById('duplicate-dry-run').checked;
+                const statusDiv = document.getElementById('duplicate-cleaner-status');
+
+                if (!areaTag) {
+                    showStatus('duplicate-cleaner-status', 'Please select an Area Tag.', 'error');
+                    return;
+                }
+
+                showStatus('duplicate-cleaner-status', `Running duplicate cleaner for area '${areaTag}' (Dry Run: ${dryRun})...`, 'info');
+
+                try {
+                    const formData = new FormData();
+                    formData.append('area_tag', areaTag);
+                    formData.append('hash_size', hashSize);
+                    formData.append('tolerance', tolerance);
+                    formData.append('dry_run', dryRun);
+
+                    const response = await fetch('/api/clean-duplicates', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        let message = `✅ ${result.message}`; // Use backend message directly
+                        if (result.duplicates_found > 0) {
+                            message += ` Found ${result.duplicates_found} duplicates, ${result.duplicates_deleted} deleted.`;
+                        }
+                        showStatus('duplicate-cleaner-status', message, 'success');
+                        // Optionally refresh video list if duplicates were deleted
+                        if (result.duplicates_deleted > 0 && !dryRun) {
+                            refreshUploadedVideos();
+                            loadUploadedVideosForExtraction();
+                        }
+                    } else {
+                        showStatus('duplicate-cleaner-status', `❌ Duplicate cleaning failed: ${result.message}`, 'error');
+                    }
+                } catch (error) {
+                    showStatus('duplicate-cleaner-status', `❌ Error during duplicate cleaning: ${error.message}`, 'error');
+                }
+            }
+
+            // Run Blur Cleaner function
+            async function runBlurCleaner() {
+                const areaTagSelect = document.getElementById('blur-cleaner-area-tag-select');
+                const areaTag = areaTagSelect.value;
+                const threshold = parseInt(document.getElementById('blur-threshold').value);
+                const dryRun = document.getElementById('blur-dry-run').checked;
+                const statusDiv = document.getElementById('blur-cleaner-status');
+
+                if (!areaTag) {
+                    showStatus('blur-cleaner-status', 'Please select an Area Tag.', 'error');
+                    return;
+                }
+
+                showStatus('blur-cleaner-status', `Running blur cleaner for area '${areaTag}' (Dry Run: ${dryRun})...`, 'info');
+
+                try {
+                    const formData = new FormData();
+                    formData.append('area_tag', areaTag);
+                    formData.append('threshold', threshold);
+                    formData.append('dry_run', dryRun);
+
+                    const response = await fetch('/api/clean-blur', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        let message = `✅ ${result.message}`; // Use backend message directly
+                        if (result.blurry_frames_found > 0) {
+                            message += ` Found ${result.blurry_frames_found} blurry frames, ${result.blurry_frames_deleted} deleted.`;
+                        }
+                        showStatus('blur-cleaner-status', message, 'success');
+                        // Optionally refresh video list if blurry frames were deleted
+                        if (result.blurry_frames_deleted > 0 && !dryRun) {
+                            refreshUploadedVideos();
+                            loadUploadedVideosForExtraction();
+                        }
+                    } else {
+                        showStatus('blur-cleaner-status', `❌ Blur cleaning failed: ${result.message}`, 'error');
+                    }
+                } catch (error) {
+                    showStatus('blur-cleaner-status', `❌ Error during blur cleaning: ${error.message}`, 'error');
+                }
+            }
+
+            // Run Empty Label Cleaner function
+            async function runEmptyLabelCleaner() {
+                const areaTagSelect = document.getElementById('empty-label-cleaner-area-tag-select');
+                const areaTag = areaTagSelect.value;
+                const dryRun = document.getElementById('empty-label-dry-run').checked;
+                const statusDiv = document.getElementById('empty-label-cleaner-status');
+
+                if (!areaTag) {
+                    showStatus('empty-label-cleaner-status', 'Please select an Area Tag.', 'error');
+                    return;
+                }
+
+                showStatus('empty-label-cleaner-status', `Running empty label cleaner for area '${areaTag}' (Dry Run: ${dryRun})...`, 'info');
+
+                try {
+                    const formData = new FormData();
+                    formData.append('area_tag', areaTag);
+                    formData.append('dry_run', dryRun);
+
+                    const response = await fetch('/api/clean-empty-labels', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        let message = `✅ ${result.message}`; // Use backend message directly
+                        if (result.empty_labels_found > 0) {
+                            message += ` Found ${result.empty_labels_found} empty label files, ${result.empty_labels_deleted} deleted.`;
+                        }
+                        showStatus('empty-label-cleaner-status', message, 'success');
+                        // Optionally refresh video list if empty label files were deleted
+                        if (result.empty_labels_deleted > 0 && !dryRun) {
+                            refreshUploadedVideos();
+                            loadUploadedVideosForExtraction();
+                        }
+                    } else {
+                        showStatus('empty-label-cleaner-status', `❌ Empty label cleaning failed: ${result.message}`, 'error');
+                    }
+                } catch (error) {
+                    showStatus('empty-label-cleaner-status', `❌ Error during empty label cleaning: ${error.message}`, 'error');
+                }
+            }
         </script>
     </body>
     </html>
@@ -1699,46 +2665,63 @@ async def get_ui():
 
 # API Endpoints
 @app.post("/api/upload-video")
-async def upload_video(file: UploadFile = File(...)):
+async def upload_video(file: UploadFile = File(...), area_tag: Optional[str] = Form(None)):
     """Upload video to MinIO storage."""
-    result = training_manager.upload_video(file)
+    result = training_manager.upload_video(file, area_tag)
     return JSONResponse(content=result.model_dump())
 
 @app.get("/api/videos")
-async def get_videos():
-    """Get list of uploaded videos (local storage fallback)."""
-    try:
-        videos = []
-        
-        # Check local uploads directory first
-        uploads_dir = Path("training/uploads")
-        if uploads_dir.exists():
-            for video_file in uploads_dir.glob("*"):
-                if video_file.is_file():
-                    videos.append({
-                        "id": video_file.name,
-                        "name": video_file.name.split('_', 1)[1] if '_' in video_file.name else video_file.name,
-                        "size": video_file.stat().st_size,
-                        "last_modified": datetime.fromtimestamp(video_file.stat().st_mtime).isoformat()
-                    })
-        
-        # Try MinIO if available
-        try:
-            objects = minio_client.list_objects(MINIO_BUCKET, recursive=True)
-            for obj in objects:
-                videos.append({
-                    "id": obj.object_name,
-                    "name": obj.object_name.split('_', 1)[1] if '_' in obj.object_name else obj.object_name,
-                    "size": obj.size,
-                    "last_modified": obj.last_modified.isoformat()
-                })
-        except:
-            pass  # MinIO not available, use local files only
-        
-        return JSONResponse(content=videos)
-    except Exception as e:
-        logger.error(f"❌ Error listing videos: {e}")
-        return JSONResponse(content=[], status_code=500)
+async def get_videos(area_tag: Optional[str] = None):
+    """Get list of uploaded videos from MinIO and local storage, with optional area tag filter."""
+    videos = training_manager.get_uploaded_videos(area_tag)
+    return JSONResponse(content=videos)
+
+@app.get("/api/models")
+async def get_models():
+    """Get list of available trained models."""
+    models = training_manager.get_available_models()
+    return JSONResponse(content=models)
+
+@app.get("/api/area-tags")
+async def get_area_tags_endpoint():
+    """Get list of all unique area tags from MinIO (folder prefixes in the main bucket)."""
+    area_tags = training_manager.get_minio_bucket_names() # This method now gets folder prefixes
+    return JSONResponse(content=area_tags)
+
+@app.post("/api/import-local-videos")
+async def import_local_videos_endpoint(source_directory: str = Form(...), area_tag: Optional[str] = Form(None)):
+    """Import videos from a local directory into the MinIO/local storage system."""
+    result = training_manager.import_local_videos(source_directory, area_tag)
+    return JSONResponse(content=result)
+
+@app.delete("/api/delete-videos-by-area")
+async def delete_videos_by_area(area_tag: str = Form(...)):
+    """Delete videos from MinIO and local storage based on area tag (folder prefix)."""
+    result = training_manager.delete_videos_by_area(area_tag)
+    return JSONResponse(content=result)
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint."""
+    return {"status": "healthy", "service": "YOLOv8 Training UI"}
+
+@app.post("/api/clean-duplicates")
+async def clean_duplicates(area_tag: str = Form(...), hash_size: int = Form(8), tolerance: int = Form(5), dry_run: bool = Form(False)):
+    """Endpoint to clean duplicate frames for a given area_tag."""
+    result = training_manager.find_and_remove_duplicates_from_area(area_tag, hash_size, tolerance, not dry_run)
+    return JSONResponse(content=result)
+
+@app.post("/api/clean-blur")
+async def clean_blur(area_tag: str = Form(...), threshold: float = Form(100.0), dry_run: bool = Form(False)):
+    """Endpoint to clean blurry frames for a given area_tag."""
+    result = training_manager.find_and_remove_blurry_frames_from_area(area_tag, threshold, not dry_run)
+    return JSONResponse(content=result)
+
+@app.post("/api/clean-empty-labels")
+async def clean_empty_labels(area_tag: str = Form(...), dry_run: bool = Form(False)):
+    """Endpoint to clean empty label files and their corresponding images for a given area_tag."""
+    result = training_manager.find_and_remove_empty_labels_from_area(area_tag, not dry_run)
+    return JSONResponse(content=result)
 
 @app.post("/api/extract-frames")
 async def extract_frames(request: FrameExtractionRequest):
@@ -1747,32 +2730,39 @@ async def extract_frames(request: FrameExtractionRequest):
     return JSONResponse(content=result)
 
 @app.post("/api/start-training")
-async def start_training(request: TrainingRequest):
-    """Start YOLOv8 training."""
-    result = training_manager.start_training(request)
-    return JSONResponse(content=result)
+async def start_training(config: TrainingConfig):
+    """Start YOLOv8 model training with the given configuration."""
+    logger.info(f"Received training request with config: {config.model_dump()}")
+    try:
+        training_manager.start_training(config)
+        return {"success": True, "message": "Training initiated successfully.", "config": config.model_dump()}
+    except Exception as e:
+        logger.error(f"Error starting training: {e}")
+        return JSONResponse(status_code=500, content={"success": False, "message": f"Failed to start training: {str(e)}"})
 
 @app.get("/api/training-status")
 async def get_training_status():
-    """Get current training status."""
+    """Get the current training status and logs."""
+    global training_status
     return JSONResponse(content=training_status.model_dump())
 
 @app.post("/api/test-model")
-async def test_model(request: TestRequest):
-    """Test trained model."""
-    result = training_manager.test_model(request)
-    return JSONResponse(content=result)
+async def test_model(model_path: str = Form(...), image_file: UploadFile = File(...), confidence: float = Form(0.5)):
+    """Test a trained model against an image."""
+    logger.info(f"Received test request for model: {model_path} with confidence: {confidence}")
+    try:
+        # Save the uploaded image temporarily
+        temp_image_path = Path("temp_test_image.jpg")
+        with open(temp_image_path, "wb") as buffer:
+            content = await image_file.read()
+            buffer.write(content)
 
-@app.get("/api/models")
-async def get_models():
-    """Get available trained models."""
-    models = training_manager.get_available_models()
-    return JSONResponse(content=models)
-
-@app.get("/health")
-async def health_check():
-    """Health check endpoint."""
-    return {"status": "healthy", "service": "YOLOv8 Training UI"}
+        result = training_manager.test_model(model_path, str(temp_image_path), confidence)
+        os.remove(temp_image_path) # Clean up temp file
+        return JSONResponse(content=result)
+    except Exception as e:
+        logger.error(f"Error testing model: {e}")
+        return JSONResponse(status_code=500, content={"success": False, "message": f"Failed to test model: {str(e)}"})
 
 if __name__ == "__main__":
     print("🚀 Starting YOLOv8 Basketball Training UI...")
