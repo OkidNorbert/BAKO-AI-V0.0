@@ -23,7 +23,7 @@ from datetime import datetime
 import shutil
 import tempfile
 
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form, BackgroundTasks
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, BackgroundTasks, Query
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -150,16 +150,18 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # Adjust as needed for security in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # Mount static files
-static_dir = Path("training/static")
+# Original static directory for index.html and other UI assets
+static_dir = Path(__file__).parent / "static"
 static_dir.mkdir(exist_ok=True)
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
 
 class YOLOTrainingManager:
     """Manages YOLOv8 training operations with MinIO integration."""
@@ -618,6 +620,13 @@ class YOLOTrainingManager:
             
             # Create test script
             test_script = f"""
+
+# Initialize training manager
+training_manager = YOLOTrainingManager()
+
+# Mount the frames directory specifically after training_manager is initialized
+app.mount("/frames", StaticFiles(directory=str(training_manager.base_dir / "datasets" / "basketball" / "area_frames")), name="frames")            
+
 import cv2
 from ultralytics import YOLO
 import json
@@ -1065,6 +1074,37 @@ print(json.dumps(detections))
             "message": f"Empty label detection and removal completed for area '{effective_area_tag}'."
         }
 
+    def get_image_label_pairs_for_review(self, area_tag: str) -> List[Dict[str, str]]:
+        """Lists all image-label pairs for a given area_tag, suitable for manual review."""
+        effective_area_tag = area_tag if area_tag else "unspecified"
+        images_dir = self.base_dir / "datasets" / "basketball" / "area_frames" / effective_area_tag / "images"
+        labels_dir = self.base_dir / "datasets" / "basketball" / "area_frames" / effective_area_tag / "labels"
+
+        if not images_dir.is_dir():
+            logger.warning(f"Images directory for area '{effective_area_tag}' not found: {images_dir}")
+            return []
+        if not labels_dir.is_dir():
+            logger.warning(f"Labels directory for area '{effective_area_tag}' not found: {labels_dir}")
+            return []
+
+        image_label_pairs = []
+        image_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff'}
+
+        for img_path in images_dir.iterdir():
+            if img_path.is_file() and img_path.suffix.lower() in image_extensions:
+                label_path = labels_dir / f"{img_path.stem}.txt"
+                image_label_pairs.append({
+                    "filename": img_path.name,
+                    "image_path": str(img_path),
+                    "label_path": str(label_path) if label_path.is_file() else None
+                })
+        
+        # Sort for consistent order
+        image_label_pairs.sort(key=lambda x: x["filename"])
+
+        logger.info(f"Found {len(image_label_pairs)} image-label pairs for review in area '{effective_area_tag}'.")
+        return image_label_pairs
+
     def import_local_videos(self, source_directory: str, area_tag: str) -> Dict[str, Any]:
         """Imports videos from a local directory into the MinIO/local storage system."""
         source_path = Path(source_directory)
@@ -1113,6 +1153,42 @@ print(json.dumps(detections))
             return {"success": True, "message": f"Successfully imported {imported_count} videos into area '{effective_area_tag}'."}
         else:
             return {"success": False, "message": f"Imported {imported_count} videos, but encountered errors: {', '.join(errors)}", "errors": errors}
+
+    def delete_image_and_label(self, image_path: str, label_path: Optional[str]) -> Dict[str, Any]:
+        """Deletes a specific image file and its corresponding label file."""
+        success = True
+        message = []
+
+        img_path = Path(image_path)
+        if img_path.is_file():
+            try:
+                os.remove(img_path)
+                message.append(f"Deleted image: {img_path.name}")
+                logger.info(f"🗑️ Deleted image: {img_path.name}")
+            except Exception as e:
+                success = False
+                message.append(f"Failed to delete image {img_path.name}: {e}")
+                logger.error(f"❌ Failed to delete image {img_path.name}: {e}")
+        else:
+            message.append(f"Image not found: {img_path.name}")
+            logger.warning(f"Image not found for deletion: {img_path.name}")
+
+        if label_path:
+            lbl_path = Path(label_path)
+            if lbl_path.is_file():
+                try:
+                    os.remove(lbl_path)
+                    message.append(f"Deleted label: {lbl_path.name}")
+                    logger.info(f"🗑️ Deleted label: {lbl_path.name}")
+                except Exception as e:
+                    success = False
+                    message.append(f"Failed to delete label {lbl_path.name}: {e}")
+                    logger.error(f"❌ Failed to delete label {lbl_path.name}: {e}")
+            else:
+                message.append(f"Label not found: {lbl_path.name}")
+                logger.warning(f"Label not found for deletion: {lbl_path.name}")
+
+        return {"success": success, "message": "; ".join(message)}
 
 # Initialize training manager
 training_manager = YOLOTrainingManager()
@@ -1826,9 +1902,35 @@ async def get_ui():
                         <button class="btn btn-primary" onclick="runEmptyLabelCleaner()">🗑️ Run Empty Label Cleaner</button>
                         <div id="empty-label-cleaner-status" class="status-message"></div>
                     </div>
+
+                    <div class="card">
+                        <h3>Manual Frame Review</h3>
+                        <p style="font-size: 0.9em; color: var(--text-light); margin-bottom: 15px;">
+                            Manually review frames and delete irrelevant ones with their labels.
+                        </p>
+                        <div class="form-group">
+                            <label for="manual-review-area-tag-select">Area Tag:</label>
+                            <select id="manual-review-area-tag-select" class="form-control" onchange="loadFramesForReview()">
+                                <option value="">Select an Area Tag</option>
+                            </select>
+                        </div>
+                        
+                        <div id="review-display-area" style="margin-top: 20px; text-align: center; border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; background-color: var(--secondary-bg);">
+                            <p id="review-filename" style="font-weight: 600; margin-bottom: 10px;">No frame loaded.</p>
+                            <img id="review-image" src="" alt="Frame for review" style="max-width: 100%; height: auto; max-height: 400px; border-radius: 4px; display: none;">
+                            <p id="review-index" style="margin-top: 10px; font-size: 0.9em; color: var(--text-light);">0 / 0</p>
+                        </div>
+
+                        <div class="d-flex justify-content-between" style="margin-top: 20px;">
+                            <button class="btn btn-secondary" onclick="previousFrame()" disabled id="prev-frame-btn">← Previous</button>
+                            <button class="btn btn-info" onclick="skipFrame()" disabled id="skip-frame-btn">Skip →</button>
+                            <button class="btn btn-success" onclick="nextFrame()" disabled id="next-frame-btn">Next →</button>
+                        </div>
+                        <button class="btn btn-danger" onclick="deleteCurrentFrame()" style="width: 100%; margin-top: 15px;" disabled id="delete-frame-btn">🗑️ Delete Current Frame & Label</button>
+                        <div id="manual-review-status" class="status-message" style="margin-top: 15px;"></div>
+                    </div>
                 </div>
             </div>
-
         </div> <!-- End of container -->
 
         <script>
@@ -2508,6 +2610,15 @@ async def get_ui():
                             option6.textContent = tag;
                             emptyLabelCleanerSelect.appendChild(option6);
                         }
+
+                        // Populate manual review area tag dropdown
+                        const manualReviewSelect = document.getElementById('manual-review-area-tag-select');
+                        if (manualReviewSelect) {
+                            const option7 = document.createElement('option');
+                            option7.value = tag;
+                            option7.textContent = tag;
+                            manualReviewSelect.appendChild(option7);
+                        }
                     });
                 } catch (error) {
                     console.error('Error populating area tag dropdowns:', error);
@@ -2654,6 +2765,142 @@ async def get_ui():
                     showStatus('empty-label-cleaner-status', `❌ Error during empty label cleaning: ${error.message}`, 'error');
                 }
             }
+
+            // Manual Frame Review variables
+            let frames_for_review = [];
+            let current_frame_index = 0;
+
+            // Manual Frame Review functions
+            async function loadFramesForReview() {
+                const areaTag = document.getElementById('manual-review-area-tag-select').value;
+                if (!areaTag) {
+                    showStatus('manual-review-status', 'Please select an Area Tag for manual review.', 'error');
+                    resetReviewer();
+                    return;
+                }
+
+                showStatus('manual-review-status', 'Loading frames...', 'info');
+
+                try {
+                    const response = await fetch(`/api/review-frames?area_tag=${areaTag}`);
+                    const result = await response.json();
+
+                    if (result && result.length > 0) {
+                        frames_for_review = result;
+                        current_frame_index = 0;
+                        displayCurrentFrame();
+                        showStatus('manual-review-status', `Loaded ${frames_for_review.length} frames for review.`, 'success');
+                    } else {
+                        frames_for_review = [];
+                        current_frame_index = 0;
+                        resetReviewer();
+                        showStatus('manual-review-status', 'No frames found for this area tag.', 'warning');
+                    }
+                } catch (error) {
+                    resetReviewer();
+                    showStatus('manual-review-status', `Error loading frames: ${error.message}`, 'error');
+                }
+            }
+
+            function displayCurrentFrame() {
+                const reviewImage = document.getElementById('review-image');
+                const reviewFilename = document.getElementById('review-filename');
+                const reviewIndex = document.getElementById('review-index');
+                const prevBtn = document.getElementById('prev-frame-btn');
+                const nextBtn = document.getElementById('next-frame-btn');
+                const skipBtn = document.getElementById('skip-frame-btn');
+                const deleteBtn = document.getElementById('delete-frame-btn');
+
+                if (frames_for_review.length === 0) {
+                    resetReviewer();
+                    return;
+                }
+
+                const frame = frames_for_review[current_frame_index];
+                reviewImage.src = `/frames/${frame.image_path.split('datasets/basketball/area_frames/')[1]}`;
+                reviewImage.style.display = 'block';
+                reviewFilename.textContent = frame.filename;
+                reviewIndex.textContent = `${current_frame_index + 1} / ${frames_for_review.length}`;
+
+                prevBtn.disabled = current_frame_index === 0;
+                nextBtn.disabled = current_frame_index === frames_for_review.length - 1;
+                skipBtn.disabled = current_frame_index === frames_for_review.length - 1;
+                deleteBtn.disabled = false;
+            }
+
+            function previousFrame() {
+                if (current_frame_index > 0) {
+                    current_frame_index--;
+                    displayCurrentFrame();
+                }
+            }
+
+            function nextFrame() {
+                if (current_frame_index < frames_for_review.length - 1) {
+                    current_frame_index++;
+                    displayCurrentFrame();
+                }
+            }
+
+            function skipFrame() {
+                nextFrame(); // Skip is same as next for now
+            }
+
+            async function deleteCurrentFrame() {
+                if (frames_for_review.length === 0) return;
+
+                const frameToDelete = frames_for_review[current_frame_index];
+                if (!confirm(`Are you sure you want to delete "${frameToDelete.filename}"? This action cannot be undone.`)) {
+                    return;
+                }
+
+                showStatus('manual-review-status', `Deleting ${frameToDelete.filename}...`, 'info');
+
+                try {
+                    const formData = new FormData();
+                    formData.append('image_path', frameToDelete.image_path);
+                    if (frameToDelete.label_path) {
+                        formData.append('label_path', frameToDelete.label_path);
+                    }
+
+                    const response = await fetch('/api/delete-reviewed-frame', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        showStatus('manual-review-status', `✅ ${result.message}`, 'success');
+                        // Remove from current review list and update
+                        frames_for_review.splice(current_frame_index, 1);
+                        if (current_frame_index >= frames_for_review.length && frames_for_review.length > 0) {
+                            current_frame_index = frames_for_review.length - 1;
+                        }
+                        displayCurrentFrame();
+                        // Refresh other parts of the UI that list frames
+                        refreshUploadedVideos();
+                        loadUploadedVideosForExtraction();
+                    } else {
+                        showStatus('manual-review-status', `❌ Failed to delete: ${result.message}`, 'error');
+                    }
+                } catch (error) {
+                    showStatus('manual-review-status', `❌ Error deleting frame: ${error.message}`, 'error');
+                }
+            }
+
+            function resetReviewer() {
+                document.getElementById('review-image').src = '';
+                document.getElementById('review-image').style.display = 'none';
+                document.getElementById('review-filename').textContent = 'No frame loaded.';
+                document.getElementById('review-index').textContent = '0 / 0';
+                document.getElementById('prev-frame-btn').disabled = true;
+                document.getElementById('next-frame-btn').disabled = true;
+                document.getElementById('skip-frame-btn').disabled = true;
+                document.getElementById('delete-frame-btn').disabled = true;
+                showStatus('manual-review-status', '', 'info');
+            }
+
         </script>
     </body>
     </html>
@@ -2683,6 +2930,14 @@ async def get_area_tags_endpoint():
     """Get list of all unique area tags from MinIO (folder prefixes in the main bucket)."""
     area_tags = training_manager.get_minio_bucket_names() # This method now gets folder prefixes
     return JSONResponse(content=area_tags)
+
+@app.get("/api/review-frames")
+async def review_frames(area_tag: str = Query(...)):
+    """Get a list of image-label pairs for manual review for a given area tag."""
+    pairs = training_manager.get_image_label_pairs_for_review(area_tag)
+    # For the UI, we'll convert local file paths to a client-accessible format if needed.
+    # For now, we return paths as is, assuming UI can handle local file paths or server is configured to serve them.
+    return JSONResponse(content=pairs)
 
 @app.post("/api/import-local-videos")
 async def import_local_videos_endpoint(source_directory: str = Form(...), area_tag: Optional[str] = Form(None)):
@@ -2759,6 +3014,12 @@ async def test_model(model_path: str = Form(...), image_file: UploadFile = File(
     except Exception as e:
         logger.error(f"Error testing model: {e}")
         return JSONResponse(status_code=500, content={"success": False, "message": f"Failed to test model: {str(e)}"})
+
+@app.post("/api/delete-reviewed-frame")
+async def delete_reviewed_frame(image_path: str = Form(...), label_path: Optional[str] = Form(None)):
+    """Deletes a specific image and its corresponding label file from disk."""
+    result = training_manager.delete_image_and_label(image_path, label_path)
+    return JSONResponse(content=result)
 
 if __name__ == "__main__":
     print("🚀 Starting YOLOv8 Basketball Training UI...")
