@@ -167,7 +167,7 @@ class YOLOTrainingManager:
     """Manages YOLOv8 training operations with MinIO integration."""
     
     def __init__(self):
-        self.base_dir = Path("training")
+        self.base_dir = Path(__file__).parent # Correctly set base_dir to the directory containing this script
         self.datasets_dir = self.base_dir / "datasets" / "basketball"
         self.models_dir = self.base_dir / "models"
         self.runs_dir = self.base_dir / "runs"
