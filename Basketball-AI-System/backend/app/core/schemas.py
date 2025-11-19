@@ -8,17 +8,30 @@ from datetime import datetime
 
 
 class ActionProbabilities(BaseModel):
-    """Action classification probabilities"""
-    shooting: float = Field(ge=0.0, le=1.0)
-    dribbling: float = Field(ge=0.0, le=1.0)
-    passing: float = Field(ge=0.0, le=1.0)
-    defense: float = Field(ge=0.0, le=1.0)
-    running: float = Field(ge=0.0, le=1.0)
-    walking: float = Field(ge=0.0, le=1.0)
-    blocking: float = Field(ge=0.0, le=1.0)
-    picking: float = Field(ge=0.0, le=1.0)
-    ball_in_hand: float = Field(ge=0.0, le=1.0)
-    idle: float = Field(ge=0.0, le=1.0)
+    """Action classification probabilities - Enhanced with specific shooting types"""
+    # Shooting types (based on court position)
+    free_throw: float = Field(ge=0.0, le=1.0, description="Free throw shot")
+    two_point_shot: float = Field(ge=0.0, le=1.0, description="2-point shot")
+    three_point_shot: float = Field(ge=0.0, le=1.0, description="3-point shot")
+    layup: float = Field(ge=0.0, le=1.0, description="Layup")
+    dunk: float = Field(ge=0.0, le=1.0, description="Dunk")
+    
+    # Ball handling
+    dribbling: float = Field(ge=0.0, le=1.0, description="Dribbling")
+    passing: float = Field(ge=0.0, le=1.0, description="Passing")
+    
+    # Movement
+    defense: float = Field(ge=0.0, le=1.0, description="Defense")
+    running: float = Field(ge=0.0, le=1.0, description="Running")
+    walking: float = Field(ge=0.0, le=1.0, description="Walking")
+    
+    # Game actions
+    blocking: float = Field(ge=0.0, le=1.0, description="Blocking")
+    picking: float = Field(ge=0.0, le=1.0, description="Setting pick/screen")
+    
+    # Other
+    ball_in_hand: float = Field(ge=0.0, le=1.0, description="Holding ball")
+    idle: float = Field(ge=0.0, le=1.0, description="Idle/No action")
 
 
 class ActionClassification(BaseModel):

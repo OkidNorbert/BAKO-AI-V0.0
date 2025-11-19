@@ -125,7 +125,28 @@ class TrainingDashboard:
         self.dataset_frame = tk.Frame(parent, bg='#0f3460')
         self.dataset_frame.pack(fill=tk.BOTH, padx=10, pady=10)
         
-        categories = ['shooting', 'dribbling', 'passing', 'defense', 'idle']
+        # Updated categories with shooting types
+        categories = [
+            'free_throw_shot',
+            '2point_shot', 
+            '3point_shot',
+            'dribbling',
+            'passing',
+            'defense',
+            'idle'
+        ]
+        
+        # Display names for categories
+        self.category_names = {
+            'free_throw_shot': 'Free Throw Shot',
+            '2point_shot': '2-Point Shot',
+            '3point_shot': '3-Point Shot',
+            'dribbling': 'Dribbling',
+            'passing': 'Passing',
+            'defense': 'Defense',
+            'idle': 'Idle/Standing'
+        }
+        
         self.count_labels = {}
         
         for category in categories:
@@ -134,11 +155,11 @@ class TrainingDashboard:
             
             tk.Label(
                 frame,
-                text=f"{category.title()}:",
-                font=("Helvetica", 12),
+                text=f"{self.category_names[category]}:",
+                font=("Helvetica", 11),
                 bg='#0f3460',
                 fg='#ffffff',
-                width=12,
+                width=16,
                 anchor='w'
             ).pack(side=tk.LEFT)
             
@@ -154,12 +175,12 @@ class TrainingDashboard:
             count_label.pack(side=tk.LEFT)
             self.count_labels[category] = count_label
             
-            # Progress bar
+            # Progress bar (target: 100 videos per category)
             progress = ttk.Progressbar(
                 frame,
-                length=150,
+                length=120,
                 mode='determinate',
-                maximum=140
+                maximum=100
             )
             progress.pack(side=tk.LEFT, padx=10)
             self.count_labels[f"{category}_progress"] = progress
@@ -171,11 +192,25 @@ class TrainingDashboard:
         self.total_label = tk.Label(
             self.dataset_frame,
             text="Total: 0 / 700 videos",
-            font=("Helvetica", 14, "bold"),
+            font=("Helvetica", 13, "bold"),
             bg='#0f3460',
             fg='#ffd700'
         )
         self.total_label.pack(pady=10)
+        
+        # Info about shooting types
+        info_label = tk.Label(
+            self.dataset_frame,
+            text="📍 Shooting types based on court position:\n"
+                 "Free throw = from free throw line\n"
+                 "2-point = inside 3-point arc\n"
+                 "3-point = outside 3-point arc",
+            font=("Helvetica", 9),
+            bg='#0f3460',
+            fg='#888888',
+            justify='left'
+        )
+        info_label.pack(pady=5)
         
         # Buttons
         button_frame = tk.Frame(parent, bg='#16213e')
@@ -332,7 +367,15 @@ class TrainingDashboard:
         
     def check_dataset(self):
         """Count videos in dataset"""
-        categories = ['shooting', 'dribbling', 'passing', 'defense', 'idle']
+        categories = [
+            'free_throw_shot',
+            '2point_shot',
+            '3point_shot',
+            'dribbling',
+            'passing',
+            'defense',
+            'idle'
+        ]
         total = 0
         
         for category in categories:
@@ -353,10 +396,10 @@ class TrainingDashboard:
             self.count_labels[category].config(text=f"{count} videos")
             self.count_labels[f"{category}_progress"]['value'] = count
             
-            # Color coding
-            if count >= 140:
+            # Color coding (target: 100 per category)
+            if count >= 100:
                 color = '#00ff88'  # Green
-            elif count >= 70:
+            elif count >= 50:
                 color = '#ffd700'  # Yellow
             else:
                 color = '#ff4757'  # Red
@@ -883,10 +926,19 @@ class TrainingDashboard:
             
             # Simulate classification (you'll replace with actual model inference)
             import random
-            actions = ['shooting', 'dribbling', 'passing', 'defense', 'idle']
+            actions = ['free_throw_shot', '2point_shot', '3point_shot', 'dribbling', 'passing', 'defense', 'idle']
+            action_display_names = {
+                'free_throw_shot': 'Free Throw',
+                '2point_shot': '2-Point Shot',
+                '3point_shot': '3-Point Shot',
+                'dribbling': 'Dribbling',
+                'passing': 'Passing',
+                'defense': 'Defense',
+                'idle': 'Idle'
+            }
             probabilities = [random.random() for _ in actions]
-            total = sum(probabilities)
-            probabilities = [p/total for p in probabilities]
+            total_prob = sum(probabilities)
+            probabilities = [p/total_prob for p in probabilities]
             
             # Sort by probability
             sorted_results = sorted(zip(actions, probabilities), key=lambda x: x[1], reverse=True)
@@ -896,14 +948,15 @@ class TrainingDashboard:
             self.test_log("\n" + "=" * 60)
             self.test_log("🎯 CLASSIFICATION RESULTS")
             self.test_log("=" * 60)
-            self.test_log(f"\n🏆 Detected Action: {predicted_action.upper()}")
+            self.test_log(f"\n🏆 Detected Action: {action_display_names[predicted_action].upper()}")
             self.test_log(f"   Confidence: {confidence*100:.1f}%")
             
             self.test_log("\n📊 Probability Distribution:")
             for action, prob in sorted_results:
-                bar_length = int(prob * 40)
-                bar = "█" * bar_length + "░" * (40 - bar_length)
-                self.test_log(f"   {action.ljust(12)} {bar} {prob*100:.1f}%")
+                bar_length = int(prob * 35)
+                bar = "█" * bar_length + "░" * (35 - bar_length)
+                display_name = action_display_names[action]
+                self.test_log(f"   {display_name.ljust(16)} {bar} {prob*100:.1f}%")
             
             # Step 3: Calculate metrics
             self.test_log("\n3️⃣  Calculating performance metrics...")
@@ -957,7 +1010,7 @@ class TrainingDashboard:
             # Success message
             messagebox.showinfo(
                 "Analysis Complete! 🎉",
-                f"Action: {predicted_action.upper()}\n"
+                f"Action: {action_display_names[predicted_action].upper()}\n"
                 f"Confidence: {confidence*100:.1f}%\n\n"
                 f"Jump Height: {metrics['jump_height']}m\n"
                 f"Form Score: {metrics['shooting_form']}\n\n"

@@ -9,11 +9,13 @@
 ```
 dataset/
 ├── raw_videos/           # Your recorded videos
-│   ├── shooting/         # 140+ shooting videos
-│   ├── dribbling/        # 140+ dribbling videos
-│   ├── passing/          # 140+ passing videos
-│   ├── defense/          # 140+ defense videos
-│   └── idle/             # 140+ idle/standing videos
+│   ├── free_throw_shot/  # 100+ free throw shots
+│   ├── 2point_shot/      # 100+ 2-point shots (layups, mid-range)
+│   ├── 3point_shot/      # 100+ 3-point shots
+│   ├── dribbling/        # 100+ dribbling videos
+│   ├── passing/          # 100+ passing videos
+│   ├── defense/          # 100+ defense videos
+│   └── idle/             # 100+ idle/standing videos
 │
 ├── keypoints/            # Extracted poses (auto-generated)
 │   └── *.npz files
@@ -44,11 +46,25 @@ dataset/
 
 Put videos in the correct folder:
 
-**Shooting** (`raw_videos/shooting/`):
-- Player taking a shot
-- Shooting form
-- Free throws
-- Jump shots
+**Free Throw Shot** (`raw_videos/free_throw_shot/`):
+- Shot from free throw line (15 ft)
+- Stationary shot
+- No defenders
+- Clear free throw line visible
+
+**2-Point Shot** (`raw_videos/2point_shot/`):
+- Shots INSIDE 3-point line
+- Layups (close to basket)
+- Mid-range jumpers (10-18 ft)
+- Floaters, close shots
+- Any shot worth 2 points
+
+**3-Point Shot** (`raw_videos/3point_shot/`):
+- Shots OUTSIDE 3-point line
+- **3-point line MUST be visible!**
+- Corner 3s, wing 3s, top-of-key
+- Player's feet behind the line
+- Long-range shots
 
 **Dribbling** (`raw_videos/dribbling/`):
 - Ball handling
@@ -76,7 +92,11 @@ Put videos in the correct folder:
 {category}_{player}_{number}.mp4
 
 Examples:
-- shooting_player1_001.mp4
+- free_throw_player1_001.mp4
+- layup_john_008.mp4
+- midrange_mary_025.mp4
+- corner3_player2_045.mp4
+- wing3_team1_067.mp4
 - dribbling_john_045.mp4
 - passing_team1_012.mp4
 ```
@@ -87,12 +107,14 @@ Examples:
 
 | Category | Target | Minimum |
 |----------|--------|---------|
-| Shooting | 140+ | 50 |
-| Dribbling | 140+ | 50 |
-| Passing | 140+ | 50 |
-| Defense | 140+ | 50 |
-| Idle | 140+ | 50 |
-| **TOTAL** | **700+** | **250** |
+| Free Throw Shot | 100+ | 30 |
+| 2-Point Shot | 100+ | 30 |
+| 3-Point Shot | 100+ | 30 |
+| Dribbling | 100+ | 30 |
+| Passing | 100+ | 30 |
+| Defense | 100+ | 30 |
+| Idle | 100+ | 30 |
+| **TOTAL** | **700+** | **210** |
 
 **Why 700+?**
 - More data = better accuracy

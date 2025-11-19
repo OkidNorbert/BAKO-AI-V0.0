@@ -6,10 +6,28 @@ export interface VideoAnalysisRequest {
 }
 
 export interface ActionProbabilities {
-  shooting: number;
+  // Shooting types (specific to court position)
+  free_throw: number;
+  two_point_shot: number;
+  three_point_shot: number;
+  layup: number;
+  dunk: number;
+  
+  // Ball handling
   dribbling: number;
   passing: number;
+  
+  // Movement
   defense: number;
+  running: number;
+  walking: number;
+  
+  // Game actions
+  blocking: number;
+  picking: number;
+  
+  // Other
+  ball_in_hand: number;
   idle: number;
 }
 

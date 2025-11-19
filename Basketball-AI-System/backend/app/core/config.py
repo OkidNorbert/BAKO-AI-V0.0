@@ -3,7 +3,7 @@ Configuration settings for Basketball AI Backend
 """
 
 from pydantic_settings import BaseSettings
-from typing import List
+from typing import List, Dict, Tuple
 import os
 
 
@@ -46,19 +46,40 @@ class Settings(BaseSettings):
     NMS_THRESHOLD: float = 0.4
     POSE_CONFIDENCE: float = 0.5
     
-    # Action Classes (based on SpaceJam dataset + Basketball-Action-Recognition)
+    # Action Classes (Enhanced with specific shooting types)
     ACTION_CLASSES: List[str] = [
-        "shooting",
-        "dribbling", 
+        # Shooting (3 types based on court position)
+        "free_throw",           # Free throw line (4.6m from basket)
+        "two_point_shot",       # Inside 3-point line
+        "three_point_shot",     # Behind 3-point line (6.75m)
+        
+        # Ball handling
+        "dribbling",
         "passing",
+        
+        # Movement
         "defense",
         "running",
         "walking",
+        
+        # Game actions
         "blocking",
         "picking",
+        "layup",                # Close-range shot
+        "dunk",                 # Slam dunk
+        
+        # Other
         "ball_in_hand",
         "idle"
     ]
+    
+    # Shooting type detection (based on distance from basket)
+    COURT_ZONES: Dict[str, Tuple[float, float]] = {
+        "free_throw": (4.2, 4.9),      # Free throw line (4.6m ± margin)
+        "paint": (0.0, 1.5),            # Under basket
+        "two_point": (1.5, 6.75),       # Inside 3-point line
+        "three_point": (6.75, 10.0),    # Behind 3-point line
+    }
     
     # Server Settings
     HOST: str = "0.0.0.0"

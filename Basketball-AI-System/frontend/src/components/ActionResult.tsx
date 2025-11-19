@@ -8,19 +8,55 @@ interface ActionResultProps {
   probabilities: ActionProbabilities;
 }
 
-const ACTION_COLORS = {
-  shooting: 'from-orange-500 to-red-500',
+const ACTION_COLORS: Record<string, string> = {
+  // Shooting types
+  free_throw: 'from-orange-500 to-red-500',
+  two_point_shot: 'from-orange-600 to-red-600',
+  three_point_shot: 'from-yellow-500 to-orange-500',
+  layup: 'from-red-500 to-pink-500',
+  dunk: 'from-purple-600 to-red-600',
+  
+  // Ball handling
   dribbling: 'from-blue-500 to-cyan-500',
   passing: 'from-green-500 to-emerald-500',
+  
+  // Movement
   defense: 'from-purple-500 to-pink-500',
+  running: 'from-indigo-500 to-blue-500',
+  walking: 'from-teal-500 to-cyan-500',
+  
+  // Game actions
+  blocking: 'from-red-600 to-orange-600',
+  picking: 'from-yellow-600 to-orange-600',
+  
+  // Other
+  ball_in_hand: 'from-amber-500 to-yellow-500',
   idle: 'from-gray-500 to-slate-500',
 };
 
-const ACTION_EMOJIS = {
-  shooting: '🏀',
+const ACTION_EMOJIS: Record<string, string> = {
+  // Shooting types
+  free_throw: '🎯',
+  two_point_shot: '🏀',
+  three_point_shot: '🌟',
+  layup: '🏃‍♂️🏀',
+  dunk: '💪🏀',
+  
+  // Ball handling
   dribbling: '⛹️',
   passing: '🤝',
+  
+  // Movement
   defense: '🛡️',
+  running: '🏃',
+  walking: '🚶',
+  
+  // Game actions
+  blocking: '✋',
+  picking: '🧱',
+  
+  // Other
+  ball_in_hand: '🏀',
   idle: '🧍',
 };
 
