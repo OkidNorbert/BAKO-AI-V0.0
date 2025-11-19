@@ -1,0 +1,81 @@
+# Basketball AI Performance Analysis - 2025 LATEST Technologies
+# Python 3.11+ required (latest stable)
+
+# ============================================
+# DEEP LEARNING - LATEST VERSIONS
+# ============================================
+torch>=2.5.0                    # Latest PyTorch (Dec 2024)
+torchvision>=0.20.0
+torchaudio>=2.5.0
+transformers>=4.45.0            # Hugging Face Transformers (SOTA models)
+timm>=1.0.0                     # PyTorch Image Models (latest)
+
+# ============================================
+# COMPUTER VISION & POSE - LATEST
+# ============================================
+mediapipe>=0.10.9               # Latest MediaPipe (Google)
+opencv-python>=4.10.0           # Latest OpenCV
+opencv-contrib-python>=4.10.0
+ultralytics>=8.3.0              # YOLOv11 (just released!)
+supervision>=0.24.0             # Video analytics utilities
+
+# ============================================
+# DATA PROCESSING - OPTIMIZED
+# ============================================
+numpy>=2.0.0                    # NumPy 2.0 (faster!)
+pandas>=2.2.0
+scikit-learn>=1.5.0
+scipy>=1.14.0
+albumentations>=1.4.0           # Advanced augmentation
+
+# ============================================
+# VISUALIZATION - MODERN
+# ============================================
+matplotlib>=3.9.0
+seaborn>=0.13.0
+plotly>=5.24.0
+pillow>=11.0.0
+
+# ============================================
+# DASHBOARD - LATEST STREAMLIT
+# ============================================
+streamlit>=1.39.0               # Latest Streamlit
+streamlit-webrtc>=0.47.0        # Real-time video
+streamlit-option-menu>=0.4.0
+
+# ============================================
+# UTILITIES
+# ============================================
+tqdm>=4.66.0
+python-dotenv>=1.0.0
+pyyaml>=6.0.2
+rich>=13.8.0                    # Beautiful terminal output
+typer>=0.12.0                   # Modern CLI
+
+# ============================================
+# MODEL TRACKING & EXPERIMENT MANAGEMENT
+# ============================================
+wandb>=0.18.0                   # Weights & Biases
+tensorboard>=2.17.0
+
+# ============================================
+# VIDEO PROCESSING
+# ============================================
+imageio>=2.35.0
+imageio-ffmpeg>=0.5.0
+moviepy>=1.0.3
+av>=13.0.0                      # PyAV for video
+
+# ============================================
+# PERFORMANCE & OPTIMIZATION
+# ============================================
+einops>=0.8.0                   # Tensor operations
+accelerate>=1.0.0               # Hugging Face training optimization
+
+# ============================================
+# DEVELOPMENT TOOLS (Optional)
+# ============================================
+jupyter>=1.1.0
+ipywidgets>=8.1.0
+black>=24.0.0
+pytest>=8.3.0
