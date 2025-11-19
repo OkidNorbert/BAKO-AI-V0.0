@@ -19,9 +19,57 @@ import json
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from typing import List, Dict
 import argparse
+import pandas as pd
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+def create_metadata_from_folders(video_base_dir: str, output_csv: str):
+    """
+    Create metadata CSV from folder structure
+    
+    Args:
+        video_base_dir: Base directory containing category folders (e.g., raw_videos/)
+        output_csv: Path to output CSV file
+    """
+    video_base = Path(video_base_dir)
+    categories = [
+        'free_throw_shot', '2point_shot', '3point_shot',
+        'dribbling', 'passing', 'defense', 'idle'
+    ]
+    
+    metadata = []
+    video_extensions = ['.mp4', '.avi', '.mov', '.MOV', '.MP4', '.AVI']
+    
+    for category in categories:
+        category_dir = video_base / category
+        if not category_dir.exists():
+            logger.warning(f"⚠️  Category folder not found: {category_dir}")
+            continue
+        
+        # Find all videos in this category
+        videos = []
+        for ext in video_extensions:
+            videos.extend(list(category_dir.glob(f"*{ext}")))
+        
+        for video_path in videos:
+            # Use relative path from video_base_dir
+            rel_path = video_path.relative_to(video_base)
+            metadata.append({
+                'filename': str(rel_path),
+                'action': category,
+                'category': category
+            })
+        
+        logger.info(f"✅ Found {len(videos)} videos in {category}")
+    
+    # Create DataFrame and save
+    df = pd.DataFrame(metadata)
+    df.to_csv(output_csv, index=False)
+    logger.info(f"✅ Metadata CSV created: {output_csv} ({len(df)} videos)")
+    
+    return output_csv
 
 
 class BasketballVideoDataset(Dataset):
@@ -51,10 +99,10 @@ class BasketballVideoDataset(Dataset):
         import pandas as pd
         self.metadata = pd.read_csv(metadata_file)
         
-        # Action classes (same as Basketball-Action-Recognition)
+        # Action classes (7 basketball actions)
         self.class_names = [
-            "shooting", "dribbling", "passing", "defense", "running",
-            "walking", "blocking", "picking", "ball_in_hand", "idle"
+            "free_throw_shot", "2point_shot", "3point_shot", 
+            "dribbling", "passing", "defense", "idle"
         ]
         self.class_to_idx = {name: idx for idx, name in enumerate(self.class_names)}
         
@@ -67,7 +115,13 @@ class BasketballVideoDataset(Dataset):
         """Get video and label"""
         row = self.metadata.iloc[idx]
         
-        video_path = self.video_dir / row['filename']
+        # Handle both relative and absolute paths
+        filename = row['filename']
+        if Path(filename).is_absolute():
+            video_path = Path(filename)
+        else:
+            video_path = self.video_dir / filename
+        
         action_label = row['action']
         label = self.class_to_idx[action_label]
         
@@ -131,14 +185,27 @@ def compute_metrics(eval_pred):
 
 def main():
     parser = argparse.ArgumentParser(description="Train VideoMAE on basketball dataset")
-    parser.add_argument('--data-dir', type=str, required=True, help="Directory with videos")
-    parser.add_argument('--metadata', type=str, required=True, help="Metadata CSV file")
+    parser.add_argument('--data-dir', type=str, required=True, help="Directory with videos (raw_videos folder)")
+    parser.add_argument('--metadata', type=str, default=None, help="Metadata CSV file (auto-generated if not provided)")
     parser.add_argument('--output-dir', type=str, default='./models', help="Output directory")
     parser.add_argument('--epochs', type=int, default=25, help="Number of epochs")
     parser.add_argument('--batch-size', type=int, default=8, help="Batch size")
     parser.add_argument('--lr', type=float, default=1e-4, help="Learning rate")
     
     args = parser.parse_args()
+    
+    # Auto-generate metadata if not provided
+    if args.metadata is None:
+        # If data_dir is raw_videos, use its parent for metadata
+        data_path = Path(args.data_dir)
+        if data_path.name == "raw_videos":
+            metadata_path = data_path.parent / "metadata.csv"
+        else:
+            metadata_path = data_path / "metadata.csv"
+        
+        logger.info(f"📝 Auto-generating metadata CSV...")
+        create_metadata_from_folders(args.data_dir, str(metadata_path))
+        args.metadata = str(metadata_path)
     
     logger.info("🏀 VideoMAE Training for Basketball Actions")
     logger.info(f"   Data: {args.data_dir}")
@@ -154,17 +221,56 @@ def main():
     
     model = VideoMAEForVideoClassification.from_pretrained(
         model_name,
-        num_labels=10,  # 10 basketball actions
+        num_labels=7,  # 7 basketball actions
         ignore_mismatched_sizes=True
     )
     
     logger.info("✅ VideoMAE model loaded")
     
+    # Load metadata and create train/val/test splits
+    metadata_df = pd.read_csv(args.metadata)
+    
+    # Split dataset: 70% train, 15% val, 15% test
+    from sklearn.model_selection import train_test_split
+    
+    train_df, temp_df = train_test_split(metadata_df, test_size=0.3, random_state=42, stratify=metadata_df['action'])
+    val_df, test_df = train_test_split(temp_df, test_size=0.5, random_state=42, stratify=temp_df['action'])
+    
+    # Save splits
+    train_csv = Path(args.output_dir) / "train_metadata.csv"
+    val_csv = Path(args.output_dir) / "val_metadata.csv"
+    test_csv = Path(args.output_dir) / "test_metadata.csv"
+    
+    train_df.to_csv(train_csv, index=False)
+    val_df.to_csv(val_csv, index=False)
+    test_df.to_csv(test_csv, index=False)
+    
+    logger.info(f"📊 Dataset splits: Train={len(train_df)}, Val={len(val_df)}, Test={len(test_df)}")
+    
+    # Determine video directory (should be raw_videos folder)
+    video_dir = Path(args.data_dir)
+    if video_dir.name != "raw_videos":
+        # If data_dir is dataset/, look for raw_videos inside
+        raw_videos_path = video_dir / "raw_videos"
+        if raw_videos_path.exists():
+            video_dir = raw_videos_path
+    
     # Create datasets
-    # Note: In real use, split metadata into train/val/test
-    dataset = BasketballVideoDataset(
-        video_dir=args.data_dir,
-        metadata_file=args.metadata,
+    train_dataset = BasketballVideoDataset(
+        video_dir=str(video_dir),
+        metadata_file=str(train_csv),
+        processor=processor
+    )
+    
+    val_dataset = BasketballVideoDataset(
+        video_dir=str(video_dir),
+        metadata_file=str(val_csv),
+        processor=processor
+    )
+    
+    test_dataset = BasketballVideoDataset(
+        video_dir=str(video_dir),
+        metadata_file=str(test_csv),
         processor=processor
     )
     
@@ -192,21 +298,55 @@ def main():
     trainer = Trainer(
         model=model,
         args=training_args,
-        train_dataset=dataset,  # In real use: train_dataset
-        eval_dataset=dataset,   # In real use: val_dataset
+        train_dataset=train_dataset,
+        eval_dataset=val_dataset,
         compute_metrics=compute_metrics,
         callbacks=[EarlyStoppingCallback(early_stopping_patience=5)]
     )
     
     # Train
     logger.info("🚀 Starting training...")
-    trainer.train()
+    train_result = trainer.train()
+    
+    # Evaluate on test set
+    logger.info("📊 Evaluating on test set...")
+    test_results = trainer.evaluate(test_dataset)
     
     # Save final model
-    model.save_pretrained(f'{args.output_dir}/final_model')
-    processor.save_pretrained(f'{args.output_dir}/final_model')
+    output_model_dir = Path(args.output_dir) / "best_model"
+    output_model_dir.mkdir(parents=True, exist_ok=True)
     
-    logger.info(f"✅ Training complete! Model saved to {args.output_dir}/final_model")
+    model.save_pretrained(str(output_model_dir))
+    processor.save_pretrained(str(output_model_dir))
+    
+    # Save model info
+    model_info = {
+        "model_type": "VideoMAE",
+        "base_model": model_name,
+        "num_labels": 7,
+        "classes": train_dataset.class_names,
+        "train_accuracy": train_result.metrics.get('train_accuracy', 0),
+        "val_accuracy": train_result.metrics.get('eval_accuracy', 0),
+        "test_accuracy": test_results.get('eval_accuracy', 0),
+        "train_samples": len(train_dataset),
+        "val_samples": len(val_dataset),
+        "test_samples": len(test_dataset),
+        "epochs_trained": train_result.global_step,
+    }
+    
+    model_info_path = Path(args.output_dir) / "model_info.json"
+    with open(model_info_path, 'w') as f:
+        json.dump(model_info, f, indent=2)
+    
+    # Also save PyTorch model for compatibility
+    torch.save(model.state_dict(), Path(args.output_dir) / "best_model.pth")
+    
+    logger.info(f"✅ Training complete!")
+    logger.info(f"   Train Accuracy: {model_info['train_accuracy']*100:.1f}%")
+    logger.info(f"   Val Accuracy: {model_info['val_accuracy']*100:.1f}%")
+    logger.info(f"   Test Accuracy: {model_info['test_accuracy']*100:.1f}%")
+    logger.info(f"   Model saved to: {output_model_dir}")
+    logger.info(f"   Model info saved to: {model_info_path}")
 
 
 if __name__ == "__main__":

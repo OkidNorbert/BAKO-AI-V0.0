@@ -600,90 +600,180 @@ class TrainingDashboard:
             return False
     
     def train_model(self):
-        """Train the action classification model"""
+        """Train the action classification model using VideoMAE"""
         try:
-            self.log("🧠 Training Vision Transformer model...")
-            self.log("📈 Epoch 1/10...")
+            import subprocess
+            import sys
             
-            import time
-            for epoch in range(10):
+            self.log("🧠 Training VideoMAE model...")
+            self.log("📦 Loading pre-trained VideoMAE base model...")
+            self.log("⏳ This may take a few minutes...")
+            self.root.update()
+            
+            # Paths
+            train_script = self.project_root / "training" / "train_videomae.py"
+            raw_videos_dir = self.dataset_dir / "raw_videos"
+            models_dir = self.models_dir
+            
+            if not train_script.exists():
+                self.log(f"❌ Training script not found: {train_script}")
+                return False
+            
+            if not raw_videos_dir.exists():
+                self.log(f"❌ Raw videos directory not found: {raw_videos_dir}")
+                return False
+            
+            # Check if we have videos
+            video_count = sum(1 for _ in raw_videos_dir.rglob("*.mp4")) + \
+                         sum(1 for _ in raw_videos_dir.rglob("*.avi")) + \
+                         sum(1 for _ in raw_videos_dir.rglob("*.mov"))
+            
+            if video_count == 0:
+                self.log("❌ No videos found in dataset!")
+                return False
+            
+            self.log(f"📹 Found {video_count} videos")
+            self.log("🚀 Starting VideoMAE training...")
+            self.root.update()
+            
+            # Build command
+            python_cmd = sys.executable
+            cmd = [
+                python_cmd,
+                str(train_script),
+                "--data-dir", str(raw_videos_dir),
+                "--output-dir", str(models_dir),
+                "--epochs", "25",
+                "--batch-size", "4",  # Smaller batch for GUI
+                "--lr", "1e-4"
+            ]
+            
+            self.log(f"💻 Command: {' '.join(cmd)}")
+            self.root.update()
+            
+            # Run training with real-time output
+            process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                bufsize=1,
+                universal_newlines=True,
+                cwd=str(self.project_root)
+            )
+            
+            # Monitor progress
+            epoch_count = 0
+            for line in process.stdout:
                 if not self.is_training:
+                    process.terminate()
                     return False
-                time.sleep(1)
-                progress = 50 + (epoch * 2.5)
-                self.progress_bar['value'] = progress
-                self.progress_label.config(text=f"Training... Epoch {epoch+1}/10")
-                self.log(f"   Epoch {epoch+1}/10 - Loss: {0.5 - epoch*0.04:.4f}")
-                self.root.update()
+                
+                line = line.strip()
+                if line:
+                    self.log(line)
+                    
+                    # Update progress based on log messages
+                    if "epoch" in line.lower() or "step" in line.lower():
+                        # Try to extract epoch number
+                        import re
+                        epoch_match = re.search(r'epoch[:\s]+(\d+)', line, re.IGNORECASE)
+                        if epoch_match:
+                            epoch_count = int(epoch_match.group(1))
+                            progress = 50 + min((epoch_count / 25) * 25, 25)
+                            self.progress_bar['value'] = progress
+                            self.progress_label.config(text=f"Training... Epoch {epoch_count}/25")
+                    
+                    self.root.update()
+            
+            # Wait for process to complete
+            return_code = process.wait()
+            
+            if return_code != 0:
+                self.log(f"❌ Training failed with exit code {return_code}")
+                return False
             
             self.log("✅ Model training complete!")
+            self.progress_bar['value'] = 75
+            self.progress_label.config(text="Training complete!")
             return True
             
         except Exception as e:
             self.log(f"❌ Training failed: {str(e)}")
+            import traceback
+            self.log(traceback.format_exc())
             return False
     
     def evaluate_model(self):
         """Evaluate the trained model"""
         try:
-            self.log("📊 Evaluating model on test set...")
+            self.log("📊 Reading evaluation results...")
+            self.root.update()
             
-            import time
-            time.sleep(2)
+            # Check if model_info.json exists (created by training script)
+            model_info_path = self.models_dir / "model_info.json"
             
-            # Simulated metrics
-            accuracy = 87.3
-            precision = 0.86
-            recall = 0.85
-            f1 = 0.85
+            if not model_info_path.exists():
+                self.log("⚠️  Model info not found. Training script should have created this.")
+                self.log("   Evaluation results may be in training logs.")
+                return True  # Training script already evaluated during training
+            
+            # Load model info from training script
+            with open(model_info_path, 'r') as f:
+                model_info = json.load(f)
+            
+            # Extract metrics (training script saves as decimals)
+            train_acc = model_info.get('train_accuracy', 0)
+            val_acc = model_info.get('val_accuracy', 0)
+            test_acc = model_info.get('test_accuracy', 0)
+            
+            # Convert to percentages if needed
+            if train_acc < 1.0:
+                train_acc *= 100
+            if val_acc < 1.0:
+                val_acc *= 100
+            if test_acc < 1.0:
+                test_acc *= 100
             
             self.log(f"\n📈 Model Performance:")
-            self.log(f"   Accuracy:  {accuracy}%")
-            self.log(f"   Precision: {precision:.2f}")
-            self.log(f"   Recall:    {recall:.2f}")
-            self.log(f"   F1-Score:  {f1:.2f}")
+            self.log(f"   Train Accuracy:      {train_acc:.1f}%")
+            self.log(f"   Validation Accuracy: {val_acc:.1f}%")
+            self.log(f"   Test Accuracy:       {test_acc:.1f}%")
+            
+            # Use test accuracy as primary metric
+            accuracy = test_acc if test_acc > 0 else val_acc
             
             if accuracy >= 85:
-                self.log(f"\n✅ Excellent! Accuracy target met ({accuracy}% ≥ 85%)")
+                self.log(f"\n✅ Excellent! Accuracy target met ({accuracy:.1f}% ≥ 85%)")
             else:
-                self.log(f"\n⚠️  Accuracy below target ({accuracy}% < 85%)")
-                self.log("   Consider recording more diverse videos")
+                self.log(f"\n⚠️  Accuracy below target ({accuracy:.1f}% < 85%)")
+                self.log("   💡 Tip: Add more diverse videos to improve accuracy")
             
-            # Save model info
-            model_info = {
-                "trained_date": datetime.now().isoformat(),
-                "accuracy": accuracy,
-                "precision": precision,
-                "recall": recall,
-                "f1_score": f1,
-                "model_path": str(self.models_dir / "best_model.pth"),
-                "categories": [
-                    "free_throw_shot",
-                    "2point_shot", 
-                    "3point_shot",
-                    "dribbling",
-                    "passing",
-                    "defense",
-                    "idle"
-                ],
-                "training_videos": self.check_dataset()
-            }
+            # Update model_info with additional metadata if missing
+            if 'trained_date' not in model_info:
+                model_info['trained_date'] = datetime.now().isoformat()
+            if 'model_path' not in model_info:
+                model_info['model_path'] = str(self.models_dir / "best_model.pth")
+            if 'categories' not in model_info:
+                model_info['categories'] = [
+                    "free_throw_shot", "2point_shot", "3point_shot",
+                    "dribbling", "passing", "defense", "idle"
+                ]
             
-            # Save model info JSON
-            with open(self.models_dir / "model_info.json", 'w') as f:
+            # Save updated model info
+            with open(model_info_path, 'w') as f:
                 json.dump(model_info, f, indent=2)
             
-            # Create dummy model file for testing
-            # (In real training, this would be the actual PyTorch model)
-            dummy_model_path = self.models_dir / "best_model.pth"
-            with open(dummy_model_path, 'w') as f:
-                f.write(f"# Dummy model file created on {datetime.now()}\n")
-                f.write(f"# Training accuracy: {accuracy}%\n")
-                f.write(f"# This is a placeholder. Real training will create actual PyTorch model.\n")
+            # Check if model files exist (created by training script)
+            model_pth = self.models_dir / "best_model.pth"
+            model_dir = self.models_dir / "best_model"
             
-            self.log(f"💾 Model files created:")
-            self.log(f"   - {dummy_model_path.name}")
-            self.log(f"   - model_info.json")
+            self.log(f"\n💾 Model files:")
+            if model_pth.exists():
+                self.log(f"   ✅ {model_pth.name} (PyTorch state dict)")
+            if model_dir.exists():
+                self.log(f"   ✅ {model_dir.name}/ (VideoMAE model)")
+            self.log(f"   ✅ model_info.json")
             
             return True
             
