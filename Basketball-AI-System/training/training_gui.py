@@ -656,11 +656,34 @@ class TrainingDashboard:
                 "precision": precision,
                 "recall": recall,
                 "f1_score": f1,
-                "model_path": str(self.models_dir / "best_model.pth")
+                "model_path": str(self.models_dir / "best_model.pth"),
+                "categories": [
+                    "free_throw_shot",
+                    "2point_shot", 
+                    "3point_shot",
+                    "dribbling",
+                    "passing",
+                    "defense",
+                    "idle"
+                ],
+                "training_videos": self.check_dataset()
             }
             
+            # Save model info JSON
             with open(self.models_dir / "model_info.json", 'w') as f:
                 json.dump(model_info, f, indent=2)
+            
+            # Create dummy model file for testing
+            # (In real training, this would be the actual PyTorch model)
+            dummy_model_path = self.models_dir / "best_model.pth"
+            with open(dummy_model_path, 'w') as f:
+                f.write(f"# Dummy model file created on {datetime.now()}\n")
+                f.write(f"# Training accuracy: {accuracy}%\n")
+                f.write(f"# This is a placeholder. Real training will create actual PyTorch model.\n")
+            
+            self.log(f"💾 Model files created:")
+            self.log(f"   - {dummy_model_path.name}")
+            self.log(f"   - model_info.json")
             
             return True
             
