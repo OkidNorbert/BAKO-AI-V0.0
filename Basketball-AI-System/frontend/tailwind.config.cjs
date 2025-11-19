@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-export default {
+module.exports = {
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
@@ -13,7 +13,7 @@ export default {
           200: '#FFCCAB',
           300: '#FFB380',
           400: '#FF9956',
-          500: '#FF6B00',  // Main brand color
+          500: '#FF6B00',
           600: '#CC5500',
           700: '#994000',
           800: '#662A00',
@@ -25,7 +25,7 @@ export default {
           200: '#90CAF9',
           300: '#64B5F6',
           400: '#42A5F5',
-          500: '#2196F3',  // Main secondary
+          500: '#2196F3',
           600: '#1E88E5',
           700: '#1976D2',
           800: '#1565C0',
@@ -57,4 +57,3 @@ export default {
     require('@tailwindcss/forms'),
   ],
 }
-
