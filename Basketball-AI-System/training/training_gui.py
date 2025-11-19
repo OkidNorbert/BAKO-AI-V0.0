@@ -947,8 +947,7 @@ class TrainingDashboard:
             self.test_log("\n2️⃣  Classifying action...")
             time.sleep(1)
             
-            # Simulate classification (you'll replace with actual model inference)
-            import random
+            # Action categories and display names
             actions = ['free_throw_shot', '2point_shot', '3point_shot', 'dribbling', 'passing', 'defense', 'idle']
             action_display_names = {
                 'free_throw_shot': 'Free Throw',
@@ -959,9 +958,39 @@ class TrainingDashboard:
                 'defense': 'Defense',
                 'idle': 'Idle'
             }
-            probabilities = [random.random() for _ in actions]
+            
+            # TODO: REPLACE THIS WITH ACTUAL MODEL INFERENCE
+            # For now, using intelligent heuristic based on filename
+            video_name = self.selected_video_path.name.lower()
+            
+            # Smart detection based on filename (until real model integration)
+            probabilities = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]  # Default low probabilities
+            
+            if 'free_throw' in video_name or 'freethrow' in video_name:
+                probabilities[0] = 0.85  # free_throw_shot
+            elif 'layup' in video_name or 'midrange' in video_name or '2point' in video_name or '2pt' in video_name:
+                probabilities[1] = 0.85  # 2point_shot
+            elif '3point' in video_name or '3pt' in video_name or 'three' in video_name or 'corner3' in video_name or 'wing3' in video_name:
+                probabilities[2] = 0.85  # 3point_shot
+            elif 'dribbl' in video_name or 'crossover' in video_name or 'handle' in video_name:
+                probabilities[3] = 0.85  # dribbling
+            elif 'pass' in video_name or 'assist' in video_name:
+                probabilities[4] = 0.85  # passing
+            elif 'defense' in video_name or 'defend' in video_name or 'guard' in video_name:
+                probabilities[5] = 0.85  # defense
+            elif 'idle' in video_name or 'stand' in video_name or 'wait' in video_name:
+                probabilities[6] = 0.85  # idle
+            else:
+                # If no keyword match, use random (simulated model)
+                import random
+                probabilities = [random.random() for _ in actions]
+            
+            # Normalize probabilities
             total_prob = sum(probabilities)
             probabilities = [p/total_prob for p in probabilities]
+            
+            self.test_log("   ℹ️  Note: Using filename-based detection (placeholder)")
+            self.test_log("   ℹ️  Real model inference will be added after full training")
             
             # Sort by probability
             sorted_results = sorted(zip(actions, probabilities), key=lambda x: x[1], reverse=True)
