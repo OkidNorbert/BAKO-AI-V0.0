@@ -12,6 +12,7 @@ from pathlib import Path
 import aiofiles
 import uuid
 from datetime import datetime
+from typing import Optional
 
 from app.core.config import settings
 from app.core.schemas import VideoAnalysisResult, HealthResponse, AnalysisStatus
