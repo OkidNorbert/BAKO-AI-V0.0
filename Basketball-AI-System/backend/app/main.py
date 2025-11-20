@@ -17,6 +17,7 @@ from typing import Optional
 from app.core.config import settings
 from app.core.schemas import VideoAnalysisResult, HealthResponse, AnalysisStatus
 from app.services.video_processor import VideoProcessor
+from app.api import chat
 
 # Configure logging
 logging.basicConfig(
@@ -42,6 +43,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include routers
+app.include_router(chat.router)
 
 # Initialize video processor
 video_processor: Optional[VideoProcessor] = None

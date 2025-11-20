@@ -853,6 +853,10 @@ class TrainingDashboard:
             self.log("✅ Model training complete!")
             self.progress_bar['value'] = 75
             self.progress_label.config(text="Training complete!")
+            
+            # Display training charts
+            self.display_training_charts()
+            
             return True
             
         except Exception as e:
@@ -860,6 +864,70 @@ class TrainingDashboard:
             import traceback
             self.log(traceback.format_exc())
             return False
+    
+    def display_training_charts(self):
+        """Display training curves chart after training"""
+        try:
+            from PIL import Image, ImageTk
+            
+            chart_path = self.models_dir / "training_curves.png"
+            
+            if not chart_path.exists():
+                self.log("⚠️  Training chart not found. Chart should be generated automatically.")
+                return
+            
+            self.log("📊 Displaying training curves...")
+            self.root.update()
+            
+            # Create a new window for the chart
+            chart_window = tk.Toplevel(self.root)
+            chart_window.title("Training Progress - Epoch Charts")
+            chart_window.geometry("1200x900")
+            chart_window.configure(bg='#1a1a2e')
+            
+            # Load and display image
+            img = Image.open(chart_path)
+            # Resize if too large
+            max_width, max_height = 1150, 850
+            img.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
+            photo = ImageTk.PhotoImage(img)
+            
+            # Create label with image
+            chart_label = tk.Label(chart_window, image=photo, bg='#1a1a2e')
+            chart_label.image = photo  # Keep a reference
+            chart_label.pack(padx=10, pady=10)
+            
+            # Add info label
+            info_label = tk.Label(
+                chart_window,
+                text="Training Progress Charts\n(Loss, Accuracy, F1 Score, Learning Rate)",
+                font=("Helvetica", 12, "bold"),
+                bg='#1a1a2e',
+                fg='#00ff88'
+            )
+            info_label.pack(pady=5)
+            
+            # Add close button
+            close_btn = tk.Button(
+                chart_window,
+                text="Close",
+                command=chart_window.destroy,
+                font=("Helvetica", 10),
+                bg='#533483',
+                fg='white',
+                padx=20,
+                pady=5
+            )
+            close_btn.pack(pady=10)
+            
+            self.log(f"✅ Training charts displayed! (Saved to: {chart_path})")
+            
+        except ImportError:
+            self.log("⚠️  PIL (Pillow) not available. Chart saved but cannot display.")
+            self.log(f"   Chart saved to: {self.models_dir / 'training_curves.png'}")
+        except Exception as e:
+            self.log(f"⚠️  Could not display chart: {e}")
+            self.log(f"   Chart saved to: {self.models_dir / 'training_curves.png'}")
     
     def evaluate_model(self):
         """Evaluate the trained model"""
@@ -1102,6 +1170,63 @@ class TrainingDashboard:
         self.results_text.insert(tk.END, "Supported formats: .mp4, .avi, .mov\n")
         self.results_text.insert(tk.END, "Recommended: 5-10 seconds, clear action\n")
         self.results_text.insert(tk.END, "=" * 60 + "\n")
+        
+        # AI Coach Chat Section (separate frame)
+        chat_frame = tk.Frame(parent, bg='#16213e')
+        chat_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        
+        tk.Label(
+            chat_frame,
+            text="🤖 AI Coach Chat",
+            font=("Helvetica", 14, "bold"),
+            bg='#16213e',
+            fg='#00d9ff'
+        ).pack(pady=10)
+        
+        # Chat display
+        chat_display_frame = tk.Frame(chat_frame, bg='#0f3460')
+        chat_display_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+        
+        self.chat_display = scrolledtext.ScrolledText(
+            chat_display_frame,
+            font=("Helvetica", 10),
+            bg='#0a0a0a',
+            fg='#00ff00',
+            height=8,
+            wrap=tk.WORD,
+            state=tk.DISABLED
+        )
+        self.chat_display.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+        
+        # Chat input
+        chat_input_frame = tk.Frame(chat_frame, bg='#16213e')
+        chat_input_frame.pack(fill=tk.X, padx=5, pady=5)
+        
+        self.chat_input = tk.Entry(
+            chat_input_frame,
+            font=("Helvetica", 11),
+            bg='#0f3460',
+            fg='white',
+            insertbackground='white'
+        )
+        self.chat_input.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
+        self.chat_input.bind('<Return>', lambda e: self.send_chat_message())
+        
+        self.chat_send_button = tk.Button(
+            chat_input_frame,
+            text="Send",
+            font=("Helvetica", 10, "bold"),
+            bg='#00ff88',
+            fg='#000000',
+            command=self.send_chat_message,
+            padx=15,
+            pady=5
+        )
+        self.chat_send_button.pack(side=tk.RIGHT)
+        
+        # Store analysis data for chat
+        self.current_analysis_data = None
+        self.ai_coach = None
     
     def check_model_exists(self):
         """Check if trained model exists"""
@@ -1504,7 +1629,45 @@ class TrainingDashboard:
             self.test_log(f"⚡ Reaction Time:   {metrics['reaction_time']}s")
             self.test_log(f"⚖️  Pose Stability:  {metrics['pose_stability']} / 1.0")
             
-            # Generate recommendations (action-aware)
+            # Store analysis data for AI coach
+            self.current_analysis_data = {
+                'action': predicted_action,
+                'metrics': metrics,
+                'confidence': confidence,
+                'probabilities': probabilities_dict if 'probabilities_dict' in locals() else {}
+            }
+            
+            # Initialize AI Coach
+            self._init_ai_coach()
+            
+            # Generate AI-powered recommendations
+            self.test_log("\n" + "=" * 60)
+            self.test_log("🤖 AI COACH ANALYSIS")
+            self.test_log("=" * 60)
+            
+            try:
+                # Get initial AI analysis
+                initial_analysis = self.ai_coach.get_initial_analysis(
+                    predicted_action,
+                    {
+                        'jump_height': metrics['jump_height'],
+                        'movement_speed': metrics['movement_speed'],
+                        'form_score': metrics['shooting_form'],
+                        'reaction_time': metrics['reaction_time'],
+                        'pose_stability': metrics['pose_stability'],
+                        'energy_efficiency': metrics.get('energy_efficiency', 0.75)
+                    },
+                    None  # shot_outcome
+                )
+                
+                self.test_log(f"\n{initial_analysis}")
+                self._add_to_chat("AI Coach", initial_analysis)
+                
+            except Exception as e:
+                self.test_log(f"\n⚠️  AI Coach unavailable: {str(e)}")
+                self.test_log("   Using fallback recommendations")
+                self._display_simple_recommendations(metrics, predicted_action)
+            
             self.test_log("\n" + "=" * 60)
             self.test_log("💡 AI RECOMMENDATIONS")
             self.test_log("=" * 60)
@@ -1532,12 +1695,60 @@ class TrainingDashboard:
                         else:
                             self.test_log(f"\n⚠️  {rec['title']}")
                         self.test_log(f"   {rec['message']}")
+                        if 'exercises' in rec:
+                            self.test_log(f"   💪 Try: {', '.join(rec['exercises'][:3])}")
                 else:
                     # Fallback to simple recommendations
                     self._display_simple_recommendations(metrics, predicted_action)
             except Exception as e:
                 # Fallback to simple recommendations
                 self._display_simple_recommendations(metrics, predicted_action)
+            
+            # Display metrics summary
+            self.test_log("\n" + "=" * 60)
+            self.test_log("📈 PERFORMANCE METRICS")
+            self.test_log("=" * 60)
+            self.test_log(f"\n🦵 Jump Height:     {metrics['jump_height']}m")
+            self.test_log(f"🏃 Movement Speed:  {metrics['movement_speed']} m/s")
+            self.test_log(f"🎯 Shooting Form:   {metrics['shooting_form']} / 1.0")
+            self.test_log(f"⚡ Reaction Time:   {metrics['reaction_time']}s")
+            self.test_log(f"⚖️  Pose Stability:  {metrics['pose_stability']} / 1.0")
+            
+            self.test_log("\n" + "=" * 60)
+            self.test_log("✅ Analysis complete!")
+            self.test_log("=" * 60)
+            
+            # Success message
+            messagebox.showinfo(
+                "Analysis Complete! 🎉",
+                f"Action: {action_display_names[predicted_action].upper()}\n"
+                f"Confidence: {confidence*100:.1f}%\n\n"
+                f"Jump Height: {metrics['jump_height']}m\n"
+                f"Form Score: {metrics['shooting_form']}\n\n"
+                "Check the console for detailed results!"
+            )
+            
+        except Exception as e:
+            import traceback
+            error_msg = str(e)
+            error_trace = traceback.format_exc()
+            
+            self.test_log(f"\n❌ ERROR: {error_msg}")
+            self.test_log("\n📋 Full error traceback:")
+            for line in error_trace.split('\n'):
+                if line.strip():
+                    self.test_log(f"   {line}")
+            
+            messagebox.showerror(
+                "Analysis Error", 
+                f"Failed to analyze video:\n\n{error_msg}\n\nCheck the console for details."
+            )
+        
+        finally:
+            # Re-enable buttons
+            self.analyze_button.config(state=tk.NORMAL)
+            self.upload_button.config(state=tk.NORMAL)
+            self.root.update()
     
     def _display_simple_recommendations(self, metrics, action_type):
         """Display simple action-aware recommendations"""
@@ -1578,48 +1789,138 @@ class TrainingDashboard:
         if metrics['reaction_time'] < 0.22:
             self.test_log("\n⚡ Excellent reaction time!")
             self.test_log("   You're faster than average!")
-            
-            self.test_log("\n" + "=" * 60)
-            self.test_log("✅ Analysis complete!")
-            self.test_log("=" * 60)
-            
-            # Success message
-            messagebox.showinfo(
-                "Analysis Complete! 🎉",
-                f"Action: {action_display_names[predicted_action].upper()}\n"
-                f"Confidence: {confidence*100:.1f}%\n\n"
-                f"Jump Height: {metrics['jump_height']}m\n"
-                f"Form Score: {metrics['shooting_form']}\n\n"
-                "Check the console for detailed results!"
-            )
-            
-        except Exception as e:
-            import traceback
-            error_msg = str(e)
-            error_trace = traceback.format_exc()
-            
-            self.test_log(f"\n❌ ERROR: {error_msg}")
-            self.test_log("\n📋 Full error traceback:")
-            for line in error_trace.split('\n'):
-                if line.strip():
-                    self.test_log(f"   {line}")
-            
-            messagebox.showerror(
-                "Analysis Error", 
-                f"Failed to analyze video:\n\n{error_msg}\n\nCheck the console for details."
-            )
-        
-        finally:
-            # Re-enable buttons
-            self.analyze_button.config(state=tk.NORMAL)
-            self.upload_button.config(state=tk.NORMAL)
-            self.root.update()
     
     def test_log(self, message):
         """Add message to test console"""
         self.results_text.insert(tk.END, message + "\n")
         self.results_text.see(tk.END)
         self.root.update()
+    
+    def _init_ai_coach(self):
+        """Initialize AI Coach for chat"""
+        try:
+            import importlib.util
+            import sys
+            
+            # Add training directory to path
+            training_dir = str(self.project_root / "training")
+            if training_dir not in sys.path:
+                sys.path.insert(0, training_dir)
+            
+            coach_path = self.project_root / "training" / "ai_coach_chat.py"
+            
+            if coach_path.exists():
+                spec = importlib.util.spec_from_file_location("ai_coach_chat", str(coach_path))
+                if spec and spec.loader:
+                    coach_module = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(coach_module)
+                    AICoachChat = coach_module.AICoachChat
+                    
+                    # Try LLaMA 3.1 first (BEST! Open-source, offline, free!)
+                    try:
+                        # Use 8B model (smaller, faster)
+                        self.ai_coach = AICoachChat(model_type="llama")
+                        self._add_to_chat("System", "AI Coach ready with LLaMA 3.1 (Open-source, offline, FREE!)")
+                    except Exception as llama_error:
+                        # Fallback to other options
+                        import os
+                        deepseek_key = os.getenv("DEEPSEEK_API_KEY")
+                        if deepseek_key:
+                            self.ai_coach = AICoachChat(model_type="deepseek", api_key=deepseek_key)
+                            self._add_to_chat("System", "AI Coach ready with DeepSeek (FREE API!)")
+                        else:
+                            openai_key = os.getenv("OPENAI_API_KEY")
+                            if openai_key:
+                                self.ai_coach = AICoachChat(model_type="openai", api_key=openai_key)
+                                self._add_to_chat("System", "AI Coach ready with OpenAI")
+                            else:
+                                self.ai_coach = AICoachChat(model_type="fallback")
+                                self._add_to_chat("System", "AI Coach ready (fallback mode - no API needed)")
+                    
+                    self._add_to_chat("System", "AI Coach ready! Ask me anything about your performance.")
+                    return True
+        except Exception as e:
+            # Log warning using self.log (GUI logging method)
+            self.log(f"⚠️  Failed to initialize AI Coach: {e}")
+        
+        # Fallback: create simple coach
+        try:
+            from training.ai_coach_chat import AICoachChat
+            self.ai_coach = AICoachChat(model_type="fallback")
+            self._add_to_chat("System", "AI Coach ready (fallback mode). Ask me about your performance!")
+            return True
+        except:
+            self.ai_coach = None
+            return False
+    
+    def _add_to_chat(self, sender: str, message: str):
+        """Add message to chat display"""
+        self.chat_display.config(state=tk.NORMAL)
+        self.chat_display.insert(tk.END, f"\n[{sender}]: {message}\n")
+        self.chat_display.see(tk.END)
+        self.chat_display.config(state=tk.DISABLED)
+        self.root.update()
+    
+    def send_chat_message(self):
+        """Send message to AI coach"""
+        if not self.ai_coach:
+            self._add_to_chat("System", "AI Coach not available. Please analyze a video first.")
+            return
+        
+        if not self.current_analysis_data:
+            self._add_to_chat("System", "Please analyze a video first to get performance data.")
+            return
+        
+        user_message = self.chat_input.get().strip()
+        if not user_message:
+            return
+        
+        # Clear input
+        self.chat_input.delete(0, tk.END)
+        
+        # Add user message to chat
+        self._add_to_chat("You", user_message)
+        
+        # Show thinking indicator
+        self.chat_display.config(state=tk.NORMAL)
+        self.chat_display.insert(tk.END, "\n[AI Coach]: Thinking...\n")
+        self.chat_display.see(tk.END)
+        self.chat_display.config(state=tk.DISABLED)
+        self.root.update()
+        
+        # Get AI response in thread (to avoid blocking UI)
+        def get_response():
+            try:
+                response = self.ai_coach.chat(
+                    user_message,
+                    self.current_analysis_data['action'],
+                    {
+                        'jump_height': self.current_analysis_data['metrics']['jump_height'],
+                        'movement_speed': self.current_analysis_data['metrics']['movement_speed'],
+                        'form_score': self.current_analysis_data['metrics']['shooting_form'],
+                        'reaction_time': self.current_analysis_data['metrics']['reaction_time'],
+                        'pose_stability': self.current_analysis_data['metrics']['pose_stability'],
+                        'energy_efficiency': self.current_analysis_data['metrics'].get('energy_efficiency', 0.75)
+                    },
+                    None
+                )
+                
+                # Remove "Thinking..." and add response
+                self.chat_display.config(state=tk.NORMAL)
+                # Remove last line (Thinking...)
+                content = self.chat_display.get("1.0", tk.END)
+                lines = content.strip().split('\n')
+                if lines[-1] == "[AI Coach]: Thinking...":
+                    self.chat_display.delete(f"{len(lines)-1}.0", tk.END)
+                
+                self._add_to_chat("AI Coach", response)
+            except Exception as e:
+                self._add_to_chat("System", f"Error: {str(e)}")
+        
+        # Run in thread
+        chat_thread = threading.Thread(target=get_response)
+        chat_thread.daemon = True
+        chat_thread.start()
 
 
 def main():

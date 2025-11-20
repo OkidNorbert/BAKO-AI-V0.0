@@ -20,6 +20,12 @@ from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from typing import List, Dict
 import argparse
 import pandas as pd
+import time
+from datetime import timedelta
+import matplotlib
+matplotlib.use('Agg')  # Non-interactive backend
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -181,6 +187,202 @@ def compute_metrics(eval_pred):
         'recall': recall,
         'f1': f1
     }
+
+
+def plot_training_curves(trainer: Trainer, output_dir: str):
+    """
+    Generate and save training curves (loss, accuracy, etc.)
+    
+    Args:
+        trainer: Hugging Face Trainer object with training history
+        output_dir: Directory to save the plot
+    """
+    try:
+        # Get training history
+        history = trainer.state.log_history
+        
+        if not history:
+            logger.warning("⚠️  No training history found for plotting")
+            return
+        
+        # Extract metrics
+        train_loss = []
+        train_accuracy = []
+        eval_loss = []
+        eval_accuracy = []
+        eval_f1 = []
+        epochs = []
+        
+        for entry in history:
+            if 'loss' in entry and 'epoch' in entry:
+                train_loss.append(entry['loss'])
+                epochs.append(entry['epoch'])
+                if 'train_accuracy' in entry:
+                    train_accuracy.append(entry['train_accuracy'])
+            
+            if 'eval_loss' in entry:
+                eval_loss.append(entry['eval_loss'])
+                if 'eval_accuracy' in entry:
+                    eval_accuracy.append(entry['eval_accuracy'])
+                if 'eval_f1' in entry:
+                    eval_f1.append(entry['eval_f1'])
+        
+        # Create figure with subplots
+        fig, axes = plt.subplots(2, 2, figsize=(15, 12))
+        fig.suptitle('Training Progress - VideoMAE Basketball Action Classification', 
+                     fontsize=16, fontweight='bold')
+        
+        # Set style
+        sns.set_style("whitegrid")
+        plt.rcParams['font.size'] = 10
+        
+        # Plot 1: Loss curves
+        ax1 = axes[0, 0]
+        if train_loss and epochs:
+            ax1.plot(epochs[:len(train_loss)], train_loss, 'b-o', label='Train Loss', linewidth=2, markersize=6)
+        if eval_loss and epochs:
+            eval_epochs = [e for e, entry in zip(epochs, history) if 'eval_loss' in entry]
+            if eval_epochs:
+                ax1.plot(eval_epochs, eval_loss, 'r-s', label='Validation Loss', linewidth=2, markersize=6)
+        ax1.set_xlabel('Epoch', fontweight='bold')
+        ax1.set_ylabel('Loss', fontweight='bold')
+        ax1.set_title('Training & Validation Loss', fontweight='bold')
+        ax1.legend()
+        ax1.grid(True, alpha=0.3)
+        
+        # Plot 2: Accuracy curves
+        ax2 = axes[0, 1]
+        if train_accuracy and epochs:
+            ax2.plot(epochs[:len(train_accuracy)], [a*100 for a in train_accuracy], 
+                    'b-o', label='Train Accuracy', linewidth=2, markersize=6)
+        if eval_accuracy:
+            eval_epochs = [e for e, entry in zip(epochs, history) if 'eval_accuracy' in entry]
+            if eval_epochs:
+                ax2.plot(eval_epochs, [a*100 for a in eval_accuracy], 
+                        'r-s', label='Validation Accuracy', linewidth=2, markersize=6)
+        ax2.set_xlabel('Epoch', fontweight='bold')
+        ax2.set_ylabel('Accuracy (%)', fontweight='bold')
+        ax2.set_title('Training & Validation Accuracy', fontweight='bold')
+        ax2.legend()
+        ax2.grid(True, alpha=0.3)
+        ax2.set_ylim([0, 100])
+        
+        # Plot 3: F1 Score
+        ax3 = axes[1, 0]
+        if eval_f1:
+            eval_epochs = [e for e, entry in zip(epochs, history) if 'eval_f1' in entry]
+            if eval_epochs:
+                ax3.plot(eval_epochs, [f*100 for f in eval_f1], 
+                        'g-^', label='Validation F1 Score', linewidth=2, markersize=6)
+        ax3.set_xlabel('Epoch', fontweight='bold')
+        ax3.set_ylabel('F1 Score (%)', fontweight='bold')
+        ax3.set_title('Validation F1 Score', fontweight='bold')
+        ax3.legend()
+        ax3.grid(True, alpha=0.3)
+        ax3.set_ylim([0, 100])
+        
+        # Plot 4: Learning Rate (if available)
+        ax4 = axes[1, 1]
+        lr_values = []
+        lr_steps = []
+        for entry in history:
+            if 'learning_rate' in entry:
+                lr_values.append(entry['learning_rate'])
+                if 'step' in entry:
+                    lr_steps.append(entry['step'])
+        
+        if lr_values:
+            if lr_steps:
+                ax4.plot(lr_steps, lr_values, 'm-', label='Learning Rate', linewidth=2)
+                ax4.set_xlabel('Step', fontweight='bold')
+            else:
+                ax4.plot(range(len(lr_values)), lr_values, 'm-', label='Learning Rate', linewidth=2)
+                ax4.set_xlabel('Epoch', fontweight='bold')
+            ax4.set_ylabel('Learning Rate', fontweight='bold')
+            ax4.set_title('Learning Rate Schedule', fontweight='bold')
+            ax4.legend()
+            ax4.grid(True, alpha=0.3)
+        else:
+            ax4.text(0.5, 0.5, 'Learning Rate\nData Not Available', 
+                    ha='center', va='center', transform=ax4.transAxes, fontsize=12)
+            ax4.set_title('Learning Rate Schedule', fontweight='bold')
+        
+        plt.tight_layout()
+        
+        # Save plot
+        output_path = Path(output_dir) / "training_curves.png"
+        plt.savefig(output_path, dpi=300, bbox_inches='tight')
+        plt.close()
+        
+        logger.info(f"📊 Training curves saved to: {output_path}")
+        
+        # Also save as PDF for better quality
+        output_path_pdf = Path(output_dir) / "training_curves.pdf"
+        fig, axes = plt.subplots(2, 2, figsize=(15, 12))
+        fig.suptitle('Training Progress - VideoMAE Basketball Action Classification', 
+                     fontsize=16, fontweight='bold')
+        
+        # Recreate plots for PDF
+        sns.set_style("whitegrid")
+        if train_loss and epochs:
+            axes[0, 0].plot(epochs[:len(train_loss)], train_loss, 'b-o', label='Train Loss', linewidth=2, markersize=6)
+        if eval_loss and epochs:
+            eval_epochs = [e for e, entry in zip(epochs, history) if 'eval_loss' in entry]
+            if eval_epochs:
+                axes[0, 0].plot(eval_epochs, eval_loss, 'r-s', label='Validation Loss', linewidth=2, markersize=6)
+        axes[0, 0].set_xlabel('Epoch', fontweight='bold')
+        axes[0, 0].set_ylabel('Loss', fontweight='bold')
+        axes[0, 0].set_title('Training & Validation Loss', fontweight='bold')
+        axes[0, 0].legend()
+        axes[0, 0].grid(True, alpha=0.3)
+        
+        if train_accuracy and epochs:
+            axes[0, 1].plot(epochs[:len(train_accuracy)], [a*100 for a in train_accuracy], 
+                           'b-o', label='Train Accuracy', linewidth=2, markersize=6)
+        if eval_accuracy:
+            eval_epochs = [e for e, entry in zip(epochs, history) if 'eval_accuracy' in entry]
+            if eval_epochs:
+                axes[0, 1].plot(eval_epochs, [a*100 for a in eval_accuracy], 
+                               'r-s', label='Validation Accuracy', linewidth=2, markersize=6)
+        axes[0, 1].set_xlabel('Epoch', fontweight='bold')
+        axes[0, 1].set_ylabel('Accuracy (%)', fontweight='bold')
+        axes[0, 1].set_title('Training & Validation Accuracy', fontweight='bold')
+        axes[0, 1].legend()
+        axes[0, 1].grid(True, alpha=0.3)
+        axes[0, 1].set_ylim([0, 100])
+        
+        if eval_f1:
+            eval_epochs = [e for e, entry in zip(epochs, history) if 'eval_f1' in entry]
+            if eval_epochs:
+                axes[1, 0].plot(eval_epochs, [f*100 for f in eval_f1], 
+                               'g-^', label='Validation F1 Score', linewidth=2, markersize=6)
+        axes[1, 0].set_xlabel('Epoch', fontweight='bold')
+        axes[1, 0].set_ylabel('F1 Score (%)', fontweight='bold')
+        axes[1, 0].set_title('Validation F1 Score', fontweight='bold')
+        axes[1, 0].legend()
+        axes[1, 0].grid(True, alpha=0.3)
+        axes[1, 0].set_ylim([0, 100])
+        
+        if lr_values:
+            if lr_steps:
+                axes[1, 1].plot(lr_steps, lr_values, 'm-', label='Learning Rate', linewidth=2)
+                axes[1, 1].set_xlabel('Step', fontweight='bold')
+            else:
+                axes[1, 1].plot(range(len(lr_values)), lr_values, 'm-', label='Learning Rate', linewidth=2)
+                axes[1, 1].set_xlabel('Epoch', fontweight='bold')
+            axes[1, 1].set_ylabel('Learning Rate', fontweight='bold')
+            axes[1, 1].set_title('Learning Rate Schedule', fontweight='bold')
+            axes[1, 1].legend()
+            axes[1, 1].grid(True, alpha=0.3)
+        
+        plt.tight_layout()
+        plt.savefig(output_path_pdf, bbox_inches='tight')
+        plt.close()
+        
+    except Exception as e:
+        logger.error(f"❌ Error generating training curves: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
 
 
 def main():
@@ -363,13 +565,34 @@ def main():
         callbacks=[EarlyStoppingCallback(early_stopping_patience=5)]
     )
     
-    # Train
+    # Train with timing
     logger.info("🚀 Starting training...")
+    logger.info("⏱️  Timing each epoch...")
+    
+    start_time = time.time()
     train_result = trainer.train()
+    total_training_time = time.time() - start_time
+    
+    # Calculate per-epoch time
+    num_epochs_completed = train_result.global_step / (len(train_dataset) / args.batch_size)
+    if num_epochs_completed > 0:
+        avg_epoch_time = total_training_time / num_epochs_completed
+        logger.info("=" * 60)
+        logger.info("⏱️  TRAINING TIME STATISTICS:")
+        logger.info("=" * 60)
+        logger.info(f"   Total Training Time: {timedelta(seconds=int(total_training_time))}")
+        logger.info(f"   Epochs Completed: {num_epochs_completed:.1f}")
+        logger.info(f"   Average Time per Epoch: {timedelta(seconds=int(avg_epoch_time))}")
+        logger.info(f"   Time per Epoch: ~{avg_epoch_time:.1f} seconds ({avg_epoch_time/60:.1f} minutes)")
+        logger.info(f"   Samples per Second: {len(train_dataset) * num_epochs_completed / total_training_time:.2f}")
+        logger.info("=" * 60)
     
     # Evaluate on test set
     logger.info("📊 Evaluating on test set...")
+    eval_start = time.time()
     test_results = trainer.evaluate(test_dataset)
+    eval_time = time.time() - eval_start
+    logger.info(f"⏱️  Evaluation time: {timedelta(seconds=int(eval_time))}")
     
     # Save final model
     output_model_dir = Path(args.output_dir) / "best_model"
@@ -379,6 +602,9 @@ def main():
     processor.save_pretrained(str(output_model_dir))
     
     # Save model info
+    num_epochs_completed = train_result.global_step / (len(train_dataset) / args.batch_size) if len(train_dataset) > 0 else 0
+    avg_epoch_time = total_training_time / num_epochs_completed if num_epochs_completed > 0 else 0
+    
     model_info = {
         "model_type": "VideoMAE",
         "base_model": model_name,
@@ -390,7 +616,12 @@ def main():
         "train_samples": len(train_dataset),
         "val_samples": len(val_dataset),
         "test_samples": len(test_dataset),
-        "epochs_trained": train_result.global_step,
+        "epochs_trained": num_epochs_completed,
+        "total_training_time_seconds": total_training_time,
+        "average_epoch_time_seconds": avg_epoch_time,
+        "training_device": "cuda" if torch.cuda.is_available() else "cpu",
+        "batch_size": args.batch_size,
+        "learning_rate": args.lr,
     }
     
     model_info_path = Path(args.output_dir) / "model_info.json"
@@ -406,6 +637,14 @@ def main():
     logger.info(f"   Test Accuracy: {model_info['test_accuracy']*100:.1f}%")
     logger.info(f"   Model saved to: {output_model_dir}")
     logger.info(f"   Model info saved to: {model_info_path}")
+    
+    # Generate and save training charts
+    logger.info("📊 Generating training charts...")
+    try:
+        plot_training_curves(trainer, args.output_dir)
+        logger.info(f"✅ Training charts saved to: {Path(args.output_dir) / 'training_curves.png'}")
+    except Exception as e:
+        logger.warning(f"⚠️  Could not generate training charts: {e}")
 
 
 if __name__ == "__main__":

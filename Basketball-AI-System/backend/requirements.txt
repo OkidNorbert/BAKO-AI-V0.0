@@ -15,8 +15,11 @@ pydantic-settings>=2.5.0
 # ============================================
 torch>=2.5.0
 torchvision>=0.20.0
-transformers>=4.45.0              # VideoMAE, TimeSformer
+transformers>=4.45.0              # VideoMAE, TimeSformer, LLaMA 3.1
 timm>=1.0.0                       # Model library
+accelerate>=0.30.0                # For LLaMA 3.1 model loading
+bitsandbytes>=0.43.0              # For quantization (optional, for 70B model)
+huggingface-hub>=0.23.0           # For downloading LLaMA models
 
 # ============================================
 # COMPUTER VISION
@@ -59,6 +62,8 @@ minio>=7.2.0                      # Object storage
 python-dotenv>=1.0.0
 tqdm>=4.66.0
 rich>=13.8.0
+matplotlib>=3.8.0              # For training curves visualization
+seaborn>=0.13.0                # For better plot styling
 
 # ============================================
 # MONITORING
