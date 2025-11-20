@@ -19,6 +19,13 @@ from app.core.schemas import VideoAnalysisResult, HealthResponse, AnalysisStatus
 from app.services.video_processor import VideoProcessor
 from app.api import chat
 
+# Suppress noisy warnings (optional - doesn't affect functionality)
+import warnings
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Suppress TensorFlow warnings
+warnings.filterwarnings('ignore', category=UserWarning, message='.*SymbolDatabase.*')
+warnings.filterwarnings('ignore', message='.*absl.*')
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -64,10 +71,13 @@ async def startup_event():
     
     try:
         video_processor = VideoProcessor()
+        # Store in app state for dependency injection
+        app.state.video_processor = video_processor
         logger.info("✅ Video processor ready!")
     except Exception as e:
         logger.error(f"❌ Failed to initialize video processor: {e}")
         video_processor = None
+        app.state.video_processor = None
 
 
 @app.on_event("shutdown")
@@ -108,6 +118,7 @@ async def analyze_video(video: UploadFile = File(...)):
     - Performance metrics (jump height, speed, form)
     - AI recommendations
     """
+    global video_processor
     if video_processor is None:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

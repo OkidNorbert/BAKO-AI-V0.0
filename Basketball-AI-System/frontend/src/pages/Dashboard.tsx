@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import VideoUpload from '../components/VideoUpload';
 import ActionResult from '../components/ActionResult';
@@ -6,8 +6,8 @@ import MetricsDisplay from '../components/MetricsDisplay';
 import RadarChart from '../components/RadarChart';
 import RecommendationCard from '../components/RecommendationCard';
 import ProgressChart from '../components/ProgressChart';
-import { analyzeVideo } from '../services/api';
-import type { VideoAnalysisResult, UploadProgress } from '../types';
+import { analyzeVideo, getHistory } from '../services/api';
+import type { VideoAnalysisResult, UploadProgress, HistoricalData } from '../types';
 
 export default function Dashboard() {
   const [uploadProgress, setUploadProgress] = useState<UploadProgress>({
@@ -16,58 +16,27 @@ export default function Dashboard() {
   });
   const [analysisResult, setAnalysisResult] = useState<VideoAnalysisResult | null>(null);
   const [error, setError] = useState<string>('');
+  const [historicalData, setHistoricalData] = useState<HistoricalData[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
-  // Mock historical data (replace with real API call)
-  const mockHistoricalData = [
-    {
-      date: '2025-01-13',
-      metrics: {
-        jump_height: 0.65,
-        movement_speed: 5.8,
-        form_score: 0.82,
-        reaction_time: 0.25,
-        pose_stability: 0.78,
-        energy_efficiency: 0.72,
-      },
-      action: 'shooting',
-    },
-    {
-      date: '2025-01-15',
-      metrics: {
-        jump_height: 0.68,
-        movement_speed: 6.1,
-        form_score: 0.85,
-        reaction_time: 0.23,
-        pose_stability: 0.81,
-        energy_efficiency: 0.75,
-      },
-      action: 'shooting',
-    },
-    {
-      date: '2025-01-17',
-      metrics: {
-        jump_height: 0.70,
-        movement_speed: 6.3,
-        form_score: 0.87,
-        reaction_time: 0.22,
-        pose_stability: 0.83,
-        energy_efficiency: 0.76,
-      },
-      action: 'shooting',
-    },
-    {
-      date: '2025-01-20',
-      metrics: {
-        jump_height: 0.72,
-        movement_speed: 6.5,
-        form_score: 0.89,
-        reaction_time: 0.21,
-        pose_stability: 0.85,
-        energy_efficiency: 0.78,
-      },
-      action: 'shooting',
-    },
-  ];
+  // Load historical data on mount
+  useEffect(() => {
+    loadHistoricalData();
+  }, []);
+
+  const loadHistoricalData = async () => {
+    try {
+      setIsLoadingHistory(true);
+      const history = await getHistory();
+      setHistoricalData(history);
+    } catch (err) {
+      console.error('Failed to load history:', err);
+      // If history endpoint is not implemented, use empty array
+      setHistoricalData([]);
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
 
   const handleVideoUpload = async (file: File) => {
     try {
@@ -79,65 +48,15 @@ export default function Dashboard() {
 
       setUploadProgress({ progress: 100, status: 'complete' });
       setAnalysisResult(result);
-    } catch (err) {
+      
+      // Reload history to include new analysis
+      await loadHistoricalData();
+    } catch (err: any) {
       console.error('Upload error:', err);
-      setError('Failed to analyze video. Please try again.');
+      const errorMessage = err?.response?.data?.detail || err?.message || 'Failed to analyze video. Please try again.';
+      setError(errorMessage);
       setUploadProgress({ progress: 0, status: 'error', message: 'Upload failed' });
     }
-  };
-
-  // Mock data for demo (remove when backend is ready)
-  const mockResult: VideoAnalysisResult = {
-    video_id: 'demo-123',
-    action: {
-      label: 'three_point_shot',
-      confidence: 0.942,
-      probabilities: {
-        free_throw: 0.012,
-        two_point_shot: 0.045,
-        three_point_shot: 0.942,
-        layup: 0.008,
-        dunk: 0.002,
-        dribbling: 0.032,
-        passing: 0.015,
-        defense: 0.008,
-        running: 0.005,
-        walking: 0.003,
-        blocking: 0.002,
-        picking: 0.001,
-        ball_in_hand: 0.020,
-        idle: 0.003,
-      },
-    },
-    metrics: {
-      jump_height: 0.72,
-      movement_speed: 6.5,
-      form_score: 0.89,
-      reaction_time: 0.21,
-      pose_stability: 0.85,
-      energy_efficiency: 0.78,
-    },
-    recommendations: [
-      {
-        type: 'excellent',
-        title: 'Excellent Shooting Form!',
-        message: 'Your shooting form is exceptional with a score of 89/100. Your elbow angle is perfect at 92°, which is within the optimal range for accuracy.',
-        priority: 'low',
-      },
-      {
-        type: 'focus',
-        title: 'Work on Jump Height Consistency',
-        message: 'Your current jump height of 0.72m is good, but you can improve to 0.80m with targeted plyometric exercises. Try box jumps and depth jumps 3 times per week.',
-        priority: 'medium',
-      },
-      {
-        type: 'improvement',
-        title: 'Great Reaction Time!',
-        message: 'Your reaction time of 0.21s is 15% faster than the average player. This gives you a competitive advantage in game situations.',
-        priority: 'low',
-      },
-    ],
-    timestamp: new Date().toISOString(),
   };
 
   return (
@@ -186,24 +105,6 @@ export default function Dashboard() {
             </motion.div>
           )}
 
-          {/* Demo Button (remove when backend is ready) */}
-          {!analysisResult && uploadProgress.status === 'idle' && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center"
-            >
-              <button
-                onClick={() => setAnalysisResult(mockResult)}
-                className="px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg transition-colors"
-              >
-                View Demo Results
-              </button>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                Click to see sample analysis (Backend not connected yet)
-              </p>
-            </motion.div>
-          )}
 
           {/* Analysis Results */}
           {analysisResult && (
@@ -225,7 +126,19 @@ export default function Dashboard() {
               <RecommendationCard recommendations={analysisResult.recommendations} />
 
               {/* Progress Chart */}
-              <ProgressChart data={mockHistoricalData} />
+              {historicalData.length > 0 ? (
+                <ProgressChart data={historicalData} />
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="p-8 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 text-center"
+                >
+                  <p className="text-gray-500 dark:text-gray-400">
+                    No historical data available yet. Upload more videos to see your progress over time.
+                  </p>
+                </motion.div>
+              )}
 
               {/* Actions */}
               <motion.div

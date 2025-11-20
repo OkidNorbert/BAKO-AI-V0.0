@@ -3,12 +3,11 @@ Chat API endpoints for AI Coach
 Allows players to interact with AI coach about their performance
 """
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Request
 from pydantic import BaseModel
 from typing import List, Optional, Dict
 from datetime import datetime
 
-from app.services.video_processor import video_processor
 from app.models.ai_coach import AICoach
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
@@ -35,7 +34,10 @@ class ChatResponse(BaseModel):
 
 
 @router.post("/", response_model=ChatResponse)
-async def chat_with_coach(request: ChatRequest):
+async def chat_with_coach(
+    request: ChatRequest,
+    http_request: Request
+):
     """
     Chat with AI coach about performance
     
@@ -43,7 +45,10 @@ async def chat_with_coach(request: ChatRequest):
     1. Provide video_id to reference previous analysis
     2. Or ensure video was just analyzed (stored in session)
     """
-    if video_processor is None or video_processor.ai_coach is None:
+    # Get video processor from app state
+    video_processor = getattr(http_request.app.state, 'video_processor', None)
+    
+    if video_processor is None or not hasattr(video_processor, 'ai_coach') or video_processor.ai_coach is None:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="AI Coach not available"

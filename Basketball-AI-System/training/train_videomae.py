@@ -205,23 +205,27 @@ def plot_training_curves(trainer: Trainer, output_dir: str):
             logger.warning("⚠️  No training history found for plotting")
             return
         
-        # Extract metrics
+        # Extract metrics - properly align epochs with values
         train_loss = []
         train_accuracy = []
         eval_loss = []
         eval_accuracy = []
         eval_f1 = []
-        epochs = []
+        train_epochs = []
+        eval_epochs = []
         
         for entry in history:
-            if 'loss' in entry and 'epoch' in entry:
+            # Training metrics
+            if 'loss' in entry and 'epoch' in entry and 'eval_loss' not in entry:
                 train_loss.append(entry['loss'])
-                epochs.append(entry['epoch'])
+                train_epochs.append(entry['epoch'])
                 if 'train_accuracy' in entry:
                     train_accuracy.append(entry['train_accuracy'])
             
-            if 'eval_loss' in entry:
+            # Evaluation metrics
+            if 'eval_loss' in entry and 'epoch' in entry:
                 eval_loss.append(entry['eval_loss'])
+                eval_epochs.append(entry['epoch'])
                 if 'eval_accuracy' in entry:
                     eval_accuracy.append(entry['eval_accuracy'])
                 if 'eval_f1' in entry:
@@ -238,12 +242,10 @@ def plot_training_curves(trainer: Trainer, output_dir: str):
         
         # Plot 1: Loss curves
         ax1 = axes[0, 0]
-        if train_loss and epochs:
-            ax1.plot(epochs[:len(train_loss)], train_loss, 'b-o', label='Train Loss', linewidth=2, markersize=6)
-        if eval_loss and epochs:
-            eval_epochs = [e for e, entry in zip(epochs, history) if 'eval_loss' in entry]
-            if eval_epochs:
-                ax1.plot(eval_epochs, eval_loss, 'r-s', label='Validation Loss', linewidth=2, markersize=6)
+        if train_loss and train_epochs:
+            ax1.plot(train_epochs[:len(train_loss)], train_loss, 'b-o', label='Train Loss', linewidth=2, markersize=6)
+        if eval_loss and eval_epochs and len(eval_loss) == len(eval_epochs):
+            ax1.plot(eval_epochs, eval_loss, 'r-s', label='Validation Loss', linewidth=2, markersize=6)
         ax1.set_xlabel('Epoch', fontweight='bold')
         ax1.set_ylabel('Loss', fontweight='bold')
         ax1.set_title('Training & Validation Loss', fontweight='bold')
@@ -252,14 +254,12 @@ def plot_training_curves(trainer: Trainer, output_dir: str):
         
         # Plot 2: Accuracy curves
         ax2 = axes[0, 1]
-        if train_accuracy and epochs:
-            ax2.plot(epochs[:len(train_accuracy)], [a*100 for a in train_accuracy], 
+        if train_accuracy and train_epochs and len(train_accuracy) <= len(train_epochs):
+            ax2.plot(train_epochs[:len(train_accuracy)], [a*100 for a in train_accuracy], 
                     'b-o', label='Train Accuracy', linewidth=2, markersize=6)
-        if eval_accuracy:
-            eval_epochs = [e for e, entry in zip(epochs, history) if 'eval_accuracy' in entry]
-            if eval_epochs:
-                ax2.plot(eval_epochs, [a*100 for a in eval_accuracy], 
-                        'r-s', label='Validation Accuracy', linewidth=2, markersize=6)
+        if eval_accuracy and eval_epochs and len(eval_accuracy) == len(eval_epochs):
+            ax2.plot(eval_epochs, [a*100 for a in eval_accuracy], 
+                    'r-s', label='Validation Accuracy', linewidth=2, markersize=6)
         ax2.set_xlabel('Epoch', fontweight='bold')
         ax2.set_ylabel('Accuracy (%)', fontweight='bold')
         ax2.set_title('Training & Validation Accuracy', fontweight='bold')
@@ -269,11 +269,9 @@ def plot_training_curves(trainer: Trainer, output_dir: str):
         
         # Plot 3: F1 Score
         ax3 = axes[1, 0]
-        if eval_f1:
-            eval_epochs = [e for e, entry in zip(epochs, history) if 'eval_f1' in entry]
-            if eval_epochs:
-                ax3.plot(eval_epochs, [f*100 for f in eval_f1], 
-                        'g-^', label='Validation F1 Score', linewidth=2, markersize=6)
+        if eval_f1 and eval_epochs and len(eval_f1) == len(eval_epochs):
+            ax3.plot(eval_epochs, [f*100 for f in eval_f1], 
+                    'g-^', label='Validation F1 Score', linewidth=2, markersize=6)
         ax3.set_xlabel('Epoch', fontweight='bold')
         ax3.set_ylabel('F1 Score (%)', fontweight='bold')
         ax3.set_title('Validation F1 Score', fontweight='bold')
@@ -324,26 +322,22 @@ def plot_training_curves(trainer: Trainer, output_dir: str):
         
         # Recreate plots for PDF
         sns.set_style("whitegrid")
-        if train_loss and epochs:
-            axes[0, 0].plot(epochs[:len(train_loss)], train_loss, 'b-o', label='Train Loss', linewidth=2, markersize=6)
-        if eval_loss and epochs:
-            eval_epochs = [e for e, entry in zip(epochs, history) if 'eval_loss' in entry]
-            if eval_epochs:
-                axes[0, 0].plot(eval_epochs, eval_loss, 'r-s', label='Validation Loss', linewidth=2, markersize=6)
+        if train_loss and train_epochs:
+            axes[0, 0].plot(train_epochs[:len(train_loss)], train_loss, 'b-o', label='Train Loss', linewidth=2, markersize=6)
+        if eval_loss and eval_epochs and len(eval_loss) == len(eval_epochs):
+            axes[0, 0].plot(eval_epochs, eval_loss, 'r-s', label='Validation Loss', linewidth=2, markersize=6)
         axes[0, 0].set_xlabel('Epoch', fontweight='bold')
         axes[0, 0].set_ylabel('Loss', fontweight='bold')
         axes[0, 0].set_title('Training & Validation Loss', fontweight='bold')
         axes[0, 0].legend()
         axes[0, 0].grid(True, alpha=0.3)
         
-        if train_accuracy and epochs:
-            axes[0, 1].plot(epochs[:len(train_accuracy)], [a*100 for a in train_accuracy], 
+        if train_accuracy and train_epochs and len(train_accuracy) <= len(train_epochs):
+            axes[0, 1].plot(train_epochs[:len(train_accuracy)], [a*100 for a in train_accuracy], 
                            'b-o', label='Train Accuracy', linewidth=2, markersize=6)
-        if eval_accuracy:
-            eval_epochs = [e for e, entry in zip(epochs, history) if 'eval_accuracy' in entry]
-            if eval_epochs:
-                axes[0, 1].plot(eval_epochs, [a*100 for a in eval_accuracy], 
-                               'r-s', label='Validation Accuracy', linewidth=2, markersize=6)
+        if eval_accuracy and eval_epochs and len(eval_accuracy) == len(eval_epochs):
+            axes[0, 1].plot(eval_epochs, [a*100 for a in eval_accuracy], 
+                           'r-s', label='Validation Accuracy', linewidth=2, markersize=6)
         axes[0, 1].set_xlabel('Epoch', fontweight='bold')
         axes[0, 1].set_ylabel('Accuracy (%)', fontweight='bold')
         axes[0, 1].set_title('Training & Validation Accuracy', fontweight='bold')
@@ -351,11 +345,9 @@ def plot_training_curves(trainer: Trainer, output_dir: str):
         axes[0, 1].grid(True, alpha=0.3)
         axes[0, 1].set_ylim([0, 100])
         
-        if eval_f1:
-            eval_epochs = [e for e, entry in zip(epochs, history) if 'eval_f1' in entry]
-            if eval_epochs:
-                axes[1, 0].plot(eval_epochs, [f*100 for f in eval_f1], 
-                               'g-^', label='Validation F1 Score', linewidth=2, markersize=6)
+        if eval_f1 and eval_epochs and len(eval_f1) == len(eval_epochs):
+            axes[1, 0].plot(eval_epochs, [f*100 for f in eval_f1], 
+                           'g-^', label='Validation F1 Score', linewidth=2, markersize=6)
         axes[1, 0].set_xlabel('Epoch', fontweight='bold')
         axes[1, 0].set_ylabel('F1 Score (%)', fontweight='bold')
         axes[1, 0].set_title('Validation F1 Score', fontweight='bold')

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { VideoAnalysisResult, UploadProgress } from '../types';
+import type { VideoAnalysisResult, UploadProgress, HistoricalData } from '../types';
 
 // API base URL - adjust based on environment
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
@@ -57,11 +57,20 @@ export async function getAnalysisResult(videoId: string): Promise<VideoAnalysisR
 /**
  * Get historical analysis data
  */
-export async function getHistory(limit: number = 10): Promise<VideoAnalysisResult[]> {
-  const response = await api.get<VideoAnalysisResult[]>('/api/history', {
-    params: { limit },
-  });
-  return response.data;
+export async function getHistory(limit: number = 10): Promise<HistoricalData[]> {
+  try {
+    const response = await api.get<HistoricalData[]>('/api/history', {
+      params: { limit },
+    });
+    return response.data;
+  } catch (error: any) {
+    // If endpoint returns 501 (not implemented) or empty array, return empty array
+    if (error?.response?.status === 501 || error?.response?.status === 404) {
+      return [];
+    }
+    console.error('Get history error:', error);
+    throw error;
+  }
 }
 
 /**
