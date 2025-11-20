@@ -40,7 +40,40 @@ export async function analyzeVideo(
     });
 
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
+    // Handle network errors
+    if (error?.code === 'ERR_NETWORK' || error?.code === 'ERR_CONNECTION_REFUSED') {
+      const helpfulError = new Error('Backend server is not running. Please start the backend server first.');
+      (helpfulError as any).code = error.code;
+      console.error('Video analysis error:', helpfulError);
+      throw helpfulError;
+    }
+    
+    // Handle structured error responses from backend
+    if (error?.response?.data) {
+      const errorData = error.response.data;
+      
+      // If backend returns structured error with suggestions
+      if (errorData.error === 'no_player_detected' && errorData.suggestions) {
+        const errorMessage = errorData.message || 'No player detected in video';
+        const suggestions = errorData.suggestions || [];
+        const fullMessage = `${errorMessage}\n\nSuggestions:\n${suggestions.map((s: string, i: number) => `${i + 1}. ${s}`).join('\n')}`;
+        
+        const customError = new Error(fullMessage);
+        (customError as any).code = 'NO_PLAYER_DETECTED';
+        (customError as any).suggestions = suggestions;
+        (customError as any).originalMessage = errorMessage;
+        throw customError;
+      }
+      
+      // Other structured errors
+      if (errorData.message) {
+        const customError = new Error(errorData.message);
+        (customError as any).code = errorData.error || 'ANALYSIS_ERROR';
+        throw customError;
+      }
+    }
+    
     console.error('Video analysis error:', error);
     throw error;
   }
@@ -66,6 +99,11 @@ export async function getHistory(limit: number = 10): Promise<HistoricalData[]> 
   } catch (error: any) {
     // If endpoint returns 501 (not implemented) or empty array, return empty array
     if (error?.response?.status === 501 || error?.response?.status === 404) {
+      return [];
+    }
+    // If connection refused, backend might not be running - return empty array gracefully
+    if (error?.code === 'ERR_NETWORK' || error?.code === 'ERR_CONNECTION_REFUSED') {
+      console.warn('Backend not available, returning empty history');
       return [];
     }
     console.error('Get history error:', error);

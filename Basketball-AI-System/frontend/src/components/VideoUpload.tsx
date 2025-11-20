@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { Upload, Film, X, CheckCircle, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../utils/cn';
@@ -14,6 +14,18 @@ export default function VideoUpload({ onUpload, isUploading = false, progress = 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [error, setError] = useState<string>('');
   const [preview, setPreview] = useState<string>('');
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  
+  // Force video to show first frame when preview changes
+  useEffect(() => {
+    if (preview && videoRef.current) {
+      const video = videoRef.current;
+      video.load(); // Reload video
+      video.currentTime = 0.1; // Set to first frame
+      video.style.visibility = 'visible';
+      video.style.opacity = '1';
+    }
+  }, [preview]);
 
   const validateFile = (file: File): string | null => {
     const validTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo'];
@@ -39,6 +51,12 @@ export default function VideoUpload({ onUpload, isUploading = false, progress = 
     }
 
     setError('');
+    
+    // Revoke old preview URL if exists
+    if (preview) {
+      URL.revokeObjectURL(preview);
+    }
+    
     setSelectedFile(file);
 
     // Create preview
@@ -191,12 +209,116 @@ export default function VideoUpload({ onUpload, isUploading = false, progress = 
             </div>
 
             {preview && (
-              <video
-                src={preview}
-                controls
-                className="w-full rounded-lg bg-black"
-                style={{ maxHeight: '300px' }}
-              />
+              <div 
+                className="w-full rounded-lg bg-black relative overflow-hidden" 
+                style={{ 
+                  minHeight: '300px',
+                  maxHeight: '600px',
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  position: 'relative',
+                  aspectRatio: 'auto'
+                }}
+              >
+                <video
+                  ref={videoRef}
+                  key={preview}
+                  src={preview}
+                  controls
+                  preload="auto"
+                  playsInline
+                  style={{ 
+                    width: '100%',
+                    height: 'auto',
+                    maxHeight: '600px',
+                    display: 'block',
+                    backgroundColor: '#000000',
+                    objectFit: 'contain',
+                    visibility: 'visible',
+                    opacity: '1',
+                    margin: '0 auto'
+                  }}
+                  onError={(e) => {
+                    console.error('❌ Video load error:', e);
+                    const target = e.currentTarget;
+                    const error = target.error;
+                    console.error('Video error details:', {
+                      error: error ? {
+                        message: error.message,
+                        code: error.code,
+                        name: error.name
+                      } : 'No error object',
+                      networkState: target.networkState,
+                      readyState: target.readyState,
+                      src: target.src,
+                      currentSrc: target.currentSrc
+                    });
+                    setError(`Failed to load video preview: ${error?.message || 'Unknown error'}. Please try another file.`);
+                  }}
+                  onLoadStart={(e) => {
+                    console.log('🔄 Video load started');
+                  }}
+                  onLoadedMetadata={(e) => {
+                    const video = e.currentTarget;
+                    const aspectRatio = video.videoWidth / video.videoHeight;
+                    const isLandscape = aspectRatio > 1;
+                    
+                    console.log('✅ Video metadata loaded:', {
+                      width: video.videoWidth,
+                      height: video.videoHeight,
+                      aspectRatio: aspectRatio.toFixed(2),
+                      orientation: isLandscape ? 'landscape' : 'portrait',
+                      duration: video.duration,
+                      readyState: video.readyState
+                    });
+                    
+                    // Adjust container for landscape videos
+                    if (isLandscape) {
+                      const container = video.parentElement;
+                      if (container) {
+                        container.style.minHeight = '300px';
+                        container.style.maxHeight = '600px';
+                        // For landscape, let video determine height based on width
+                        video.style.width = '100%';
+                        video.style.height = 'auto';
+                      }
+                    } else {
+                      // For portrait, maintain reasonable height
+                      const container = video.parentElement;
+                      if (container) {
+                        container.style.minHeight = '400px';
+                        container.style.maxHeight = '800px';
+                      }
+                    }
+                    
+                    // Force video to show first frame
+                    video.currentTime = 0.1;
+                  }}
+                  onLoadedData={(e) => {
+                    console.log('✅ Video data loaded');
+                    const video = e.currentTarget;
+                    video.style.visibility = 'visible';
+                    video.style.opacity = '1';
+                  }}
+                  onCanPlay={(e) => {
+                    console.log('✅ Video can play');
+                    const video = e.currentTarget;
+                    video.style.visibility = 'visible';
+                    video.style.opacity = '1';
+                  }}
+                  onCanPlayThrough={(e) => {
+                    console.log('✅ Video can play through');
+                  }}
+                >
+                  Your browser does not support the video tag.
+                </video>
+                {!selectedFile && (
+                  <div className="absolute inset-0 flex items-center justify-center text-white">
+                    <p>Loading video preview...</p>
+                  </div>
+                )}
+              </div>
             )}
 
             {isUploading ? (

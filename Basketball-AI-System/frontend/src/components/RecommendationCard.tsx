@@ -1,3 +1,4 @@
+import React from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle, AlertTriangle, Info, TrendingUp, ChevronRight } from 'lucide-react';
 import type { Recommendation } from '../types';
@@ -6,25 +7,37 @@ interface RecommendationCardProps {
   recommendations: Recommendation[];
 }
 
-const ICON_MAP = {
+const ICON_MAP: Record<string, React.ComponentType<any>> = {
   excellent: CheckCircle,
   improvement: TrendingUp,
   focus: AlertTriangle,
   warning: Info,
+  positive: CheckCircle,
+  strength: CheckCircle,
+  intro: Info,
+  info: Info,
 };
 
-const COLOR_MAP = {
+const COLOR_MAP: Record<string, string> = {
   excellent: 'from-green-500 to-emerald-500',
   improvement: 'from-blue-500 to-cyan-500',
   focus: 'from-yellow-500 to-orange-500',
   warning: 'from-red-500 to-pink-500',
+  positive: 'from-green-500 to-emerald-500',
+  strength: 'from-green-500 to-emerald-500',
+  intro: 'from-blue-500 to-cyan-500',
+  info: 'from-blue-500 to-cyan-500',
 };
 
-const BG_MAP = {
+const BG_MAP: Record<string, string> = {
   excellent: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800',
   improvement: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800',
   focus: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800',
   warning: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800',
+  positive: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800',
+  strength: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800',
+  intro: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800',
+  info: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800',
 };
 
 const PRIORITY_COLORS = {
@@ -57,9 +70,9 @@ export default function RecommendationCard({ recommendations }: RecommendationCa
 
       <div className="space-y-4">
         {sortedRecommendations.map((recommendation, index) => {
-          const Icon = ICON_MAP[recommendation.type];
-          const colorClass = COLOR_MAP[recommendation.type];
-          const bgClass = BG_MAP[recommendation.type];
+          const Icon = ICON_MAP[recommendation.type] || Info; // Fallback to Info icon
+          const colorClass = COLOR_MAP[recommendation.type] || COLOR_MAP.focus;
+          const bgClass = BG_MAP[recommendation.type] || BG_MAP.focus;
 
           return (
             <motion.div

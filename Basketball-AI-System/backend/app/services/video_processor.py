@@ -52,51 +52,85 @@ class VideoProcessor:
             self.metrics_engine = PerformanceMetricsEngine()
             self.shot_outcome_detector = ShotOutcomeDetector()
             
-            # Initialize AI Coach (try LLaMA 3.1 first - BEST! Open-source, offline, free!)
+            # Initialize AI Coach
+            # LLaMA 3.1 requires Hugging Face authentication for gated models
+            # Skip it if not authenticated to avoid errors
             try:
                 import os
+                from huggingface_hub import whoami
                 
-                # Try LLaMA 3.1 first (Open-source, offline, FREE!)
+                # Quick check: Is user authenticated with Hugging Face?
+                try_llama = False
                 try:
-                    # Use 8B model (smaller, faster) or 70B (better quality, needs more RAM)
-                    # Check available RAM/VRAM to decide
-                    import torch
-                    if torch.cuda.is_available():
-                        vram_gb = torch.cuda.get_device_properties(0).total_memory / (1024**3)
-                        if vram_gb >= 40:  # Can handle 70B with quantization
-                            model_name = "meta-llama/Meta-Llama-3.1-70B-Instruct"
-                            logger.info(f"   Using LLaMA 3.1 70B (VRAM: {vram_gb:.1f}GB)")
+                    user_info = whoami()
+                    if user_info:
+                        try_llama = True
+                        logger.info(f"✅ Hugging Face authenticated - will try LLaMA 3.1")
+                except Exception:
+                    # Not authenticated - skip LLaMA entirely
+                    logger.info("ℹ️  Hugging Face not authenticated")
+                    logger.info("   💡 LLaMA 3.1 requires authentication (gated model)")
+                    logger.info("   🔄 Using rule-based AI Coach (no authentication needed)")
+                    try_llama = False
+                
+                # Try LLaMA 3.1 only if authenticated
+                if try_llama:
+                    try:
+                        import torch
+                        if torch.cuda.is_available():
+                            vram_gb = torch.cuda.get_device_properties(0).total_memory / (1024**3)
+                            if vram_gb >= 40:
+                                model_name = "meta-llama/Meta-Llama-3.1-70B-Instruct"
+                                logger.info(f"   Using LLaMA 3.1 70B (VRAM: {vram_gb:.1f}GB)")
+                            else:
+                                model_name = "meta-llama/Meta-Llama-3.1-8B-Instruct"
+                                logger.info(f"   Using LLaMA 3.1 8B (VRAM: {vram_gb:.1f}GB)")
                         else:
                             model_name = "meta-llama/Meta-Llama-3.1-8B-Instruct"
-                            logger.info(f"   Using LLaMA 3.1 8B (VRAM: {vram_gb:.1f}GB)")
-                    else:
-                        model_name = "meta-llama/Meta-Llama-3.1-8B-Instruct"
-                        logger.info("   Using LLaMA 3.1 8B (CPU mode)")
-                    
-                    self.ai_coach = AICoach(model_type="llama", model_name=model_name)
-                    logger.info("✅ AI Coach initialized with LLaMA 3.1 (Open-source, offline, FREE!)")
-                except Exception as llama_error:
-                    logger.warning(f"⚠️  LLaMA 3.1 not available: {llama_error}")
-                    logger.info("   Trying alternative models...")
-                    
-                    # Try DeepSeek as backup (API-based, free/cheap)
+                            logger.info("   Using LLaMA 3.1 8B (CPU mode)")
+                        
+                        self.ai_coach = AICoach(model_type="llama", model_name=model_name)
+                        logger.info("✅ AI Coach initialized with LLaMA 3.1")
+                    except Exception as llama_error:
+                        error_str = str(llama_error)
+                        if "gated" in error_str.lower() or "401" in error_str or "access" in error_str.lower():
+                            logger.warning("⚠️  LLaMA model access denied (requires model access approval)")
+                            logger.info("   🔄 Falling back to rule-based mode")
+                        else:
+                            logger.warning(f"⚠️  LLaMA initialization failed: {error_str[:150]}")
+                            logger.info("   🔄 Falling back to rule-based mode")
+                        try_llama = False
+                
+                # If LLaMA didn't work, try API alternatives or use fallback
+                if not try_llama:
+                    # Try DeepSeek API (if key available)
                     deepseek_key = os.getenv("DEEPSEEK_API_KEY")
                     if deepseek_key:
-                        self.ai_coach = AICoach(model_type="deepseek", model_name="deepseek-chat", api_key=deepseek_key)
-                        logger.info("✅ AI Coach initialized with DeepSeek (FREE/Cheap API!)")
-                    else:
-                        # Try OpenAI as backup
+                        try:
+                            self.ai_coach = AICoach(model_type="deepseek", model_name="deepseek-chat", api_key=deepseek_key)
+                            logger.info("✅ AI Coach initialized with DeepSeek API")
+                        except Exception:
+                            pass  # Fall through to next option
+                    
+                    # Try OpenAI API (if key available)
+                    if self.ai_coach is None:
                         openai_key = os.getenv("OPENAI_API_KEY")
                         if openai_key:
-                            self.ai_coach = AICoach(model_type="openai", model_name="gpt-4o-mini", api_key=openai_key)
-                            logger.info("✅ AI Coach initialized with OpenAI")
-                        else:
-                            # Use fallback (rule-based, works without API)
-                            self.ai_coach = AICoach(model_type="fallback")
-                            logger.info("✅ AI Coach initialized with fallback mode (no API key needed)")
+                            try:
+                                self.ai_coach = AICoach(model_type="openai", model_name="gpt-4o-mini", api_key=openai_key)
+                                logger.info("✅ AI Coach initialized with OpenAI")
+                            except Exception:
+                                pass  # Fall through to fallback
+                    
+                    # Use fallback (rule-based, always works)
+                    if self.ai_coach is None:
+                        self.ai_coach = AICoach(model_type="fallback")
+                        logger.info("✅ AI Coach initialized with rule-based mode (no API/authentication needed)")
+                        
             except Exception as e:
-                logger.warning(f"⚠️  AI Coach initialization failed: {e}. Using fallback mode.")
+                logger.warning(f"⚠️  AI Coach initialization error: {str(e)[:150]}")
                 self.ai_coach = AICoach(model_type="fallback")
+                logger.info("✅ AI Coach initialized with fallback mode")
             
             logger.info("✅ All models loaded successfully!")
             
@@ -229,13 +263,65 @@ class VideoProcessor:
                 action_label
             )
         
+        # Map model class names to schema class names
+        def map_probabilities(model_probs: Dict[str, float]) -> Dict[str, float]:
+            """Map model class names to schema class names"""
+            # Model uses: free_throw_shot, 2point_shot, 3point_shot, dribbling, passing, defense, idle
+            # Schema expects: free_throw, two_point_shot, three_point_shot, layup, dunk, dribbling, 
+            #                 passing, defense, running, walking, blocking, picking, ball_in_hand, idle
+            mapping = {
+                # Shooting types
+                "free_throw_shot": "free_throw",
+                "2point_shot": "two_point_shot",
+                "3point_shot": "three_point_shot",
+                # Ball handling
+                "dribbling": "dribbling",
+                "passing": "passing",
+                # Movement
+                "defense": "defense",
+                # Other
+                "idle": "idle",
+            }
+            
+            # Initialize all schema fields with 0.0
+            schema_probs = {
+                "free_throw": 0.0,
+                "two_point_shot": 0.0,
+                "three_point_shot": 0.0,
+                "layup": 0.0,
+                "dunk": 0.0,
+                "dribbling": 0.0,
+                "passing": 0.0,
+                "defense": 0.0,
+                "running": 0.0,
+                "walking": 0.0,
+                "blocking": 0.0,
+                "picking": 0.0,
+                "ball_in_hand": 0.0,
+                "idle": 0.0,
+            }
+            
+            # Map model probabilities to schema
+            for model_key, prob_value in model_probs.items():
+                schema_key = mapping.get(model_key, None)
+                if schema_key:
+                    schema_probs[schema_key] = prob_value
+                else:
+                    # If unknown class, log it but don't fail
+                    logger.debug(f"Unknown model class: {model_key}, skipping")
+            
+            return schema_probs
+        
+        # Map probabilities to schema format
+        mapped_probabilities = map_probabilities(probabilities)
+        
         # Create response
         result = VideoAnalysisResult(
             video_id=video_id,
             action=ActionClassification(
                 label=action_label,
                 confidence=confidence,
-                probabilities=ActionProbabilities(**probabilities)
+                probabilities=ActionProbabilities(**mapped_probabilities)
             ),
             metrics=PerformanceMetrics(**metrics_dict),
             recommendations=[

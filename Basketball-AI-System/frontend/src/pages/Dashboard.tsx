@@ -53,14 +53,44 @@ export default function Dashboard() {
       await loadHistoricalData();
     } catch (err: any) {
       console.error('Upload error:', err);
-      const errorMessage = err?.response?.data?.detail || err?.message || 'Failed to analyze video. Please try again.';
+      
+      // Handle different error types
+      let errorMessage = 'Failed to analyze video. Please try again.';
+      
+      if (err?.code === 'NO_PLAYER_DETECTED') {
+        // Show structured error with suggestions
+        errorMessage = err.originalMessage || err.message;
+        if (err.suggestions && Array.isArray(err.suggestions)) {
+          errorMessage += '\n\n' + err.suggestions.map((s: string, i: number) => `${i + 1}. ${s}`).join('\n');
+        }
+      } else if (err?.code === 'ERR_NETWORK' || err?.code === 'ERR_CONNECTION_REFUSED') {
+        errorMessage = 'Backend server is not running. Please start the backend server first.';
+      } else if (err?.response?.data) {
+        // Backend returned structured error
+        const errorData = err.response.data;
+        if (typeof errorData === 'string') {
+          errorMessage = errorData;
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+          if (errorData.suggestions) {
+            errorMessage += '\n\n' + errorData.suggestions.map((s: string, i: number) => `${i + 1}. ${s}`).join('\n');
+          }
+        } else if (errorData.detail) {
+          errorMessage = typeof errorData.detail === 'string' 
+            ? errorData.detail 
+            : errorData.detail.message || errorMessage;
+        }
+      } else if (err?.message) {
+        errorMessage = err.message;
+      }
+      
       setError(errorMessage);
       setUploadProgress({ progress: 0, status: 'error', message: 'Upload failed' });
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
       {/* Header */}
       <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -81,7 +111,7 @@ export default function Dashboard() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
         <div className="space-y-8">
           {/* Video Upload Section */}
           <motion.div
@@ -99,9 +129,23 @@ export default function Dashboard() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400"
+              className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
             >
-              {error}
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3 flex-1">
+                  <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
+                    Analysis Failed
+                  </h3>
+                  <div className="mt-2 text-sm text-red-700 dark:text-red-300 whitespace-pre-line">
+                    {error}
+                  </div>
+                </div>
+              </div>
             </motion.div>
           )}
 
@@ -162,7 +206,7 @@ export default function Dashboard() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-16">
+      <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <p className="text-center text-sm text-gray-600 dark:text-gray-400">
             © 2025 Basketball AI Performance Analysis • Built with React + Vite + TypeScript
