@@ -49,6 +49,7 @@ class ModelInference:
                 with open(model_info, 'r') as f:
                     info = json.load(f)
                     self.class_names = info.get('categories', self.class_names)
+                    logger.info(f"Loaded class names from model_info.json: {self.class_names}")
             
             # Try loading from directory first (VideoMAE format)
             if model_path.exists():
@@ -59,11 +60,13 @@ class ModelInference:
                 self.model = VideoMAEForVideoClassification.from_pretrained(
                     str(model_path)
                 )
+                logger.info("✅ Model loaded from best_model/ directory")
             # Try loading from .pth file (PyTorch state dict)
             elif model_pth.exists():
                 logger.info(f"Loading model from {model_pth}")
                 # Load base model
                 base_model_name = "MCG-NJU/videomae-base-finetuned-kinetics"
+                logger.info(f"Loading base model: {base_model_name}")
                 self.processor = VideoMAEImageProcessor.from_pretrained(base_model_name)
                 self.model = VideoMAEForVideoClassification.from_pretrained(
                     base_model_name,
@@ -71,26 +74,26 @@ class ModelInference:
                     ignore_mismatched_sizes=True
                 )
                 # Load trained weights
+                logger.info(f"Loading trained weights from {model_pth}")
                 state_dict = torch.load(model_pth, map_location=self.device)
-                self.model.load_state_dict(state_dict)
+                self.model.load_state_dict(state_dict, strict=False)
+                logger.info("✅ Model weights loaded from .pth file")
             else:
-                logger.warning("No trained model found, using pre-trained base model")
-                base_model_name = "MCG-NJU/videomae-base-finetuned-kinetics"
-                self.processor = VideoMAEImageProcessor.from_pretrained(base_model_name)
-                self.model = VideoMAEForVideoClassification.from_pretrained(
-                    base_model_name,
-                    num_labels=len(self.class_names),
-                    ignore_mismatched_sizes=True
-                )
+                error_msg = f"No trained model found in {self.model_dir}. Expected 'best_model/' or 'best_model.pth'"
+                logger.error(error_msg)
+                raise FileNotFoundError(error_msg)
             
             self.model.to(self.device)
             self.model.eval()
-            logger.info(f"✅ Model loaded on {self.device}")
+            logger.info(f"✅ Model loaded successfully on {self.device}")
             return True
             
         except Exception as e:
-            logger.error(f"❌ Failed to load model: {e}")
-            return False
+            import traceback
+            error_msg = f"Failed to load model: {e}"
+            logger.error(error_msg)
+            logger.error(traceback.format_exc())
+            raise RuntimeError(error_msg) from e
     
     def load_video_frames(self, video_path: str, num_frames: int = 16) -> List[np.ndarray]:
         """

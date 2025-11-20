@@ -1,0 +1,136 @@
+\section{System Architecture Details}
+\label{app:architecture}
+
+\subsection{Complete Technology Stack}
+\begin{itemize}
+    \item \textbf{Frontend:} React 18.2.0, TypeScript 5.3.3, Vite 5.0.0, TailwindCSS 3.4.0
+    \item \textbf{Backend:} Python 3.12, FastAPI 0.109.0, PyTorch 2.6.0, CUDA 12.4
+    \item \textbf{AI Models:} YOLOv11-nano (Ultralytics 8.3.0), MediaPipe 0.10.9, VideoMAE (Hugging Face Transformers 4.45.0)
+    \item \textbf{Training:} Hugging Face Accelerate 1.11.0, scikit-learn 1.5.0
+    \item \textbf{Hardware:} NVIDIA GeForce RTX 4080 SUPER (16GB VRAM) for training
+\end{itemize}
+
+\subsection{System Pipeline}
+The complete processing pipeline operates as follows:
+\begin{enumerate}
+    \item Video upload via React frontend (drag-and-drop interface)
+    \item Backend receives video file and stores temporarily
+    \item YOLOv11 detects player(s) in each frame, extracts largest bounding box
+    \item MediaPipe extracts 33 body keypoints from player region
+    \item VideoMAE processes sequence of 16 frames for action classification
+    \item Performance metrics engine calculates jump height, movement speed, form score, reaction time, pose stability
+    \item Results returned as JSON to frontend for visualization
+\end{enumerate}
+
+\section{Dataset Statistics}
+\label{app:dataset}
+
+\subsection{Video Distribution by Category}
+\begin{table}[h]
+\centering
+\caption{Dataset composition by action category}
+\begin{tabular}{lcc}
+\toprule
+Action Category & Number of Videos & Percentage \\
+\midrule
+Free Throw Shot & 23 & 34.3\% \\
+3-Point Shot & 24 & 35.8\% \\
+Dribbling & 11 & 16.4\% \\
+2-Point Shot & 6 & 9.0\% \\
+Idle & 2 & 3.0\% \\
+Defense & 1 & 1.5\% \\
+Passing & 0 & 0.0\% \\
+\midrule
+\textbf{Total} & \textbf{67} & \textbf{100\%} \\
+\bottomrule
+\end{tabular}
+\label{tab:dataset}
+\end{table}
+
+\subsection{Dataset Splits}
+Training: 46 videos (68.7\%), Validation: 10 videos (14.9\%), Test: 11 videos (16.4\%)
+
+\subsection{Video Characteristics}
+\begin{itemize}
+    \item Average duration: 5--10 seconds per clip
+    \item Resolution: Variable (mobile phone recordings, typically 720p--1080p)
+    \item Frame rate: 24--30 FPS
+    \item Recording environment: Indoor and outdoor courts, natural lighting
+    \item Equipment: Standard mobile phones (iPhone, Android devices)
+\end{itemize}
+
+\section{Model Training Details}
+\label{app:training}
+
+\subsection{Training Hyperparameters}
+\begin{itemize}
+    \item Base model: \texttt{MCG-NJU/videomae-base-finetuned-kinetics}
+    \item Number of epochs: 192 (with early stopping)
+    \item Batch size: 4 (limited by GPU memory)
+    \item Learning rate: $1 \times 10^{-4}$
+    \item Optimizer: AdamW with weight decay 0.01
+    \item Warmup steps: 500
+    \item Mixed precision: FP16 enabled
+    \item Evaluation strategy: Per epoch on validation set
+    \item Early stopping patience: 5 epochs
+    \item Metric for best model: F1 score
+\end{itemize}
+
+\subsection{Training Results}
+\begin{itemize}
+    \item Final test accuracy: 90.9\%
+    \item Training samples: 46 videos
+    \item Validation samples: 10 videos
+    \item Test samples: 11 videos
+    \item Total training time: Approximately 4--6 hours on RTX 4080 SUPER
+    \item Model size: 340MB (PyTorch state dict)
+\end{itemize}
+
+\section{Action Categories}
+\label{app:actions}
+
+The system classifies basketball actions into 7 categories:
+
+\begin{enumerate}
+    \item \textbf{Free Throw Shot:} Stationary shot from free throw line (4.6m from basket)
+    \item \textbf{2-Point Shot:} Shot from inside 3-point arc (1.5m--6.75m from basket)
+    \item \textbf{3-Point Shot:} Shot from behind 3-point line ($\geq$6.75m from basket)
+    \item \textbf{Dribbling:} Ball handling while moving, maintaining ball control
+    \item \textbf{Passing:} Transferring ball to teammate (chest pass, bounce pass, overhead)
+    \item \textbf{Defense:} Defensive stance, guarding opponent, lateral movement
+    \item \textbf{Idle:} Standing, no active action, waiting/positioning
+\end{enumerate}
+
+\section{Performance Metrics Calculation}
+\label{app:metrics}
+
+The system computes six performance metrics:
+
+\begin{enumerate}
+    \item \textbf{Jump Height:} Calculated from vertical displacement of hip keypoint during jump phase
+    \item \textbf{Movement Speed:} Average velocity of center-of-mass (calculated from hip keypoints) across frames
+    \item \textbf{Shooting Form Score:} Composite metric based on elbow angle, release consistency, follow-through (0--1 scale)
+    \item \textbf{Reaction Time:} Time from stimulus (e.g., ball arrival) to movement initiation
+    \item \textbf{Pose Stability:} Variance in keypoint positions, indicating balance and control (0--1 scale)
+    \item \textbf{Energy Efficiency:} Ratio of effective movement to total movement (optional metric)
+\end{enumerate}
+
+\section{System Availability}
+\label{app:availability}
+
+The complete system, including source code, documentation, trained models, and dataset collection guidelines, is available as an open-source project. All components are licensed under permissive open-source licenses, enabling free use, modification, and distribution for academic and commercial purposes.
+
+\section{PRISMA Flow Diagram}
+\label{app:prisma}
+
+\textbf{Note:} The PRISMA 2020 flow diagram should be included here as a figure showing:
+\begin{itemize}
+    \item Records identified: 102 (Scopus: 58, Web of Science: 44)
+    \item Duplicates removed: 18
+    \item Records screened: 84
+    \item Records excluded: 50 (title/abstract screening)
+    \item Full-text assessed: 34
+    \item Full-text excluded: 14
+    \item Studies included: 20
+\end{itemize}
+

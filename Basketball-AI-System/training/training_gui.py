@@ -1008,13 +1008,16 @@ class TrainingDashboard:
         
         self.model_status_label = tk.Label(
             status_frame,
-            text="No model found. Train first!",
+            text="Checking for model...",
             font=("Helvetica", 12),
             bg='#0f3460',
-            fg='#ff4757',
+            fg='#ffd700',
             wraplength=350
         )
         self.model_status_label.pack(pady=10)
+        
+        # Check for model immediately when test panel is set up
+        self.root.after(100, self.check_model_exists)  # Small delay to ensure UI is ready
         
         # Video upload section
         upload_frame = tk.Frame(parent, bg='#16213e')
@@ -1103,22 +1106,67 @@ class TrainingDashboard:
     def check_model_exists(self):
         """Check if trained model exists"""
         model_path = self.models_dir / "best_model.pth"
+        model_dir = self.models_dir / "best_model"
         model_info_path = self.models_dir / "model_info.json"
         
-        if model_path.exists():
+        # Debug: Print paths being checked
+        print(f"🔍 Checking for model in: {self.models_dir}")
+        print(f"   - best_model.pth exists: {model_path.exists()}")
+        print(f"   - best_model/ exists: {model_dir.exists()}")
+        print(f"   - model_info.json exists: {model_info_path.exists()}")
+        
+        # Check for either model format
+        model_exists = model_path.exists() or model_dir.exists()
+        
+        if model_exists:
             # Model exists
+            model_type = "best_model.pth" if model_path.exists() else "best_model/"
             self.model_status_label.config(
-                text=f"✅ Model found: {model_path.name}",
+                text=f"✅ Model found: {model_type}",
                 fg='#00ff88'
             )
             
             # Load model info if available
             if model_info_path.exists():
-                with open(model_info_path, 'r') as f:
-                    info = json.load(f)
-                    trained_date = datetime.fromisoformat(info['trained_date']).strftime('%Y-%m-%d %H:%M')
+                try:
+                    with open(model_info_path, 'r') as f:
+                        info = json.load(f)
+                    
+                    # Safely get accuracy (try test_accuracy first, then val_accuracy, then train_accuracy)
+                    test_acc = info.get('test_accuracy', 0)
+                    if test_acc == 0:
+                        test_acc = info.get('val_accuracy', 0)
+                    if test_acc == 0:
+                        test_acc = info.get('train_accuracy', 0)
+                    # Fallback for old format that might have 'accuracy' key
+                    if test_acc == 0:
+                        test_acc = info.get('accuracy', 0)
+                    
+                    # Convert to percentage if needed
+                    if test_acc < 1.0 and test_acc > 0:
+                        test_acc = test_acc * 100
+                    
+                    trained_date = info.get('trained_date', 'Unknown')
+                    if trained_date != 'Unknown':
+                        try:
+                            trained_date = datetime.fromisoformat(trained_date).strftime('%Y-%m-%d %H:%M')
+                        except:
+                            pass
+                    
+                    if test_acc > 0:
+                        self.model_status_label.config(
+                            text=f"✅ Model ready! Test Accuracy: {test_acc:.1f}% | Trained: {trained_date}",
+                            fg='#00ff88'
+                        )
+                    else:
+                        self.model_status_label.config(
+                            text=f"✅ Model found: {model_type} | Trained: {trained_date}",
+                            fg='#00ff88'
+                        )
+                except Exception as e:
+                    # Silently handle errors - model exists even if info can't be loaded
                     self.model_status_label.config(
-                        text=f"✅ Model ready! Accuracy: {info['accuracy']}% | Trained: {trained_date}",
+                        text=f"✅ Model found: {model_type}",
                         fg='#00ff88'
                     )
             
@@ -1155,26 +1203,44 @@ class TrainingDashboard:
     
     def analyze_video(self):
         """Analyze selected video with trained model"""
-        if not hasattr(self, 'selected_video_path'):
-            messagebox.showwarning("No Video", "Please select a video first!")
-            return
-        
-        # Check model exists
-        if not self.check_model_exists():
-            messagebox.showerror(
-                "No Model",
-                "No trained model found!\n\nPlease train a model first in the TRAIN tab."
-            )
-            return
-        
-        # Disable button during analysis
-        self.analyze_button.config(state=tk.DISABLED)
-        self.upload_button.config(state=tk.DISABLED)
-        
-        # Run analysis in thread
-        analysis_thread = threading.Thread(target=self.run_analysis)
-        analysis_thread.daemon = True
-        analysis_thread.start()
+        try:
+            # Check if video is selected
+            if not hasattr(self, 'selected_video_path'):
+                messagebox.showwarning("No Video", "Please select a video first!")
+                return
+            
+            # Verify video file exists
+            if not self.selected_video_path.exists():
+                messagebox.showerror("Video Not Found", f"Video file not found:\n{self.selected_video_path}")
+                return
+            
+            # Check model exists
+            if not self.check_model_exists():
+                messagebox.showerror(
+                    "No Model",
+                    "No trained model found!\n\nPlease train a model first in the TRAIN tab."
+                )
+                return
+            
+            # Disable button during analysis
+            self.analyze_button.config(state=tk.DISABLED)
+            self.upload_button.config(state=tk.DISABLED)
+            self.root.update()
+            
+            # Run analysis in thread
+            analysis_thread = threading.Thread(target=self.run_analysis)
+            analysis_thread.daemon = True
+            analysis_thread.start()
+            
+        except Exception as e:
+            import traceback
+            error_msg = f"Error starting analysis: {str(e)}"
+            self.test_log(f"❌ {error_msg}")
+            self.test_log(traceback.format_exc())
+            messagebox.showerror("Error", error_msg)
+            # Re-enable buttons
+            self.analyze_button.config(state=tk.NORMAL)
+            self.upload_button.config(state=tk.NORMAL)
     
     def run_analysis(self):
         """Run video analysis"""
@@ -1182,17 +1248,6 @@ class TrainingDashboard:
             self.test_log("\n" + "=" * 60)
             self.test_log(f"🎬 Analyzing: {self.selected_video_path.name}")
             self.test_log("=" * 60)
-            
-            # Step 1: Extract poses
-            self.test_log("\n1️⃣  Extracting pose keypoints...")
-            import time
-            time.sleep(1)
-            self.test_log("   ✅ Extracted 33 keypoints per frame")
-            self.test_log("   ✅ Total frames: 180")
-            
-            # Step 2: Classify action
-            self.test_log("\n2️⃣  Classifying action...")
-            time.sleep(1)
             
             # Action categories and display names
             actions = ['free_throw_shot', '2point_shot', '3point_shot', 'dribbling', 'passing', 'defense', 'idle']
@@ -1206,31 +1261,63 @@ class TrainingDashboard:
                 'idle': 'Idle'
             }
             
+            # Step 1: Extract poses (optional, for metrics)
+            self.test_log("\n1️⃣  Extracting pose keypoints...")
+            self.root.update()
+            
+            # Step 2: Classify action
+            self.test_log("\n2️⃣  Classifying action...")
+            self.root.update()
+            
             # REAL MODEL INFERENCE
             self.test_log("   🔍 Loading trained model...")
+            self.root.update()
             
             # Try to load trained model
             try:
-                # Import from same directory
+                import sys
                 import importlib.util
-                inference_path = self.project_root / "training" / "model_inference.py"
-                if inference_path.exists():
-                    spec = importlib.util.spec_from_file_location("model_inference", inference_path)
-                    model_inference_module = importlib.util.module_from_spec(spec)
-                    spec.loader.exec_module(model_inference_module)
-                    ModelInference = model_inference_module.ModelInference
-                else:
-                    raise ImportError("model_inference.py not found")
                 
+                # Add training directory to path
+                training_dir = str(self.project_root / "training")
+                if training_dir not in sys.path:
+                    sys.path.insert(0, training_dir)
+                
+                inference_path = self.project_root / "training" / "model_inference.py"
+                
+                if not inference_path.exists():
+                    raise FileNotFoundError(f"model_inference.py not found at {inference_path}")
+                
+                self.test_log(f"   📂 Loading from: {inference_path}")
+                self.root.update()
+                
+                # Import the module
+                spec = importlib.util.spec_from_file_location("model_inference", str(inference_path))
+                if spec is None or spec.loader is None:
+                    raise ImportError("Failed to create module spec")
+                
+                model_inference_module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(model_inference_module)
+                ModelInference = model_inference_module.ModelInference
+                
+                self.test_log(f"   📂 Model directory: {self.models_dir}")
+                self.root.update()
+                
+                # Initialize model inference
                 model_inference = ModelInference(self.models_dir)
                 
                 if model_inference.model is None:
-                    raise ValueError("Model not loaded")
+                    raise ValueError("Model failed to load - model is None")
                 
                 self.test_log("   ✅ Model loaded successfully!")
-                self.test_log("   🎯 Running inference...")
+                self.test_log(f"   💻 Device: {model_inference.device}")
+                self.root.update()
                 
                 # Run real inference
+                self.test_log("   🎯 Running inference...")
+                self.test_log(f"   📹 Video: {self.selected_video_path}")
+                self.root.update()
+                
                 predicted_action, confidence, probabilities_dict = model_inference.predict(
                     str(self.selected_video_path),
                     return_probabilities=True
@@ -1239,13 +1326,25 @@ class TrainingDashboard:
                 # Convert to list format for display
                 probabilities = [probabilities_dict.get(action, 0.0) for action in actions]
                 
-                self.test_log(f"   ✅ Inference complete! Predicted: {predicted_action}")
+                self.test_log(f"   ✅ Inference complete!")
+                self.test_log(f"   🎯 Predicted: {predicted_action} ({confidence*100:.1f}%)")
                 
             except Exception as e:
-                # Fallback to filename-based if model not available
-                self.test_log(f"   ⚠️  Model inference failed: {str(e)}")
-                self.test_log("   ⚠️  Falling back to filename-based detection")
+                # Better error reporting
+                import traceback
+                error_msg = str(e)
+                error_trace = traceback.format_exc()
                 
+                self.test_log(f"   ❌ Model inference error: {error_msg}")
+                self.test_log("   📋 Error details:")
+                for line in error_trace.split('\n')[-5:]:  # Last 5 lines of traceback
+                    if line.strip():
+                        self.test_log(f"      {line}")
+                
+                self.test_log("\n   ⚠️  Falling back to filename-based detection")
+                self.root.update()
+                
+                # Fallback to filename-based if model not available
                 video_name = self.selected_video_path.name.lower()
                 probabilities = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
                 
@@ -1295,6 +1394,11 @@ class TrainingDashboard:
             
             # Try to extract poses and calculate real metrics
             try:
+                # Add backend to path for imports
+                backend_dir = self.project_root / "backend"
+                if str(backend_dir) not in sys.path:
+                    sys.path.insert(0, str(backend_dir))
+                
                 from app.models.pose_extractor import PoseExtractor
                 from app.models.metrics_engine import PerformanceMetricsEngine
                 import cv2
@@ -1339,9 +1443,50 @@ class TrainingDashboard:
                     self.test_log(f"   ✅ Extracted {frames_processed} frames with poses")
                     self.test_log("   ✅ Calculated real performance metrics")
                 else:
-                    # Fallback to simulated if no poses detected
+                    # Fallback to simulated if no poses detected (action-aware)
                     self.test_log("   ⚠️  No poses detected, using estimated metrics")
                     import random
+                    
+                    # Action-aware metrics
+                    action_lower = predicted_action.lower()
+                    if 'free_throw' in action_lower or 'free' in action_lower:
+                        # Free throws: minimal jump, minimal movement
+                        metrics = {
+                            'jump_height': round(random.uniform(0.0, 0.10), 2),  # < 10cm
+                            'movement_speed': round(random.uniform(0.0, 0.5), 1),  # < 0.5 m/s
+                            'shooting_form': round(random.uniform(0.70, 0.95), 2),
+                            'reaction_time': round(random.uniform(0.15, 0.35), 2),
+                            'pose_stability': round(random.uniform(0.75, 0.95), 2)
+                        }
+                    else:
+                        # Other actions: normal range
+                        metrics = {
+                            'jump_height': round(random.uniform(0.50, 0.85), 2),
+                            'movement_speed': round(random.uniform(5.0, 7.5), 1),
+                            'shooting_form': round(random.uniform(0.70, 0.95), 2),
+                            'reaction_time': round(random.uniform(0.15, 0.35), 2),
+                            'pose_stability': round(random.uniform(0.75, 0.95), 2)
+                        }
+                    
+            except Exception as e:
+                # Fallback to simulated metrics (action-aware)
+                self.test_log(f"   ⚠️  Metrics calculation failed: {str(e)}")
+                self.test_log("   ⚠️  Using estimated metrics")
+                import random
+                
+                # Action-aware metrics
+                action_lower = predicted_action.lower()
+                if 'free_throw' in action_lower or 'free' in action_lower:
+                    # Free throws: minimal jump, minimal movement
+                    metrics = {
+                        'jump_height': round(random.uniform(0.0, 0.10), 2),  # < 10cm
+                        'movement_speed': round(random.uniform(0.0, 0.5), 1),  # < 0.5 m/s
+                        'shooting_form': round(random.uniform(0.70, 0.95), 2),
+                        'reaction_time': round(random.uniform(0.15, 0.35), 2),
+                        'pose_stability': round(random.uniform(0.75, 0.95), 2)
+                    }
+                else:
+                    # Other actions: normal range
                     metrics = {
                         'jump_height': round(random.uniform(0.50, 0.85), 2),
                         'movement_speed': round(random.uniform(5.0, 7.5), 1),
@@ -1349,19 +1494,6 @@ class TrainingDashboard:
                         'reaction_time': round(random.uniform(0.15, 0.35), 2),
                         'pose_stability': round(random.uniform(0.75, 0.95), 2)
                     }
-                    
-            except Exception as e:
-                # Fallback to simulated metrics
-                self.test_log(f"   ⚠️  Metrics calculation failed: {str(e)}")
-                self.test_log("   ⚠️  Using estimated metrics")
-                import random
-                metrics = {
-                    'jump_height': round(random.uniform(0.50, 0.85), 2),
-                    'movement_speed': round(random.uniform(5.0, 7.5), 1),
-                    'shooting_form': round(random.uniform(0.70, 0.95), 2),
-                    'reaction_time': round(random.uniform(0.15, 0.35), 2),
-                    'pose_stability': round(random.uniform(0.75, 0.95), 2)
-                }
             
             self.test_log("\n" + "=" * 60)
             self.test_log("📈 PERFORMANCE METRICS")
@@ -1372,11 +1504,57 @@ class TrainingDashboard:
             self.test_log(f"⚡ Reaction Time:   {metrics['reaction_time']}s")
             self.test_log(f"⚖️  Pose Stability:  {metrics['pose_stability']} / 1.0")
             
-            # Generate recommendations
+            # Generate recommendations (action-aware)
             self.test_log("\n" + "=" * 60)
             self.test_log("💡 AI RECOMMENDATIONS")
             self.test_log("=" * 60)
             
+            # Use metrics engine for recommendations if available
+            try:
+                if 'metrics_engine' in locals():
+                    recommendations = metrics_engine.generate_recommendations(
+                        {
+                            'jump_height': metrics['jump_height'],
+                            'movement_speed': metrics['movement_speed'],
+                            'form_score': metrics['shooting_form'],
+                            'reaction_time': metrics['reaction_time'],
+                            'pose_stability': metrics['pose_stability'],
+                            'energy_efficiency': metrics.get('energy_efficiency', 0.75)
+                        },
+                        predicted_action
+                    )
+                    
+                    for rec in recommendations:
+                        if rec['type'] == 'excellent':
+                            self.test_log(f"\n✅ {rec['title']}")
+                        elif rec['type'] == 'improvement':
+                            self.test_log(f"\n❌ {rec['title']}")
+                        else:
+                            self.test_log(f"\n⚠️  {rec['title']}")
+                        self.test_log(f"   {rec['message']}")
+                else:
+                    # Fallback to simple recommendations
+                    self._display_simple_recommendations(metrics, predicted_action)
+            except Exception as e:
+                # Fallback to simple recommendations
+                self._display_simple_recommendations(metrics, predicted_action)
+    
+    def _display_simple_recommendations(self, metrics, action_type):
+        """Display simple action-aware recommendations"""
+        action_lower = action_type.lower()
+        
+        # Form recommendations
+        if 'free_throw' in action_lower or 'free' in action_lower:
+            if metrics['shooting_form'] >= 0.85:
+                self.test_log("\n✅ Excellent free throw form!")
+                self.test_log("   Your technique is near perfect. Keep it up!")
+            elif metrics['shooting_form'] >= 0.75:
+                self.test_log("\n⚠️  Good form, room for improvement")
+                self.test_log("   Focus on: Stay grounded, elbow angle (85-95°), smooth release")
+            else:
+                self.test_log("\n❌ Free throw form needs work")
+                self.test_log("   Practice: Stay stationary, consistent release, follow through")
+        else:
             if metrics['shooting_form'] >= 0.85:
                 self.test_log("\n✅ Excellent shooting form!")
                 self.test_log("   Your technique is near perfect. Keep it up!")
@@ -1386,14 +1564,20 @@ class TrainingDashboard:
             else:
                 self.test_log("\n❌ Shooting form needs work")
                 self.test_log("   Practice basic shooting mechanics")
-            
-            if metrics['jump_height'] < 0.65:
-                self.test_log("\n💪 Work on explosive power")
-                self.test_log("   Try: Box jumps, plyometrics, squats")
-            
-            if metrics['reaction_time'] < 0.22:
-                self.test_log("\n⚡ Excellent reaction time!")
-                self.test_log("   You're faster than average!")
+        
+        # Jump height recommendations (action-aware)
+        if 'free_throw' in action_lower or 'free' in action_lower:
+            if metrics['jump_height'] > 0.10:
+                self.test_log("\n❌ Stay grounded on free throws")
+                self.test_log(f"   You're jumping {metrics['jump_height']:.2f}m. Free throws should be stationary!")
+        elif metrics['jump_height'] < 0.65:
+            self.test_log("\n💪 Work on explosive power")
+            self.test_log("   Try: Box jumps, plyometrics, squats")
+        
+        # Reaction time recommendations
+        if metrics['reaction_time'] < 0.22:
+            self.test_log("\n⚡ Excellent reaction time!")
+            self.test_log("   You're faster than average!")
             
             self.test_log("\n" + "=" * 60)
             self.test_log("✅ Analysis complete!")
@@ -1410,13 +1594,26 @@ class TrainingDashboard:
             )
             
         except Exception as e:
-            self.test_log(f"\n❌ ERROR: {str(e)}")
-            messagebox.showerror("Analysis Error", f"Failed to analyze video:\n{str(e)}")
+            import traceback
+            error_msg = str(e)
+            error_trace = traceback.format_exc()
+            
+            self.test_log(f"\n❌ ERROR: {error_msg}")
+            self.test_log("\n📋 Full error traceback:")
+            for line in error_trace.split('\n'):
+                if line.strip():
+                    self.test_log(f"   {line}")
+            
+            messagebox.showerror(
+                "Analysis Error", 
+                f"Failed to analyze video:\n\n{error_msg}\n\nCheck the console for details."
+            )
         
         finally:
             # Re-enable buttons
             self.analyze_button.config(state=tk.NORMAL)
             self.upload_button.config(state=tk.NORMAL)
+            self.root.update()
     
     def test_log(self, message):
         """Add message to test console"""

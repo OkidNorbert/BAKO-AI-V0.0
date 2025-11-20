@@ -230,11 +230,52 @@ def main():
     # Load metadata and create train/val/test splits
     metadata_df = pd.read_csv(args.metadata)
     
+    # Check class distribution
+    class_counts = metadata_df['action'].value_counts()
+    logger.info(f"📊 Class distribution:")
+    for action, count in class_counts.items():
+        logger.info(f"   {action}: {count} samples")
+    
+    # Filter out classes with 0 samples (shouldn't happen, but safety check)
+    valid_classes = class_counts[class_counts > 0].index
+    metadata_df = metadata_df[metadata_df['action'].isin(valid_classes)]
+    
+    # Check if stratification is possible (all classes need at least 2 samples)
+    min_class_count = class_counts.min()
+    can_stratify = min_class_count >= 2
+    
+    if not can_stratify:
+        logger.warning(f"⚠️  Some classes have < 2 samples (min: {min_class_count}). Using non-stratified splitting.")
+        logger.warning(f"   Classes with < 2 samples: {class_counts[class_counts < 2].index.tolist()}")
+    
     # Split dataset: 70% train, 15% val, 15% test
     from sklearn.model_selection import train_test_split
     
-    train_df, temp_df = train_test_split(metadata_df, test_size=0.3, random_state=42, stratify=metadata_df['action'])
-    val_df, test_df = train_test_split(temp_df, test_size=0.5, random_state=42, stratify=temp_df['action'])
+    if can_stratify:
+        train_df, temp_df = train_test_split(
+            metadata_df, test_size=0.3, random_state=42, stratify=metadata_df['action']
+        )
+        # Check if second split can be stratified
+        temp_class_counts = temp_df['action'].value_counts()
+        can_stratify_second = temp_class_counts.min() >= 2
+        
+        if can_stratify_second:
+            val_df, test_df = train_test_split(
+                temp_df, test_size=0.5, random_state=42, stratify=temp_df['action']
+            )
+        else:
+            logger.warning("⚠️  Second split using non-stratified method")
+            val_df, test_df = train_test_split(
+                temp_df, test_size=0.5, random_state=42
+            )
+    else:
+        # Non-stratified splitting
+        train_df, temp_df = train_test_split(
+            metadata_df, test_size=0.3, random_state=42
+        )
+        val_df, test_df = train_test_split(
+            temp_df, test_size=0.5, random_state=42
+        )
     
     # Save splits
     train_csv = Path(args.output_dir) / "train_metadata.csv"
@@ -246,6 +287,24 @@ def main():
     test_df.to_csv(test_csv, index=False)
     
     logger.info(f"📊 Dataset splits: Train={len(train_df)}, Val={len(val_df)}, Test={len(test_df)}")
+    
+    # Log class distribution in each split
+    logger.info(f"📊 Train split distribution:")
+    for action, count in train_df['action'].value_counts().items():
+        logger.info(f"   {action}: {count} samples")
+    
+    logger.info(f"📊 Validation split distribution:")
+    for action, count in val_df['action'].value_counts().items():
+        logger.info(f"   {action}: {count} samples")
+    
+    logger.info(f"📊 Test split distribution:")
+    for action, count in test_df['action'].value_counts().items():
+        logger.info(f"   {action}: {count} samples")
+    
+    # Warn about class imbalance
+    if not can_stratify:
+        logger.warning("⚠️  WARNING: Class imbalance detected. Consider collecting more samples for underrepresented classes.")
+        logger.warning("   Recommended minimum: 10-20 samples per class for better model performance.")
     
     # Determine video directory (should be raw_videos folder)
     video_dir = Path(args.data_dir)
