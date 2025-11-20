@@ -67,8 +67,8 @@ class ModernPoseExtractor:
         self.pose = self.mp_pose.Pose(
             static_image_mode=False,
             model_complexity=model_complexity,
-            enable_segmentation=True,  # Enable for better tracking
-            smooth_landmarks=True,      # NEW: Smooth temporal tracking
+            enable_segmentation=False,  # Disable to avoid dimension consistency issues
+            smooth_landmarks=True,      # Smooth temporal tracking
             min_detection_confidence=min_detection_confidence,
             min_tracking_confidence=min_tracking_confidence
         )
@@ -129,20 +129,50 @@ class ModernPoseExtractor:
         # Extract ROI if bbox provided
         if bbox:
             x1, y1, x2, y2 = bbox
+            # Ensure valid bbox
+            x1, y1 = max(0, x1), max(0, y1)
+            x2, y2 = min(frame.shape[1], x2), min(frame.shape[0], y2)
+            
+            if x2 <= x1 or y2 <= y1:
+                return None
+                
             roi = frame[y1:y2, x1:x2]
+            original_roi_height, original_roi_width = roi.shape[:2]
         else:
             roi = frame
+            original_roi_height, original_roi_width = roi.shape[:2]
+        
+        # Resize ROI to consistent size to avoid MediaPipe dimension errors
+        # MediaPipe works best with 640x640 or similar, but we'll maintain aspect ratio
+        target_size = 640
+        roi_height, roi_width = roi.shape[:2]
+        
+        # Calculate scaling factor maintaining aspect ratio
+        scale = min(target_size / roi_width, target_size / roi_height)
+        new_width = int(roi_width * scale)
+        new_height = int(roi_height * scale)
+        
+        # Resize ROI to ensure consistent dimensions for MediaPipe
+        if roi_width != new_width or roi_height != new_height:
+            roi = cv2.resize(roi, (new_width, new_height), interpolation=cv2.INTER_LINEAR)
+        
+        # Get final processed ROI dimensions
+        processed_height, processed_width = roi.shape[:2]
         
         # Convert to RGB
         rgb_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2RGB)
         
         # Process with MediaPipe
-        results = self.pose.process(rgb_roi)
+        try:
+            results = self.pose.process(rgb_roi)
+        except Exception as e:
+            logger.warning(f"MediaPipe processing error: {e}")
+            return None
         
         if not results.pose_landmarks:
             return None
         
-        # Extract 2D keypoints (33 points)
+        # Extract 2D keypoints (33 points) - normalized to processed ROI
         keypoints_2d = np.zeros((33, 3))
         for idx, landmark in enumerate(results.pose_landmarks.landmark):
             keypoints_2d[idx] = [landmark.x, landmark.y, landmark.visibility]
@@ -153,13 +183,16 @@ class ModernPoseExtractor:
             for idx, landmark in enumerate(results.pose_world_landmarks.landmark):
                 keypoints_3d[idx] = [landmark.x, landmark.y, landmark.z]
         
-        # Adjust 2D keypoints to original frame coordinates
+        # Scale keypoints back to original ROI coordinates
+        # MediaPipe returns normalized coordinates (0-1), so scale directly to original ROI size
+        keypoints_2d[:, 0] = keypoints_2d[:, 0] * original_roi_width
+        keypoints_2d[:, 1] = keypoints_2d[:, 1] * original_roi_height
+        
+        # Then adjust to original frame coordinates if bbox was provided
         if bbox:
             x1, y1, x2, y2 = bbox
-            roi_width = x2 - x1
-            roi_height = y2 - y1
-            keypoints_2d[:, 0] = keypoints_2d[:, 0] * roi_width + x1
-            keypoints_2d[:, 1] = keypoints_2d[:, 1] * roi_height + y1
+            keypoints_2d[:, 0] = keypoints_2d[:, 0] + x1
+            keypoints_2d[:, 1] = keypoints_2d[:, 1] + y1
         
         # Calculate average confidence
         confidence = float(keypoints_2d[:, 2].mean())

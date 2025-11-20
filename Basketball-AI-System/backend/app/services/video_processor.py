@@ -15,7 +15,8 @@ from app.models.yolo_detector import PlayerDetector
 from app.models.pose_extractor import PoseExtractor
 from app.models.action_classifier import ActionClassifier
 from app.models.metrics_engine import PerformanceMetricsEngine
-from app.core.schemas import VideoAnalysisResult, ActionClassification, PerformanceMetrics, ActionProbabilities, Recommendation
+from app.models.shot_outcome_detector import ShotOutcomeDetector
+from app.core.schemas import VideoAnalysisResult, ActionClassification, PerformanceMetrics, ActionProbabilities, Recommendation, ShotOutcome
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +39,7 @@ class VideoProcessor:
             self.pose_extractor = PoseExtractor()
             self.action_classifier = ActionClassifier()
             self.metrics_engine = PerformanceMetricsEngine()
+            self.shot_outcome_detector = ShotOutcomeDetector()
             
             logger.info("✅ All models loaded successfully!")
             
@@ -140,7 +142,21 @@ class VideoProcessor:
         
         logger.info(f"   📊 Metrics calculated: Jump={metrics_dict['jump_height']:.2f}m, Speed={metrics_dict['movement_speed']:.1f}m/s")
         
-        # Step 6: Generate recommendations
+        # Step 6: Detect shot outcome (for shooting actions)
+        shot_outcome_dict = self.shot_outcome_detector.detect_outcome(
+            all_frames,
+            all_keypoints,
+            action_label,
+            metrics_dict['form_score'],
+            metrics_dict
+        )
+        
+        shot_outcome_obj = None
+        if shot_outcome_dict['outcome'] != 'not_applicable':
+            shot_outcome_obj = ShotOutcome(**shot_outcome_dict)
+            logger.info(f"   🎯 Shot outcome: {shot_outcome_dict['outcome']} ({shot_outcome_dict['confidence']*100:.1f}%) via {shot_outcome_dict['method']}")
+        
+        # Step 7: Generate recommendations
         recommendations_list = self.metrics_engine.generate_recommendations(
             metrics_dict,
             action_label
@@ -158,6 +174,7 @@ class VideoProcessor:
             recommendations=[
                 Recommendation(**rec) for rec in recommendations_list
             ],
+            shot_outcome=shot_outcome_obj,
             timestamp=datetime.now()
         )
         

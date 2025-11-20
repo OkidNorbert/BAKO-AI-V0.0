@@ -59,12 +59,21 @@ class Recommendation(BaseModel):
     priority: str = Field(description="Priority: low, medium, high")
 
 
+class ShotOutcome(BaseModel):
+    """Shot outcome detection (made/missed)"""
+    outcome: str = Field(description="Outcome: made, missed, unknown, not_applicable")
+    confidence: float = Field(ge=0.0, le=1.0, description="Confidence in outcome")
+    method: str = Field(description="Detection method: ball_trajectory, form_based_prediction, player_reaction, form_and_reaction")
+    make_probability: float = Field(ge=0.0, le=1.0, description="Statistical probability of make")
+
+
 class VideoAnalysisResult(BaseModel):
     """Complete video analysis result"""
     video_id: str
     action: ActionClassification
     metrics: PerformanceMetrics
     recommendations: List[Recommendation]
+    shot_outcome: Optional[ShotOutcome] = Field(default=None, description="Shot outcome (only for shooting actions)")
     keypoints: Optional[List] = None
     timestamp: datetime = Field(default_factory=datetime.now)
 
