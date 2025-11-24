@@ -304,7 +304,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👨‍🎓 Author
 
-**Okidi Norbert**  
+**Okidi Norbert** 
+**Anna Akumu**
+**Nankya Zahra**
+
 Bachelor of Science in Computer Science  
 Uganda Christian University (UCU)  
 2025
@@ -326,7 +329,7 @@ Uganda Christian University (UCU)
 
 - **Email**: oknorbert6@gmail.com
 - **GitHub**: [@OkidNorbert](https://github.com/OkidNorbert)
-- **Project Repository**: [Final-Year-Project](https://github.com/OkidNorbert/Final-Year-Project)
+- **Project Repository**: [Final-Year-Project](https://github.com/OkidNorbert/Basketball-AI-Performance-Analysis)
 
 ---
 
