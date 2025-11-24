@@ -397,9 +397,29 @@ def plot_validation_chart(trainer: Trainer, test_dataset, class_names: List[str]
         
         # Calculate metrics
         accuracy = accuracy_score(y_true, y_pred)
-        precision, recall, f1, support = precision_recall_fscore_support(
-            y_true, y_pred, average=None, zero_division=0
-        )
+        num_classes = len(class_names)
+        
+        # Initialize arrays for all classes (with zeros for classes not in test set)
+        precision = np.zeros(num_classes)
+        recall = np.zeros(num_classes)
+        f1 = np.zeros(num_classes)
+        support = np.zeros(num_classes, dtype=int)
+        
+        # Get metrics only for classes present in the test set
+        unique_labels = np.unique(np.concatenate([y_true, y_pred]))
+        if len(unique_labels) > 0:
+            precision_raw, recall_raw, f1_raw, support_raw = precision_recall_fscore_support(
+                y_true, y_pred, average=None, zero_division=0, labels=unique_labels
+            )
+            
+            # Map the results to the correct class indices
+            for i, label in enumerate(unique_labels):
+                if 0 <= label < num_classes:
+                    precision[label] = precision_raw[i]
+                    recall[label] = recall_raw[i]
+                    f1[label] = f1_raw[i]
+                    support[label] = support_raw[i]
+        
         macro_precision = precision.mean()
         macro_recall = recall.mean()
         macro_f1 = f1.mean()
@@ -715,11 +735,11 @@ def main():
     logger.info(f"   Learning rate: {args.lr}")
     
     # Load processor and model
-    model_name = "MCG-NJU/videomae-base-finetuned-kinetics"
-    processor = VideoMAEImageProcessor.from_pretrained(model_name)
+    base_model_name = "MCG-NJU/videomae-base-finetuned-kinetics"
+    processor = VideoMAEImageProcessor.from_pretrained(base_model_name)
     
     model = VideoMAEForVideoClassification.from_pretrained(
-        model_name,
+        base_model_name,
         num_labels=7,  # 7 basketball actions
         ignore_mismatched_sizes=True
     )
@@ -891,9 +911,15 @@ def main():
     eval_time = time.time() - eval_start
     logger.info(f"⏱️  Evaluation time: {timedelta(seconds=int(eval_time))}")
     
-    # Save final model
-    output_model_dir = Path(args.output_dir) / "best_model"
+    # Save final model with timestamp to avoid overwriting old models
+    from datetime import datetime
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    model_name = f"videomae_model_{timestamp}"
+    output_model_dir = Path(args.output_dir) / model_name
     output_model_dir.mkdir(parents=True, exist_ok=True)
+    
+    logger.info(f"💾 Saving model to: {output_model_dir}")
+    logger.info(f"   Model name: {model_name}")
     
     model.save_pretrained(str(output_model_dir))
     processor.save_pretrained(str(output_model_dir))
@@ -904,7 +930,9 @@ def main():
     
     model_info = {
         "model_type": "VideoMAE",
-        "base_model": model_name,
+        "base_model": base_model_name,
+        "model_name": model_name,  # Add model name for reference
+        "model_path": str(output_model_dir),  # Add full path
         "num_labels": 7,
         "classes": train_dataset.class_names,
         "train_accuracy": train_result.metrics.get('train_accuracy', 0),
@@ -919,14 +947,22 @@ def main():
         "training_device": "cuda" if torch.cuda.is_available() else "cpu",
         "batch_size": args.batch_size,
         "learning_rate": args.lr,
+        "training_timestamp": timestamp,  # Add timestamp
     }
     
-    model_info_path = Path(args.output_dir) / "model_info.json"
+    # Save model info in both the model directory and output directory
+    model_info_path = output_model_dir / "model_info.json"
+    model_info_path.parent.mkdir(parents=True, exist_ok=True)
     with open(model_info_path, 'w') as f:
         json.dump(model_info, f, indent=2)
     
-    # Also save PyTorch model for compatibility
-    torch.save(model.state_dict(), Path(args.output_dir) / "best_model.pth")
+    # Also save a copy in the output directory with timestamp for easy reference
+    model_info_path_global = Path(args.output_dir) / f"model_info_{timestamp}.json"
+    with open(model_info_path_global, 'w') as f:
+        json.dump(model_info, f, indent=2)
+    
+    # Also save PyTorch model for compatibility (with timestamp)
+    torch.save(model.state_dict(), Path(args.output_dir) / f"{model_name}.pth")
     
     logger.info(f"✅ Training complete!")
     logger.info(f"   Train Accuracy: {model_info['train_accuracy']*100:.1f}%")
@@ -935,21 +971,32 @@ def main():
     logger.info(f"   Model saved to: {output_model_dir}")
     logger.info(f"   Model info saved to: {model_info_path}")
     
-    # Generate and save training charts
+    # Generate and save training charts (save in model directory)
     logger.info("📊 Generating training charts...")
     try:
-        plot_training_curves(trainer, args.output_dir)
-        logger.info(f"✅ Training charts saved to: {Path(args.output_dir) / 'training_curves.png'}")
+        plot_training_curves(trainer, str(output_model_dir))
+        logger.info(f"✅ Training charts saved to: {output_model_dir / 'training_curves.png'}")
     except Exception as e:
         logger.warning(f"⚠️  Could not generate training charts: {e}")
     
-    # Generate and save validation chart with confusion matrix
+    # Generate and save validation chart with confusion matrix (save in model directory)
     logger.info("📊 Generating validation chart...")
     try:
-        plot_validation_chart(trainer, test_dataset, train_dataset.class_names, args.output_dir)
-        logger.info(f"✅ Validation chart saved to: {Path(args.output_dir) / 'validation_chart.png'}")
+        plot_validation_chart(trainer, test_dataset, train_dataset.class_names, str(output_model_dir))
+        logger.info(f"✅ Validation chart saved to: {output_model_dir / 'validation_chart.png'}")
     except Exception as e:
         logger.warning(f"⚠️  Could not generate validation chart: {e}")
+    
+    # Create a symlink or copy to "best_model" only if this is the best performing model
+    # (Optional: You can add logic here to compare with previous models)
+    logger.info("")
+    logger.info("=" * 60)
+    logger.info("📦 MODEL SAVED SUCCESSFULLY")
+    logger.info("=" * 60)
+    logger.info(f"   Model Directory: {output_model_dir}")
+    logger.info(f"   Model Name: {model_name}")
+    logger.info(f"   Old model 'best_model' remains untouched")
+    logger.info("=" * 60)
 
 
 if __name__ == "__main__":
