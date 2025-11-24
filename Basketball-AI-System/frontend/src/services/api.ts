@@ -53,9 +53,11 @@ export async function analyzeVideo(
     if (error?.response?.data) {
       const errorData = error.response.data;
       
+      // FastAPI returns errors in 'detail' field
+      let errorMessage = errorData.detail || errorData.message;
+      
       // If backend returns structured error with suggestions
       if (errorData.error === 'no_player_detected' && errorData.suggestions) {
-        const errorMessage = errorData.message || 'No player detected in video';
         const suggestions = errorData.suggestions || [];
         const fullMessage = `${errorMessage}\n\nSuggestions:\n${suggestions.map((s: string, i: number) => `${i + 1}. ${s}`).join('\n')}`;
         
@@ -66,10 +68,20 @@ export async function analyzeVideo(
         throw customError;
       }
       
-      // Other structured errors
-      if (errorData.message) {
+      // Handle structured error with code and message
+      if (errorData.code && errorData.message) {
         const customError = new Error(errorData.message);
-        (customError as any).code = errorData.error || 'ANALYSIS_ERROR';
+        (customError as any).code = errorData.code;
+        if (errorData.suggestions) {
+          (customError as any).suggestions = errorData.suggestions;
+        }
+        throw customError;
+      }
+      
+      // Simple error message (FastAPI format)
+      if (errorMessage) {
+        const customError = new Error(errorMessage);
+        (customError as any).code = errorData.error || errorData.code || 'ANALYSIS_ERROR';
         throw customError;
       }
     }

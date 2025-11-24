@@ -28,15 +28,31 @@ export default function VideoUpload({ onUpload, isUploading = false, progress = 
   }, [preview]);
 
   const validateFile = (file: File): string | null => {
-    const validTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo'];
+    // Check file extension (backend validates by extension)
+    const validExtensions = ['.mp4', '.mov', '.avi', '.mkv'];
+    const fileName = file.name.toLowerCase();
+    const hasValidExtension = validExtensions.some(ext => fileName.endsWith(ext));
+    
+    // Also check MIME type as secondary validation
+    const validMimeTypes = [
+      'video/mp4', 
+      'video/quicktime',  // MOV
+      'video/x-msvideo', // AVI
+      'video/x-matroska' // MKV
+    ];
+    
     const maxSize = 500 * 1024 * 1024; // 500MB
 
-    if (!validTypes.includes(file.type)) {
-      return 'Please upload MP4, MOV, or AVI files only';
+    if (!hasValidExtension && !validMimeTypes.includes(file.type)) {
+      return `Please upload MP4, MOV, AVI, or MKV files only. Current file: ${file.name}`;
+    }
+
+    if (file.size === 0) {
+      return 'File is empty. Please select a valid video file.';
     }
 
     if (file.size > maxSize) {
-      return 'File size must be less than 500MB';
+      return `File size (${(file.size / (1024 * 1024)).toFixed(2)}MB) exceeds maximum of 500MB`;
     }
 
     return null;

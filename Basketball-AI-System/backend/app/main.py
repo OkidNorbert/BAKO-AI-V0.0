@@ -194,7 +194,9 @@ async def analyze_video(
             
             # Upload to Supabase (Background Task)
             if background_tasks:
-                background_tasks.add_task(handle_supabase_upload, temp_path, temp_filename, result.dict())
+                # Convert Pydantic model to dict with JSON-serializable values
+                result_dict = result.model_dump(mode='json') if hasattr(result, 'model_dump') else result.dict()
+                background_tasks.add_task(handle_supabase_upload, temp_path, temp_filename, result_dict)
             else:
                 # If no background tasks, clean up immediately
                 if os.path.exists(temp_path):

@@ -279,6 +279,7 @@ class VideoProcessor:
                     # Action Classification (needs frames)
                     action_probs = self._classify_action(frames_window)
                     action_label = self._get_action_label(action_probs)
+                    confidence = float(max(action_probs.values())) if action_probs else 0.0
                     
                     # Calculate Metrics for this window (needs keypoints)
                     # Filter out empty keypoints if needed, or engine handles it
@@ -287,13 +288,17 @@ class VideoProcessor:
                         window_metrics = self._calculate_metrics(valid_keypoints, action_label)
                         all_metrics.append(window_metrics)
                         
-                        # Add to timeline
+                        # Add to timeline - create proper ActionClassification object
                         timestamp = frame_count / fps
+                        action_classification = ActionClassification(
+                            label=action_label,
+                            confidence=confidence,
+                            probabilities=ActionProbabilities(**action_probs)
+                        )
                         timeline.append(TimelineSegment(
                             start_time=max(0, timestamp - (window_size/fps)),
                             end_time=timestamp,
-                            action=action_label,
-                            confidence=float(max(action_probs.values())) if action_probs else 0.0,
+                            action=action_classification,
                             metrics=window_metrics
                         ))
                     
@@ -315,28 +320,42 @@ class VideoProcessor:
             
         # Aggregate results
         # Find most frequent action
-        actions = [t.action for t in timeline]
+        actions = [t.action.label for t in timeline]
         main_action = max(set(actions), key=actions.count)
         
         # Average metrics
         avg_metrics = self._aggregate_metrics(timeline)
         
         # Average confidence
-        avg_confidence = sum(t.confidence for t in timeline) / len(timeline)
+        avg_confidence = sum(t.action.confidence for t in timeline) / len(timeline)
         
-        # Generate recommendations
-        recommendations = self.ai_coach.analyze_performance(
-            {
-                "label": main_action,
-                "confidence": avg_confidence,
-                "probabilities": {} # We could aggregate probs too if needed
-            },
-            avg_metrics
-        )
+        # Aggregate probabilities (average across all segments)
+        all_probs = {}
+        for prob_key in ["free_throw", "two_point_shot", "three_point_shot", "layup", "dunk",
+                         "dribbling", "passing", "defense", "running", "walking",
+                         "blocking", "picking", "ball_in_hand", "idle"]:
+            all_probs[prob_key] = sum(getattr(t.action.probabilities, prob_key) for t in timeline) / len(timeline)
+        
         # Detect shot outcome if applicable
         shot_outcome = None
-        if "shot" in main_action:
+        if "shot" in main_action or "free_throw" in main_action:
             shot_outcome = self._detect_shot_outcome(all_detections)
+        
+        # Generate recommendations
+        # Convert PerformanceMetrics Pydantic object to dict for AI coach
+        metrics_dict = avg_metrics.model_dump() if hasattr(avg_metrics, 'model_dump') else avg_metrics.dict()
+        shot_outcome_dict = None
+        if shot_outcome:
+            shot_outcome_dict = shot_outcome.model_dump() if hasattr(shot_outcome, 'model_dump') else shot_outcome.dict()
+        
+        recommendations_dicts = self.ai_coach.generate_initial_recommendations(
+            action_type=main_action,
+            metrics=metrics_dict,
+            shot_outcome=shot_outcome_dict
+        )
+        
+        # Convert dicts to Recommendation Pydantic objects
+        recommendations = [Recommendation(**rec) for rec in recommendations_dicts]
 
         # Upload annotated video to Supabase if available
         annotated_video_url = None
@@ -347,16 +366,20 @@ class VideoProcessor:
         except Exception as e:
             logger.error(f"Failed to upload annotated video: {e}")
 
+        # Create main action classification
+        main_action_classification = ActionClassification(
+            label=main_action,
+            confidence=float(avg_confidence),
+            probabilities=ActionProbabilities(**all_probs)
+        )
+        
         return VideoAnalysisResult(
-            action={
-                "label": main_action,
-                "confidence": float(avg_confidence),
-                "probabilities": {} # Simplified
-            },
+            video_id=str(uuid.uuid4()),
+            action=main_action_classification,
             metrics=avg_metrics,
             recommendations=recommendations,
             shot_outcome=shot_outcome,
-            timeline=timeline,
+            timeline=timeline if len(timeline) > 1 else None,  # Only include timeline if multiple segments
             annotated_video_url=annotated_video_url
         )
 

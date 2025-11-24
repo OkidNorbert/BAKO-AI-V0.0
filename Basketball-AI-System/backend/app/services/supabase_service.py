@@ -4,6 +4,7 @@ from app.core.config import settings
 import logging
 from typing import Dict, Any, Optional
 import json
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -33,9 +34,17 @@ class SupabaseService:
         try:
             bucket_name = "videos"
             
-            # Check if bucket exists (optional, assuming it does or we can't create it easily via client)
-            # For now, just try to upload
+            # Check if bucket exists by trying to list it
+            try:
+                self.client.storage.from_(bucket_name).list()
+            except Exception as bucket_error:
+                if "not found" in str(bucket_error).lower() or "404" in str(bucket_error):
+                    logger.warning(f"⚠️  Supabase bucket '{bucket_name}' not found. Skipping video upload.")
+                    logger.info("   💡 Create the bucket in Supabase dashboard: Storage > Create bucket > 'videos'")
+                    return None
+                raise  # Re-raise if it's a different error
             
+            # Upload video
             with open(file_path, 'rb') as f:
                 self.client.storage.from_(bucket_name).upload(
                     path=filename,
@@ -52,6 +61,21 @@ class SupabaseService:
             logger.error(f"❌ Failed to upload video to Supabase: {e}")
             return None
 
+    def _serialize_for_json(self, obj: Any) -> Any:
+        """Recursively serialize objects for JSON (handles datetime, Pydantic models, etc.)"""
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        elif hasattr(obj, 'model_dump'):  # Pydantic v2
+            return self._serialize_for_json(obj.model_dump())
+        elif hasattr(obj, 'dict'):  # Pydantic v1
+            return self._serialize_for_json(obj.dict())
+        elif isinstance(obj, dict):
+            return {k: self._serialize_for_json(v) for k, v in obj.items()}
+        elif isinstance(obj, (list, tuple)):
+            return [self._serialize_for_json(item) for item in obj]
+        else:
+            return obj
+    
     def save_analysis(self, result: Dict[str, Any], video_url: Optional[str] = None) -> bool:
         """
         Save analysis result to Supabase Database
@@ -62,13 +86,26 @@ class SupabaseService:
         try:
             table_name = "analysis_results"
             
+            # Serialize result to handle datetime and Pydantic objects
+            serialized_result = self._serialize_for_json(result)
+            
+            # Extract action info safely
+            action_data = serialized_result.get("action", {})
+            if isinstance(action_data, dict):
+                action_label = action_data.get("label")
+                action_confidence = action_data.get("confidence")
+            else:
+                # If action is already a string or other type
+                action_label = str(action_data) if action_data else None
+                action_confidence = None
+            
             data = {
-                "action": result.get("action", {}).get("label"),
-                "confidence": result.get("action", {}).get("confidence"),
-                "metrics": result.get("metrics"),
-                "recommendations": result.get("recommendations"),
+                "action": action_label,
+                "confidence": action_confidence,
+                "metrics": serialized_result.get("metrics"),
+                "recommendations": serialized_result.get("recommendations"),
                 "video_url": video_url,
-                "raw_result": result
+                "raw_result": serialized_result  # Now properly serialized
             }
             
             self.client.table(table_name).insert(data).execute()

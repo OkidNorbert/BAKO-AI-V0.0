@@ -68,21 +68,24 @@ export default function Dashboard() {
       } else if (err?.code === 'ERR_NETWORK' || err?.code === 'ERR_CONNECTION_REFUSED') {
         errorMessage = 'Backend server is not running. Please start the backend server first.';
       } else if (err?.response?.data) {
-        // Backend returned structured error
+        // Backend returned structured error (FastAPI format)
         const errorData = err.response.data;
-        if (typeof errorData === 'string') {
+        
+        // FastAPI returns errors in 'detail' field
+        if (errorData.detail) {
+          errorMessage = typeof errorData.detail === 'string'
+            ? errorData.detail
+            : errorData.detail.message || errorMessage;
+        } else if (typeof errorData === 'string') {
           errorMessage = errorData;
         } else if (errorData.message) {
           errorMessage = errorData.message;
           if (errorData.suggestions) {
             errorMessage += '\n\n' + errorData.suggestions.map((s: string, i: number) => `${i + 1}. ${s}`).join('\n');
           }
-        } else if (errorData.detail) {
-          errorMessage = typeof errorData.detail === 'string'
-            ? errorData.detail
-            : errorData.detail.message || errorMessage;
         }
       } else if (err?.message) {
+        // Error object with message property
         errorMessage = err.message;
       }
 
