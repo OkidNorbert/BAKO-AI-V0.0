@@ -356,4 +356,4 @@ If you find this project useful, please consider:
 
 ---
 
-**Last Updated**: November 19, 2025
+![alt text](<Screenshot from 2025-11-20 11-55-20.png>) ![alt text](<Screenshot from 2025-11-20 19-00-48.png>) ![alt text](<Screenshot from 2025-11-20 19-27-28.png>) ![alt text](<Screenshot from 2025-11-20 20-04-10.png>) ![alt text](<Screenshot from 2025-11-20 20-16-43.png>)
