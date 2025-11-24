@@ -16,7 +16,7 @@ from pathlib import Path
 import logging
 from tqdm import tqdm
 import json
-from sklearn.metrics import accuracy_score, precision_recall_fscore_support
+from sklearn.metrics import accuracy_score, precision_recall_fscore_support, confusion_matrix, classification_report
 from typing import List, Dict
 import argparse
 import pandas as pd
@@ -377,6 +377,311 @@ def plot_training_curves(trainer: Trainer, output_dir: str):
         logger.error(traceback.format_exc())
 
 
+def plot_validation_chart(trainer: Trainer, test_dataset, class_names: List[str], output_dir: str):
+    """
+    Generate comprehensive validation chart with confusion matrix and per-class metrics
+    
+    Args:
+        trainer: Hugging Face Trainer object
+        test_dataset: Test dataset for evaluation
+        class_names: List of class names
+        output_dir: Directory to save the chart
+    """
+    try:
+        logger.info("📊 Generating validation chart...")
+        
+        # Get predictions on test set
+        predictions = trainer.predict(test_dataset)
+        y_pred = np.argmax(predictions.predictions, axis=1)
+        y_true = predictions.label_ids
+        
+        # Calculate metrics
+        accuracy = accuracy_score(y_true, y_pred)
+        precision, recall, f1, support = precision_recall_fscore_support(
+            y_true, y_pred, average=None, zero_division=0
+        )
+        macro_precision = precision.mean()
+        macro_recall = recall.mean()
+        macro_f1 = f1.mean()
+        
+        # Confusion matrix - specify labels to ensure all classes are included
+        # even if some are missing from the test set
+        cm = confusion_matrix(y_true, y_pred, labels=list(range(len(class_names))))
+        
+        # Create figure with subplots
+        fig = plt.figure(figsize=(18, 12))
+        gs = fig.add_gridspec(3, 3, hspace=0.3, wspace=0.3)
+        
+        fig.suptitle('Model Validation Report - Basketball Action Classification', 
+                     fontsize=18, fontweight='bold', y=0.98)
+        
+        # Set style
+        sns.set_style("whitegrid")
+        plt.rcParams['font.size'] = 10
+        
+        # Plot 1: Confusion Matrix (large, top-left)
+        ax1 = fig.add_subplot(gs[0:2, 0:2])
+        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
+                   xticklabels=class_names, yticklabels=class_names,
+                   ax=ax1, cbar_kws={'label': 'Count'})
+        ax1.set_xlabel('Predicted Label', fontweight='bold', fontsize=12)
+        ax1.set_ylabel('True Label', fontweight='bold', fontsize=12)
+        ax1.set_title('Confusion Matrix', fontweight='bold', fontsize=14)
+        plt.setp(ax1.get_xticklabels(), rotation=45, ha='right')
+        plt.setp(ax1.get_yticklabels(), rotation=0)
+        
+        # Plot 2: Per-Class Metrics (top-right)
+        ax2 = fig.add_subplot(gs[0:2, 2])
+        x_pos = np.arange(len(class_names))
+        width = 0.25
+        
+        # Normalize metrics to percentages for better visualization
+        precision_pct = precision * 100
+        recall_pct = recall * 100
+        f1_pct = f1 * 100
+        
+        ax2.barh(x_pos - width, precision_pct, width, label='Precision', color='#3498db', alpha=0.8)
+        ax2.barh(x_pos, recall_pct, width, label='Recall', color='#2ecc71', alpha=0.8)
+        ax2.barh(x_pos + width, f1_pct, width, label='F1 Score', color='#e74c3c', alpha=0.8)
+        
+        ax2.set_yticks(x_pos)
+        ax2.set_yticklabels(class_names, fontsize=9)
+        ax2.set_xlabel('Score (%)', fontweight='bold')
+        ax2.set_title('Per-Class Metrics', fontweight='bold', fontsize=12)
+        ax2.legend(loc='lower right', fontsize=9)
+        ax2.set_xlim([0, 100])
+        ax2.grid(True, alpha=0.3, axis='x')
+        
+        # Add value labels on bars
+        for i, (p, r, f) in enumerate(zip(precision_pct, recall_pct, f1_pct)):
+            ax2.text(p + 1, i - width, f'{p:.1f}%', va='center', fontsize=7)
+            ax2.text(r + 1, i, f'{r:.1f}%', va='center', fontsize=7)
+            ax2.text(f + 1, i + width, f'{f:.1f}%', va='center', fontsize=7)
+        
+        # Plot 3: Overall Metrics Summary (middle-right)
+        ax3 = fig.add_subplot(gs[2, 2])
+        ax3.axis('off')
+        
+        metrics_text = f"""
+OVERALL METRICS
+
+Accuracy: {accuracy*100:.2f}%
+
+Macro-Averaged:
+  Precision: {macro_precision*100:.2f}%
+  Recall: {macro_recall*100:.2f}%
+  F1 Score: {macro_f1*100:.2f}%
+
+Test Samples: {len(y_true)}
+Classes: {len(class_names)}
+        """
+        
+        ax3.text(0.1, 0.5, metrics_text, fontsize=11, 
+                family='monospace', verticalalignment='center',
+                bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+        
+        # Plot 4: Class Distribution (bottom-left)
+        ax4 = fig.add_subplot(gs[2, 0])
+        class_counts = pd.Series(y_true).value_counts().sort_index()
+        colors = plt.cm.Set3(np.linspace(0, 1, len(class_names)))
+        
+        bars = ax4.bar(range(len(class_names)), 
+                      [class_counts.get(i, 0) for i in range(len(class_names))],
+                      color=colors, alpha=0.8, edgecolor='black', linewidth=1.5)
+        
+        ax4.set_xticks(range(len(class_names)))
+        ax4.set_xticklabels(class_names, rotation=45, ha='right', fontsize=9)
+        ax4.set_ylabel('Sample Count', fontweight='bold')
+        ax4.set_title('Test Set Class Distribution', fontweight='bold', fontsize=12)
+        ax4.grid(True, alpha=0.3, axis='y')
+        
+        # Add count labels on bars
+        for bar in bars:
+            height = bar.get_height()
+            if height > 0:
+                ax4.text(bar.get_x() + bar.get_width()/2., height,
+                        f'{int(height)}', ha='center', va='bottom', fontsize=9, fontweight='bold')
+        
+        # Plot 5: Support (samples per class) (bottom-middle)
+        ax5 = fig.add_subplot(gs[2, 1])
+        support_data = pd.DataFrame({
+            'Class': class_names,
+            'Support': support,
+            'Precision': precision_pct,
+            'Recall': recall_pct,
+            'F1': f1_pct
+        })
+        
+        # Create a table
+        table_data = []
+        for i, row in support_data.iterrows():
+            table_data.append([
+                row['Class'][:15],  # Truncate long names
+                f"{row['Support']}",
+                f"{row['Precision']:.1f}%",
+                f"{row['Recall']:.1f}%",
+                f"{row['F1']:.1f}%"
+            ])
+        
+        table = ax5.table(cellText=table_data,
+                         colLabels=['Class', 'Support', 'Precision', 'Recall', 'F1'],
+                         cellLoc='center',
+                         loc='center',
+                         bbox=[0, 0, 1, 1])
+        table.auto_set_font_size(False)
+        table.set_fontsize(8)
+        table.scale(1, 2)
+        
+        # Style the header
+        for i in range(5):
+            table[(0, i)].set_facecolor('#34495e')
+            table[(0, i)].set_text_props(weight='bold', color='white')
+        
+        # Color code cells by performance
+        for i in range(1, len(table_data) + 1):
+            precision_val = float(table_data[i-1][2].replace('%', ''))
+            recall_val = float(table_data[i-1][3].replace('%', ''))
+            f1_val = float(table_data[i-1][4].replace('%', ''))
+            
+            # Green for good (>80%), yellow for medium (60-80%), red for poor (<60%)
+            if f1_val >= 80:
+                color = '#d5f4e6'
+            elif f1_val >= 60:
+                color = '#fff9c4'
+            else:
+                color = '#ffcccb'
+            
+            table[(i, 4)].set_facecolor(color)  # F1 column
+        
+        ax5.axis('off')
+        ax5.set_title('Detailed Per-Class Metrics', fontweight='bold', fontsize=12, pad=20)
+        
+        # Save plot
+        output_path = Path(output_dir) / "validation_chart.png"
+        plt.savefig(output_path, dpi=300, bbox_inches='tight')
+        plt.close()
+        
+        logger.info(f"✅ Validation chart saved to: {output_path}")
+        
+        # Also save as PDF
+        output_path_pdf = Path(output_dir) / "validation_chart.pdf"
+        # Recreate figure for PDF (same code as above)
+        fig = plt.figure(figsize=(18, 12))
+        gs = fig.add_gridspec(3, 3, hspace=0.3, wspace=0.3)
+        fig.suptitle('Model Validation Report - Basketball Action Classification', 
+                     fontsize=18, fontweight='bold', y=0.98)
+        sns.set_style("whitegrid")
+        
+        # Recreate all plots (same as above)
+        ax1 = fig.add_subplot(gs[0:2, 0:2])
+        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
+                   xticklabels=class_names, yticklabels=class_names,
+                   ax=ax1, cbar_kws={'label': 'Count'})
+        ax1.set_xlabel('Predicted Label', fontweight='bold', fontsize=12)
+        ax1.set_ylabel('True Label', fontweight='bold', fontsize=12)
+        ax1.set_title('Confusion Matrix', fontweight='bold', fontsize=14)
+        plt.setp(ax1.get_xticklabels(), rotation=45, ha='right')
+        plt.setp(ax1.get_yticklabels(), rotation=0)
+        
+        ax2 = fig.add_subplot(gs[0:2, 2])
+        ax2.barh(x_pos - width, precision_pct, width, label='Precision', color='#3498db', alpha=0.8)
+        ax2.barh(x_pos, recall_pct, width, label='Recall', color='#2ecc71', alpha=0.8)
+        ax2.barh(x_pos + width, f1_pct, width, label='F1 Score', color='#e74c3c', alpha=0.8)
+        ax2.set_yticks(x_pos)
+        ax2.set_yticklabels(class_names, fontsize=9)
+        ax2.set_xlabel('Score (%)', fontweight='bold')
+        ax2.set_title('Per-Class Metrics', fontweight='bold', fontsize=12)
+        ax2.legend(loc='lower right', fontsize=9)
+        ax2.set_xlim([0, 100])
+        ax2.grid(True, alpha=0.3, axis='x')
+        
+        # Add value labels on bars for PDF version
+        for i, (p, r, f) in enumerate(zip(precision_pct, recall_pct, f1_pct)):
+            ax2.text(p + 1, i - width, f'{p:.1f}%', va='center', fontsize=7)
+            ax2.text(r + 1, i, f'{r:.1f}%', va='center', fontsize=7)
+            ax2.text(f + 1, i + width, f'{f:.1f}%', va='center', fontsize=7)
+        
+        ax3 = fig.add_subplot(gs[2, 2])
+        ax3.axis('off')
+        ax3.text(0.1, 0.5, metrics_text, fontsize=11, 
+                family='monospace', verticalalignment='center',
+                bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+        
+        ax4 = fig.add_subplot(gs[2, 0])
+        bars = ax4.bar(range(len(class_names)), 
+                      [class_counts.get(i, 0) for i in range(len(class_names))],
+                      color=colors, alpha=0.8, edgecolor='black', linewidth=1.5)
+        ax4.set_xticks(range(len(class_names)))
+        ax4.set_xticklabels(class_names, rotation=45, ha='right', fontsize=9)
+        ax4.set_ylabel('Sample Count', fontweight='bold')
+        ax4.set_title('Test Set Class Distribution', fontweight='bold', fontsize=12)
+        ax4.grid(True, alpha=0.3, axis='y')
+        
+        # Add count labels on bars for PDF version
+        for bar in bars:
+            height = bar.get_height()
+            if height > 0:
+                ax4.text(bar.get_x() + bar.get_width()/2., height,
+                        f'{int(height)}', ha='center', va='bottom', fontsize=9, fontweight='bold')
+        
+        ax5 = fig.add_subplot(gs[2, 1])
+        table = ax5.table(cellText=table_data,
+                         colLabels=['Class', 'Support', 'Precision', 'Recall', 'F1'],
+                         cellLoc='center',
+                         loc='center',
+                         bbox=[0, 0, 1, 1])
+        table.auto_set_font_size(False)
+        table.set_fontsize(8)
+        table.scale(1, 2)
+        for i in range(5):
+            table[(0, i)].set_facecolor('#34495e')
+            table[(0, i)].set_text_props(weight='bold', color='white')
+        for i in range(1, len(table_data) + 1):
+            f1_val = float(table_data[i-1][4].replace('%', ''))
+            if f1_val >= 80:
+                color = '#d5f4e6'
+            elif f1_val >= 60:
+                color = '#fff9c4'
+            else:
+                color = '#ffcccb'
+            table[(i, 4)].set_facecolor(color)
+        ax5.axis('off')
+        ax5.set_title('Detailed Per-Class Metrics', fontweight='bold', fontsize=12, pad=20)
+        
+        plt.savefig(output_path_pdf, bbox_inches='tight')
+        plt.close()
+        
+        logger.info(f"✅ Validation chart (PDF) saved to: {output_path_pdf}")
+        
+        # Save classification report to text file
+        report_path = Path(output_dir) / "classification_report.txt"
+        with open(report_path, 'w') as f:
+            f.write("=" * 80 + "\n")
+            f.write("CLASSIFICATION REPORT\n")
+            f.write("=" * 80 + "\n\n")
+            f.write(f"Overall Accuracy: {accuracy*100:.2f}%\n\n")
+            f.write(f"Macro-Averaged Metrics:\n")
+            f.write(f"  Precision: {macro_precision*100:.2f}%\n")
+            f.write(f"  Recall: {macro_recall*100:.2f}%\n")
+            f.write(f"  F1 Score: {macro_f1*100:.2f}%\n\n")
+            f.write("=" * 80 + "\n")
+            f.write("PER-CLASS METRICS\n")
+            f.write("=" * 80 + "\n\n")
+            f.write(classification_report(y_true, y_pred, target_names=class_names, digits=3))
+            f.write("\n" + "=" * 80 + "\n")
+            f.write("CONFUSION MATRIX\n")
+            f.write("=" * 80 + "\n\n")
+            f.write(f"Rows = True Labels, Columns = Predicted Labels\n\n")
+            f.write(pd.DataFrame(cm, index=class_names, columns=class_names).to_string())
+        
+        logger.info(f"✅ Classification report saved to: {report_path}")
+        
+    except Exception as e:
+        logger.error(f"❌ Error generating validation chart: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
+
+
 def main():
     parser = argparse.ArgumentParser(description="Train VideoMAE on basketball dataset")
     parser.add_argument('--data-dir', type=str, required=True, help="Directory with videos (raw_videos folder)")
@@ -637,6 +942,14 @@ def main():
         logger.info(f"✅ Training charts saved to: {Path(args.output_dir) / 'training_curves.png'}")
     except Exception as e:
         logger.warning(f"⚠️  Could not generate training charts: {e}")
+    
+    # Generate and save validation chart with confusion matrix
+    logger.info("📊 Generating validation chart...")
+    try:
+        plot_validation_chart(trainer, test_dataset, train_dataset.class_names, args.output_dir)
+        logger.info(f"✅ Validation chart saved to: {Path(args.output_dir) / 'validation_chart.png'}")
+    except Exception as e:
+        logger.warning(f"⚠️  Could not generate validation chart: {e}")
 
 
 if __name__ == "__main__":

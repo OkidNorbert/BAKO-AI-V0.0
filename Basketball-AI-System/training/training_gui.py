@@ -866,46 +866,86 @@ class TrainingDashboard:
             return False
     
     def display_training_charts(self):
-        """Display training curves chart after training"""
+        """Display training curves and validation charts after training"""
         try:
             from PIL import Image, ImageTk
             
-            chart_path = self.models_dir / "training_curves.png"
+            # Check for both charts
+            training_chart_path = self.models_dir / "training_curves.png"
+            validation_chart_path = self.models_dir / "validation_chart.png"
             
-            if not chart_path.exists():
-                self.log("⚠️  Training chart not found. Chart should be generated automatically.")
+            charts_found = []
+            if training_chart_path.exists():
+                charts_found.append(("Training Progress", training_chart_path))
+            if validation_chart_path.exists():
+                charts_found.append(("Validation Report", validation_chart_path))
+            
+            if not charts_found:
+                self.log("⚠️  No charts found. Charts should be generated automatically after training.")
                 return
             
-            self.log("📊 Displaying training curves...")
+            self.log("📊 Displaying charts...")
             self.root.update()
             
-            # Create a new window for the chart
+            # Create a new window for the charts
             chart_window = tk.Toplevel(self.root)
-            chart_window.title("Training Progress - Epoch Charts")
-            chart_window.geometry("1200x900")
+            chart_window.title("Training & Validation Charts")
+            chart_window.geometry("1400x1000")
             chart_window.configure(bg='#1a1a2e')
             
-            # Load and display image
-            img = Image.open(chart_path)
-            # Resize if too large
-            max_width, max_height = 1150, 850
-            img.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
-            photo = ImageTk.PhotoImage(img)
-            
-            # Create label with image
-            chart_label = tk.Label(chart_window, image=photo, bg='#1a1a2e')
-            chart_label.image = photo  # Keep a reference
-            chart_label.pack(padx=10, pady=10)
-            
-            # Add info label
-            info_label = tk.Label(
-                chart_window,
-                text="Training Progress Charts\n(Loss, Accuracy, F1 Score, Learning Rate)",
-                font=("Helvetica", 12, "bold"),
-                bg='#1a1a2e',
-                fg='#00ff88'
-            )
-            info_label.pack(pady=5)
+            # Create notebook for tabs if multiple charts
+            if len(charts_found) > 1:
+                notebook = ttk.Notebook(chart_window)
+                notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+                
+                for chart_name, chart_path in charts_found:
+                    chart_frame = tk.Frame(notebook, bg='#1a1a2e')
+                    notebook.add(chart_frame, text=chart_name)
+                    
+                    # Load and display image
+                    img = Image.open(chart_path)
+                    # Resize to fit window
+                    img_width, img_height = img.size
+                    max_width, max_height = 1300, 850
+                    scale = min(max_width / img_width, max_height / img_height, 1.0)
+                    new_width = int(img_width * scale)
+                    new_height = int(img_height * scale)
+                    img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+                    photo = ImageTk.PhotoImage(img)
+                    
+                    chart_label = tk.Label(chart_frame, image=photo, bg='#1a1a2e')
+                    chart_label.image = photo  # Keep a reference
+                    chart_label.pack(padx=10, pady=10)
+                    
+                    # Add title
+                    tk.Label(
+                        chart_frame,
+                        text=chart_name,
+                        font=("Helvetica", 12, "bold"),
+                        bg='#1a1a2e',
+                        fg='#00ff88'
+                    ).pack(pady=5)
+            else:
+                # Single chart - display directly
+                chart_name, chart_path = charts_found[0]
+                
+                # Load and display image
+                img = Image.open(chart_path)
+                max_width, max_height = 1300, 850
+                img.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
+                photo = ImageTk.PhotoImage(img)
+                
+                chart_label = tk.Label(chart_window, image=photo, bg='#1a1a2e')
+                chart_label.image = photo
+                chart_label.pack(padx=10, pady=10)
+                
+                tk.Label(
+                    chart_window,
+                    text=chart_name,
+                    font=("Helvetica", 12, "bold"),
+                    bg='#1a1a2e',
+                    fg='#00ff88'
+                ).pack(pady=5)
             
             # Add close button
             close_btn = tk.Button(
@@ -920,14 +960,26 @@ class TrainingDashboard:
             )
             close_btn.pack(pady=10)
             
-            self.log(f"✅ Training charts displayed! (Saved to: {chart_path})")
+            # Log chart locations
+            for chart_name, chart_path in charts_found:
+                self.log(f"✅ {chart_name} chart displayed! (Saved to: {chart_path})")
             
         except ImportError:
-            self.log("⚠️  PIL (Pillow) not available. Chart saved but cannot display.")
-            self.log(f"   Chart saved to: {self.models_dir / 'training_curves.png'}")
+            self.log("⚠️  PIL (Pillow) not available. Charts saved but cannot display.")
+            training_chart_path = self.models_dir / "training_curves.png"
+            validation_chart_path = self.models_dir / "validation_chart.png"
+            if training_chart_path.exists():
+                self.log(f"   Training chart: {training_chart_path}")
+            if validation_chart_path.exists():
+                self.log(f"   Validation chart: {validation_chart_path}")
         except Exception as e:
-            self.log(f"⚠️  Could not display chart: {e}")
-            self.log(f"   Chart saved to: {self.models_dir / 'training_curves.png'}")
+            self.log(f"⚠️  Could not display charts: {e}")
+            training_chart_path = self.models_dir / "training_curves.png"
+            validation_chart_path = self.models_dir / "validation_chart.png"
+            if training_chart_path.exists():
+                self.log(f"   Training chart: {training_chart_path}")
+            if validation_chart_path.exists():
+                self.log(f"   Validation chart: {validation_chart_path}")
     
     def evaluate_model(self):
         """Evaluate the trained model"""
