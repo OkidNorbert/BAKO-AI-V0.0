@@ -6,6 +6,7 @@ import MetricsDisplay from '../components/MetricsDisplay';
 import RadarChart from '../components/RadarChart';
 import RecommendationCard from '../components/RecommendationCard';
 import ProgressChart from '../components/ProgressChart';
+import RealTimeVisualization from '../components/RealTimeVisualization';
 import { analyzeVideo, getHistory } from '../services/api';
 import type { VideoAnalysisResult, UploadProgress, HistoricalData } from '../types';
 
@@ -20,6 +21,8 @@ export default function Dashboard() {
   const [error, setError] = useState<string>('');
   const [historicalData, setHistoricalData] = useState<HistoricalData[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [currentVideoId, setCurrentVideoId] = useState<string | null>(null);
+  const [showVisualization, setShowVisualization] = useState(false);
 
   // Load historical data on mount
   useEffect(() => {
@@ -45,11 +48,21 @@ export default function Dashboard() {
       setError('');
       setUploadProgress({ progress: 0, status: 'uploading' });
 
-      // Call API
-      const result = await analyzeVideo(file, setUploadProgress);
+      // Generate video_id on frontend BEFORE uploading
+      // This allows WebSocket to connect immediately
+      const frontendVideoId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      setCurrentVideoId(frontendVideoId);
+      setShowVisualization(true);
+      
+      // Call API with video_id - backend will use it for WebSocket streaming
+      const result = await analyzeVideo(file, setUploadProgress, frontendVideoId);
 
       setUploadProgress({ progress: 100, status: 'complete' });
       setAnalysisResult(result);
+      // Keep using the same video_id (backend should use the one we sent)
+      if (result.video_id && result.video_id !== frontendVideoId) {
+        setCurrentVideoId(result.video_id); // Update if backend generated different one
+      }
 
       // Reload history to include new analysis
       await loadHistoricalData();
@@ -141,6 +154,27 @@ export default function Dashboard() {
               progress={uploadProgress.progress}
             />
           </motion.div>
+
+          {/* Real-time Visualization */}
+          {showVisualization && currentVideoId && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6"
+            >
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                🎥 Real-Time Analysis Visualization
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Watch YOLO detection boxes and MediaPipe pose keypoints in real-time as your video is processed
+              </p>
+              <RealTimeVisualization
+                videoId={currentVideoId}
+                isProcessing={uploadProgress.status === 'uploading' || uploadProgress.status === 'processing'}
+                onClose={() => setShowVisualization(false)}
+              />
+            </motion.div>
+          )}
 
           {error && (
             <motion.div

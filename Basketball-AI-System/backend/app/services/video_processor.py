@@ -9,7 +9,7 @@ import os
 import base64
 import mediapipe as mp
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 import logging
 from datetime import datetime
 import uuid
@@ -22,6 +22,7 @@ from app.models.action_classifier import ActionClassifier
 from app.models.metrics_engine import PerformanceMetricsEngine
 from app.models.shot_outcome_detector import ShotOutcomeDetector
 from app.models.ai_coach import AICoach
+from app.models.court_detector import CourtDetector
 from app.core.schemas import VideoAnalysisResult, ActionClassification, PerformanceMetrics, ActionProbabilities, Recommendation, ShotOutcome, TimelineSegment
 
 logger = logging.getLogger(__name__)
@@ -63,6 +64,7 @@ class VideoProcessor:
             
             self.metrics_engine = PerformanceMetricsEngine()
             self.shot_outcome_detector = ShotOutcomeDetector()
+            self.court_detector = CourtDetector()
             
             # Initialize AI Coach
             # LLaMA 3.1 requires Hugging Face authentication for gated models
@@ -150,7 +152,15 @@ class VideoProcessor:
             logger.error(f"❌ Failed to initialize models: {e}")
             raise
     
-    def _draw_annotations(self, frame: np.ndarray, detections: List[Dict], pose_landmarks) -> np.ndarray:
+    def _draw_annotations(
+        self, 
+        frame: np.ndarray, 
+        detections: List[Dict], 
+        pose_landmarks,
+        basketball_detections: List[Dict] = None,
+        court_info: Dict = None,
+        hoop_info: Dict = None
+    ) -> np.ndarray:
         """Draw bounding boxes and pose landmarks on frame"""
         annotated_frame = frame.copy()
         
@@ -163,7 +173,7 @@ class VideoProcessor:
                 landmark_drawing_spec=self.mp_drawing_styles.get_default_pose_landmarks_style()
             )
             
-        # Draw bounding boxes
+        # Draw player bounding boxes (green)
         for det in detections:
             bbox = det['bbox']
             conf = det['confidence']
@@ -171,17 +181,92 @@ class VideoProcessor:
             
             x1, y1, x2, y2 = map(int, bbox)
             
-            # Draw box
+            # Draw box (green for players)
             cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
             
             # Draw label
             label = f"{cls} {conf:.2f}"
             cv2.putText(annotated_frame, label, (x1, y1 - 10), 
                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+        
+        # Draw basketball bounding boxes (orange/red)
+        if basketball_detections:
+            for det in basketball_detections:
+                bbox = det['bbox']
+                conf = det['confidence']
+                cls = det['class']
+                is_predicted = det.get('predicted', False)
+                
+                x1, y1, x2, y2 = map(int, bbox)
+                
+                # Different colors for detected vs predicted
+                if is_predicted:
+                    # Lighter orange for predicted position
+                    color = (0, 200, 255)
+                    thickness = 2
+                else:
+                    # Solid orange for detected
+                    color = (0, 165, 255)
+                    thickness = 3
+                
+                # Draw box
+                cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), color, thickness)
+                
+                # Draw label
+                label = f"{cls} {conf:.2f}"
+                if is_predicted:
+                    label += " (pred)"
+                cv2.putText(annotated_frame, label, (x1, y1 - 10), 
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+                
+                # Draw circle in center to highlight basketball
+                center_x = (x1 + x2) // 2
+                center_y = (y1 + y2) // 2
+                radius = max(5, min((x2 - x1), (y2 - y1)) // 4)
+                cv2.circle(annotated_frame, (center_x, center_y), radius, color, 2 if is_predicted else 3)
+                
+                # Draw shot zone label if available
+                if det.get('shot_zone'):
+                    zone_label = det['shot_zone'].replace('_', ' ').title()
+                    cv2.putText(annotated_frame, zone_label, (x1, y2 + 20), 
+                               cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+        
+        # Draw court lines
+        if court_info and court_info.get("lines"):
+            lines = court_info["lines"]
+            # Draw horizontal lines (court boundaries, center line)
+            for line in lines.get("horizontal", [])[:10]:  # Limit to avoid clutter
+                x1, y1, x2, y2 = line
+                cv2.line(annotated_frame, (x1, y1), (x2, y2), (255, 255, 255), 1)
+            
+            # Draw key points
+            if court_info.get("key_points"):
+                key_points = court_info["key_points"]
+                if "basket_left" in key_points:
+                    bx, by = key_points["basket_left"]
+                    cv2.circle(annotated_frame, (int(bx), int(by)), 10, (0, 255, 255), 2)
+                if "basket_right" in key_points:
+                    bx, by = key_points["basket_right"]
+                    cv2.circle(annotated_frame, (int(bx), int(by)), 10, (0, 255, 255), 2)
+        
+        # Draw hoop
+        if hoop_info:
+            center = hoop_info["center"]
+            bbox = hoop_info["bbox"]
+            center_x, center_y = int(center[0]), int(center[1])
+            
+            # Draw hoop circle
+            x1, y1, x2, y2 = bbox
+            radius = max((x2 - x1), (y2 - y1)) // 2
+            cv2.circle(annotated_frame, (center_x, center_y), radius, (0, 255, 255), 3)
+            
+            # Draw hoop label
+            cv2.putText(annotated_frame, "HOOP", (center_x - 20, center_y - radius - 10),
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
                        
         return annotated_frame
 
-    async def process_video(self, video_path: str) -> VideoAnalysisResult:
+    async def process_video(self, video_path: str, video_id: Optional[str] = None) -> VideoAnalysisResult:
         """
         Process video file and return analysis results
         """
@@ -217,6 +302,18 @@ class VideoProcessor:
         all_metrics = []
         timeline = []
         
+        # Basketball tracking state
+        last_ball_position = None  # (x, y, w, h)
+        ball_velocity = None  # (vx, vy)
+        frames_without_ball = 0
+        MAX_FRAMES_WITHOUT_BALL = 5  # Predict position for 5 frames if detection fails
+        
+        # Court and hoop detection (detect once per video or periodically)
+        court_info = None
+        hoop_info = None
+        ball_trajectory = []  # Track ball path for shot outcome detection
+        court_detection_frame_interval = max(30, fps)  # Detect court every second or 30 frames
+        
         frame_count = 0
         window_size = settings.SEQUENCE_LENGTH
         stride = 8  # Overlap windows
@@ -226,9 +323,21 @@ class VideoProcessor:
                 ret, frame = cap.read()
                 if not ret:
                     break
+                
+                # Detect court and hoop periodically (once per second or on first frame)
+                if frame_count == 0 or frame_count % court_detection_frame_interval == 0:
+                    try:
+                        court_info = self.court_detector.detect_court_lines(frame)
+                        hoop_info = self.court_detector.detect_hoop(frame)
+                        if hoop_info:
+                            logger.info(f"🏀 Hoop detected at {hoop_info['center']}")
+                        if court_info and court_info.get("key_points"):
+                            logger.info(f"🏟️  Court lines detected")
+                    except Exception as e:
+                        logger.debug(f"Court/hoop detection failed: {e}")
                     
                 # Process frame for detection
-                # YOLO Detection
+                # YOLO Detection - Players
                 results = self.yolo_model(frame, verbose=False)[0]
                 detections = []
                 
@@ -236,7 +345,7 @@ class VideoProcessor:
                     cls = int(box.cls[0])
                     conf = float(box.conf[0])
                     
-                    # Filter for person class (usually 0 in COCO)
+                    # Filter for person class (0 in COCO)
                     if cls == 0 and conf > settings.CONFIDENCE_THRESHOLD:
                         detections.append({
                             "bbox": box.xyxy[0].tolist(),
@@ -244,13 +353,122 @@ class VideoProcessor:
                             "class": "player"
                         })
                 
+                # Basketball detection with very low threshold for immediate tracking
+                basketball_threshold = 0.15  # Very low threshold for immediate detection
+                basketball_results = self.yolo_model(frame, classes=[32], conf=basketball_threshold, verbose=False)[0]
+                basketball_detections = []
+                current_ball_detected = False
+                
+                for box in basketball_results.boxes:
+                    cls = int(box.cls[0])
+                    conf = float(box.conf[0])
+                    
+                    # Basketball detection (sports ball class 32 in COCO)
+                    if cls == 32:
+                        x1, y1, x2, y2 = box.xyxy[0].tolist()
+                        center_x = (x1 + x2) / 2
+                        center_y = (y1 + y2) / 2
+                        w = x2 - x1
+                        h = y2 - y1
+                        
+                        # Update tracking state
+                        if last_ball_position:
+                            # Calculate velocity
+                            old_x, old_y = last_ball_position[0], last_ball_position[1]
+                            ball_velocity = (center_x - old_x, center_y - old_y)
+                        
+                        last_ball_position = (center_x, center_y, w, h)
+                        frames_without_ball = 0
+                        current_ball_detected = True
+                        
+                        # Track ball trajectory for shot outcome detection
+                        ball_trajectory.append((center_x, center_y))
+                        if len(ball_trajectory) > 30:  # Keep last 30 positions
+                            ball_trajectory.pop(0)
+                        
+                        # Classify shot type based on court position if available
+                        shot_type_from_court = None
+                        if hoop_info and court_info:
+                            try:
+                                shot_type_from_court = self.court_detector.classify_shot_zone(
+                                    (center_x, center_y),
+                                    hoop_info["center"],
+                                    court_info.get("court_zones", {})
+                                )
+                            except Exception as e:
+                                logger.debug(f"Shot zone classification failed: {e}")
+                        
+                        basketball_detections.append({
+                            "bbox": [x1, y1, x2, y2],
+                            "confidence": conf,
+                            "class": "basketball",
+                            "shot_zone": shot_type_from_court
+                        })
+                
+                # If no detection but we have previous position, predict/continue tracking
+                if not current_ball_detected and last_ball_position and frames_without_ball < MAX_FRAMES_WITHOUT_BALL:
+                    frames_without_ball += 1
+                    
+                    # Predict position based on velocity
+                    if ball_velocity:
+                        pred_x = last_ball_position[0] + ball_velocity[0]
+                        pred_y = last_ball_position[1] + ball_velocity[1]
+                        pred_w = last_ball_position[2]
+                        pred_h = last_ball_position[3]
+                        
+                        # Update predicted position
+                        last_ball_position = (pred_x, pred_y, pred_w, pred_h)
+                        
+                        # Draw predicted position (with lower confidence)
+                        x1 = int(pred_x - pred_w / 2)
+                        y1 = int(pred_y - pred_h / 2)
+                        x2 = int(pred_x + pred_w / 2)
+                        y2 = int(pred_y + pred_h / 2)
+                        
+                        basketball_detections.append({
+                            "bbox": [x1, y1, x2, y2],
+                            "confidence": 0.3,  # Lower confidence for predicted
+                            "class": "basketball",
+                            "predicted": True
+                        })
+                elif not current_ball_detected:
+                    # Reset tracking if ball lost for too long
+                    if frames_without_ball >= MAX_FRAMES_WITHOUT_BALL:
+                        last_ball_position = None
+                        ball_velocity = None
+                        frames_without_ball = 0
+                
                 # Pose Estimation
                 frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 pose_results = self.pose_model.process(frame_rgb)
                 
-                # Draw annotations
-                annotated_frame = self._draw_annotations(frame, detections, pose_results.pose_landmarks)
+                # Draw annotations (players + basketballs + court + hoop)
+                annotated_frame = self._draw_annotations(
+                    frame, 
+                    detections, 
+                    pose_results.pose_landmarks, 
+                    basketball_detections,
+                    court_info,
+                    hoop_info
+                )
                 out.write(annotated_frame)
+                
+                # Send annotated frame via WebSocket if connection exists
+                if video_id:
+                    try:
+                        from app.api.websocket_video import send_annotated_frame_async, has_connection
+                        if has_connection(video_id):
+                            # Send every Nth frame to reduce bandwidth (e.g., every 3rd frame for ~10fps)
+                            if frame_count % 3 == 0:
+                                success = await send_annotated_frame_async(video_id, annotated_frame)
+                                if success and frame_count % 30 == 0:  # Log every 30 frames sent
+                                    logger.debug(f"📡 Sent frame {frame_count} via WebSocket for {video_id}")
+                        elif frame_count == 0:
+                            logger.info(f"⚠️  No WebSocket connection for {video_id} - frames won't be streamed")
+                    except Exception as e:
+                        # Don't fail video processing if WebSocket fails
+                        if frame_count % 30 == 0:  # Log occasionally
+                            logger.debug(f"WebSocket frame send failed: {e}")
                 
                 # Store frame for action classification
                 # Resize to 224x224 for VideoMAE if needed, but classifier handles it?
@@ -336,10 +554,10 @@ class VideoProcessor:
                          "blocking", "picking", "ball_in_hand", "idle"]:
             all_probs[prob_key] = sum(getattr(t.action.probabilities, prob_key) for t in timeline) / len(timeline)
         
-        # Detect shot outcome if applicable
+        # Detect shot outcome if applicable (using court and hoop detection)
         shot_outcome = None
-        if "shot" in main_action or "free_throw" in main_action:
-            shot_outcome = self._detect_shot_outcome(all_detections)
+        if "shot" in main_action or "free_throw" in main_action or "layup" in main_action or "dunk" in main_action:
+            shot_outcome = self._detect_shot_outcome_with_court(ball_trajectory, hoop_info, court_info)
         
         # Generate recommendations
         # Convert PerformanceMetrics Pydantic object to dict for AI coach
@@ -374,7 +592,7 @@ class VideoProcessor:
         )
         
         return VideoAnalysisResult(
-            video_id=str(uuid.uuid4()),
+            video_id=video_id or str(uuid.uuid4()),
             action=main_action_classification,
             metrics=avg_metrics,
             recommendations=recommendations,
@@ -401,9 +619,56 @@ class VideoProcessor:
         return PerformanceMetrics(**metrics_dict)
 
     def _detect_shot_outcome(self, detections: List[List[Dict]]) -> Optional[ShotOutcome]:
-        """Detect shot outcome from detections"""
+        """Detect shot outcome from detections (legacy method)"""
         # This would require ball detection which we might not have fully implemented
         # For now, return None or a dummy outcome
+        return None
+    
+    def _detect_shot_outcome_with_court(
+        self, 
+        ball_trajectory: List[Tuple[float, float]],
+        hoop_info: Optional[Dict],
+        court_info: Optional[Dict]
+    ) -> Optional[ShotOutcome]:
+        """
+        Detect shot outcome using ball trajectory and hoop position
+        
+        Args:
+            ball_trajectory: List of (x, y) ball positions
+            hoop_info: Hoop detection information
+            court_info: Court detection information
+            
+        Returns:
+            ShotOutcome object or None
+        """
+        if not ball_trajectory or len(ball_trajectory) < 3:
+            return None
+        
+        if not hoop_info:
+            # Fallback to existing shot outcome detector
+            return None
+        
+        try:
+            # Use court detector to analyze shot outcome
+            hoop_center = hoop_info["center"]
+            hoop_bbox = hoop_info["bbox"]
+            
+            outcome_result = self.court_detector.detect_shot_outcome(
+                ball_trajectory,
+                hoop_center,
+                hoop_bbox
+            )
+            
+            if outcome_result and outcome_result.get("outcome") != "unknown":
+                return ShotOutcome(
+                    outcome=outcome_result["outcome"],
+                    confidence=outcome_result["confidence"],
+                    method=outcome_result["method"],
+                    make_probability=0.9 if outcome_result["outcome"] == "made" else 0.1
+                )
+        except Exception as e:
+            logger.debug(f"Shot outcome detection with court failed: {e}")
+        
         return None
 
 

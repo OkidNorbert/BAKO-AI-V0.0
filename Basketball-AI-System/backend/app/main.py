@@ -3,7 +3,7 @@ Basketball AI Performance Analysis - FastAPI Backend
 Main application with video upload and analysis endpoints
 """
 
-from fastapi import FastAPI, File, UploadFile, HTTPException, status, BackgroundTasks
+from fastapi import FastAPI, File, UploadFile, HTTPException, status, BackgroundTasks, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import logging
@@ -19,7 +19,7 @@ from app.core.config import settings
 from app.core.schemas import VideoAnalysisResult, HealthResponse, AnalysisStatus
 from app.services.video_processor import VideoProcessor
 from app.services.supabase_service import supabase_service
-from app.api import chat, websocket
+from app.api import chat, websocket, websocket_video
 
 # Suppress noisy warnings (optional - doesn't affect functionality)
 import warnings
@@ -56,6 +56,7 @@ app.add_middleware(
 # Include routers
 app.include_router(chat.router)
 app.include_router(websocket.router)
+app.include_router(websocket_video.router)
 
 # Initialize video processor
 video_processor: Optional[VideoProcessor] = None
@@ -132,6 +133,7 @@ def handle_supabase_upload(file_path: str, filename: str, result: dict):
 @app.post("/api/analyze", response_model=VideoAnalysisResult)
 async def analyze_video(
     video: UploadFile = File(...),
+    video_id: Optional[str] = Form(None),
     background_tasks: BackgroundTasks = None
 ):
     """
@@ -188,9 +190,15 @@ async def analyze_video(
             
         logger.info(f"📥 Video uploaded: {temp_filename} ({len(file_content)/(1024*1024):.2f}MB)")
 
-        # Process video (NOT async)
+        # Use provided video_id or generate new one for WebSocket streaming
+        if not video_id:
+            video_id = str(uuid.uuid4())
+        logger.info(f"📹 Video ID for streaming: {video_id}")
+        logger.info(f"   💡 Frontend should connect to: ws://localhost:8000/ws/video-stream/{video_id}")
+
+        # Process video
         try:
-            result = await video_processor.process_video(temp_path)
+            result = await video_processor.process_video(temp_path, video_id=video_id)
             
             # Upload to Supabase (Background Task)
             if background_tasks:

@@ -16,10 +16,14 @@ const api = axios.create({
  */
 export async function analyzeVideo(
   file: File,
-  onProgress?: (progress: UploadProgress) => void
+  onProgress?: (progress: UploadProgress) => void,
+  videoId?: string
 ): Promise<VideoAnalysisResult> {
   const formData = new FormData();
   formData.append('video', file);
+  if (videoId) {
+    formData.append('video_id', videoId);
+  }
 
   try {
     // Upload progress callback
