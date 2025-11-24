@@ -3,7 +3,7 @@ Basketball AI Performance Analysis - FastAPI Backend
 Main application with video upload and analysis endpoints
 """
 
-from fastapi import FastAPI, File, UploadFile, HTTPException, status
+from fastapi import FastAPI, File, UploadFile, HTTPException, status, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import logging
@@ -11,13 +11,15 @@ import torch
 from pathlib import Path
 import aiofiles
 import uuid
+import shutil
 from datetime import datetime
 from typing import Optional
 
 from app.core.config import settings
 from app.core.schemas import VideoAnalysisResult, HealthResponse, AnalysisStatus
 from app.services.video_processor import VideoProcessor
-from app.api import chat
+from app.services.supabase_service import supabase_service
+from app.api import chat, websocket
 
 # Suppress noisy warnings (optional - doesn't affect functionality)
 import warnings
@@ -53,6 +55,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(chat.router)
+app.include_router(websocket.router)
 
 # Initialize video processor
 video_processor: Optional[VideoProcessor] = None
@@ -108,8 +111,29 @@ async def health_check():
     )
 
 
+def handle_supabase_upload(file_path: str, filename: str, result: dict):
+    """Background task to upload to Supabase and clean up"""
+    try:
+        # Upload video
+        video_url = supabase_service.upload_video(file_path, filename)
+        
+        # Save result
+        supabase_service.save_analysis(result, video_url)
+        
+    except Exception as e:
+        logger.error(f"Background Supabase task failed: {e}")
+    finally:
+        # Clean up temp file
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            logger.info(f"Deleted temp file: {file_path}")
+
+
 @app.post("/api/analyze", response_model=VideoAnalysisResult)
-async def analyze_video(video: UploadFile = File(...)):
+async def analyze_video(
+    video: UploadFile = File(...),
+    background_tasks: BackgroundTasks = None
+):
     """
     Analyze basketball video
     
@@ -131,49 +155,85 @@ async def analyze_video(video: UploadFile = File(...)):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="No filename provided"
         )
-    
-    file_ext = Path(video.filename).suffix.lower()
-    if file_ext not in settings.ALLOWED_VIDEO_EXTENSIONS:
+
+    ext = os.path.splitext(video.filename)[1].lower()
+    if ext not in settings.ALLOWED_VIDEO_EXTENSIONS:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid file type. Allowed: {settings.ALLOWED_VIDEO_EXTENSIONS}"
         )
     
-    # Read file content
-    content = await video.read()
-    
-    if len(content) > settings.MAX_UPLOAD_SIZE:
+    # Check file size
+    file_content = await video.read()
+    if len(file_content) > settings.MAX_UPLOAD_SIZE:
         raise HTTPException(
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail=f"File too large. Max size: {settings.MAX_UPLOAD_SIZE / (1024*1024)}MB"
+            detail=f"File too large. Max size: {settings.MAX_UPLOAD_SIZE / (1024*1024):.2f}MB"
         )
     
-    # Save video temporarily
-    video_id = str(uuid.uuid4())
-    temp_video_path = Path(settings.UPLOAD_DIR) / f"{video_id}{file_ext}"
+    # Create temp file
+    temp_filename = f"{uuid.uuid4()}{ext}"
+    temp_path = os.path.join(settings.UPLOAD_DIR, temp_filename)
     
     try:
-        async with aiofiles.open(temp_video_path, 'wb') as f:
-            await f.write(content)
-        
-        logger.info(f"📥 Video uploaded: {video_id} ({len(content)/(1024*1024):.2f}MB)")
-        
-        # Process video
-        result = await video_processor.process_video(str(temp_video_path))
-        
-        return result
-        
+        # Save uploaded file
+        async with aiofiles.open(temp_path, "wb") as buffer:
+            await buffer.write(file_content)
+            
+        logger.info(f"📥 Video uploaded: {temp_filename} ({len(file_content)/(1024*1024):.2f}MB)")
+
+        # Process video (NOT async)
+        try:
+            result = await video_processor.process_video(temp_path)
+            
+            # Upload to Supabase (Background Task)
+            if background_tasks:
+                background_tasks.add_task(handle_supabase_upload, temp_path, temp_filename, result.dict())
+            else:
+                # If no background tasks, clean up immediately
+                if os.path.exists(temp_path):
+                    os.remove(temp_path)
+            
+            return result
+            
+        except ValueError as e:
+            # Handle specific errors from video processor
+            error_msg = str(e)
+            if "Insufficient frames with detected poses" in error_msg:
+                logger.warning(f"⚠️ Analysis rejected: {error_msg}")
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail={
+                        "code": "NO_PLAYER_DETECTED",
+                        "message": "No basketball player detected in the video.",
+                        "suggestions": [
+                            "Ensure the player is fully visible in the frame",
+                            "Check for good lighting conditions",
+                            "Make sure the video contains basketball action",
+                            "Try a video with a clear view of the player"
+                        ]
+                    }
+                )
+            logger.error(f"❌ Analysis failed (ValueError): {e}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e)
+            )
+            
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+        raise
     except Exception as e:
         logger.error(f"❌ Analysis failed: {e}")
+        # Cleanup
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Video analysis failed: {str(e)}"
         )
-    
-    finally:
-        # Cleanup
-        if temp_video_path.exists():
-            temp_video_path.unlink()
 
 
 @app.get("/api/results/{video_id}", response_model=VideoAnalysisResult)

@@ -67,6 +67,15 @@ class ShotOutcome(BaseModel):
     make_probability: float = Field(ge=0.0, le=1.0, description="Statistical probability of make")
 
 
+class TimelineSegment(BaseModel):
+    """Analysis result for a specific time segment"""
+    start_time: float = Field(description="Start time in seconds")
+    end_time: float = Field(description="End time in seconds")
+    action: ActionClassification
+    metrics: PerformanceMetrics
+    shot_outcome: Optional[ShotOutcome] = None
+
+
 class VideoAnalysisResult(BaseModel):
     """Complete video analysis result"""
     video_id: str
@@ -74,6 +83,9 @@ class VideoAnalysisResult(BaseModel):
     metrics: PerformanceMetrics
     recommendations: List[Recommendation]
     shot_outcome: Optional[ShotOutcome] = Field(default=None, description="Shot outcome (only for shooting actions)")
+    timeline: Optional[List[TimelineSegment]] = Field(default=None, description="Timeline of actions for long videos")
+    annotated_video_url: Optional[str] = None
+    annotated_frame: Optional[str] = None  # Base64 string for live analysis
     keypoints: Optional[List] = None
     timestamp: datetime = Field(default_factory=datetime.now)
 

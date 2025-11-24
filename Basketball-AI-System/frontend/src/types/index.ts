@@ -12,20 +12,20 @@ export interface ActionProbabilities {
   three_point_shot: number;
   layup: number;
   dunk: number;
-  
+
   // Ball handling
   dribbling: number;
   passing: number;
-  
+
   // Movement
   defense: number;
   running: number;
   walking: number;
-  
+
   // Game actions
   blocking: number;
   picking: number;
-  
+
   // Other
   ball_in_hand: number;
   idle: number;
@@ -57,6 +57,7 @@ export interface VideoAnalysisResult {
   metrics: PerformanceMetrics;
   recommendations: Recommendation[];
   keypoints?: number[][][]; // For visualization
+  annotated_video_url?: string;
   timestamp: string;
 }
 

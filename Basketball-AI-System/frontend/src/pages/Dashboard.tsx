@@ -9,6 +9,8 @@ import ProgressChart from '../components/ProgressChart';
 import { analyzeVideo, getHistory } from '../services/api';
 import type { VideoAnalysisResult, UploadProgress, HistoricalData } from '../types';
 
+import { Link } from 'react-router-dom';
+
 export default function Dashboard() {
   const [uploadProgress, setUploadProgress] = useState<UploadProgress>({
     progress: 0,
@@ -48,15 +50,15 @@ export default function Dashboard() {
 
       setUploadProgress({ progress: 100, status: 'complete' });
       setAnalysisResult(result);
-      
+
       // Reload history to include new analysis
       await loadHistoricalData();
     } catch (err: any) {
       console.error('Upload error:', err);
-      
+
       // Handle different error types
       let errorMessage = 'Failed to analyze video. Please try again.';
-      
+
       if (err?.code === 'NO_PLAYER_DETECTED') {
         // Show structured error with suggestions
         errorMessage = err.originalMessage || err.message;
@@ -76,14 +78,14 @@ export default function Dashboard() {
             errorMessage += '\n\n' + errorData.suggestions.map((s: string, i: number) => `${i + 1}. ${s}`).join('\n');
           }
         } else if (errorData.detail) {
-          errorMessage = typeof errorData.detail === 'string' 
-            ? errorData.detail 
+          errorMessage = typeof errorData.detail === 'string'
+            ? errorData.detail
             : errorData.detail.message || errorMessage;
         }
       } else if (err?.message) {
         errorMessage = err.message;
       }
-      
+
       setError(errorMessage);
       setUploadProgress({ progress: 0, status: 'error', message: 'Upload failed' });
     }
@@ -103,9 +105,21 @@ export default function Dashboard() {
                 Upload a video to analyze your basketball performance
               </p>
             </div>
-            <button className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
-              View History
-            </button>
+            <div className="flex gap-4">
+              <Link
+                to="/live"
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 font-medium"
+              >
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+                </span>
+                Live Analysis
+              </Link>
+              <button className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                View History
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -153,6 +167,34 @@ export default function Dashboard() {
           {/* Analysis Results */}
           {analysisResult && (
             <>
+              {/* Annotated Video Player */}
+              {analysisResult.annotated_video_url && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700 mb-8"
+                >
+                  <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                      <svg className="w-5 h-5 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      AI Analysis View
+                    </h2>
+                  </div>
+                  <div className="aspect-video bg-black relative">
+                    <video
+                      src={analysisResult.annotated_video_url}
+                      controls
+                      className="w-full h-full"
+                      poster="/placeholder-video-thumb.jpg"
+                    >
+                      Your browser does not support the video tag.
+                    </video>
+                  </div>
+                </motion.div>
+              )}
+
               {/* Action Classification */}
               <ActionResult
                 action={analysisResult.action.label}

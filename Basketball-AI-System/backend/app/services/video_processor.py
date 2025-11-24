@@ -17,7 +17,7 @@ from app.models.action_classifier import ActionClassifier
 from app.models.metrics_engine import PerformanceMetricsEngine
 from app.models.shot_outcome_detector import ShotOutcomeDetector
 from app.models.ai_coach import AICoach
-from app.core.schemas import VideoAnalysisResult, ActionClassification, PerformanceMetrics, ActionProbabilities, Recommendation, ShotOutcome
+from app.core.schemas import VideoAnalysisResult, ActionClassification, PerformanceMetrics, ActionProbabilities, Recommendation, ShotOutcome, TimelineSegment
 
 logger = logging.getLogger(__name__)
 
@@ -138,200 +138,287 @@ class VideoProcessor:
             logger.error(f"❌ Failed to initialize models: {e}")
             raise
     
-    async def process_video(
-        self,
-        video_path: str,
-        target_fps: int = 10
-    ) -> VideoAnalysisResult:
-        """
-        Process video and extract all analysis
+    def _draw_annotations(self, frame: np.ndarray, detections: List[Dict], pose_landmarks) -> np.ndarray:
+        """Draw bounding boxes and pose landmarks on frame"""
+        annotated_frame = frame.copy()
         
-        Args:
-            video_path: Path to video file
-            target_fps: Target FPS for processing (10 = 1 frame every 0.1s)
+        # Draw pose landmarks
+        if pose_landmarks:
+            self.mp_drawing.draw_landmarks(
+                annotated_frame,
+                pose_landmarks,
+                self.mp_pose.POSE_CONNECTIONS,
+                landmark_drawing_spec=self.mp_drawing_styles.get_default_pose_landmarks_style()
+            )
             
-        Returns:
-            VideoAnalysisResult with complete analysis
+        # Draw bounding boxes
+        for det in detections:
+            bbox = det['bbox']
+            conf = det['confidence']
+            cls = det['class']
+            
+            x1, y1, x2, y2 = map(int, bbox)
+            
+            # Draw box
+            cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            
+            # Draw label
+            label = f"{cls} {conf:.2f}"
+            cv2.putText(annotated_frame, label, (x1, y1 - 10), 
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                       
+        return annotated_frame
+
+    async def process_video(self, video_path: str) -> VideoAnalysisResult:
         """
-        video_id = str(uuid.uuid4())
-        logger.info(f"🎬 Processing video: {video_id}")
-        
+        Process video file and return analysis results
+        """
+        if not os.path.exists(video_path):
+            raise FileNotFoundError(f"Video file not found: {video_path}")
+            
         cap = cv2.VideoCapture(video_path)
-        
         if not cap.isOpened():
-            raise ValueError(f"Cannot open video: {video_path}")
-        
-        fps = cap.get(cv2.CAP_PROP_FPS)
+            raise ValueError("Could not open video file")
+            
+        # Video properties
+        fps = int(cap.get(cv2.CAP_PROP_FPS))
+        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         
-        # Calculate frame skip for target FPS
-        frame_skip = max(1, int(fps / target_fps))
+        # Prepare output video
+        output_filename = f"processed_{os.path.basename(video_path)}"
+        output_path = os.path.join(os.path.dirname(video_path), output_filename)
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
         
-        # Storage
-        all_frames = []
+        frames_buffer = []
+        all_detections = []
+        all_metrics = []
+        timeline = []
+        
+        frame_count = 0
+        window_size = settings.SEQUENCE_LENGTH
+        stride = 8  # Overlap windows
+        
+        try:
+            while cap.isOpened():
+                ret, frame = cap.read()
+                if not ret:
+                    break
+                    
+                # Process frame for detection
+                # YOLO Detection
+                results = self.yolo_model(frame, verbose=False)[0]
+                detections = []
+                
+                for box in results.boxes:
+                    cls = int(box.cls[0])
+                    conf = float(box.conf[0])
+                    
+                    # Filter for person class (usually 0 in COCO)
+                    if cls == 0 and conf > settings.CONFIDENCE_THRESHOLD:
+                        detections.append({
+                            "bbox": box.xyxy[0].tolist(),
+                            "confidence": conf,
+                            "class": "player"
+                        })
+                
+                # Pose Estimation
+                frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                pose_results = self.pose_model.process(frame_rgb)
+                
+                # Draw annotations
+                annotated_frame = self._draw_annotations(frame, detections, pose_results.pose_landmarks)
+                out.write(annotated_frame)
+                
+                if pose_results.pose_landmarks:
+                    # Extract keypoints
+                    keypoints = []
+                    for landmark in pose_results.pose_landmarks.landmark:
+                        keypoints.append([landmark.x, landmark.y, landmark.z])
+                    
+                    frames_buffer.append(keypoints)
+                    all_detections.append(detections)
+                else:
+                    # If no pose detected, append None or handle gracefully
+                    # For sequence processing, we need continuous frames
+                    # If we skip, the sequence is broken.
+                    # Let's append empty keypoints but mark as invalid?
+                    # Or just skip this frame for action classification but keep for timeline?
+                    pass
+                
+                # Process window if buffer is full
+                if len(frames_buffer) >= window_size:
+                    # Create window
+                    window = np.array(frames_buffer[-window_size:])
+                    
+                    # Action Classification
+                    action_probs = self._classify_action(window)
+                    action_label = self._get_action_label(action_probs)
+                    
+                    # Calculate Metrics for this window
+                    window_metrics = self._calculate_metrics(window)
+                    all_metrics.append(window_metrics)
+                    
+                    # Add to timeline
+                    timestamp = frame_count / fps
+                    timeline.append(TimelineSegment(
+                        start_time=max(0, timestamp - (window_size/fps)),
+                        end_time=timestamp,
+                        action=action_label,
+                        confidence=float(np.max(action_probs)),
+                        metrics=window_metrics
+                    ))
+                    
+                    # Slide window
+                    frames_buffer = frames_buffer[stride:]
+                
+                frame_count += 1
+                
+        finally:
+            cap.release()
+            out.release()
+            
+        if not timeline:
+            raise ValueError("Insufficient frames with detected poses to analyze video")
+            
+        # Aggregate results
+        # Find most frequent action
+        # Generate recommendations
+        recommendations = self.ai_coach.analyze_performance(
+            {
+                "label": main_action,
+                "confidence": avg_confidence,
+                "probabilities": {} # We could aggregate probs too if needed
+            },
+            avg_metrics
+        )
+        # Detect shot outcome if applicable
+        shot_outcome = None
+        if "shot" in main_action:
+            shot_outcome = self._detect_shot_outcome(all_detections)
+
+        # Upload annotated video to Supabase if available
+        annotated_video_url = None
+        try:
+            from app.services.supabase_service import supabase_service
+            if supabase_service.enabled:
+                annotated_video_url = supabase_service.upload_video(output_path, output_filename)
+        except Exception as e:
+            logger.error(f"Failed to upload annotated video: {e}")
+
+        return VideoAnalysisResult(
+            action={
+                "label": main_action,
+                "confidence": float(avg_confidence),
+                "probabilities": {} # Simplified
+            },
+            metrics=avg_metrics,
+            recommendations=recommendations,
+            shot_outcome=shot_outcome,
+            timeline=timeline,
+            annotated_video_url=annotated_video_url
+        )
+
+
+    def _map_probabilities(self, model_probs: Dict[str, float]) -> Dict[str, float]:
+        """Map model class names to schema class names"""
+        mapping = {
+            "free_throw_shot": "free_throw",
+            "2point_shot": "two_point_shot",
+            "3point_shot": "three_point_shot",
+            "dribbling": "dribbling",
+            "passing": "passing",
+            "defense": "defense",
+            "idle": "idle",
+        }
+        
+        schema_probs = {
+            "free_throw": 0.0, "two_point_shot": 0.0, "three_point_shot": 0.0,
+            "layup": 0.0, "dunk": 0.0, "dribbling": 0.0, "passing": 0.0,
+            "defense": 0.0, "running": 0.0, "walking": 0.0,
+            "blocking": 0.0, "picking": 0.0, "ball_in_hand": 0.0, "idle": 0.0,
+        }
+        
+        for model_key, prob_value in model_probs.items():
+            schema_key = mapping.get(model_key, None)
+            if schema_key:
+                schema_probs[schema_key] = prob_value
+        
+        return schema_probs
+
+    def _aggregate_metrics(self, segments: List[TimelineSegment]) -> PerformanceMetrics:
+        """Average metrics across segments"""
+        if not segments:
+            return PerformanceMetrics(
+                jump_height=0.0, movement_speed=0.0, form_score=0.0,
+                reaction_time=0.0, pose_stability=0.0, energy_efficiency=0.0
+            )
+        
+        count = len(segments)
+        return PerformanceMetrics(
+            jump_height=sum(s.metrics.jump_height for s in segments) / count,
+            movement_speed=sum(s.metrics.movement_speed for s in segments) / count,
+            form_score=sum(s.metrics.form_score for s in segments) / count,
+            reaction_time=sum(s.metrics.reaction_time for s in segments) / count,
+            pose_stability=sum(s.metrics.pose_stability for s in segments) / count,
+            energy_efficiency=sum(s.metrics.energy_efficiency for s in segments) / count,
+        )
+
+    async def process_sequence(self, frames: List[np.ndarray]) -> Optional[VideoAnalysisResult]:
+        """
+        Process a sequence of frames (real-time)
+        """
+        if not frames:
+            return None
+            
+        # Extract keypoints for all frames
         all_keypoints = []
-        frame_idx = 0
-        processed_frames = 0
+        valid_frames = []
         
-        logger.info(f"   Video FPS: {fps}, Total frames: {total_frames}")
-        logger.info(f"   Processing every {frame_skip} frames (target {target_fps} FPS)")
-        
-        while cap.isOpened() and processed_frames < 60:  # Limit to ~6 seconds
-            ret, frame = cap.read()
-            if not ret:
-                break
-            
-            # Skip frames to match target FPS
-            if frame_idx % frame_skip != 0:
-                frame_idx += 1
-                continue
-            
-            # Step 1: Detect player with YOLOv11
+        for frame in frames:
+            # Detect player
             detections = self.player_detector.detect_players(frame, return_largest=True)
-            
             if detections:
                 bbox = detections[0][:4]
-                
-                # Step 2: Extract ROI
                 roi = self.player_detector.extract_roi(frame, bbox)
-                
-                # Step 3: Extract pose from ROI
                 pose_result = self.pose_extractor.extract_keypoints(roi)
                 
                 if pose_result:
-                    keypoints_2d, keypoints_3d, confidence = pose_result
-                    
-                    # Store for action classification
-                    rgb_frame = cv2.cvtColor(roi, cv2.COLOR_BGR2RGB)
-                    all_frames.append(rgb_frame)
+                    keypoints_2d, _, _ = pose_result
                     all_keypoints.append(keypoints_2d)
-                    
-                    processed_frames += 1
+                    valid_frames.append(cv2.cvtColor(roi, cv2.COLOR_BGR2RGB))
+        
+        if len(valid_frames) < 8: # Minimum frames for valid analysis
+            return None
             
-            frame_idx += 1
-        
-        cap.release()
-        
-        logger.info(f"   Extracted {processed_frames} frames with poses")
-        
-        if len(all_frames) < 8:
-            raise ValueError("Insufficient frames with detected poses. Please ensure player is clearly visible.")
-        
-        # Step 4: Classify action using VideoMAE/TimeSformer
+        # Classify action
         action_label, confidence, probabilities = self.action_classifier.classify(
-            all_frames,
+            valid_frames,
             return_probabilities=True
         )
         
-        logger.info(f"   🎯 Action detected: {action_label} ({confidence*100:.1f}%)")
-        
-        # Step 5: Compute performance metrics (NEW!)
+        # Compute metrics
         metrics_dict = self.metrics_engine.compute_all_metrics(
             all_keypoints,
             action_label
         )
         
-        logger.info(f"   📊 Metrics calculated: Jump={metrics_dict['jump_height']:.2f}m, Speed={metrics_dict['movement_speed']:.1f}m/s")
+        # Map probabilities
+        mapped_probs = self._map_probabilities(probabilities)
         
-        # Step 6: Detect shot outcome (for shooting actions)
-        shot_outcome_dict = self.shot_outcome_detector.detect_outcome(
-            all_frames,
-            all_keypoints,
-            action_label,
-            metrics_dict['form_score'],
-            metrics_dict
-        )
-        
-        shot_outcome_obj = None
-        if shot_outcome_dict['outcome'] != 'not_applicable':
-            shot_outcome_obj = ShotOutcome(**shot_outcome_dict)
-            logger.info(f"   🎯 Shot outcome: {shot_outcome_dict['outcome']} ({shot_outcome_dict['confidence']*100:.1f}%) via {shot_outcome_dict['method']}")
-        
-        # Step 7: Generate AI-powered recommendations (replaces hardcoded)
-        try:
-            recommendations_list = self.ai_coach.generate_initial_recommendations(
-                action_label,
-                metrics_dict,
-                shot_outcome_dict if shot_outcome_dict['outcome'] != 'not_applicable' else None
-            )
-            logger.info("   🤖 AI Coach generated personalized recommendations")
-        except Exception as e:
-            logger.warning(f"   ⚠️  AI Coach failed: {e}. Using fallback recommendations.")
-            # Fallback to metrics engine
-            recommendations_list = self.metrics_engine.generate_recommendations(
-                metrics_dict,
-                action_label
-            )
-        
-        # Map model class names to schema class names
-        def map_probabilities(model_probs: Dict[str, float]) -> Dict[str, float]:
-            """Map model class names to schema class names"""
-            # Model uses: free_throw_shot, 2point_shot, 3point_shot, dribbling, passing, defense, idle
-            # Schema expects: free_throw, two_point_shot, three_point_shot, layup, dunk, dribbling, 
-            #                 passing, defense, running, walking, blocking, picking, ball_in_hand, idle
-            mapping = {
-                # Shooting types
-                "free_throw_shot": "free_throw",
-                "2point_shot": "two_point_shot",
-                "3point_shot": "three_point_shot",
-                # Ball handling
-                "dribbling": "dribbling",
-                "passing": "passing",
-                # Movement
-                "defense": "defense",
-                # Other
-                "idle": "idle",
-            }
-            
-            # Initialize all schema fields with 0.0
-            schema_probs = {
-                "free_throw": 0.0,
-                "two_point_shot": 0.0,
-                "three_point_shot": 0.0,
-                "layup": 0.0,
-                "dunk": 0.0,
-                "dribbling": 0.0,
-                "passing": 0.0,
-                "defense": 0.0,
-                "running": 0.0,
-                "walking": 0.0,
-                "blocking": 0.0,
-                "picking": 0.0,
-                "ball_in_hand": 0.0,
-                "idle": 0.0,
-            }
-            
-            # Map model probabilities to schema
-            for model_key, prob_value in model_probs.items():
-                schema_key = mapping.get(model_key, None)
-                if schema_key:
-                    schema_probs[schema_key] = prob_value
-                else:
-                    # If unknown class, log it but don't fail
-                    logger.debug(f"Unknown model class: {model_key}, skipping")
-            
-            return schema_probs
-        
-        # Map probabilities to schema format
-        mapped_probabilities = map_probabilities(probabilities)
-        
-        # Create response
+        # Create result (simplified for real-time)
         result = VideoAnalysisResult(
-            video_id=video_id,
+            video_id="realtime",
             action=ActionClassification(
                 label=action_label,
                 confidence=confidence,
-                probabilities=ActionProbabilities(**mapped_probabilities)
+                probabilities=ActionProbabilities(**mapped_probs)
             ),
             metrics=PerformanceMetrics(**metrics_dict),
-            recommendations=[
-                Recommendation(**rec) for rec in recommendations_list
-            ],
-            shot_outcome=shot_outcome_obj,
+            recommendations=[], # Skip recommendations for real-time to save time
             timestamp=datetime.now()
         )
         
-        logger.info(f"✅ Analysis complete for {video_id}")
-        
         return result
-

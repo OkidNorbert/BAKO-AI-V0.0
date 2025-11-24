@@ -85,6 +85,10 @@ class Settings(BaseSettings):
     HOST: str = "0.0.0.0"
     PORT: int = 8000
     WORKERS: int = 4
+
+    # Supabase Settings
+    SUPABASE_URL: str = "https://qpvkuhcmhntsamgabovo.supabase.co"
+    SUPABASE_KEY: str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFwdmt1aGNtaG50c2FtZ2Fib3ZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3Mzk4NDMsImV4cCI6MjA3OTMxNTg0M30.atEXiMulOroQLzXkZpyI5ERj59tBDI0_zLAl2Yu8bJk"
     
     class Config:
         env_file = ".env"
