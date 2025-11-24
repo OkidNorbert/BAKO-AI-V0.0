@@ -687,7 +687,9 @@ Classes: {len(class_names)}
             f.write("=" * 80 + "\n")
             f.write("PER-CLASS METRICS\n")
             f.write("=" * 80 + "\n\n")
-            f.write(classification_report(y_true, y_pred, target_names=class_names, digits=3))
+            # Specify labels to ensure all classes are included in the report
+            f.write(classification_report(y_true, y_pred, target_names=class_names, 
+                                         labels=list(range(num_classes)), digits=3))
             f.write("\n" + "=" * 80 + "\n")
             f.write("CONFUSION MATRIX\n")
             f.write("=" * 80 + "\n\n")
