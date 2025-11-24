@@ -1,0 +1,14 @@
+[Unit]
+Description=Cloudflare Tunnel for Basketball AI
+After=network.target
+
+[Service]
+Type=simple
+User=student
+ExecStart=/usr/local/bin/cloudflared tunnel --config /home/student/.cloudflared/config.yml run basketball-ai
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+

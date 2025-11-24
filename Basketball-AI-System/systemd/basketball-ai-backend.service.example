@@ -1,0 +1,16 @@
+[Unit]
+Description=Basketball AI Backend
+After=network.target
+
+[Service]
+Type=simple
+User=student
+WorkingDirectory=/home/student/Documents/Final-Year-Project/Basketball-AI-System/backend
+Environment="PATH=/home/student/Documents/Final-Year-Project/Basketball-AI-System/backend/venv/bin"
+ExecStart=/home/student/Documents/Final-Year-Project/Basketball-AI-System/backend/venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+

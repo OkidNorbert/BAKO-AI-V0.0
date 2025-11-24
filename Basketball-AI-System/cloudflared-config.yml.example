@@ -1,0 +1,14 @@
+# Cloudflare Tunnel Configuration Example
+# Copy this to ~/.cloudflared/config.yml and update with your tunnel ID
+
+tunnel: <YOUR_TUNNEL_ID>
+credentials-file: /home/student/.cloudflared/<TUNNEL_ID>.json
+
+ingress:
+  # Backend API - Replace with your actual domain or random subdomain
+  - hostname: api.yourdomain.com
+    service: http://localhost:8000
+  
+  # Catch-all rule (must be last)
+  - service: http_status:404
+

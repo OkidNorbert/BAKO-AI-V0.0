@@ -23,6 +23,10 @@ class Settings(BaseSettings):
         "http://localhost:3000",
         "http://localhost:5173",
         "http://localhost:8080",
+        # Vercel deployments (add your actual domain)
+        "https://*.vercel.app",
+        # Add your custom domain here if you have one
+        # "https://yourdomain.com",
     ]
     
     # File Upload
