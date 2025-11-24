@@ -58,7 +58,12 @@ class SupabaseService:
             return public_url
             
         except Exception as e:
-            logger.error(f"❌ Failed to upload video to Supabase: {e}")
+            error_str = str(e).lower()
+            if "not found" in error_str or "404" in error_str or "bucket" in error_str:
+                logger.debug(f"⚠️  Supabase bucket not configured. Video upload skipped. (This is optional)")
+                logger.debug("   💡 To enable: Create 'videos' bucket in Supabase Storage dashboard")
+            else:
+                logger.warning(f"⚠️  Video upload failed: {e}")
             return None
 
     def _serialize_for_json(self, obj: Any) -> Any:
@@ -108,12 +113,29 @@ class SupabaseService:
                 "raw_result": serialized_result  # Now properly serialized
             }
             
+            # Check if table exists by trying to query it first
+            try:
+                self.client.table(table_name).select("id").limit(1).execute()
+            except Exception as table_check_error:
+                error_str = str(table_check_error).lower()
+                if "not found" in error_str or "404" in error_str or "pgrst205" in error_str or "table" in error_str:
+                    logger.debug(f"⚠️  Supabase table '{table_name}' not found. Analysis save skipped. (This is optional)")
+                    logger.debug("   💡 To enable: Run supabase_setup.sql in Supabase SQL Editor")
+                    return False
+                raise  # Re-raise if it's a different error
+            
+            # Table exists, insert data
             self.client.table(table_name).insert(data).execute()
             logger.info("✅ Analysis result saved to Supabase DB")
             return True
             
         except Exception as e:
-            logger.error(f"❌ Failed to save analysis to Supabase DB: {e}")
+            error_str = str(e).lower()
+            if "not found" in error_str or "404" in error_str or "pgrst205" in error_str or "table" in error_str:
+                logger.debug(f"⚠️  Supabase table not configured. Analysis save skipped. (This is optional)")
+                logger.debug("   💡 To enable: Run supabase_setup.sql in Supabase SQL Editor")
+            else:
+                logger.warning(f"⚠️  Failed to save analysis to Supabase DB: {e}")
             return False
 
 # Singleton instance

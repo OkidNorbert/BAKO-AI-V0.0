@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { Upload, Film, X, CheckCircle, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../utils/cn';
@@ -13,19 +13,6 @@ export default function VideoUpload({ onUpload, isUploading = false, progress = 
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [error, setError] = useState<string>('');
-  const [preview, setPreview] = useState<string>('');
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-
-  // Force video to show first frame when preview changes
-  useEffect(() => {
-    if (preview && videoRef.current) {
-      const video = videoRef.current;
-      video.load(); // Reload video
-      video.currentTime = 0.1; // Set to first frame
-      video.style.visibility = 'visible';
-      video.style.opacity = '1';
-    }
-  }, [preview]);
 
   const validateFile = (file: File): string | null => {
     // Check file extension (backend validates by extension)
@@ -67,17 +54,7 @@ export default function VideoUpload({ onUpload, isUploading = false, progress = 
     }
 
     setError('');
-
-    // Revoke old preview URL if exists
-    if (preview) {
-      URL.revokeObjectURL(preview);
-    }
-
     setSelectedFile(file);
-
-    // Create preview
-    const url = URL.createObjectURL(file);
-    setPreview(url);
   };
 
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -114,11 +91,7 @@ export default function VideoUpload({ onUpload, isUploading = false, progress = 
 
   const clearFile = () => {
     setSelectedFile(null);
-    setPreview('');
     setError('');
-    if (preview) {
-      URL.revokeObjectURL(preview);
-    }
   };
 
   return (
@@ -194,7 +167,7 @@ export default function VideoUpload({ onUpload, isUploading = false, progress = 
           </motion.div>
         ) : (
           <motion.div
-            key="preview"
+            key="selected"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
@@ -224,135 +197,11 @@ export default function VideoUpload({ onUpload, isUploading = false, progress = 
               )}
             </div>
 
-            {preview && (
-              <div
-                className="w-full rounded-lg bg-black relative overflow-hidden"
-                style={{
-                  minHeight: '300px',
-                  maxHeight: '600px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  position: 'relative',
-                  aspectRatio: 'auto'
-                }}
-              >
-                {error && error.includes('preview') ? (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-6 text-center bg-gray-900">
-                    <AlertCircle className="w-12 h-12 text-yellow-500 mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">Preview Not Available</h3>
-                    <p className="text-gray-400 max-w-md mb-6">
-                      This video format cannot be played in the browser, but we can still analyze it.
-                    </p>
-                    <div className="flex items-center space-x-2 text-sm text-gray-500">
-                      <Film className="w-4 h-4" />
-                      <span>{selectedFile?.name}</span>
-                    </div>
-                  </div>
-                ) : (
-                  <video
-                    ref={videoRef}
-                    key={preview}
-                    src={preview}
-                    controls
-                    preload="auto"
-                    playsInline
-                    style={{
-                      width: '100%',
-                      height: 'auto',
-                      maxHeight: '600px',
-                      display: 'block',
-                      backgroundColor: '#000000',
-                      objectFit: 'contain',
-                      visibility: 'visible',
-                      opacity: '1',
-                      margin: '0 auto'
-                    }}
-                    onError={(e) => {
-                      console.error('❌ Video load error:', e);
-                      const target = e.currentTarget;
-                      const error = target.error;
-                      console.error('Video error details:', {
-                        error: error ? {
-                          message: error.message,
-                          code: error.code
-                        } : 'No error object',
-                        networkState: target.networkState,
-                        readyState: target.readyState,
-                        src: target.src,
-                        currentSrc: target.currentSrc
-                      });
-                      // Set a specific error for preview failure, but don't block upload
-                      setError('Failed to load video preview. You can still analyze this video.');
-                    }}
-                    onLoadStart={() => {
-                      console.log('🔄 Video load started');
-                    }}
-                    onLoadedMetadata={(e) => {
-                      const video = e.currentTarget;
-                      const aspectRatio = video.videoWidth / video.videoHeight;
-                      const isLandscape = aspectRatio > 1;
-
-                      console.log('✅ Video metadata loaded:', {
-                        width: video.videoWidth,
-                        height: video.videoHeight,
-                        aspectRatio: aspectRatio.toFixed(2),
-                        orientation: isLandscape ? 'landscape' : 'portrait',
-                        duration: video.duration,
-                        readyState: video.readyState
-                      });
-
-                      // Adjust container for landscape videos
-                      if (isLandscape) {
-                        const container = video.parentElement;
-                        if (container) {
-                          container.style.minHeight = '300px';
-                          container.style.maxHeight = '600px';
-                          // For landscape, let video determine height based on width
-                          video.style.width = '100%';
-                          video.style.height = 'auto';
-                        }
-                      } else {
-                        // For portrait, maintain reasonable height
-                        const container = video.parentElement;
-                        if (container) {
-                          container.style.minHeight = '400px';
-                          container.style.maxHeight = '800px';
-                        }
-                      }
-
-                      // Force video to show first frame
-                      video.currentTime = 0.1;
-                    }}
-                    onLoadedData={(e) => {
-                      console.log('✅ Video data loaded');
-                      const video = e.currentTarget;
-                      video.style.visibility = 'visible';
-                      video.style.opacity = '1';
-                    }}
-                    onCanPlay={(e) => {
-                      console.log('✅ Video can play');
-                      const video = e.currentTarget;
-                      video.style.visibility = 'visible';
-                      video.style.opacity = '1';
-                    }}
-                  >
-                    Your browser does not support the video tag.
-                  </video>
-                )}
-                {!selectedFile && !error && (
-                  <div className="absolute inset-0 flex items-center justify-center text-white">
-                    <p>Loading video preview...</p>
-                  </div>
-                )}
-              </div>
-            )}
-
             {isUploading ? (
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-600 dark:text-gray-400">
-                    Processing video...
+                    Processing video... Real-time analysis will appear below
                   </span>
                   <span className="font-semibold text-primary-600 dark:text-primary-400">
                     {progress}%
@@ -373,7 +222,7 @@ export default function VideoUpload({ onUpload, isUploading = false, progress = 
                 className="w-full btn-primary flex items-center justify-center space-x-2"
               >
                 <CheckCircle className="w-5 h-5" />
-                <span>Analyze Video</span>
+                <span>Start Analysis</span>
               </button>
             )}
           </motion.div>

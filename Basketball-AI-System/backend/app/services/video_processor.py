@@ -231,23 +231,50 @@ class VideoProcessor:
                     cv2.putText(annotated_frame, zone_label, (x1, y2 + 20), 
                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
         
-        # Draw court lines
+        # Draw court lines (filtered and limited for clarity)
         if court_info and court_info.get("lines"):
             lines = court_info["lines"]
-            # Draw horizontal lines (court boundaries, center line)
-            for line in lines.get("horizontal", [])[:10]:  # Limit to avoid clutter
-                x1, y1, x2, y2 = line
-                cv2.line(annotated_frame, (x1, y1), (x2, y2), (255, 255, 255), 1)
+            h, w = annotated_frame.shape[:2]
             
-            # Draw key points
-            if court_info.get("key_points"):
-                key_points = court_info["key_points"]
-                if "basket_left" in key_points:
-                    bx, by = key_points["basket_left"]
-                    cv2.circle(annotated_frame, (int(bx), int(by)), 10, (0, 255, 255), 2)
-                if "basket_right" in key_points:
-                    bx, by = key_points["basket_right"]
-                    cv2.circle(annotated_frame, (int(bx), int(by)), 10, (0, 255, 255), 2)
+            # Filter and draw only the longest, most prominent court lines
+            def filter_court_lines(line_list, min_length=150, max_count=8):
+                """Filter lines by length and limit count"""
+                filtered = []
+                for line in line_list:
+                    x1, y1, x2, y2 = line
+                    length = ((x2-x1)**2 + (y2-y1)**2)**0.5  # Use **0.5 instead of np.sqrt
+                    if length >= min_length:
+                        filtered.append((line, length))
+                # Sort by length and take top N
+                filtered.sort(key=lambda x: x[1], reverse=True)
+                return [line for line, _ in filtered[:max_count]]
+            
+            # Draw horizontal lines (court boundaries, center line, free throw line)
+            # Only draw long horizontal lines that are likely court boundaries
+            horizontal_lines = filter_court_lines(lines.get("horizontal", []), min_length=200, max_count=5)
+            for line in horizontal_lines:
+                x1, y1, x2, y2 = map(int, line)
+                # Only draw if line is reasonably horizontal and long enough
+                if abs(y2 - y1) < 20:  # Nearly horizontal
+                    cv2.line(annotated_frame, (x1, y1), (x2, y2), (0, 255, 255), 2)  # Yellow
+            
+            # Draw vertical lines (sidelines) - be more selective
+            vertical_lines = filter_court_lines(lines.get("vertical", []), min_length=150, max_count=4)
+            for line in vertical_lines:
+                x1, y1, x2, y2 = map(int, line)
+                # Only draw if line is reasonably vertical
+                if abs(x2 - x1) < 20:  # Nearly vertical
+                    cv2.line(annotated_frame, (x1, y1), (x2, y2), (255, 255, 0), 2)  # Cyan
+            
+            # Draw diagonal lines (3-point arc segments) - very selective
+            diagonal_lines = filter_court_lines(lines.get("diagonal", []), min_length=100, max_count=6)
+            for line in diagonal_lines:
+                x1, y1, x2, y2 = map(int, line)
+                # Draw diagonal lines (3-point arc, free throw arc)
+                cv2.line(annotated_frame, (x1, y1), (x2, y2), (0, 255, 0), 1)  # Green, thinner
+            
+            # Draw key points (only if they make sense)
+            # Skip key points drawing to reduce clutter - hoop detection is more reliable
         
         # Draw hoop
         if hoop_info:
@@ -325,16 +352,25 @@ class VideoProcessor:
                     break
                 
                 # Detect court and hoop periodically (once per second or on first frame)
+                # Keep court_info and hoop_info persistent across frames so lines are always drawn
                 if frame_count == 0 or frame_count % court_detection_frame_interval == 0:
                     try:
-                        court_info = self.court_detector.detect_court_lines(frame)
-                        hoop_info = self.court_detector.detect_hoop(frame)
-                        if hoop_info:
-                            logger.info(f"🏀 Hoop detected at {hoop_info['center']}")
-                        if court_info and court_info.get("key_points"):
-                            logger.info(f"🏟️  Court lines detected")
+                        new_court_info = self.court_detector.detect_court_lines(frame)
+                        new_hoop_info = self.court_detector.detect_hoop(frame)
+                        
+                        # Update court and hoop info (keep previous if detection fails)
+                        if new_court_info and new_court_info.get("lines"):
+                            court_info = new_court_info
+                            if frame_count == 0 or frame_count % (court_detection_frame_interval * 2) == 0:
+                                logger.info(f"🏟️  Court lines detected: {len(court_info.get('lines', {}).get('horizontal', []))} horizontal, {len(court_info.get('lines', {}).get('vertical', []))} vertical")
+                        
+                        if new_hoop_info:
+                            hoop_info = new_hoop_info
+                            if frame_count == 0 or frame_count % (court_detection_frame_interval * 2) == 0:
+                                logger.info(f"🏀 Hoop detected at {hoop_info['center']}")
                     except Exception as e:
                         logger.debug(f"Court/hoop detection failed: {e}")
+                        # Keep previous court_info and hoop_info if detection fails
                     
                 # Process frame for detection
                 # YOLO Detection - Players
@@ -498,6 +534,30 @@ class VideoProcessor:
                     action_probs = self._classify_action(frames_window)
                     action_label = self._get_action_label(action_probs)
                     confidence = float(max(action_probs.values())) if action_probs else 0.0
+                    
+                    # Enhance action classification with court-based shot zones if available
+                    # If model detected a generic "shot", refine it using court position
+                    if "shot" in action_label.lower() and basketball_detections and hoop_info and court_info:
+                        try:
+                            # Get most recent basketball position
+                            if basketball_detections and not basketball_detections[-1].get('predicted', False):
+                                ball_bbox = basketball_detections[-1]["bbox"]
+                                ball_center = ((ball_bbox[0] + ball_bbox[2]) / 2, (ball_bbox[1] + ball_bbox[3]) / 2)
+                                
+                                # Classify shot zone
+                                shot_zone = self.court_detector.classify_shot_zone(
+                                    ball_center,
+                                    hoop_info["center"],
+                                    court_info.get("court_zones", {})
+                                )
+                                
+                                # Override action label with specific shot type
+                                if shot_zone in ["free_throw", "two_point", "three_point"]:
+                                    action_label = shot_zone if shot_zone == "free_throw" else f"{shot_zone}_shot"
+                                    # Update probabilities to reflect court-based classification
+                                    action_probs[action_label] = max(action_probs.values()) if action_probs else 0.8
+                        except Exception as e:
+                            logger.debug(f"Court-based shot classification enhancement failed: {e}")
                     
                     # Calculate Metrics for this window (needs keypoints)
                     # Filter out empty keypoints if needed, or engine handles it
