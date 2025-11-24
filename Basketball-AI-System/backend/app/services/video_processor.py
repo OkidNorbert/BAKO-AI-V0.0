@@ -5,11 +5,16 @@ Combines YOLO detection + Pose extraction + Action classification + Metrics
 
 import cv2
 import numpy as np
+import os
+import base64
+import mediapipe as mp
 from pathlib import Path
 from typing import Dict, List, Optional
 import logging
 from datetime import datetime
 import uuid
+
+from app.core.config import settings
 
 from app.models.yolo_detector import PlayerDetector
 from app.models.pose_extractor import PoseExtractor
@@ -38,6 +43,13 @@ class VideoProcessor:
         try:
             self.player_detector = PlayerDetector()
             self.pose_extractor = PoseExtractor()
+            
+            # Expose underlying models for full-frame processing
+            self.yolo_model = self.player_detector.model
+            self.pose_model = self.pose_extractor.pose
+            self.mp_drawing = self.pose_extractor.mp_drawing
+            self.mp_pose = self.pose_extractor.mp_pose
+            self.mp_drawing_styles = mp.solutions.drawing_styles
             
             # Try to load trained model first (if available)
             project_root = Path(__file__).parent.parent.parent.parent
@@ -186,6 +198,13 @@ class VideoProcessor:
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         
+        logger.info(f"🎥 Processing video: {video_path}")
+        logger.info(f"   Properties: {width}x{height} @ {fps}fps, {total_frames} frames")
+        
+        if width == 0 or height == 0 or total_frames == 0:
+            logger.error("❌ Invalid video properties detected")
+            raise ValueError("Invalid video file: dimensions or frame count is zero")
+        
         # Prepare output video
         output_filename = f"processed_{os.path.basename(video_path)}"
         output_path = os.path.join(os.path.dirname(video_path), output_filename)
@@ -193,6 +212,7 @@ class VideoProcessor:
         out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
         
         frames_buffer = []
+        keypoints_buffer = []
         all_detections = []
         all_metrics = []
         timeline = []
@@ -232,47 +252,54 @@ class VideoProcessor:
                 annotated_frame = self._draw_annotations(frame, detections, pose_results.pose_landmarks)
                 out.write(annotated_frame)
                 
+                # Store frame for action classification
+                # Resize to 224x224 for VideoMAE if needed, but classifier handles it?
+                # Classifier expects full frames usually, let's store RGB
+                frames_buffer.append(frame_rgb)
+                
                 if pose_results.pose_landmarks:
                     # Extract keypoints
                     keypoints = []
                     for landmark in pose_results.pose_landmarks.landmark:
                         keypoints.append([landmark.x, landmark.y, landmark.z])
                     
-                    frames_buffer.append(keypoints)
+                    keypoints_buffer.append(keypoints)
                     all_detections.append(detections)
                 else:
-                    # If no pose detected, append None or handle gracefully
-                    # For sequence processing, we need continuous frames
-                    # If we skip, the sequence is broken.
-                    # Let's append empty keypoints but mark as invalid?
-                    # Or just skip this frame for action classification but keep for timeline?
-                    pass
+                    # If no pose detected, append empty keypoints to keep sync
+                    keypoints_buffer.append([])
+                    all_detections.append(detections)
                 
                 # Process window if buffer is full
                 if len(frames_buffer) >= window_size:
-                    # Create window
-                    window = np.array(frames_buffer[-window_size:])
+                    # Create windows
+                    frames_window = frames_buffer[-window_size:]
+                    keypoints_window = keypoints_buffer[-window_size:]
                     
-                    # Action Classification
-                    action_probs = self._classify_action(window)
+                    # Action Classification (needs frames)
+                    action_probs = self._classify_action(frames_window)
                     action_label = self._get_action_label(action_probs)
                     
-                    # Calculate Metrics for this window
-                    window_metrics = self._calculate_metrics(window)
-                    all_metrics.append(window_metrics)
-                    
-                    # Add to timeline
-                    timestamp = frame_count / fps
-                    timeline.append(TimelineSegment(
-                        start_time=max(0, timestamp - (window_size/fps)),
-                        end_time=timestamp,
-                        action=action_label,
-                        confidence=float(np.max(action_probs)),
-                        metrics=window_metrics
-                    ))
+                    # Calculate Metrics for this window (needs keypoints)
+                    # Filter out empty keypoints if needed, or engine handles it
+                    valid_keypoints = [k for k in keypoints_window if k]
+                    if valid_keypoints:
+                        window_metrics = self._calculate_metrics(valid_keypoints, action_label)
+                        all_metrics.append(window_metrics)
+                        
+                        # Add to timeline
+                        timestamp = frame_count / fps
+                        timeline.append(TimelineSegment(
+                            start_time=max(0, timestamp - (window_size/fps)),
+                            end_time=timestamp,
+                            action=action_label,
+                            confidence=float(max(action_probs.values())) if action_probs else 0.0,
+                            metrics=window_metrics
+                        ))
                     
                     # Slide window
                     frames_buffer = frames_buffer[stride:]
+                    keypoints_buffer = keypoints_buffer[stride:]
                 
                 frame_count += 1
                 
@@ -281,10 +308,22 @@ class VideoProcessor:
             out.release()
             
         if not timeline:
+            # If no timeline, maybe video was too short or no poses found
+            if frame_count < window_size:
+                 raise ValueError(f"Video too short for analysis. Need at least {window_size} frames.")
             raise ValueError("Insufficient frames with detected poses to analyze video")
             
         # Aggregate results
         # Find most frequent action
+        actions = [t.action for t in timeline]
+        main_action = max(set(actions), key=actions.count)
+        
+        # Average metrics
+        avg_metrics = self._aggregate_metrics(timeline)
+        
+        # Average confidence
+        avg_confidence = sum(t.confidence for t in timeline) / len(timeline)
+        
         # Generate recommendations
         recommendations = self.ai_coach.analyze_performance(
             {
@@ -320,6 +359,29 @@ class VideoProcessor:
             timeline=timeline,
             annotated_video_url=annotated_video_url
         )
+
+    def _classify_action(self, frames: List[np.ndarray]) -> Dict[str, float]:
+        """Classify action for a window of frames"""
+        # Classifier expects list of RGB frames
+        _, _, probabilities = self.action_classifier.classify(frames, return_probabilities=True)
+        return self._map_probabilities(probabilities)
+
+    def _get_action_label(self, probs: Dict[str, float]) -> str:
+        """Get label with highest probability"""
+        if not probs:
+            return "idle"
+        return max(probs, key=probs.get)
+
+    def _calculate_metrics(self, keypoints: List[List[float]], action_label: str) -> PerformanceMetrics:
+        """Calculate metrics for a window of keypoints"""
+        metrics_dict = self.metrics_engine.compute_all_metrics(keypoints, action_label)
+        return PerformanceMetrics(**metrics_dict)
+
+    def _detect_shot_outcome(self, detections: List[List[Dict]]) -> Optional[ShotOutcome]:
+        """Detect shot outcome from detections"""
+        # This would require ball detection which we might not have fully implemented
+        # For now, return None or a dummy outcome
+        return None
 
 
     def _map_probabilities(self, model_probs: Dict[str, float]) -> Dict[str, float]:

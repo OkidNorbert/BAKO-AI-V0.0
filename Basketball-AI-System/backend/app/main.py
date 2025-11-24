@@ -165,6 +165,12 @@ async def analyze_video(
     
     # Check file size
     file_content = await video.read()
+    if len(file_content) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Empty file provided"
+        )
+        
     if len(file_content) > settings.MAX_UPLOAD_SIZE:
         raise HTTPException(
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
@@ -199,8 +205,9 @@ async def analyze_video(
         except ValueError as e:
             # Handle specific errors from video processor
             error_msg = str(e)
+            logger.warning(f"⚠️ Analysis rejected: {error_msg}")
+            
             if "Insufficient frames with detected poses" in error_msg:
-                logger.warning(f"⚠️ Analysis rejected: {error_msg}")
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                     detail={
@@ -214,6 +221,19 @@ async def analyze_video(
                         ]
                     }
                 )
+            elif "Video too short" in error_msg:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail={
+                        "code": "VIDEO_TOO_SHORT",
+                        "message": str(e),
+                        "suggestions": [
+                            "Upload a longer video (at least 1 second)",
+                            "Ensure the video file is not corrupted"
+                        ]
+                    }
+                )
+                
             logger.error(f"❌ Analysis failed (ValueError): {e}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
