@@ -9,8 +9,9 @@ import ProgressChart from '../components/ProgressChart';
 import RealTimeVisualization from '../components/RealTimeVisualization';
 import { analyzeVideo, getHistory } from '../services/api';
 import type { VideoAnalysisResult, UploadProgress, HistoricalData } from '../types';
-
 import { Link } from 'react-router-dom';
+import jsPDF from 'jspdf';
+import confetti from 'canvas-confetti';
 
 export default function Dashboard() {
   const [uploadProgress, setUploadProgress] = useState<UploadProgress>({
@@ -23,6 +24,8 @@ export default function Dashboard() {
   const [, setIsLoadingHistory] = useState(false);
   const [currentVideoId, setCurrentVideoId] = useState<string | null>(null);
   const [showVisualization, setShowVisualization] = useState(false);
+  const [processingTime, setProcessingTime] = useState<number>(0);
+  const [processingStartTime, setProcessingStartTime] = useState<number | null>(null);
 
   // Load historical data on mount
   useEffect(() => {
@@ -48,6 +51,11 @@ export default function Dashboard() {
       setError('');
       setUploadProgress({ progress: 0, status: 'uploading' });
 
+      // Start processing timer
+      const startTime = Date.now();
+      setProcessingStartTime(startTime);
+      setProcessingTime(0);
+
       // Generate video_id on frontend BEFORE uploading
       // This allows WebSocket to connect immediately
       const frontendVideoId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -58,11 +66,25 @@ export default function Dashboard() {
       const result = await analyzeVideo(file, setUploadProgress, frontendVideoId);
 
       setUploadProgress({ progress: 100, status: 'complete' });
+
+      // Calculate processing time
+      const endTime = Date.now();
+      const totalTime = (endTime - startTime) / 1000; // Convert to seconds
+      setProcessingTime(totalTime);
+      setProcessingStartTime(null);
+
       setAnalysisResult(result);
       // Keep using the same video_id (backend should use the one we sent)
       if (result.video_id && result.video_id !== frontendVideoId) {
         setCurrentVideoId(result.video_id); // Update if backend generated different one
       }
+
+      // 🎉 Celebrate success with confetti!
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
 
       // Reload history to include new analysis
       await loadHistoricalData();
@@ -104,7 +126,67 @@ export default function Dashboard() {
 
       setError(errorMessage);
       setUploadProgress({ progress: 0, status: 'error', message: 'Upload failed' });
+      setProcessingStartTime(null);
     }
+  };
+
+  const downloadReport = (result: VideoAnalysisResult) => {
+    const doc = new jsPDF();
+
+    // Title
+    doc.setFontSize(20);
+    doc.text('Basketball AI Performance Report', 20, 20);
+
+    // Date
+    doc.setFontSize(10);
+    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 20, 30);
+
+    // Processing Time
+    if (processingTime > 0) {
+      doc.text(`Processing Time: ${processingTime.toFixed(2)}s`, 20, 36);
+    }
+
+    // Action Classification
+    doc.setFontSize(14);
+    doc.text('Action Classification', 20, 50);
+    doc.setFontSize(11);
+    doc.text(`Action: ${result.action.label.replace(/_/g, ' ').toUpperCase()}`, 25, 58);
+    doc.text(`Confidence: ${(result.action.confidence * 100).toFixed(1)}%`, 25, 64);
+
+    // Performance Metrics
+    doc.setFontSize(14);
+    doc.text('Performance Metrics', 20, 80);
+    doc.setFontSize(11);
+    doc.text(`Jump Height: ${result.metrics.jump_height.toFixed(2)}m`, 25, 88);
+    doc.text(`Movement Speed: ${result.metrics.movement_speed.toFixed(2)}m/s`, 25, 94);
+    doc.text(`Form Score: ${(result.metrics.form_score * 100).toFixed(0)}%`, 25, 100);
+    doc.text(`Reaction Time: ${result.metrics.reaction_time.toFixed(3)}s`, 25, 106);
+    doc.text(`Pose Stability: ${(result.metrics.pose_stability * 100).toFixed(0)}%`, 25, 112);
+    doc.text(`Energy Efficiency: ${(result.metrics.energy_efficiency * 100).toFixed(0)}%`, 25, 118);
+
+    // Recommendations
+    if (result.recommendations && result.recommendations.length > 0) {
+      doc.setFontSize(14);
+      doc.text('AI Recommendations', 20, 135);
+      doc.setFontSize(10);
+
+      let yPos = 143;
+      result.recommendations.forEach((rec, index) => {
+        if (yPos > 270) { // New page if needed
+          doc.addPage();
+          yPos = 20;
+        }
+        doc.text(`${index + 1}. ${rec.title}`, 25, yPos);
+        yPos += 6;
+        const lines = doc.splitTextToSize(rec.message, 160);
+        doc.text(lines, 30, yPos);
+        yPos += lines.length * 5 + 5;
+      });
+    }
+
+    // Save PDF
+    const filename = `basketball-analysis-${new Date().getTime()}.pdf`;
+    doc.save(filename);
   };
 
   return (
@@ -156,6 +238,23 @@ export default function Dashboard() {
               isUploading={uploadProgress.status === 'uploading' || uploadProgress.status === 'processing'}
               progress={uploadProgress.progress}
             />
+
+            {/* Processing Time Display */}
+            {processingStartTime && (
+              <div className="mt-4 text-center">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Processing... {((Date.now() - processingStartTime) / 1000).toFixed(1)}s
+                </p>
+              </div>
+            )}
+
+            {processingTime > 0 && !processingStartTime && analysisResult && (
+              <div className="mt-4 text-center">
+                <p className="text-sm text-green-600 dark:text-green-400">
+                  ✓ Completed in {processingTime.toFixed(2)}s
+                </p>
+              </div>
+            )}
           </motion.div>
 
           {/* Real-time Visualization */}
@@ -250,7 +349,13 @@ export default function Dashboard() {
                 >
                   Analyze Another Video
                 </button>
-                <button className="px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg transition-colors">
+                <button
+                  onClick={() => downloadReport(analysisResult)}
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors flex items-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
                   Download Report
                 </button>
               </motion.div>
