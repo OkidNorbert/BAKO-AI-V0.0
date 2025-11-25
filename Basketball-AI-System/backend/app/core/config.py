@@ -18,18 +18,10 @@ class Settings(BaseSettings):
     # API Settings
     API_V1_PREFIX: str = "/api/v1"
     
-    # CORS
-    CORS_ORIGINS: List[str] = [
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "http://localhost:8080",
-        # Vercel deployments (add your actual domain)
-        "https://*.vercel.app",
-        # Cloudflare Tunnel URL
-        "https://pickup-studying-tells-cattle.trycloudflare.com",
-        # Add your custom domain here if you have one
-        # "https://yourdomain.com",
-    ]
+    
+    # CORS - Allow all origins for development/demo
+    # TODO: Restrict to specific domains in production
+    CORS_ORIGINS: List[str] = ["*"]  # Allow all origins for now
     
     # File Upload
     MAX_UPLOAD_SIZE: int = 500 * 1024 * 1024  # 500MB
