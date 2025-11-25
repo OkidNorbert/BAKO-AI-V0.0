@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Camera, Video, Activity, AlertCircle, ArrowLeft } from 'lucide-react';
+import { getWebSocketUrl } from '../utils/websocket';
 
 interface AnalysisResult {
     action: {
@@ -71,7 +72,8 @@ const LiveAnalysis: React.FC = () => {
     };
 
     const connectWebSocket = () => {
-        const ws = new WebSocket('ws://localhost:8000/ws/analyze');
+        const wsUrl = getWebSocketUrl('/ws/analyze');
+        const ws = new WebSocket(wsUrl);
 
         ws.onopen = () => {
             console.log('Connected to analysis server');
@@ -85,7 +87,7 @@ const LiveAnalysis: React.FC = () => {
 
         ws.onerror = (err) => {
             console.error('WebSocket error:', err);
-            setError("Connection to analysis server failed.");
+            setError("Live analysis unavailable. Please try uploading a video instead.");
         };
 
         wsRef.current = ws;

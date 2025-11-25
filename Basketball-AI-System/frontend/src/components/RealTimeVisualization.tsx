@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Video, X, Loader2 } from 'lucide-react';
+import { getWebSocketUrl } from '../utils/websocket';
 
 interface RealTimeVisualizationProps {
   videoId: string | null;
@@ -32,8 +33,9 @@ export default function RealTimeVisualization({
     // Don't close connection when processing is done - keep showing frames
     // Only close if videoId changes or component unmounts
 
-    // Connect to WebSocket
-    const ws = new WebSocket(`ws://localhost:8000/ws/video-stream/${videoId}`);
+    // Connect to WebSocket with dynamic URL
+    const wsUrl = getWebSocketUrl(`/ws/video-stream/${videoId}`);
+    const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
       console.log('✅ Connected to video stream WebSocket');
@@ -71,7 +73,7 @@ export default function RealTimeVisualization({
 
     ws.onerror = (err) => {
       console.error('WebSocket error:', err);
-      setError('Connection error. Real-time visualization may not be available.');
+      setError('Real-time visualization unavailable. Video will still be processed.');
     };
 
     ws.onclose = () => {
