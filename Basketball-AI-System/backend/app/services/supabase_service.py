@@ -138,5 +138,49 @@ class SupabaseService:
                 logger.warning(f"⚠️  Failed to save analysis to Supabase DB: {e}")
             return False
 
+    def get_history(self, limit: int = 50) -> list:
+        """
+        Retrieve analysis history from Supabase Database
+        Returns list of analysis results ordered by creation time (newest first)
+        """
+        if not self.enabled or not self.client:
+            logger.debug("⚠️  Supabase not enabled, returning empty history")
+            return []
+            
+        try:
+            table_name = "analysis_results"
+            
+            # Check if table exists
+            try:
+                self.client.table(table_name).select("id").limit(1).execute()
+            except Exception as table_check_error:
+                error_str = str(table_check_error).lower()
+                if "not found" in error_str or "404" in error_str or "pgrst205" in error_str:
+                    logger.debug(f"⚠️  Supabase table '{table_name}' not found. Returning empty history.")
+                    return []
+                raise
+            
+            # Fetch history
+            response = self.client.table(table_name)\
+                .select("*")\
+                .order("created_at", desc=True)\
+                .limit(limit)\
+                .execute()
+            
+            if response.data:
+                logger.info(f"✅ Retrieved {len(response.data)} analysis records from Supabase")
+                return response.data
+            else:
+                logger.debug("No analysis history found in database")
+                return []
+                
+        except Exception as e:
+            error_str = str(e).lower()
+            if "not found" in error_str or "404" in error_str or "pgrst205" in error_str:
+                logger.debug(f"⚠️  Supabase table not configured. Returning empty history.")
+            else:
+                logger.warning(f"⚠️  Failed to retrieve history from Supabase: {e}")
+            return []
+
 # Singleton instance
 supabase_service = SupabaseService()

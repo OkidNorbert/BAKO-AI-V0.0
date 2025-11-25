@@ -279,12 +279,47 @@ async def get_result(video_id: str):
 
 
 @app.get("/api/history")
-async def get_history(limit: int = 10):
+async def get_history(limit: int = 50):
     """
-    Get historical analysis results
-    (For future implementation with database)
+    Get historical analysis results from Supabase database
     """
-    return []
+    try:
+        from app.services.supabase_service import supabase_service
+        
+        # Get raw data from Supabase
+        raw_history = supabase_service.get_history(limit=limit)
+        
+        # Transform to match frontend HistoricalData type
+        formatted_history = []
+        for record in raw_history:
+            try:
+                # Extract metrics from raw_result or metrics field
+                metrics_data = record.get('metrics') or record.get('raw_result', {}).get('metrics', {})
+                
+                formatted_history.append({
+                    "date": record.get('created_at', datetime.now().isoformat()),
+                    "action": record.get('action', 'unknown'),
+                    "metrics": {
+                        "jump_height": metrics_data.get('jump_height', 0.0),
+                        "movement_speed": metrics_data.get('movement_speed', 0.0),
+                        "form_score": metrics_data.get('form_score', 0.0),
+                        "reaction_time": metrics_data.get('reaction_time', 0.0),
+                        "pose_stability": metrics_data.get('pose_stability', 0.0),
+                        "energy_efficiency": metrics_data.get('energy_efficiency', 0.0)
+                    }
+                })
+            except Exception as e:
+                logger.warning(f"⚠️  Failed to format history record: {e}")
+                continue
+        
+        logger.info(f"📊 Returning {len(formatted_history)} history records")
+        return formatted_history
+        
+    except Exception as e:
+        logger.error(f"❌ Failed to retrieve history: {e}")
+        # Return empty array instead of error to avoid breaking frontend
+        return []
+
 
 
 if __name__ == "__main__":

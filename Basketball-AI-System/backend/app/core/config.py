@@ -25,6 +25,8 @@ class Settings(BaseSettings):
         "http://localhost:8080",
         # Vercel deployments (add your actual domain)
         "https://*.vercel.app",
+        # Cloudflare Tunnel URL
+        "https://pickup-studying-tells-cattle.trycloudflare.com",
         # Add your custom domain here if you have one
         # "https://yourdomain.com",
     ]

@@ -132,9 +132,12 @@ export default function Dashboard() {
                 </span>
                 Live Analysis
               </Link>
-              <button className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+              <Link
+                to="/history"
+                className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              >
                 View History
-              </button>
+              </Link>
             </div>
           </div>
         </div>
