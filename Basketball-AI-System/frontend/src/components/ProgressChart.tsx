@@ -77,15 +77,14 @@ export default function ProgressChart({ data }: ProgressChartProps) {
               </p>
               <div className="flex items-baseline space-x-2">
                 <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                  {chartData[chartData.length - 1]?.[metric.key as keyof typeof chartData[0]]?.toFixed(2) || '0.00'}
+                  {(chartData[chartData.length - 1]?.[metric.key as keyof typeof chartData[0]] as number)?.toFixed(2) || '0.00'}
                 </span>
                 <span className="text-xs text-gray-500 dark:text-gray-400">
                   {metric.unit}
                 </span>
               </div>
-              <div className={`flex items-center space-x-1 mt-2 text-xs font-semibold ${
-                isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-              }`}>
+              <div className={`flex items-center space-x-1 mt-2 text-xs font-semibold ${isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                }`}>
                 <TrendingUp className={`w-3 h-3 ${!isPositive && 'rotate-180'}`} />
                 <span>{Math.abs(trend).toFixed(1)}%</span>
               </div>

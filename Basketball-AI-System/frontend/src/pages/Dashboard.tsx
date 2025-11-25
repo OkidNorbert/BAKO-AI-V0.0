@@ -20,7 +20,7 @@ export default function Dashboard() {
   const [analysisResult, setAnalysisResult] = useState<VideoAnalysisResult | null>(null);
   const [error, setError] = useState<string>('');
   const [historicalData, setHistoricalData] = useState<HistoricalData[]>([]);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [, setIsLoadingHistory] = useState(false);
   const [currentVideoId, setCurrentVideoId] = useState<string | null>(null);
   const [showVisualization, setShowVisualization] = useState(false);
 
@@ -53,7 +53,7 @@ export default function Dashboard() {
       const frontendVideoId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       setCurrentVideoId(frontendVideoId);
       setShowVisualization(true);
-      
+
       // Call API with video_id - backend will use it for WebSocket streaming
       const result = await analyzeVideo(file, setUploadProgress, frontendVideoId);
 
@@ -83,7 +83,7 @@ export default function Dashboard() {
       } else if (err?.response?.data) {
         // Backend returned structured error (FastAPI format)
         const errorData = err.response.data;
-        
+
         // FastAPI returns errors in 'detail' field
         if (errorData.detail) {
           errorMessage = typeof errorData.detail === 'string'

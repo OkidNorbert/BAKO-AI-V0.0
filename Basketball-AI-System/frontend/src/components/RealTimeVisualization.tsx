@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Video, X, Loader2 } from 'lucide-react';
 
 interface RealTimeVisualizationProps {
@@ -7,10 +7,10 @@ interface RealTimeVisualizationProps {
   onClose?: () => void;
 }
 
-export default function RealTimeVisualization({ 
-  videoId, 
+export default function RealTimeVisualization({
+  videoId,
   isProcessing,
-  onClose 
+  onClose
 }: RealTimeVisualizationProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
@@ -28,13 +28,13 @@ export default function RealTimeVisualization({
       }
       return;
     }
-    
+
     // Don't close connection when processing is done - keep showing frames
     // Only close if videoId changes or component unmounts
 
     // Connect to WebSocket
     const ws = new WebSocket(`ws://localhost:8000/ws/video-stream/${videoId}`);
-    
+
     ws.onopen = () => {
       console.log('✅ Connected to video stream WebSocket');
       setIsConnected(true);
@@ -44,7 +44,7 @@ export default function RealTimeVisualization({
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        
+
         if (data.type === 'frame' && data.data) {
           // Decode base64 image
           const img = new Image();
@@ -55,7 +55,7 @@ export default function RealTimeVisualization({
                 // Set canvas size to match image
                 canvasRef.current.width = img.width;
                 canvasRef.current.height = img.height;
-                
+
                 // Draw image
                 ctx.drawImage(img, 0, 0);
                 setFrameCount(prev => prev + 1);
@@ -130,7 +130,7 @@ export default function RealTimeVisualization({
           className="w-full h-full object-contain"
           style={{ display: 'block' }}
         />
-        
+
         {/* Placeholder when no frames received */}
         {!isConnected && !error && (
           <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500">
