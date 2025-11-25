@@ -282,20 +282,65 @@ export default function Dashboard() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
+              className="p-6 bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl shadow-lg"
             >
               <div className="flex items-start">
                 <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <svg className="h-6 w-6 text-red-500" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                   </svg>
                 </div>
                 <div className="ml-3 flex-1">
-                  <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
-                    Analysis Failed
+                  <h3 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-2">
+                    ⚠️ Analysis Failed
                   </h3>
-                  <div className="mt-2 text-sm text-red-700 dark:text-red-300 whitespace-pre-line">
+                  <div className="text-sm text-red-700 dark:text-red-300 whitespace-pre-line mb-3">
                     {error}
+                  </div>
+                  {error.includes('player') && (
+                    <div className="mt-3 p-3 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                      <p className="text-sm font-medium text-red-800 dark:text-red-200 mb-2">💡 Quick Tips:</p>
+                      <ul className="text-xs text-red-700 dark:text-red-300 space-y-1 list-disc list-inside">
+                        <li>Ensure the player is fully visible in the frame</li>
+                        <li>Use good lighting conditions</li>
+                        <li>Keep the camera steady</li>
+                        <li>Try a video with clear basketball action</li>
+                      </ul>
+                    </div>
+                  )}
+                  <button
+                    onClick={() => setError('')}
+                    className="mt-3 text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200 font-medium"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Loading Skeleton */}
+          {uploadProgress.status === 'processing' && !analysisResult && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="space-y-6"
+            >
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+                <div className="animate-pulse space-y-4">
+                  <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                  <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                </div>
+              </div>
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+                <div className="animate-pulse space-y-4">
+                  <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="h-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                    <div className="h-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                    <div className="h-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                    <div className="h-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
                   </div>
                 </div>
               </div>
@@ -306,6 +351,35 @@ export default function Dashboard() {
           {/* Analysis Results */}
           {analysisResult && (
             <>
+              {/* Annotated Video Playback */}
+              {analysisResult.annotated_video_url && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6"
+                >
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    AI-Annotated Video
+                  </h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    Watch your video with AI detections: YOLO bounding boxes, MediaPipe pose keypoints, and court/hoop detection
+                  </p>
+                  <div className="relative rounded-lg overflow-hidden bg-black" style={{ aspectRatio: '16/9' }}>
+                    <video
+                      controls
+                      className="w-full h-full"
+                      src={analysisResult.annotated_video_url}
+                    >
+                      Your browser does not support the video tag.
+                    </video>
+                  </div>
+                </motion.div>
+              )}
+
               {/* Action Classification */}
               <ActionResult
                 action={analysisResult.action.label}
