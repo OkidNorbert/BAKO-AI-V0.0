@@ -1,5 +1,4065 @@
 [
   {
+    "action": "passing",
+    "confidence": 0.18677934183149922,
+    "metrics": {
+      "jump_height": 0.037448620917845746,
+      "movement_speed": 1.007043642439756,
+      "form_score": 0.9935157211314908,
+      "reaction_time": 0.006802721088435374,
+      "pose_stability": 0.9929437776091159,
+      "energy_efficiency": 0.7955397230722595
+    },
+    "recommendations": [
+      {
+        "type": "info",
+        "title": "Performance Analysis:",
+        "message": "Performance Analysis:",
+        "priority": "low"
+      },
+      {
+        "type": "improvement",
+        "title": "\u274c Form needs work. Practice fundamentals daily.",
+        "message": "\u274c Form needs work. Practice fundamentals daily.",
+        "priority": "high"
+      },
+      {
+        "type": "improvement",
+        "title": "\u26a0\ufe0f  Jump height (0.00m) could improve. Try plyomet...",
+        "message": "\u26a0\ufe0f  Jump height (0.00m) could improve. Try plyometrics.",
+        "priority": "high"
+      },
+      {
+        "type": "improvement",
+        "title": "\u26a0\ufe0f  Speed (0.0 m/s) needs work. Try sprint trainin...",
+        "message": "\u26a0\ufe0f  Speed (0.0 m/s) needs work. Try sprint training.",
+        "priority": "high"
+      },
+      {
+        "type": "info",
+        "title": "Keep practicing and focus on consistency!",
+        "message": "Keep practicing and focus on consistency!",
+        "priority": "low"
+      }
+    ],
+    "video_url": null,
+    "raw_result": {
+      "video_id": "1764078955820-puyu51lcv",
+      "action": {
+        "label": "passing",
+        "confidence": 0.18677934183149922,
+        "probabilities": {
+          "free_throw": 0.13438747154206646,
+          "two_point_shot": 0.1642947035784624,
+          "three_point_shot": 0.1462844579043437,
+          "layup": 0.0,
+          "dunk": 0.0,
+          "dribbling": 0.1541397805724825,
+          "passing": 0.17968353218570046,
+          "defense": 0.11555379826803597,
+          "running": 0.0,
+          "walking": 0.0,
+          "blocking": 0.0,
+          "picking": 0.0,
+          "ball_in_hand": 0.0,
+          "idle": 0.10565625990227777
+        }
+      },
+      "metrics": {
+        "jump_height": 0.037448620917845746,
+        "movement_speed": 1.007043642439756,
+        "form_score": 0.9935157211314908,
+        "reaction_time": 0.006802721088435374,
+        "pose_stability": 0.9929437776091159,
+        "energy_efficiency": 0.7955397230722595
+      },
+      "recommendations": [
+        {
+          "type": "info",
+          "title": "Performance Analysis:",
+          "message": "Performance Analysis:",
+          "priority": "low"
+        },
+        {
+          "type": "improvement",
+          "title": "\u274c Form needs work. Practice fundamentals daily.",
+          "message": "\u274c Form needs work. Practice fundamentals daily.",
+          "priority": "high"
+        },
+        {
+          "type": "improvement",
+          "title": "\u26a0\ufe0f  Jump height (0.00m) could improve. Try plyomet...",
+          "message": "\u26a0\ufe0f  Jump height (0.00m) could improve. Try plyometrics.",
+          "priority": "high"
+        },
+        {
+          "type": "improvement",
+          "title": "\u26a0\ufe0f  Speed (0.0 m/s) needs work. Try sprint trainin...",
+          "message": "\u26a0\ufe0f  Speed (0.0 m/s) needs work. Try sprint training.",
+          "priority": "high"
+        },
+        {
+          "type": "info",
+          "title": "Keep practicing and focus on consistency!",
+          "message": "Keep practicing and focus on consistency!",
+          "priority": "low"
+        }
+      ],
+      "shot_outcome": null,
+      "timeline": [
+        {
+          "start_time": 0.0,
+          "end_time": 0.5172413793103449,
+          "action": {
+            "label": "passing",
+            "confidence": 0.17673233151435852,
+            "probabilities": {
+              "free_throw": 0.1458686888217926,
+              "two_point_shot": 0.17591969668865204,
+              "three_point_shot": 0.12541843950748444,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.16780798137187958,
+              "passing": 0.17673233151435852,
+              "defense": 0.11553481221199036,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.09271803498268127
+            }
+          },
+          "metrics": {
+            "jump_height": 0.015278458595275879,
+            "movement_speed": 0.5919808521866798,
+            "form_score": 0.9983120634550923,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9983120634550923,
+            "energy_efficiency": 0.7682796416178733
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 0.24137931034482762,
+          "end_time": 0.7931034482758621,
+          "action": {
+            "label": "two_point_shot",
+            "confidence": 0.19769379496574402,
+            "probabilities": {
+              "free_throw": 0.129521906375885,
+              "two_point_shot": 0.19769379496574402,
+              "three_point_shot": 0.12308907508850098,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.16735607385635376,
+              "passing": 0.1717020571231842,
+              "defense": 0.11313125491142273,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.09750589728355408
+            }
+          },
+          "metrics": {
+            "jump_height": 0.02011018991470337,
+            "movement_speed": 0.7199113257229328,
+            "form_score": 0.9988201988925256,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9988201988925256,
+            "energy_efficiency": 0.8384771796612749
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 0.5172413793103448,
+          "end_time": 1.0689655172413792,
+          "action": {
+            "label": "two_point_shot",
+            "confidence": 0.18674486875534058,
+            "probabilities": {
+              "free_throw": 0.11921902745962143,
+              "two_point_shot": 0.18674486875534058,
+              "three_point_shot": 0.12514668703079224,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.17605452239513397,
+              "passing": 0.18467368185520172,
+              "defense": 0.1058865487575531,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10227461904287338
+            }
+          },
+          "metrics": {
+            "jump_height": 0.026604890823364258,
+            "movement_speed": 0.5121457390487194,
+            "form_score": 0.9987876519348726,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9987876519348726,
+            "energy_efficiency": 0.8711307259097226
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 0.7931034482758621,
+          "end_time": 1.3448275862068966,
+          "action": {
+            "label": "passing",
+            "confidence": 0.19545266032218933,
+            "probabilities": {
+              "free_throw": 0.12659049034118652,
+              "two_point_shot": 0.1798233538866043,
+              "three_point_shot": 0.12656170129776,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.17948615550994873,
+              "passing": 0.19545266032218933,
+              "defense": 0.1031571626663208,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.08892843872308731
+            }
+          },
+          "metrics": {
+            "jump_height": 0.032797813415527344,
+            "movement_speed": 0.5016541108489037,
+            "form_score": 0.9982725263902262,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9982725263902262,
+            "energy_efficiency": 0.8654654042849451
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 1.0689655172413792,
+          "end_time": 1.6206896551724137,
+          "action": {
+            "label": "dribbling",
+            "confidence": 0.20012257993221283,
+            "probabilities": {
+              "free_throw": 0.12328646332025528,
+              "two_point_shot": 0.193476140499115,
+              "three_point_shot": 0.12266960740089417,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.20012257993221283,
+              "passing": 0.15560521185398102,
+              "defense": 0.10684306919574738,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.09799694269895554
+            }
+          },
+          "metrics": {
+            "jump_height": 0.02919083833694458,
+            "movement_speed": 0.7137170992791653,
+            "form_score": 0.9998970735019119,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9981865866898405,
+            "energy_efficiency": 0.8167395569012684
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 1.3448275862068966,
+          "end_time": 1.896551724137931,
+          "action": {
+            "label": "two_point_shot",
+            "confidence": 0.19974927604198456,
+            "probabilities": {
+              "free_throw": 0.12493819743394852,
+              "two_point_shot": 0.19974927604198456,
+              "three_point_shot": 0.13315002620220184,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.19329270720481873,
+              "passing": 0.1455889195203781,
+              "defense": 0.10449092090129852,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.09878993779420853
+            }
+          },
+          "metrics": {
+            "jump_height": 0.024028360843658447,
+            "movement_speed": 0.4923432134091854,
+            "form_score": 0.9991561708622488,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9991561708622488,
+            "energy_efficiency": 0.7981125331508887
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 1.620689655172414,
+          "end_time": 2.1724137931034484,
+          "action": {
+            "label": "two_point_shot",
+            "confidence": 0.19159872829914093,
+            "probabilities": {
+              "free_throw": 0.13004142045974731,
+              "two_point_shot": 0.19159872829914093,
+              "three_point_shot": 0.1331399530172348,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.18222850561141968,
+              "passing": 0.14900106191635132,
+              "defense": 0.11620268225669861,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.09778767824172974
+            }
+          },
+          "metrics": {
+            "jump_height": 0.03975945711135864,
+            "movement_speed": 0.19514495506882668,
+            "form_score": 0.9986907654456554,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9986907654456554,
+            "energy_efficiency": 0.6714462319062895
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 1.8965517241379308,
+          "end_time": 2.4482758620689653,
+          "action": {
+            "label": "two_point_shot",
+            "confidence": 0.1785675287246704,
+            "probabilities": {
+              "free_throw": 0.1348877251148224,
+              "two_point_shot": 0.1785675287246704,
+              "three_point_shot": 0.1364631950855255,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.17157170176506042,
+              "passing": 0.17722909152507782,
+              "defense": 0.11220012605190277,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.08908065408468246
+            }
+          },
+          "metrics": {
+            "jump_height": 0.05115211009979248,
+            "movement_speed": 0.16997605562210083,
+            "form_score": 0.9974978318509674,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9974978318509674,
+            "energy_efficiency": 0.5655849122951707
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 2.1724137931034484,
+          "end_time": 2.7241379310344827,
+          "action": {
+            "label": "two_point_shot",
+            "confidence": 0.19686658680438995,
+            "probabilities": {
+              "free_throw": 0.12651798129081726,
+              "two_point_shot": 0.19686658680438995,
+              "three_point_shot": 0.12624569237232208,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.18098017573356628,
+              "passing": 0.1740378737449646,
+              "defense": 0.10393276810646057,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.09141886979341507
+            }
+          },
+          "metrics": {
+            "jump_height": 0.17483723163604736,
+            "movement_speed": 1.5576711297035217,
+            "form_score": 0.9443788249405236,
+            "reaction_time": 0.26666666666666666,
+            "pose_stability": 0.9443788249405236,
+            "energy_efficiency": 0.3164145015187371
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 2.4482758620689653,
+          "end_time": 3.0,
+          "action": {
+            "label": "dribbling",
+            "confidence": 0.20280957221984863,
+            "probabilities": {
+              "free_throw": 0.11978105455636978,
+              "two_point_shot": 0.17894306778907776,
+              "three_point_shot": 0.11640404909849167,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.20280957221984863,
+              "passing": 0.17152346670627594,
+              "defense": 0.1129988357424736,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.09754005819559097
+            }
+          },
+          "metrics": {
+            "jump_height": 0.17080003023147583,
+            "movement_speed": 1.730901300907135,
+            "form_score": 0.9983819431556742,
+            "reaction_time": 0.0,
+            "pose_stability": 0.982537639127275,
+            "energy_efficiency": 0.5187060799222077
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 2.724137931034483,
+          "end_time": 3.2758620689655173,
+          "action": {
+            "label": "two_point_shot",
+            "confidence": 0.186698779463768,
+            "probabilities": {
+              "free_throw": 0.1293892115354538,
+              "two_point_shot": 0.186698779463768,
+              "three_point_shot": 0.14087682962417603,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.16850760579109192,
+              "passing": 0.16170193254947662,
+              "defense": 0.11510450392961502,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.09772118180990219
+            }
+          },
+          "metrics": {
+            "jump_height": 0.039393067359924316,
+            "movement_speed": 0.2570462878793478,
+            "form_score": 0.9990326116376539,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9990326116376539,
+            "energy_efficiency": 0.885790018807672
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 3.0,
+          "end_time": 3.5517241379310347,
+          "action": {
+            "label": "two_point_shot",
+            "confidence": 0.18216484785079956,
+            "probabilities": {
+              "free_throw": 0.12378287315368652,
+              "two_point_shot": 0.18216484785079956,
+              "three_point_shot": 0.15042553842067719,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.17376787960529327,
+              "passing": 0.1632339507341385,
+              "defense": 0.11259995400905609,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.09402493387460709
+            }
+          },
+          "metrics": {
+            "jump_height": 0.03406244516372681,
+            "movement_speed": 0.03498746082186699,
+            "form_score": 0.9994842520327147,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9994842520327147,
+            "energy_efficiency": 0.9027605473291881
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 3.275862068965517,
+          "end_time": 3.8275862068965516,
+          "action": {
+            "label": "dribbling",
+            "confidence": 0.1901128590106964,
+            "probabilities": {
+              "free_throw": 0.11970605701208115,
+              "two_point_shot": 0.16252319514751434,
+              "three_point_shot": 0.16358424723148346,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.1901128590106964,
+              "passing": 0.16402700543403625,
+              "defense": 0.10106752812862396,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.09897907078266144
+            }
+          },
+          "metrics": {
+            "jump_height": 0.035954058170318604,
+            "movement_speed": 0.06813663057982922,
+            "form_score": 0.9997965744912712,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9986192747707855,
+            "energy_efficiency": 0.8757395286220521
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 3.5517241379310347,
+          "end_time": 4.103448275862069,
+          "action": {
+            "label": "dribbling",
+            "confidence": 0.18477243185043335,
+            "probabilities": {
+              "free_throw": 0.12089738994836807,
+              "two_point_shot": 0.14966359734535217,
+              "three_point_shot": 0.1744321584701538,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.18477243185043335,
+              "passing": 0.16474905610084534,
+              "defense": 0.10208015143871307,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10340520739555359
+            }
+          },
+          "metrics": {
+            "jump_height": 0.040274620056152344,
+            "movement_speed": 0.8577259490266442,
+            "form_score": 0.9997826124381232,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9974405357165024,
+            "energy_efficiency": 0.7873012592635444
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 3.8275862068965516,
+          "end_time": 4.379310344827586,
+          "action": {
+            "label": "passing",
+            "confidence": 0.18655528128147125,
+            "probabilities": {
+              "free_throw": 0.1350843906402588,
+              "two_point_shot": 0.15498200058937073,
+              "three_point_shot": 0.13560466468334198,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.15416529774665833,
+              "passing": 0.18655528128147125,
+              "defense": 0.12521664798259735,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10839170962572098
+            }
+          },
+          "metrics": {
+            "jump_height": 0.03495895862579346,
+            "movement_speed": 1.2907067779451609,
+            "form_score": 0.9963414093739114,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9963414093739114,
+            "energy_efficiency": 0.8261507925648197
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 4.1034482758620685,
+          "end_time": 4.655172413793103,
+          "action": {
+            "label": "passing",
+            "confidence": 0.1861911118030548,
+            "probabilities": {
+              "free_throw": 0.12535713613033295,
+              "two_point_shot": 0.15054252743721008,
+              "three_point_shot": 0.13192413747310638,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.16089129447937012,
+              "passing": 0.1861911118030548,
+              "defense": 0.13436110317707062,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.11073266714811325
+            }
+          },
+          "metrics": {
+            "jump_height": 0.07950466871261597,
+            "movement_speed": 0.6826237309724092,
+            "form_score": 0.9967700215140023,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9967700215140023,
+            "energy_efficiency": 0.865232354452361
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 4.379310344827586,
+          "end_time": 4.931034482758621,
+          "action": {
+            "label": "passing",
+            "confidence": 0.17755427956581116,
+            "probabilities": {
+              "free_throw": 0.12228873372077942,
+              "two_point_shot": 0.1525023728609085,
+              "three_point_shot": 0.13063183426856995,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.1708381474018097,
+              "passing": 0.17755427956581116,
+              "defense": 0.12775713205337524,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.11842750757932663
+            }
+          },
+          "metrics": {
+            "jump_height": 0.052225708961486816,
+            "movement_speed": 0.17866878770291805,
+            "form_score": 0.9978751783679533,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9978751783679533,
+            "energy_efficiency": 0.8716196350528764
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 4.655172413793103,
+          "end_time": 5.206896551724138,
+          "action": {
+            "label": "passing",
+            "confidence": 0.18686068058013916,
+            "probabilities": {
+              "free_throw": 0.1280551701784134,
+              "two_point_shot": 0.17131713032722473,
+              "three_point_shot": 0.14329786598682404,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.1487520933151245,
+              "passing": 0.18686068058013916,
+              "defense": 0.11651724576950073,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10519988089799881
+            }
+          },
+          "metrics": {
+            "jump_height": 0.011593639850616455,
+            "movement_speed": 1.0291201528161764,
+            "form_score": 0.9974730245599994,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9974730245599994,
+            "energy_efficiency": 0.8583053092593564
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 4.93103448275862,
+          "end_time": 5.482758620689655,
+          "action": {
+            "label": "passing",
+            "confidence": 0.17177560925483704,
+            "probabilities": {
+              "free_throw": 0.13322322070598602,
+              "two_point_shot": 0.16883407533168793,
+              "three_point_shot": 0.15574395656585693,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.1456577479839325,
+              "passing": 0.17177560925483704,
+              "defense": 0.12053917348384857,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.104226253926754
+            }
+          },
+          "metrics": {
+            "jump_height": 0.023970365524291992,
+            "movement_speed": 1.9039494451135397,
+            "form_score": 0.9922789303632887,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9922789303632887,
+            "energy_efficiency": 0.8676231683188931
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 5.206896551724138,
+          "end_time": 5.758620689655173,
+          "action": {
+            "label": "two_point_shot",
+            "confidence": 0.16843731701374054,
+            "probabilities": {
+              "free_throw": 0.1500186324119568,
+              "two_point_shot": 0.16843731701374054,
+              "three_point_shot": 0.14023131132125854,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14476518332958221,
+              "passing": 0.16620494425296783,
+              "defense": 0.12749382853507996,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10284881293773651
+            }
+          },
+          "metrics": {
+            "jump_height": 0.04793596267700195,
+            "movement_speed": 1.1262334417551756,
+            "form_score": 0.991776657455963,
+            "reaction_time": 0.0,
+            "pose_stability": 0.991776657455963,
+            "energy_efficiency": 0.7672141643832996
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 5.482758620689655,
+          "end_time": 6.0344827586206895,
+          "action": {
+            "label": "passing",
+            "confidence": 0.16562475264072418,
+            "probabilities": {
+              "free_throw": 0.14414267241954803,
+              "two_point_shot": 0.1503075510263443,
+              "three_point_shot": 0.15019120275974274,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.1569710671901703,
+              "passing": 0.16562475264072418,
+              "defense": 0.11833959817886353,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.11442317068576813
+            }
+          },
+          "metrics": {
+            "jump_height": 0.0966799259185791,
+            "movement_speed": 1.169058121740818,
+            "form_score": 0.99419977800653,
+            "reaction_time": 0.0,
+            "pose_stability": 0.99419977800653,
+            "energy_efficiency": 0.6406498626247804
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 5.758620689655173,
+          "end_time": 6.310344827586207,
+          "action": {
+            "label": "dribbling",
+            "confidence": 0.1683616042137146,
+            "probabilities": {
+              "free_throw": 0.13854722678661346,
+              "two_point_shot": 0.15307970345020294,
+              "three_point_shot": 0.14426647126674652,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.1683616042137146,
+              "passing": 0.16673867404460907,
+              "defense": 0.11469660699367523,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.11430975049734116
+            }
+          },
+          "metrics": {
+            "jump_height": 0.06008327007293701,
+            "movement_speed": 2.608213573694229,
+            "form_score": 0.9988736472904955,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9821925427231527,
+            "energy_efficiency": 0.6600174636504198
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 6.0344827586206895,
+          "end_time": 6.586206896551724,
+          "action": {
+            "label": "passing",
+            "confidence": 0.16463211178779602,
+            "probabilities": {
+              "free_throw": 0.13199159502983093,
+              "two_point_shot": 0.1636655032634735,
+              "three_point_shot": 0.14805299043655396,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.16100768744945526,
+              "passing": 0.16463211178779602,
+              "defense": 0.11265809088945389,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.11799197643995285
+            }
+          },
+          "metrics": {
+            "jump_height": 0.12077337503433228,
+            "movement_speed": 2.896637376397848,
+            "form_score": 0.9845113009667199,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9845113009667199,
+            "energy_efficiency": 0.6509063621899321
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 6.310344827586206,
+          "end_time": 6.862068965517241,
+          "action": {
+            "label": "two_point_shot",
+            "confidence": 0.17470186948776245,
+            "probabilities": {
+              "free_throw": 0.14272372424602509,
+              "two_point_shot": 0.17470186948776245,
+              "three_point_shot": 0.13425879180431366,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.1621987521648407,
+              "passing": 0.15088577568531036,
+              "defense": 0.12192567437887192,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.1133054569363594
+            }
+          },
+          "metrics": {
+            "jump_height": 0.05916917324066162,
+            "movement_speed": 2.4540181271731853,
+            "form_score": 0.9864054359909323,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9864054359909323,
+            "energy_efficiency": 0.6677483793737495
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 6.586206896551724,
+          "end_time": 7.137931034482759,
+          "action": {
+            "label": "dribbling",
+            "confidence": 0.16695746779441833,
+            "probabilities": {
+              "free_throw": 0.13976849615573883,
+              "two_point_shot": 0.15781477093696594,
+              "three_point_shot": 0.1462388038635254,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.16695746779441833,
+              "passing": 0.14789047837257385,
+              "defense": 0.13191872835159302,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10941124707460403
+            }
+          },
+          "metrics": {
+            "jump_height": 0.08157074451446533,
+            "movement_speed": 1.956504676491022,
+            "form_score": 0.9982506783749524,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9873564680364075,
+            "energy_efficiency": 0.622392282774763
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 6.862068965517241,
+          "end_time": 7.413793103448276,
+          "action": {
+            "label": "dribbling",
+            "confidence": 0.15923573076725006,
+            "probabilities": {
+              "free_throw": 0.1477372795343399,
+              "two_point_shot": 0.15258929133415222,
+              "three_point_shot": 0.12930098176002502,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.15923573076725006,
+              "passing": 0.15890952944755554,
+              "defense": 0.1382109522819519,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.11401620507240295
+            }
+          },
+          "metrics": {
+            "jump_height": 0.069915771484375,
+            "movement_speed": 1.791213545948267,
+            "form_score": 0.999299320215934,
+            "reaction_time": 0.0,
+            "pose_stability": 0.99306938514518,
+            "energy_efficiency": 0.729076920678753
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 7.137931034482758,
+          "end_time": 7.689655172413793,
+          "action": {
+            "label": "passing",
+            "confidence": 0.16540725529193878,
+            "probabilities": {
+              "free_throw": 0.14979836344718933,
+              "two_point_shot": 0.14268817007541656,
+              "three_point_shot": 0.13520021736621857,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.15916457772254944,
+              "passing": 0.16540725529193878,
+              "defense": 0.12767647206783295,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.12006496638059616
+            }
+          },
+          "metrics": {
+            "jump_height": 0.05216085910797119,
+            "movement_speed": 1.8561791628599167,
+            "form_score": 0.9910383026482311,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9910383026482311,
+            "energy_efficiency": 0.8425064375691776
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 7.413793103448276,
+          "end_time": 7.9655172413793105,
+          "action": {
+            "label": "passing",
+            "confidence": 0.1799684762954712,
+            "probabilities": {
+              "free_throw": 0.1347547173500061,
+              "two_point_shot": 0.13323447108268738,
+              "three_point_shot": 0.1373741179704666,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.15933117270469666,
+              "passing": 0.1799684762954712,
+              "defense": 0.13285523653030396,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.12248177081346512
+            }
+          },
+          "metrics": {
+            "jump_height": 0.09981656074523926,
+            "movement_speed": 2.0687995478510857,
+            "form_score": 0.9739747800694374,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9739747800694374,
+            "energy_efficiency": 0.761700989441791
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 7.689655172413793,
+          "end_time": 8.241379310344827,
+          "action": {
+            "label": "passing",
+            "confidence": 0.1779818832874298,
+            "probabilities": {
+              "free_throw": 0.11268212646245956,
+              "two_point_shot": 0.13715073466300964,
+              "three_point_shot": 0.15147165954113007,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.15905512869358063,
+              "passing": 0.1779818832874298,
+              "defense": 0.14060349762439728,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.121055006980896
+            }
+          },
+          "metrics": {
+            "jump_height": 0.03590750694274902,
+            "movement_speed": 0.9084032848477364,
+            "form_score": 0.9771299001339264,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9771299001339264,
+            "energy_efficiency": 0.7076009957563794
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 7.9655172413793105,
+          "end_time": 8.517241379310345,
+          "action": {
+            "label": "three_point_shot",
+            "confidence": 0.1834547221660614,
+            "probabilities": {
+              "free_throw": 0.1004289835691452,
+              "two_point_shot": 0.13575249910354614,
+              "three_point_shot": 0.1834547221660614,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.1476946622133255,
+              "passing": 0.17977526783943176,
+              "defense": 0.1365842968225479,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.11630956083536148
+            }
+          },
+          "metrics": {
+            "jump_height": 0.06763416528701782,
+            "movement_speed": 0.9688396006822586,
+            "form_score": 0.9784878518973893,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9784878518973893,
+            "energy_efficiency": 0.750406645209164
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 8.241379310344827,
+          "end_time": 8.793103448275861,
+          "action": {
+            "label": "three_point_shot",
+            "confidence": 0.19298334419727325,
+            "probabilities": {
+              "free_throw": 0.09767133742570877,
+              "two_point_shot": 0.13602909445762634,
+              "three_point_shot": 0.19298334419727325,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.1429203748703003,
+              "passing": 0.19223755598068237,
+              "defense": 0.12895184755325317,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10920647531747818
+            }
+          },
+          "metrics": {
+            "jump_height": 0.06144130229949951,
+            "movement_speed": 2.473670616745949,
+            "form_score": 0.9792799296953443,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9792799296953443,
+            "energy_efficiency": 0.7768805013511954
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 8.517241379310345,
+          "end_time": 9.068965517241379,
+          "action": {
+            "label": "passing",
+            "confidence": 0.196291983127594,
+            "probabilities": {
+              "free_throw": 0.09915011376142502,
+              "two_point_shot": 0.1305997669696808,
+              "three_point_shot": 0.1888580620288849,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.1507960855960846,
+              "passing": 0.196291983127594,
+              "defense": 0.12269306927919388,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.11161091923713684
+            }
+          },
+          "metrics": {
+            "jump_height": 0.03725481033325195,
+            "movement_speed": 2.882925420999527,
+            "form_score": 0.9822560613485046,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9822560613485046,
+            "energy_efficiency": 0.747732510803373
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 8.793103448275863,
+          "end_time": 9.344827586206897,
+          "action": {
+            "label": "passing",
+            "confidence": 0.18654417991638184,
+            "probabilities": {
+              "free_throw": 0.11314751207828522,
+              "two_point_shot": 0.13897638022899628,
+              "three_point_shot": 0.17194461822509766,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14748212695121765,
+              "passing": 0.18654417991638184,
+              "defense": 0.12737718224525452,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.11452802270650864
+            }
+          },
+          "metrics": {
+            "jump_height": 0.06445461511611938,
+            "movement_speed": 2.7734102681279182,
+            "form_score": 0.9862535909582499,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9862535909582499,
+            "energy_efficiency": 0.6198544228252936
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 9.06896551724138,
+          "end_time": 9.620689655172415,
+          "action": {
+            "label": "passing",
+            "confidence": 0.17619042098522186,
+            "probabilities": {
+              "free_throw": 0.12543311715126038,
+              "two_point_shot": 0.1329881101846695,
+              "three_point_shot": 0.16299086809158325,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.1597985476255417,
+              "passing": 0.17619042098522186,
+              "defense": 0.12601463496685028,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.11658426374197006
+            }
+          },
+          "metrics": {
+            "jump_height": 0.05781036615371704,
+            "movement_speed": 2.0634401589632034,
+            "form_score": 0.9887140257521174,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9887140257521174,
+            "energy_efficiency": 0.602839129955156
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 9.344827586206897,
+          "end_time": 9.89655172413793,
+          "action": {
+            "label": "passing",
+            "confidence": 0.18320518732070923,
+            "probabilities": {
+              "free_throw": 0.12777401506900787,
+              "two_point_shot": 0.13470692932605743,
+              "three_point_shot": 0.16461795568466187,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.1552676409482956,
+              "passing": 0.18320518732070923,
+              "defense": 0.11531481891870499,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.1191134974360466
+            }
+          },
+          "metrics": {
+            "jump_height": 0.058064401149749756,
+            "movement_speed": 0.8716218173503876,
+            "form_score": 0.9969369563929397,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9969369563929397,
+            "energy_efficiency": 0.6706610634548403
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 9.620689655172415,
+          "end_time": 10.172413793103448,
+          "action": {
+            "label": "passing",
+            "confidence": 0.17676126956939697,
+            "probabilities": {
+              "free_throw": 0.12993742525577545,
+              "two_point_shot": 0.14838570356369019,
+              "three_point_shot": 0.1483946591615677,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.15404070913791656,
+              "passing": 0.17676126956939697,
+              "defense": 0.11990351229906082,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.12257667630910873
+            }
+          },
+          "metrics": {
+            "jump_height": 0.04976099729537964,
+            "movement_speed": 0.7604640908539295,
+            "form_score": 0.9959232248241306,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9959232248241306,
+            "energy_efficiency": 0.7899122773775807
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 9.896551724137932,
+          "end_time": 10.448275862068966,
+          "action": {
+            "label": "passing",
+            "confidence": 0.16653162240982056,
+            "probabilities": {
+              "free_throw": 0.1350821703672409,
+              "two_point_shot": 0.16189166903495789,
+              "three_point_shot": 0.1446981281042099,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.15267527103424072,
+              "passing": 0.16653162240982056,
+              "defense": 0.11787068843841553,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.12125050276517868
+            }
+          },
+          "metrics": {
+            "jump_height": 0.029657185077667236,
+            "movement_speed": 0.7805784232914448,
+            "form_score": 0.997341744242362,
+            "reaction_time": 0.0,
+            "pose_stability": 0.997341744242362,
+            "energy_efficiency": 0.8293138623447732
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 10.172413793103448,
+          "end_time": 10.724137931034482,
+          "action": {
+            "label": "passing",
+            "confidence": 0.16815778613090515,
+            "probabilities": {
+              "free_throw": 0.12764891982078552,
+              "two_point_shot": 0.15071074664592743,
+              "three_point_shot": 0.15523509681224823,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14590033888816833,
+              "passing": 0.16815778613090515,
+              "defense": 0.13079610466957092,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.12155093997716904
+            }
+          },
+          "metrics": {
+            "jump_height": 0.027349472045898438,
+            "movement_speed": 0.9774740785360336,
+            "form_score": 0.9964579899473723,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9964579899473723,
+            "energy_efficiency": 0.817396556052039
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 10.448275862068966,
+          "end_time": 11.0,
+          "action": {
+            "label": "passing",
+            "confidence": 0.18123619258403778,
+            "probabilities": {
+              "free_throw": 0.11946508288383484,
+              "two_point_shot": 0.1441929042339325,
+              "three_point_shot": 0.16352666914463043,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14826299250125885,
+              "passing": 0.18123619258403778,
+              "defense": 0.13043689727783203,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.11287929117679596
+            }
+          },
+          "metrics": {
+            "jump_height": 0.03183293342590332,
+            "movement_speed": 0.6627246737480164,
+            "form_score": 0.9972527536194887,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9972527536194887,
+            "energy_efficiency": 0.7901057006022456
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 10.724137931034484,
+          "end_time": 11.275862068965518,
+          "action": {
+            "label": "passing",
+            "confidence": 0.17931388318538666,
+            "probabilities": {
+              "free_throw": 0.12588682770729065,
+              "two_point_shot": 0.1669623702764511,
+              "three_point_shot": 0.15365467965602875,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.15126916766166687,
+              "passing": 0.17931388318538666,
+              "defense": 0.11645100265741348,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10646209865808487
+            }
+          },
+          "metrics": {
+            "jump_height": 0.02842921018600464,
+            "movement_speed": 1.120857149362564,
+            "form_score": 0.9959120330709501,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9959120330709501,
+            "energy_efficiency": 0.8025076658389686
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 11.0,
+          "end_time": 11.551724137931034,
+          "action": {
+            "label": "two_point_shot",
+            "confidence": 0.17360268533229828,
+            "probabilities": {
+              "free_throw": 0.14372962713241577,
+              "two_point_shot": 0.17360268533229828,
+              "three_point_shot": 0.16170206665992737,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14895503222942352,
+              "passing": 0.16289055347442627,
+              "defense": 0.10691409558057785,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10220601409673691
+            }
+          },
+          "metrics": {
+            "jump_height": 0.02815347909927368,
+            "movement_speed": 3.050691168755293,
+            "form_score": 0.9813715607822495,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9813715607822495,
+            "energy_efficiency": 0.8043709512948122
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 11.275862068965518,
+          "end_time": 11.827586206896552,
+          "action": {
+            "label": "passing",
+            "confidence": 0.17226727306842804,
+            "probabilities": {
+              "free_throw": 0.12798115611076355,
+              "two_point_shot": 0.16618086397647858,
+              "three_point_shot": 0.16951923072338104,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14315712451934814,
+              "passing": 0.17226727306842804,
+              "defense": 0.10738666355609894,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.1135077029466629
+            }
+          },
+          "metrics": {
+            "jump_height": 0.01853334903717041,
+            "movement_speed": 2.4785013869404793,
+            "form_score": 0.9910125455045339,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9910125455045339,
+            "energy_efficiency": 0.7908492410160574
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 11.551724137931036,
+          "end_time": 12.10344827586207,
+          "action": {
+            "label": "passing",
+            "confidence": 0.18199242651462555,
+            "probabilities": {
+              "free_throw": 0.13890257477760315,
+              "two_point_shot": 0.1631430685520172,
+              "three_point_shot": 0.15306659042835236,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14940820634365082,
+              "passing": 0.18199242651462555,
+              "defense": 0.11557409912347794,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.09791307896375656
+            }
+          },
+          "metrics": {
+            "jump_height": 0.0687636137008667,
+            "movement_speed": 0.7237250916659832,
+            "form_score": 0.9984520827829104,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9984520827829104,
+            "energy_efficiency": 0.7249294980316348
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 11.827586206896552,
+          "end_time": 12.379310344827585,
+          "action": {
+            "label": "passing",
+            "confidence": 0.17249593138694763,
+            "probabilities": {
+              "free_throw": 0.1419055312871933,
+              "two_point_shot": 0.15846076607704163,
+              "three_point_shot": 0.14307057857513428,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.1671176701784134,
+              "passing": 0.17249593138694763,
+              "defense": 0.1214095875620842,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.0955398827791214
+            }
+          },
+          "metrics": {
+            "jump_height": 0.07839882373809814,
+            "movement_speed": 0.288540031760931,
+            "form_score": 0.9980315861841156,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9980315861841156,
+            "energy_efficiency": 0.6704398299670868
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 12.10344827586207,
+          "end_time": 12.655172413793103,
+          "action": {
+            "label": "passing",
+            "confidence": 0.19190937280654907,
+            "probabilities": {
+              "free_throw": 0.144745871424675,
+              "two_point_shot": 0.14969655871391296,
+              "three_point_shot": 0.1560448557138443,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14592352509498596,
+              "passing": 0.19190937280654907,
+              "defense": 0.11484219133853912,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.09683762490749359
+            }
+          },
+          "metrics": {
+            "jump_height": 0.007363259792327881,
+            "movement_speed": 0.25672344490885735,
+            "form_score": 0.9996133411542774,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9996133411542774,
+            "energy_efficiency": 0.8495606528273091
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 12.379310344827587,
+          "end_time": 12.931034482758621,
+          "action": {
+            "label": "passing",
+            "confidence": 0.1828112006187439,
+            "probabilities": {
+              "free_throw": 0.13096509873867035,
+              "two_point_shot": 0.16086424887180328,
+              "three_point_shot": 0.14231397211551666,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.15330322086811066,
+              "passing": 0.1828112006187439,
+              "defense": 0.12072665244340897,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10901562869548798
+            }
+          },
+          "metrics": {
+            "jump_height": 0.03661787509918213,
+            "movement_speed": 0.13159587979316711,
+            "form_score": 0.9982266569732954,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9982266569732954,
+            "energy_efficiency": 0.8894650000443025
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 12.655172413793105,
+          "end_time": 13.206896551724139,
+          "action": {
+            "label": "passing",
+            "confidence": 0.16894418001174927,
+            "probabilities": {
+              "free_throw": 0.13922832906246185,
+              "two_point_shot": 0.16686230897903442,
+              "three_point_shot": 0.16513611376285553,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14459751546382904,
+              "passing": 0.16894418001174927,
+              "defense": 0.1125299409031868,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10270162671804428
+            }
+          },
+          "metrics": {
+            "jump_height": 0.033070147037506104,
+            "movement_speed": 0.18341504037380219,
+            "form_score": 0.9964992786553946,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9964992786553946,
+            "energy_efficiency": 0.9044690065765749
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 12.931034482758621,
+          "end_time": 13.482758620689655,
+          "action": {
+            "label": "passing",
+            "confidence": 0.17657794058322906,
+            "probabilities": {
+              "free_throw": 0.13853731751441956,
+              "two_point_shot": 0.16398698091506958,
+              "three_point_shot": 0.15989013016223907,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.1479024440050125,
+              "passing": 0.17657794058322906,
+              "defense": 0.10844755172729492,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10465763509273529
+            }
+          },
+          "metrics": {
+            "jump_height": 0.010135769844055176,
+            "movement_speed": 0.264909490942955,
+            "form_score": 0.9987251787081256,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9987251787081256,
+            "energy_efficiency": 0.9325730646343638
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 13.206896551724139,
+          "end_time": 13.758620689655173,
+          "action": {
+            "label": "passing",
+            "confidence": 0.17415615916252136,
+            "probabilities": {
+              "free_throw": 0.14495952427387238,
+              "two_point_shot": 0.17213128507137299,
+              "three_point_shot": 0.1376461684703827,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.1536487638950348,
+              "passing": 0.17415615916252136,
+              "defense": 0.11321569979190826,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10424239188432693
+            }
+          },
+          "metrics": {
+            "jump_height": 0.011940836906433105,
+            "movement_speed": 0.1409676857292652,
+            "form_score": 0.9998723243362309,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9998723243362309,
+            "energy_efficiency": 0.9541908277165182
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 13.482758620689657,
+          "end_time": 14.03448275862069,
+          "action": {
+            "label": "passing",
+            "confidence": 0.17387564480304718,
+            "probabilities": {
+              "free_throw": 0.13500367105007172,
+              "two_point_shot": 0.16240742802619934,
+              "three_point_shot": 0.1462792456150055,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.1613483875989914,
+              "passing": 0.17387564480304718,
+              "defense": 0.11907694488763809,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.1020086333155632
+            }
+          },
+          "metrics": {
+            "jump_height": 0.011559724807739258,
+            "movement_speed": 0.1185217872262001,
+            "form_score": 0.9998885557551628,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9998885557551628,
+            "energy_efficiency": 0.9454692019777688
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 13.758620689655173,
+          "end_time": 14.310344827586206,
+          "action": {
+            "label": "dribbling",
+            "confidence": 0.17292436957359314,
+            "probabilities": {
+              "free_throw": 0.12028942257165909,
+              "two_point_shot": 0.15805581212043762,
+              "three_point_shot": 0.16080565750598907,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.17292436957359314,
+              "passing": 0.15479931235313416,
+              "defense": 0.1218232735991478,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.11130216717720032
+            }
+          },
+          "metrics": {
+            "jump_height": 0.011142849922180176,
+            "movement_speed": 0.6892100907862186,
+            "form_score": 0.9999187348624248,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9987476869288989,
+            "energy_efficiency": 0.8996443804205099
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 14.03448275862069,
+          "end_time": 14.586206896551724,
+          "action": {
+            "label": "two_point_shot",
+            "confidence": 0.1645381897687912,
+            "probabilities": {
+              "free_throw": 0.12648989260196686,
+              "two_point_shot": 0.1645381897687912,
+              "three_point_shot": 0.1570720672607422,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.15742045640945435,
+              "passing": 0.1526907980442047,
+              "defense": 0.12717364728450775,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.11461493372917175
+            }
+          },
+          "metrics": {
+            "jump_height": 0.01874709129333496,
+            "movement_speed": 1.231111865490675,
+            "form_score": 0.997619206160038,
+            "reaction_time": 0.0,
+            "pose_stability": 0.997619206160038,
+            "energy_efficiency": 0.8631847424095062
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 14.310344827586208,
+          "end_time": 14.862068965517242,
+          "action": {
+            "label": "passing",
+            "confidence": 0.1663874089717865,
+            "probabilities": {
+              "free_throw": 0.13156066834926605,
+              "two_point_shot": 0.15772409737110138,
+              "three_point_shot": 0.15330274403095245,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.16122496128082275,
+              "passing": 0.1663874089717865,
+              "defense": 0.11949503421783447,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.1103050708770752
+            }
+          },
+          "metrics": {
+            "jump_height": 0.02220374345779419,
+            "movement_speed": 1.0857241228222847,
+            "form_score": 0.9981564197221677,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9981564197221677,
+            "energy_efficiency": 0.8464862592416582
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 14.586206896551724,
+          "end_time": 15.137931034482758,
+          "action": {
+            "label": "passing",
+            "confidence": 0.1765611469745636,
+            "probabilities": {
+              "free_throw": 0.15523123741149902,
+              "two_point_shot": 0.15776202082633972,
+              "three_point_shot": 0.14875531196594238,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.1415315717458725,
+              "passing": 0.1765611469745636,
+              "defense": 0.11119336634874344,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10896529257297516
+            }
+          },
+          "metrics": {
+            "jump_height": 0.01812189817428589,
+            "movement_speed": 0.7818298414349556,
+            "form_score": 0.9946971765750321,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9946971765750321,
+            "energy_efficiency": 0.8355280648166947
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 14.862068965517242,
+          "end_time": 15.413793103448276,
+          "action": {
+            "label": "passing",
+            "confidence": 0.1732572317123413,
+            "probabilities": {
+              "free_throw": 0.13721249997615814,
+              "two_point_shot": 0.15084175765514374,
+              "three_point_shot": 0.1466439813375473,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.1483824998140335,
+              "passing": 0.1732572317123413,
+              "defense": 0.13074198365211487,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.11292001605033875
+            }
+          },
+          "metrics": {
+            "jump_height": 0.04466134309768677,
+            "movement_speed": 0.3248753026127815,
+            "form_score": 0.9912995576066427,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9912995576066427,
+            "energy_efficiency": 0.7533974455070346
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 15.13793103448276,
+          "end_time": 15.689655172413794,
+          "action": {
+            "label": "two_point_shot",
+            "confidence": 0.16098953783512115,
+            "probabilities": {
+              "free_throw": 0.14974404871463776,
+              "two_point_shot": 0.16098953783512115,
+              "three_point_shot": 0.14793185889720917,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14713916182518005,
+              "passing": 0.14428843557834625,
+              "defense": 0.14189960062503815,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10800733417272568
+            }
+          },
+          "metrics": {
+            "jump_height": 0.033179640769958496,
+            "movement_speed": 0.29433723539114,
+            "form_score": 0.9962393440102185,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9962393440102185,
+            "energy_efficiency": 0.8128891921228244
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 15.413793103448276,
+          "end_time": 15.96551724137931,
+          "action": {
+            "label": "free_throw",
+            "confidence": 0.17105136811733246,
+            "probabilities": {
+              "free_throw": 0.17105136811733246,
+              "two_point_shot": 0.15834110975265503,
+              "three_point_shot": 0.139182448387146,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.1323920488357544,
+              "passing": 0.13941699266433716,
+              "defense": 0.1508975625038147,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10871846973896027
+            }
+          },
+          "metrics": {
+            "jump_height": 0.0,
+            "movement_speed": 0.18836064264178276,
+            "form_score": 0.9960259276691249,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9960259276691249,
+            "energy_efficiency": 0.9015835545641745
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 15.689655172413795,
+          "end_time": 16.24137931034483,
+          "action": {
+            "label": "free_throw",
+            "confidence": 0.16896997392177582,
+            "probabilities": {
+              "free_throw": 0.16896997392177582,
+              "two_point_shot": 0.16629460453987122,
+              "three_point_shot": 0.1490824818611145,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14501738548278809,
+              "passing": 0.13955335319042206,
+              "defense": 0.12382280826568604,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10725938528776169
+            }
+          },
+          "metrics": {
+            "jump_height": 0.0,
+            "movement_speed": 0.18836064264178276,
+            "form_score": 0.9890028368180361,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9890028368180361,
+            "energy_efficiency": 0.8484934114423007
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 15.965517241379311,
+          "end_time": 16.517241379310345,
+          "action": {
+            "label": "two_point_shot",
+            "confidence": 0.1962144821882248,
+            "probabilities": {
+              "free_throw": 0.1563120037317276,
+              "two_point_shot": 0.1962144821882248,
+              "three_point_shot": 0.13604925572872162,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14506042003631592,
+              "passing": 0.14644166827201843,
+              "defense": 0.11040060222148895,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10952161997556686
+            }
+          },
+          "metrics": {
+            "jump_height": 0.02389383316040039,
+            "movement_speed": 0.2908439375460148,
+            "form_score": 0.9945498795858495,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9945498795858495,
+            "energy_efficiency": 0.8484727694797844
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 16.241379310344826,
+          "end_time": 16.79310344827586,
+          "action": {
+            "label": "two_point_shot",
+            "confidence": 0.192644864320755,
+            "probabilities": {
+              "free_throw": 0.15561117231845856,
+              "two_point_shot": 0.192644864320755,
+              "three_point_shot": 0.130197674036026,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14837715029716492,
+              "passing": 0.16938327252864838,
+              "defense": 0.11397171020507812,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.08981411904096603
+            }
+          },
+          "metrics": {
+            "jump_height": 0.0037732720375061035,
+            "movement_speed": 0.3742961212992668,
+            "form_score": 0.9957048153609183,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9957048153609183,
+            "energy_efficiency": 0.8965268621180869
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 16.517241379310345,
+          "end_time": 17.06896551724138,
+          "action": {
+            "label": "passing",
+            "confidence": 0.1768813580274582,
+            "probabilities": {
+              "free_throw": 0.1635601818561554,
+              "two_point_shot": 0.17523890733718872,
+              "three_point_shot": 0.1266966611146927,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.15602964162826538,
+              "passing": 0.1768813580274582,
+              "defense": 0.11495654284954071,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.08663678914308548
+            }
+          },
+          "metrics": {
+            "jump_height": 0.0325658917427063,
+            "movement_speed": 0.4252108745276928,
+            "form_score": 0.9975563076115581,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9975563076115581,
+            "energy_efficiency": 0.8756141859255422
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 16.79310344827586,
+          "end_time": 17.344827586206897,
+          "action": {
+            "label": "two_point_shot",
+            "confidence": 0.17357181012630463,
+            "probabilities": {
+              "free_throw": 0.15439704060554504,
+              "two_point_shot": 0.17357181012630463,
+              "three_point_shot": 0.1478867530822754,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.1508004367351532,
+              "passing": 0.15107405185699463,
+              "defense": 0.12053223699331284,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10173770785331726
+            }
+          },
+          "metrics": {
+            "jump_height": 0.06313496828079224,
+            "movement_speed": 0.6780794821679592,
+            "form_score": 0.9932600275211337,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9932600275211337,
+            "energy_efficiency": 0.839769503166802
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 17.068965517241377,
+          "end_time": 17.620689655172413,
+          "action": {
+            "label": "two_point_shot",
+            "confidence": 0.18579886853694916,
+            "probabilities": {
+              "free_throw": 0.15309932827949524,
+              "two_point_shot": 0.18579886853694916,
+              "three_point_shot": 0.15803192555904388,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14132840931415558,
+              "passing": 0.143648162484169,
+              "defense": 0.11869177967309952,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.09940149635076523
+            }
+          },
+          "metrics": {
+            "jump_height": 0.047199547290802,
+            "movement_speed": 1.6592411790043116,
+            "form_score": 0.993678288730843,
+            "reaction_time": 0.0,
+            "pose_stability": 0.993678288730843,
+            "energy_efficiency": 0.8317620254306128
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 17.344827586206897,
+          "end_time": 17.896551724137932,
+          "action": {
+            "label": "two_point_shot",
+            "confidence": 0.180096834897995,
+            "probabilities": {
+              "free_throw": 0.14991340041160583,
+              "two_point_shot": 0.180096834897995,
+              "three_point_shot": 0.15038281679153442,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.16073717176914215,
+              "passing": 0.15259799361228943,
+              "defense": 0.09642481803894043,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10984702408313751
+            }
+          },
+          "metrics": {
+            "jump_height": 0.022617101669311523,
+            "movement_speed": 2.0705311093479395,
+            "form_score": 0.9943719107536716,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9943719107536716,
+            "energy_efficiency": 0.8250699589776733
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 17.620689655172413,
+          "end_time": 18.17241379310345,
+          "action": {
+            "label": "two_point_shot",
+            "confidence": 0.1872187703847885,
+            "probabilities": {
+              "free_throw": 0.15251676738262177,
+              "two_point_shot": 0.1872187703847885,
+              "three_point_shot": 0.13906115293502808,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.1373554915189743,
+              "passing": 0.15831121802330017,
+              "defense": 0.11605016142129898,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10948637127876282
+            }
+          },
+          "metrics": {
+            "jump_height": 0.019766628742218018,
+            "movement_speed": 1.0803838726133108,
+            "form_score": 0.9980230029698761,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9980230029698761,
+            "energy_efficiency": 0.8768265377658877
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 17.89655172413793,
+          "end_time": 18.448275862068964,
+          "action": {
+            "label": "two_point_shot",
+            "confidence": 0.1842469573020935,
+            "probabilities": {
+              "free_throw": 0.1486748903989792,
+              "two_point_shot": 0.1842469573020935,
+              "three_point_shot": 0.1376713365316391,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.1514759063720703,
+              "passing": 0.16770192980766296,
+              "defense": 0.11048463732004166,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.09974434971809387
+            }
+          },
+          "metrics": {
+            "jump_height": 0.008457362651824951,
+            "movement_speed": 0.4093253519386053,
+            "form_score": 0.999085341074255,
+            "reaction_time": 0.0,
+            "pose_stability": 0.999085341074255,
+            "energy_efficiency": 0.920817349269164
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 18.17241379310345,
+          "end_time": 18.724137931034484,
+          "action": {
+            "label": "passing",
+            "confidence": 0.17876991629600525,
+            "probabilities": {
+              "free_throw": 0.13440574705600739,
+              "two_point_shot": 0.17146627604961395,
+              "three_point_shot": 0.13868817687034607,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14904309809207916,
+              "passing": 0.17876991629600525,
+              "defense": 0.12743932008743286,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10018743574619293
+            }
+          },
+          "metrics": {
+            "jump_height": 0.02429419755935669,
+            "movement_speed": 0.5054565612226725,
+            "form_score": 0.9991152803638316,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9991152803638316,
+            "energy_efficiency": 0.8913923303992561
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 18.448275862068964,
+          "end_time": 19.0,
+          "action": {
+            "label": "passing",
+            "confidence": 0.19894284009933472,
+            "probabilities": {
+              "free_throw": 0.12757600843906403,
+              "two_point_shot": 0.17292724549770355,
+              "three_point_shot": 0.1339111477136612,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14744023978710175,
+              "passing": 0.19894284009933472,
+              "defense": 0.11973360180854797,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.09946883469820023
+            }
+          },
+          "metrics": {
+            "jump_height": 0.02605438232421875,
+            "movement_speed": 1.0707397246733308,
+            "form_score": 0.9979368282711253,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9979368282711253,
+            "energy_efficiency": 0.8662393459107084
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 18.72413793103448,
+          "end_time": 19.275862068965516,
+          "action": {
+            "label": "passing",
+            "confidence": 0.21090050041675568,
+            "probabilities": {
+              "free_throw": 0.1352563351392746,
+              "two_point_shot": 0.15922044217586517,
+              "three_point_shot": 0.13685239851474762,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.1379527747631073,
+              "passing": 0.21090050041675568,
+              "defense": 0.11671406775712967,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10310347378253937
+            }
+          },
+          "metrics": {
+            "jump_height": 0.018481969833374023,
+            "movement_speed": 0.9086184203624725,
+            "form_score": 0.9984463986738005,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9984463986738005,
+            "energy_efficiency": 0.8478078581086959
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 19.0,
+          "end_time": 19.551724137931036,
+          "action": {
+            "label": "passing",
+            "confidence": 0.20039081573486328,
+            "probabilities": {
+              "free_throw": 0.13074682652950287,
+              "two_point_shot": 0.1568673849105835,
+              "three_point_shot": 0.1402529776096344,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.145698681473732,
+              "passing": 0.20039081573486328,
+              "defense": 0.11776129901409149,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.1082819327712059
+            }
+          },
+          "metrics": {
+            "jump_height": 0.02542853355407715,
+            "movement_speed": 0.6183955119922757,
+            "form_score": 0.9983292855092086,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9983292855092086,
+            "energy_efficiency": 0.8659379686178755
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 19.275862068965516,
+          "end_time": 19.82758620689655,
+          "action": {
+            "label": "passing",
+            "confidence": 0.20177677273750305,
+            "probabilities": {
+              "free_throw": 0.1272338181734085,
+              "two_point_shot": 0.15724658966064453,
+              "three_point_shot": 0.1377122849225998,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.13856612145900726,
+              "passing": 0.20177677273750305,
+              "defense": 0.12213068455457687,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.11533374339342117
+            }
+          },
+          "metrics": {
+            "jump_height": 0.0226479172706604,
+            "movement_speed": 0.6684387219138443,
+            "form_score": 0.9983480814901579,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9983480814901579,
+            "energy_efficiency": 0.8653580715743078
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 19.551724137931032,
+          "end_time": 20.103448275862068,
+          "action": {
+            "label": "passing",
+            "confidence": 0.20453768968582153,
+            "probabilities": {
+              "free_throw": 0.13380491733551025,
+              "two_point_shot": 0.14975403249263763,
+              "three_point_shot": 0.1375330537557602,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14124003052711487,
+              "passing": 0.20453768968582153,
+              "defense": 0.11983567476272583,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.11329464614391327
+            }
+          },
+          "metrics": {
+            "jump_height": 0.01329416036605835,
+            "movement_speed": 0.667575909756124,
+            "form_score": 0.9990855190525845,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9990855190525845,
+            "energy_efficiency": 0.8799792247666902
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 19.82758620689655,
+          "end_time": 20.379310344827587,
+          "action": {
+            "label": "passing",
+            "confidence": 0.2137380987405777,
+            "probabilities": {
+              "free_throw": 0.13414306938648224,
+              "two_point_shot": 0.140685573220253,
+              "three_point_shot": 0.14637434482574463,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.1447809636592865,
+              "passing": 0.2137380987405777,
+              "defense": 0.10675708204507828,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.11352085322141647
+            }
+          },
+          "metrics": {
+            "jump_height": 0.02353304624557495,
+            "movement_speed": 0.2910262090153992,
+            "form_score": 0.9990874636805313,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9990874636805313,
+            "energy_efficiency": 0.8921642376913459
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 20.103448275862068,
+          "end_time": 20.655172413793103,
+          "action": {
+            "label": "passing",
+            "confidence": 0.19840635359287262,
+            "probabilities": {
+              "free_throw": 0.13655757904052734,
+              "two_point_shot": 0.15609760582447052,
+              "three_point_shot": 0.1474694311618805,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14360558986663818,
+              "passing": 0.19840635359287262,
+              "defense": 0.10793653130531311,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.1099269911646843
+            }
+          },
+          "metrics": {
+            "jump_height": 0.02242136001586914,
+            "movement_speed": 0.0357068027369678,
+            "form_score": 0.9986959825514442,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9986959825514442,
+            "energy_efficiency": 0.8575368343755047
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 20.379310344827584,
+          "end_time": 20.93103448275862,
+          "action": {
+            "label": "passing",
+            "confidence": 0.20697589218616486,
+            "probabilities": {
+              "free_throw": 0.13372911512851715,
+              "two_point_shot": 0.14044705033302307,
+              "three_point_shot": 0.14291204512119293,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14491529762744904,
+              "passing": 0.20697589218616486,
+              "defense": 0.12345284223556519,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10756778717041016
+            }
+          },
+          "metrics": {
+            "jump_height": 0.023104071617126465,
+            "movement_speed": 0.15013759257271886,
+            "form_score": 0.999376679036963,
+            "reaction_time": 0.0,
+            "pose_stability": 0.999376679036963,
+            "energy_efficiency": 0.8494009119842538
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 20.655172413793103,
+          "end_time": 21.20689655172414,
+          "action": {
+            "label": "passing",
+            "confidence": 0.21534958481788635,
+            "probabilities": {
+              "free_throw": 0.1351243108510971,
+              "two_point_shot": 0.14069676399230957,
+              "three_point_shot": 0.14220646023750305,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.1404411643743515,
+              "passing": 0.21534958481788635,
+              "defense": 0.1235426589846611,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10263899713754654
+            }
+          },
+          "metrics": {
+            "jump_height": 0.010517239570617676,
+            "movement_speed": 0.3408967168070376,
+            "form_score": 0.9990023997130554,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9990023997130554,
+            "energy_efficiency": 0.9109300466546358
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 20.93103448275862,
+          "end_time": 21.482758620689655,
+          "action": {
+            "label": "passing",
+            "confidence": 0.20392461121082306,
+            "probabilities": {
+              "free_throw": 0.13354192674160004,
+              "two_point_shot": 0.15033675730228424,
+              "three_point_shot": 0.1452641785144806,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.1407027542591095,
+              "passing": 0.20392461121082306,
+              "defense": 0.11995958536863327,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10627015680074692
+            }
+          },
+          "metrics": {
+            "jump_height": 0.010065257549285889,
+            "movement_speed": 0.6017305728164501,
+            "form_score": 0.9983448456140931,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9983448456140931,
+            "energy_efficiency": 0.8818192131903505
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 21.206896551724135,
+          "end_time": 21.75862068965517,
+          "action": {
+            "label": "passing",
+            "confidence": 0.204881951212883,
+            "probabilities": {
+              "free_throw": 0.126083642244339,
+              "two_point_shot": 0.15618135035037994,
+              "three_point_shot": 0.1453213393688202,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.13969078660011292,
+              "passing": 0.204881951212883,
+              "defense": 0.12380091100931168,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.1040400043129921
+            }
+          },
+          "metrics": {
+            "jump_height": 0.023435592651367188,
+            "movement_speed": 0.8638294719276018,
+            "form_score": 0.9977595148306029,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9977595148306029,
+            "energy_efficiency": 0.8194580009429859
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 21.482758620689655,
+          "end_time": 22.03448275862069,
+          "action": {
+            "label": "passing",
+            "confidence": 0.1949310451745987,
+            "probabilities": {
+              "free_throw": 0.13248518109321594,
+              "two_point_shot": 0.16408959031105042,
+              "three_point_shot": 0.15546435117721558,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.13509875535964966,
+              "passing": 0.1949310451745987,
+              "defense": 0.1160513311624527,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10187972337007523
+            }
+          },
+          "metrics": {
+            "jump_height": 0.07446295022964478,
+            "movement_speed": 7.663518879562616,
+            "form_score": 0.8953037562782487,
+            "reaction_time": 0.3333333333333333,
+            "pose_stability": 0.8953037562782487,
+            "energy_efficiency": 0.13637570427253304
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 21.75862068965517,
+          "end_time": 22.310344827586206,
+          "action": {
+            "label": "passing",
+            "confidence": 0.1902390867471695,
+            "probabilities": {
+              "free_throw": 0.1290484517812729,
+              "two_point_shot": 0.1688830703496933,
+              "three_point_shot": 0.15137383341789246,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.1366817206144333,
+              "passing": 0.1902390867471695,
+              "defense": 0.11194799840450287,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.11182583123445511
+            }
+          },
+          "metrics": {
+            "jump_height": 0.07446295022964478,
+            "movement_speed": 7.663518879562616,
+            "form_score": 0.913567882815026,
+            "reaction_time": 0.06666666666666667,
+            "pose_stability": 0.913567882815026,
+            "energy_efficiency": 0.13489050926841636
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 22.034482758620687,
+          "end_time": 22.586206896551722,
+          "action": {
+            "label": "passing",
+            "confidence": 0.1939219981431961,
+            "probabilities": {
+              "free_throw": 0.13857465982437134,
+              "two_point_shot": 0.16769196093082428,
+              "three_point_shot": 0.14773021638393402,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14152473211288452,
+              "passing": 0.1939219981431961,
+              "defense": 0.11112717539072037,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.09942927211523056
+            }
+          },
+          "metrics": {
+            "jump_height": 0.059126853942871094,
+            "movement_speed": 0.5276438780128956,
+            "form_score": 0.9979711450246004,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9979711450246004,
+            "energy_efficiency": 0.7479242375645453
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 22.310344827586206,
+          "end_time": 22.862068965517242,
+          "action": {
+            "label": "passing",
+            "confidence": 0.17298820614814758,
+            "probabilities": {
+              "free_throw": 0.14106395840644836,
+              "two_point_shot": 0.16448591649532318,
+              "three_point_shot": 0.14863747358322144,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.15357115864753723,
+              "passing": 0.17298820614814758,
+              "defense": 0.10815460979938507,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.1110987439751625
+            }
+          },
+          "metrics": {
+            "jump_height": 0.030340492725372314,
+            "movement_speed": 0.6409610621631145,
+            "form_score": 0.9985732605199468,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9985732605199468,
+            "energy_efficiency": 0.7358878611695551
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 22.586206896551722,
+          "end_time": 23.137931034482758,
+          "action": {
+            "label": "passing",
+            "confidence": 0.18088069558143616,
+            "probabilities": {
+              "free_throw": 0.14847053587436676,
+              "two_point_shot": 0.15793922543525696,
+              "three_point_shot": 0.14987102150917053,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14000122249126434,
+              "passing": 0.18088069558143616,
+              "defense": 0.1118064895272255,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.11103081703186035
+            }
+          },
+          "metrics": {
+            "jump_height": 0.0373762845993042,
+            "movement_speed": 0.7314839400351048,
+            "form_score": 0.9982545363141652,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9982545363141652,
+            "energy_efficiency": 0.6601103649532104
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 22.862068965517242,
+          "end_time": 23.413793103448278,
+          "action": {
+            "label": "passing",
+            "confidence": 0.18085260689258575,
+            "probabilities": {
+              "free_throw": 0.1355586051940918,
+              "two_point_shot": 0.15560397505760193,
+              "three_point_shot": 0.1546759158372879,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14156463742256165,
+              "passing": 0.18085260689258575,
+              "defense": 0.11958692967891693,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.11215735226869583
+            }
+          },
+          "metrics": {
+            "jump_height": 0.017911016941070557,
+            "movement_speed": 0.9647984057664871,
+            "form_score": 0.9978376410226693,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9978376410226693,
+            "energy_efficiency": 0.7264503282873975
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 23.137931034482758,
+          "end_time": 23.689655172413794,
+          "action": {
+            "label": "passing",
+            "confidence": 0.1863132119178772,
+            "probabilities": {
+              "free_throw": 0.1273861527442932,
+              "two_point_shot": 0.1614965945482254,
+              "three_point_shot": 0.1619180142879486,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.1463335007429123,
+              "passing": 0.1863132119178772,
+              "defense": 0.10823898017406464,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10831356048583984
+            }
+          },
+          "metrics": {
+            "jump_height": 0.016836225986480713,
+            "movement_speed": 0.9064642712473869,
+            "form_score": 0.997307777872511,
+            "reaction_time": 0.0,
+            "pose_stability": 0.997307777872511,
+            "energy_efficiency": 0.8055009438087691
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 23.413793103448274,
+          "end_time": 23.96551724137931,
+          "action": {
+            "label": "passing",
+            "confidence": 0.1802312433719635,
+            "probabilities": {
+              "free_throw": 0.12965615093708038,
+              "two_point_shot": 0.1623915433883667,
+              "three_point_shot": 0.16403093934059143,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14403291046619415,
+              "passing": 0.1802312433719635,
+              "defense": 0.11164936423301697,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10800784081220627
+            }
+          },
+          "metrics": {
+            "jump_height": 0.009848535060882568,
+            "movement_speed": 0.9257074445486069,
+            "form_score": 0.9972923131054621,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9972923131054621,
+            "energy_efficiency": 0.84998155663493
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 23.689655172413794,
+          "end_time": 24.24137931034483,
+          "action": {
+            "label": "passing",
+            "confidence": 0.18775822222232819,
+            "probabilities": {
+              "free_throw": 0.14485886693000793,
+              "two_point_shot": 0.16453033685684204,
+              "three_point_shot": 0.1530071496963501,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14480026066303253,
+              "passing": 0.18775822222232819,
+              "defense": 0.10457539558410645,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10046976804733276
+            }
+          },
+          "metrics": {
+            "jump_height": 0.023030102252960205,
+            "movement_speed": 0.8186750113964081,
+            "form_score": 0.9980731332117468,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9980731332117468,
+            "energy_efficiency": 0.8484041202331826
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 23.96551724137931,
+          "end_time": 24.517241379310345,
+          "action": {
+            "label": "passing",
+            "confidence": 0.206110417842865,
+            "probabilities": {
+              "free_throw": 0.14032505452632904,
+              "two_point_shot": 0.17418241500854492,
+              "three_point_shot": 0.1414579451084137,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.13686323165893555,
+              "passing": 0.206110417842865,
+              "defense": 0.10527051985263824,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.09579042345285416
+            }
+          },
+          "metrics": {
+            "jump_height": 0.014933526515960693,
+            "movement_speed": 0.7910307962447405,
+            "form_score": 0.9985483379856464,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9985483379856464,
+            "energy_efficiency": 0.8900966268916425
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 24.241379310344826,
+          "end_time": 24.79310344827586,
+          "action": {
+            "label": "passing",
+            "confidence": 0.19329307973384857,
+            "probabilities": {
+              "free_throw": 0.14674215018749237,
+              "two_point_shot": 0.16789034008979797,
+              "three_point_shot": 0.1414225548505783,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14457224309444427,
+              "passing": 0.19329307973384857,
+              "defense": 0.10512784123420715,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10095176845788956
+            }
+          },
+          "metrics": {
+            "jump_height": 0.00869297981262207,
+            "movement_speed": 0.8041308727115393,
+            "form_score": 0.9988778212582994,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9988778212582994,
+            "energy_efficiency": 0.8614078461598984
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 24.517241379310345,
+          "end_time": 25.06896551724138,
+          "action": {
+            "label": "passing",
+            "confidence": 0.21027372777462006,
+            "probabilities": {
+              "free_throw": 0.14434605836868286,
+              "two_point_shot": 0.15993784368038177,
+              "three_point_shot": 0.136091947555542,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.1602800488471985,
+              "passing": 0.21027372777462006,
+              "defense": 0.09748827666044235,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.09158209711313248
+            }
+          },
+          "metrics": {
+            "jump_height": 0.006504833698272705,
+            "movement_speed": 0.4908165894448757,
+            "form_score": 0.9992335468067658,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9992335468067658,
+            "energy_efficiency": 0.85933033989673
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 24.79310344827586,
+          "end_time": 25.344827586206897,
+          "action": {
+            "label": "passing",
+            "confidence": 0.22851917147636414,
+            "probabilities": {
+              "free_throw": 0.1290174275636673,
+              "two_point_shot": 0.18594752252101898,
+              "three_point_shot": 0.13042689859867096,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14177465438842773,
+              "passing": 0.22851917147636414,
+              "defense": 0.08927445858716965,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.09503983706235886
+            }
+          },
+          "metrics": {
+            "jump_height": 0.01002967357635498,
+            "movement_speed": 0.2788705285638571,
+            "form_score": 0.9996191062282719,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9996191062282719,
+            "energy_efficiency": 0.9224392721178286
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 25.068965517241377,
+          "end_time": 25.620689655172413,
+          "action": {
+            "label": "passing",
+            "confidence": 0.24194012582302094,
+            "probabilities": {
+              "free_throw": 0.12550373375415802,
+              "two_point_shot": 0.17466618120670319,
+              "three_point_shot": 0.135366290807724,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14556579291820526,
+              "passing": 0.24194012582302094,
+              "defense": 0.09014317393302917,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.0868147537112236
+            }
+          },
+          "metrics": {
+            "jump_height": 0.01290661096572876,
+            "movement_speed": 0.16104248352348804,
+            "form_score": 0.9998314535028637,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9998314535028637,
+            "energy_efficiency": 0.8945555967518435
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 25.344827586206897,
+          "end_time": 25.896551724137932,
+          "action": {
+            "label": "passing",
+            "confidence": 0.2328025996685028,
+            "probabilities": {
+              "free_throw": 0.12596473097801208,
+              "two_point_shot": 0.18025711178779602,
+              "three_point_shot": 0.13221362233161926,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14589913189411163,
+              "passing": 0.2328025996685028,
+              "defense": 0.08631084114313126,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.09655202925205231
+            }
+          },
+          "metrics": {
+            "jump_height": 0.02270418405532837,
+            "movement_speed": 0.10736365802586079,
+            "form_score": 0.9998049818000898,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9998049818000898,
+            "energy_efficiency": 0.8770634161575874
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 25.620689655172413,
+          "end_time": 26.17241379310345,
+          "action": {
+            "label": "passing",
+            "confidence": 0.21286430954933167,
+            "probabilities": {
+              "free_throw": 0.11626236140727997,
+              "two_point_shot": 0.1697339117527008,
+              "three_point_shot": 0.1427353322505951,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14904926717281342,
+              "passing": 0.21286430954933167,
+              "defense": 0.10552196204662323,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10383289307355881
+            }
+          },
+          "metrics": {
+            "jump_height": 0.018574178218841553,
+            "movement_speed": 0.10722856968641281,
+            "form_score": 0.9998681422343539,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9998681422343539,
+            "energy_efficiency": 0.9213519004267108
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 25.89655172413793,
+          "end_time": 26.448275862068964,
+          "action": {
+            "label": "passing",
+            "confidence": 0.20425644516944885,
+            "probabilities": {
+              "free_throw": 0.12768715620040894,
+              "two_point_shot": 0.17531722784042358,
+              "three_point_shot": 0.14511041343212128,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14644749462604523,
+              "passing": 0.20425644516944885,
+              "defense": 0.10114915668964386,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10003215819597244
+            }
+          },
+          "metrics": {
+            "jump_height": 0.03129565715789795,
+            "movement_speed": 0.024124234914779663,
+            "form_score": 0.9997737081518564,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9997737081518564,
+            "energy_efficiency": 0.8870205539942154
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 26.17241379310345,
+          "end_time": 26.724137931034484,
+          "action": {
+            "label": "passing",
+            "confidence": 0.1943630427122116,
+            "probabilities": {
+              "free_throw": 0.13347677886486053,
+              "two_point_shot": 0.17962859570980072,
+              "three_point_shot": 0.14775267243385315,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14896933734416962,
+              "passing": 0.1943630427122116,
+              "defense": 0.09251394122838974,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10329563915729523
+            }
+          },
+          "metrics": {
+            "jump_height": 0.029514968395233154,
+            "movement_speed": 0.12174546718597412,
+            "form_score": 0.9996235563527291,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9996235563527291,
+            "energy_efficiency": 0.8629111456927722
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 26.448275862068964,
+          "end_time": 27.0,
+          "action": {
+            "label": "passing",
+            "confidence": 0.2118307501077652,
+            "probabilities": {
+              "free_throw": 0.1321467161178589,
+              "two_point_shot": 0.18070754408836365,
+              "three_point_shot": 0.1478377729654312,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14388754963874817,
+              "passing": 0.2118307501077652,
+              "defense": 0.08522002398967743,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.09836966544389725
+            }
+          },
+          "metrics": {
+            "jump_height": 0.03938025236129761,
+            "movement_speed": 0.11863536201417446,
+            "form_score": 0.9996370400826992,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9996370400826992,
+            "energy_efficiency": 0.8642270019884364
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 26.72413793103448,
+          "end_time": 27.275862068965516,
+          "action": {
+            "label": "passing",
+            "confidence": 0.20042163133621216,
+            "probabilities": {
+              "free_throw": 0.1403741091489792,
+              "two_point_shot": 0.17318102717399597,
+              "three_point_shot": 0.14907658100128174,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.15981274843215942,
+              "passing": 0.20042163133621216,
+              "defense": 0.07697194814682007,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10016191750764847
+            }
+          },
+          "metrics": {
+            "jump_height": 0.040553271770477295,
+            "movement_speed": 0.05097356624901295,
+            "form_score": 0.9998257355520833,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9998257355520833,
+            "energy_efficiency": 0.888252398753117
+          },
+          "shot_outcome": null
+        }
+      ],
+      "annotated_video_url": null,
+      "annotated_frame": null,
+      "keypoints": null,
+      "timestamp": "2025-11-25T16:57:23.323236"
+    },
+    "created_at": "2025-11-25T16:57:28.778099"
+  },
+  {
+    "action": "three_point_shot",
+    "confidence": 0.1775238745742374,
+    "metrics": {
+      "jump_height": 0.01922244495815701,
+      "movement_speed": 0.2645319794408149,
+      "form_score": 0.9978050325244197,
+      "reaction_time": 0.0,
+      "pose_stability": 0.9979315770027976,
+      "energy_efficiency": 0.9260071726363388
+    },
+    "recommendations": [
+      {
+        "type": "info",
+        "title": "Performance Analysis:",
+        "message": "Performance Analysis:",
+        "priority": "low"
+      },
+      {
+        "type": "improvement",
+        "title": "\u274c Form needs work. Practice fundamentals daily.",
+        "message": "\u274c Form needs work. Practice fundamentals daily.",
+        "priority": "high"
+      },
+      {
+        "type": "improvement",
+        "title": "\u26a0\ufe0f  Jump height (0.00m) could improve. Try plyomet...",
+        "message": "\u26a0\ufe0f  Jump height (0.00m) could improve. Try plyometrics.",
+        "priority": "high"
+      },
+      {
+        "type": "improvement",
+        "title": "\u26a0\ufe0f  Speed (0.0 m/s) needs work. Try sprint trainin...",
+        "message": "\u26a0\ufe0f  Speed (0.0 m/s) needs work. Try sprint training.",
+        "priority": "high"
+      },
+      {
+        "type": "info",
+        "title": "Keep practicing and focus on consistency!",
+        "message": "Keep practicing and focus on consistency!",
+        "priority": "low"
+      }
+    ],
+    "video_url": null,
+    "raw_result": {
+      "video_id": "1764078222329-kt9dlovxo",
+      "action": {
+        "label": "three_point_shot",
+        "confidence": 0.1775238745742374,
+        "probabilities": {
+          "free_throw": 0.11501171232925521,
+          "two_point_shot": 0.1506308193008105,
+          "three_point_shot": 0.17262339095274606,
+          "layup": 0.0,
+          "dunk": 0.0,
+          "dribbling": 0.14103799561659494,
+          "passing": 0.1621782307823499,
+          "defense": 0.1461598256395923,
+          "running": 0.0,
+          "walking": 0.0,
+          "blocking": 0.0,
+          "picking": 0.0,
+          "ball_in_hand": 0.0,
+          "idle": 0.11523835319611761
+        }
+      },
+      "metrics": {
+        "jump_height": 0.01922244495815701,
+        "movement_speed": 0.2645319794408149,
+        "form_score": 0.9978050325244197,
+        "reaction_time": 0.0,
+        "pose_stability": 0.9979315770027976,
+        "energy_efficiency": 0.9260071726363388
+      },
+      "recommendations": [
+        {
+          "type": "info",
+          "title": "Performance Analysis:",
+          "message": "Performance Analysis:",
+          "priority": "low"
+        },
+        {
+          "type": "improvement",
+          "title": "\u274c Form needs work. Practice fundamentals daily.",
+          "message": "\u274c Form needs work. Practice fundamentals daily.",
+          "priority": "high"
+        },
+        {
+          "type": "improvement",
+          "title": "\u26a0\ufe0f  Jump height (0.00m) could improve. Try plyomet...",
+          "message": "\u26a0\ufe0f  Jump height (0.00m) could improve. Try plyometrics.",
+          "priority": "high"
+        },
+        {
+          "type": "improvement",
+          "title": "\u26a0\ufe0f  Speed (0.0 m/s) needs work. Try sprint trainin...",
+          "message": "\u26a0\ufe0f  Speed (0.0 m/s) needs work. Try sprint training.",
+          "priority": "high"
+        },
+        {
+          "type": "info",
+          "title": "Keep practicing and focus on consistency!",
+          "message": "Keep practicing and focus on consistency!",
+          "priority": "low"
+        }
+      ],
+      "shot_outcome": null,
+      "timeline": [
+        {
+          "start_time": 0.0,
+          "end_time": 0.5,
+          "action": {
+            "label": "three_point_shot",
+            "confidence": 0.1919873207807541,
+            "probabilities": {
+              "free_throw": 0.10894748568534851,
+              "two_point_shot": 0.1532115936279297,
+              "three_point_shot": 0.1919873207807541,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.13273116946220398,
+              "passing": 0.16269846260547638,
+              "defense": 0.13465088605880737,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.11577307432889938
+            }
+          },
+          "metrics": {
+            "jump_height": 0.012114763259887695,
+            "movement_speed": 0.011096745729446411,
+            "form_score": 0.9998716280670638,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9998716280670638,
+            "energy_efficiency": 0.9714651885254016
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 0.2333333333333334,
+          "end_time": 0.7666666666666667,
+          "action": {
+            "label": "three_point_shot",
+            "confidence": 0.188528910279274,
+            "probabilities": {
+              "free_throw": 0.11978729814291,
+              "two_point_shot": 0.174477219581604,
+              "three_point_shot": 0.188528910279274,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.13708162307739258,
+              "passing": 0.15834809839725494,
+              "defense": 0.11796393245458603,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10381291061639786
+            }
+          },
+          "metrics": {
+            "jump_height": 0.011135220527648926,
+            "movement_speed": 0.003309454768896103,
+            "form_score": 0.9999598070579094,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9999598070579094,
+            "energy_efficiency": 0.9780895928047082
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 0.5000000000000001,
+          "end_time": 1.0333333333333334,
+          "action": {
+            "label": "three_point_shot",
+            "confidence": 0.18792293965816498,
+            "probabilities": {
+              "free_throw": 0.10846429318189621,
+              "two_point_shot": 0.1688431054353714,
+              "three_point_shot": 0.18792293965816498,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.140452578663826,
+              "passing": 0.1548556238412857,
+              "defense": 0.1346578598022461,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10480361431837082
+            }
+          },
+          "metrics": {
+            "jump_height": 0.0035141706466674805,
+            "movement_speed": 0.0025321729481220245,
+            "form_score": 0.9999864274929794,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9999864274929794,
+            "energy_efficiency": 0.9863998780662953
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 0.7666666666666667,
+          "end_time": 1.3,
+          "action": {
+            "label": "three_point_shot",
+            "confidence": 0.18831388652324677,
+            "probabilities": {
+              "free_throw": 0.10659682005643845,
+              "two_point_shot": 0.17267704010009766,
+              "three_point_shot": 0.18831388652324677,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.13614621758460999,
+              "passing": 0.15716342628002167,
+              "defense": 0.1333092600107193,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10579328238964081
+            }
+          },
+          "metrics": {
+            "jump_height": 0.0019371509552001953,
+            "movement_speed": 0.0062797218561172485,
+            "form_score": 0.9999870216674125,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9999870216674125,
+            "energy_efficiency": 0.990441207213843
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 1.0333333333333332,
+          "end_time": 1.5666666666666667,
+          "action": {
+            "label": "three_point_shot",
+            "confidence": 0.18599951267242432,
+            "probabilities": {
+              "free_throw": 0.10591909289360046,
+              "two_point_shot": 0.16753150522708893,
+              "three_point_shot": 0.18599951267242432,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.13370360434055328,
+              "passing": 0.16044948995113373,
+              "defense": 0.13728779554367065,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10910891741514206
+            }
+          },
+          "metrics": {
+            "jump_height": 0.0063574910163879395,
+            "movement_speed": 0.03968551754951477,
+            "form_score": 0.999830581696046,
+            "reaction_time": 0.0,
+            "pose_stability": 0.999830581696046,
+            "energy_efficiency": 0.9813084612190492
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 1.2999999999999998,
+          "end_time": 1.8333333333333333,
+          "action": {
+            "label": "passing",
+            "confidence": 0.1745206117630005,
+            "probabilities": {
+              "free_throw": 0.11087790876626968,
+              "two_point_shot": 0.15713296830654144,
+              "three_point_shot": 0.1732313185930252,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.12395626306533813,
+              "passing": 0.1745206117630005,
+              "defense": 0.14990898966789246,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.11037193238735199
+            }
+          },
+          "metrics": {
+            "jump_height": 0.005839347839355469,
+            "movement_speed": 0.10874639265239239,
+            "form_score": 0.9987292612070708,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9987292612070708,
+            "energy_efficiency": 0.9642560147382796
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 1.5666666666666669,
+          "end_time": 2.1,
+          "action": {
+            "label": "passing",
+            "confidence": 0.19181615114212036,
+            "probabilities": {
+              "free_throw": 0.11319942772388458,
+              "two_point_shot": 0.14318406581878662,
+              "three_point_shot": 0.1627650111913681,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.12611262500286102,
+              "passing": 0.19181615114212036,
+              "defense": 0.16150951385498047,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10141319781541824
+            }
+          },
+          "metrics": {
+            "jump_height": 0.033439457416534424,
+            "movement_speed": 0.09370897896587849,
+            "form_score": 0.9945525304275921,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9945525304275921,
+            "energy_efficiency": 0.914726147072609
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 1.8333333333333335,
+          "end_time": 2.3666666666666667,
+          "action": {
+            "label": "defense",
+            "confidence": 0.16835443675518036,
+            "probabilities": {
+              "free_throw": 0.1234138160943985,
+              "two_point_shot": 0.1379125416278839,
+              "three_point_shot": 0.14305628836154938,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14391334354877472,
+              "passing": 0.168135866522789,
+              "defense": 0.16835443675518036,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.11521369963884354
+            }
+          },
+          "metrics": {
+            "jump_height": 0.052695512771606445,
+            "movement_speed": 0.020599644631147385,
+            "form_score": 0.9981608929510628,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9981608929510628,
+            "energy_efficiency": 0.9138816022112388
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 2.1,
+          "end_time": 2.6333333333333333,
+          "action": {
+            "label": "passing",
+            "confidence": 0.16129885613918304,
+            "probabilities": {
+              "free_throw": 0.12214279919862747,
+              "two_point_shot": 0.14283306896686554,
+              "three_point_shot": 0.15046818554401398,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14304479956626892,
+              "passing": 0.16129885613918304,
+              "defense": 0.15568959712982178,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.12452274560928345
+            }
+          },
+          "metrics": {
+            "jump_height": 0.01625770330429077,
+            "movement_speed": 0.08101179264485836,
+            "form_score": 0.9997900895553353,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9997900895553353,
+            "energy_efficiency": 0.9431376100928425
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 2.3666666666666667,
+          "end_time": 2.9,
+          "action": {
+            "label": "three_point_shot",
+            "confidence": 0.17537367343902588,
+            "probabilities": {
+              "free_throw": 0.10724063962697983,
+              "two_point_shot": 0.13402406871318817,
+              "three_point_shot": 0.17537367343902588,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.13838621973991394,
+              "passing": 0.1623995304107666,
+              "defense": 0.1507328450679779,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.1318429857492447
+            }
+          },
+          "metrics": {
+            "jump_height": 0.02936720848083496,
+            "movement_speed": 0.09504463523626328,
+            "form_score": 0.9931082927411309,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9931082927411309,
+            "energy_efficiency": 0.9369886750086901
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 2.6333333333333333,
+          "end_time": 3.1666666666666665,
+          "action": {
+            "label": "three_point_shot",
+            "confidence": 0.18431635200977325,
+            "probabilities": {
+              "free_throw": 0.10833189636468887,
+              "two_point_shot": 0.1418209671974182,
+              "three_point_shot": 0.18431635200977325,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.13643382489681244,
+              "passing": 0.16287024319171906,
+              "defense": 0.13858859241008759,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.12763813138008118
+            }
+          },
+          "metrics": {
+            "jump_height": 0.027846813201904297,
+            "movement_speed": 0.19571869634091854,
+            "form_score": 0.9931465158187307,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9931465158187307,
+            "energy_efficiency": 0.9044177690869633
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 2.9,
+          "end_time": 3.433333333333333,
+          "action": {
+            "label": "three_point_shot",
+            "confidence": 0.16571883857250214,
+            "probabilities": {
+              "free_throw": 0.11582844704389572,
+              "two_point_shot": 0.1479450762271881,
+              "three_point_shot": 0.16571883857250214,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.15394461154937744,
+              "passing": 0.150053933262825,
+              "defense": 0.14566627144813538,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.12084288150072098
+            }
+          },
+          "metrics": {
+            "jump_height": 0.013542532920837402,
+            "movement_speed": 0.44989893212914467,
+            "form_score": 0.9992894458531454,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9992894458531454,
+            "energy_efficiency": 0.8922905685086238
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 3.166666666666667,
+          "end_time": 3.7,
+          "action": {
+            "label": "three_point_shot",
+            "confidence": 0.17729255557060242,
+            "probabilities": {
+              "free_throw": 0.11347566545009613,
+              "two_point_shot": 0.1538487821817398,
+              "three_point_shot": 0.17729255557060242,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14686976373195648,
+              "passing": 0.1489902287721634,
+              "defense": 0.14466960728168488,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.11485334485769272
+            }
+          },
+          "metrics": {
+            "jump_height": 0.01921755075454712,
+            "movement_speed": 0.5369465332478285,
+            "form_score": 0.9962532676392511,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9962532676392511,
+            "energy_efficiency": 0.8651320361581716
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 3.4333333333333336,
+          "end_time": 3.966666666666667,
+          "action": {
+            "label": "three_point_shot",
+            "confidence": 0.17642150819301605,
+            "probabilities": {
+              "free_throw": 0.10802501440048218,
+              "two_point_shot": 0.13931742310523987,
+              "three_point_shot": 0.17642150819301605,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.16627955436706543,
+              "passing": 0.1428011655807495,
+              "defense": 0.14744310081005096,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.11971220374107361
+            }
+          },
+          "metrics": {
+            "jump_height": 0.021502196788787842,
+            "movement_speed": 0.8792616426944733,
+            "form_score": 0.9972783735804881,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9972783735804881,
+            "energy_efficiency": 0.8872543479232399
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 3.7,
+          "end_time": 4.233333333333333,
+          "action": {
+            "label": "dribbling",
+            "confidence": 0.1686236411333084,
+            "probabilities": {
+              "free_throw": 0.10752977430820465,
+              "two_point_shot": 0.13432849943637848,
+              "three_point_shot": 0.16822314262390137,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.1686236411333084,
+              "passing": 0.15483839809894562,
+              "defense": 0.1536114364862442,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.1128450557589531
+            }
+          },
+          "metrics": {
+            "jump_height": 0.03497195243835449,
+            "movement_speed": 0.9750044904649258,
+            "form_score": 0.9956830388995502,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9979608395103509,
+            "energy_efficiency": 0.8785616338575727
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 3.966666666666667,
+          "end_time": 4.5,
+          "action": {
+            "label": "free_throw",
+            "confidence": 0.16282178461551666,
+            "probabilities": {
+              "free_throw": 0.16282178461551666,
+              "two_point_shot": 0.14434394240379333,
+              "three_point_shot": 0.16282178461551666,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.14776939153671265,
+              "passing": 0.16184930503368378,
+              "defense": 0.15473797917366028,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.11750197410583496
+            }
+          },
+          "metrics": {
+            "jump_height": 0.0,
+            "movement_speed": 0.5,
+            "form_score": 0.9985727853063038,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9985727853063038,
+            "energy_efficiency": 0.9035397499388749
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 4.233333333333333,
+          "end_time": 4.766666666666667,
+          "action": {
+            "label": "passing",
+            "confidence": 0.17250271141529083,
+            "probabilities": {
+              "free_throw": 0.1057596430182457,
+              "two_point_shot": 0.14625944197177887,
+              "three_point_shot": 0.16210483014583588,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.13931623101234436,
+              "passing": 0.17250271141529083,
+              "defense": 0.16181902587413788,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.11223812401294708
+            }
+          },
+          "metrics": {
+            "jump_height": 0.026133060455322266,
+            "movement_speed": 0.549093447625637,
+            "form_score": 0.9990040812207269,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9990040812207269,
+            "energy_efficiency": 0.8739173366329998
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 4.5,
+          "end_time": 5.033333333333333,
+          "action": {
+            "label": "passing",
+            "confidence": 0.17361605167388916,
+            "probabilities": {
+              "free_throw": 0.12184901535511017,
+              "two_point_shot": 0.15166343748569489,
+              "three_point_shot": 0.16267497837543488,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.12391845881938934,
+              "passing": 0.17361605167388916,
+              "defense": 0.1402757316827774,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.12600228190422058
+            }
+          },
+          "metrics": {
+            "jump_height": 0.030131876468658447,
+            "movement_speed": 0.2136368304491043,
+            "form_score": 0.9972865442577568,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9972865442577568,
+            "energy_efficiency": 0.8823212883946946
+          },
+          "shot_outcome": null
+        }
+      ],
+      "annotated_video_url": null,
+      "annotated_frame": null,
+      "keypoints": null,
+      "timestamp": "2025-11-25T16:44:00.087691"
+    },
+    "created_at": "2025-11-25T16:44:02.452554"
+  },
+  {
     "action": "three_point_shot",
     "confidence": 0.1775238745742374,
     "metrics": {

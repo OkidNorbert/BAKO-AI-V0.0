@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Dashboard from './pages/Dashboard';
 import LiveAnalysis from './pages/LiveAnalysis';
 import History from './pages/History';
+import Comparison from './pages/Comparison';
 import './App.css';
 
 // Dark Mode Context
@@ -56,6 +57,19 @@ function AnimatedRoutes() {
               transition={{ duration: 0.3 }}
             >
               <History />
+            </motion.div>
+          }
+        />
+        <Route
+          path="/compare"
+          element={
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Comparison />
             </motion.div>
           }
         />
