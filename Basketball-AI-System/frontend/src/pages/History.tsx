@@ -4,6 +4,7 @@ import { ArrowLeft, Calendar, Activity } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { getHistory } from '../services/api';
 import type { HistoricalData } from '../types';
+import ProgressChart from '../components/ProgressChart';
 
 export default function History() {
     const [history, setHistory] = useState<HistoricalData[]>([]);
@@ -84,62 +85,73 @@ export default function History() {
                         </Link>
                     </motion.div>
                 ) : (
-                    <div className="space-y-4">
-                        {history.map((item, index) => (
-                            <motion.div
-                                key={index}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.1 }}
-                                className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-shadow"
-                            >
-                                <div className="flex items-start justify-between">
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-3 mb-3">
-                                            <Calendar className="w-5 h-5 text-gray-400" />
-                                            <span className="text-sm text-gray-600 dark:text-gray-400">
-                                                {new Date(item.date).toLocaleDateString('en-US', {
-                                                    year: 'numeric',
-                                                    month: 'long',
-                                                    day: 'numeric',
-                                                    hour: '2-digit',
-                                                    minute: '2-digit'
-                                                })}
-                                            </span>
-                                        </div>
-                                        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                                            {item.action.replace(/_/g, ' ').toUpperCase()}
-                                        </h3>
-                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                                            <div>
-                                                <p className="text-xs text-gray-500 dark:text-gray-400">Jump Height</p>
-                                                <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                                                    {item.metrics.jump_height.toFixed(2)}m
-                                                </p>
+                    <div className="space-y-8">
+                        {/* Progress Chart */}
+                        {history.length >= 2 && (
+                            <ProgressChart data={history} />
+                        )}
+
+                        {/* History List */}
+                        <div className="space-y-4">
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                                Recent Sessions
+                            </h2>
+                            {history.map((item, index) => (
+                                <motion.div
+                                    key={index}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: index * 0.1 }}
+                                    className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-shadow"
+                                >
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-3 mb-3">
+                                                <Calendar className="w-5 h-5 text-gray-400" />
+                                                <span className="text-sm text-gray-600 dark:text-gray-400">
+                                                    {new Date(item.date).toLocaleDateString('en-US', {
+                                                        year: 'numeric',
+                                                        month: 'long',
+                                                        day: 'numeric',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    })}
+                                                </span>
                                             </div>
-                                            <div>
-                                                <p className="text-xs text-gray-500 dark:text-gray-400">Speed</p>
-                                                <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                                                    {item.metrics.movement_speed.toFixed(2)}m/s
-                                                </p>
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-gray-500 dark:text-gray-400">Form Score</p>
-                                                <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                                                    {(item.metrics.form_score * 100).toFixed(0)}%
-                                                </p>
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-gray-500 dark:text-gray-400">Stability</p>
-                                                <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                                                    {(item.metrics.pose_stability * 100).toFixed(0)}%
-                                                </p>
+                                            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                                                {item.action.replace(/_/g, ' ').toUpperCase()}
+                                            </h3>
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                                                <div>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400">Jump Height</p>
+                                                    <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                                                        {item.metrics.jump_height.toFixed(2)}m
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400">Speed</p>
+                                                    <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                                                        {item.metrics.movement_speed.toFixed(2)}m/s
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400">Form Score</p>
+                                                    <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                                                        {(item.metrics.form_score * 100).toFixed(0)}%
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400">Stability</p>
+                                                    <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                                                        {(item.metrics.pose_stability * 100).toFixed(0)}%
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            </motion.div>
-                        ))}
+                                </motion.div>
+                            ))}
+                        </div>
                     </div>
                 )}
             </main>
