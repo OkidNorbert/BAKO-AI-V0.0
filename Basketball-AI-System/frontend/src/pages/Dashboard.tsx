@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import VideoUpload from '../components/VideoUpload';
-import ActionResult from '../components/ActionResult';
+import ActionTimeline from '../components/ActionTimeline';
 import MetricsDisplay from '../components/MetricsDisplay';
 import RadarChart from '../components/RadarChart';
 import RecommendationCard from '../components/RecommendationCard';
@@ -27,6 +27,8 @@ export default function Dashboard() {
   const [showVisualization, setShowVisualization] = useState(false);
   const [processingTime, setProcessingTime] = useState<number>(0);
   const [processingStartTime, setProcessingStartTime] = useState<number | null>(null);
+  const [videoLoadError, setVideoLoadError] = useState<boolean>(false);
+  const [videoLoading, setVideoLoading] = useState<boolean>(true);
   const { darkMode, toggleDarkMode } = useDarkMode();
 
   // Load historical data on mount
@@ -51,6 +53,9 @@ export default function Dashboard() {
   const handleVideoUpload = async (file: File) => {
     try {
       setError('');
+      setAnalysisResult(null); // Clear previous results
+      setVideoLoadError(false); // Reset video error state
+      setVideoLoading(true); // Reset video loading state
       setUploadProgress({ progress: 0, status: 'uploading' });
 
       // Start processing timer
@@ -64,8 +69,37 @@ export default function Dashboard() {
       setCurrentVideoId(frontendVideoId);
       setShowVisualization(true);
 
+      // Set processing status when upload completes and analysis starts
+      setUploadProgress(prev => ({ ...prev, status: 'processing', message: 'Analyzing video...' }));
+
       // Call API with video_id - backend will use it for WebSocket streaming
       const result = await analyzeVideo(file, setUploadProgress, frontendVideoId);
+
+      // Debug: Log the result to console (always log, not just in dev mode)
+      console.log('✅ Analysis result received:', result);
+      console.log('📊 Result structure:', {
+        hasAction: !!result?.action,
+        hasMetrics: !!result?.metrics,
+        hasRecommendations: !!result?.recommendations,
+        hasTimeline: !!result?.timeline,
+        videoId: result?.video_id,
+        actionLabel: result?.action?.label,
+        metricsKeys: result?.metrics ? Object.keys(result.metrics) : [],
+        recommendationsCount: result?.recommendations?.length || 0
+      });
+
+      // Validate result structure
+      if (!result) {
+        console.error('❌ Result is null or undefined!');
+        throw new Error('No result returned from analysis');
+      }
+      
+      if (!result.action || !result.metrics) {
+        console.error('❌ Result missing required fields:', {
+          hasAction: !!result.action,
+          hasMetrics: !!result.metrics
+        });
+      }
 
       setUploadProgress({ progress: 100, status: 'complete' });
 
@@ -74,6 +108,11 @@ export default function Dashboard() {
       const totalTime = (endTime - startTime) / 1000; // Convert to seconds
       setProcessingTime(totalTime);
       setProcessingStartTime(null);
+
+      // Validate result before setting
+      if (!result) {
+        throw new Error('No result returned from analysis');
+      }
 
       setAnalysisResult(result);
       // Keep using the same video_id (backend should use the one we sent)
@@ -87,6 +126,14 @@ export default function Dashboard() {
         spread: 70,
         origin: { y: 0.6 }
       });
+
+      // Scroll to results section after a brief delay
+      setTimeout(() => {
+        const resultsSection = document.getElementById('analysis-results');
+        if (resultsSection) {
+          resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 500);
 
       // Reload history to include new analysis
       await loadHistoricalData();
@@ -369,7 +416,19 @@ export default function Dashboard() {
 
           {/* Analysis Results */}
           {analysisResult && (
-            <>
+            <div id="analysis-results">
+              {/* Debug: Log result structure - always log for debugging */}
+              {(() => {
+                console.log('🎯 Rendering analysis results:', {
+                  hasAction: !!analysisResult.action,
+                  hasMetrics: !!analysisResult.metrics,
+                  hasRecommendations: !!analysisResult.recommendations,
+                  actionLabel: analysisResult.action?.label,
+                  metricsCount: analysisResult.metrics ? Object.keys(analysisResult.metrics).length : 0
+                });
+                return null;
+              })()}
+              
               {/* Annotated Video Playback */}
               {analysisResult.annotated_video_url && (
                 <motion.div
@@ -388,10 +447,125 @@ export default function Dashboard() {
                     Watch your video with AI detections: YOLO bounding boxes, MediaPipe pose keypoints, and court/hoop detection
                   </p>
                   <div className="relative rounded-lg overflow-hidden bg-black" style={{ aspectRatio: '16/9' }}>
+                    {videoLoadError ? (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 text-white p-4 z-10">
+                        <svg className="w-12 h-12 mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p className="text-sm text-center font-medium mb-1">Video playback unavailable</p>
+                        <p className="text-xs text-gray-400 mb-2 text-center max-w-md">
+                          The video may still be processing, or there may be a CORS/codec compatibility issue.
+                        </p>
+                        <p className="text-xs text-gray-500 mb-4 text-center">
+                          The analysis results are still available below.
+                        </p>
+                        <div className="flex flex-col gap-2 items-center">
+                          <a
+                            href={analysisResult.annotated_video_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
+                          >
+                            Try opening video in new tab
+                          </a>
+                          <button
+                            onClick={() => {
+                              setVideoLoadError(false);
+                              setVideoLoading(true);
+                              // Force video reload
+                              const video = document.querySelector('video');
+                              if (video) {
+                                video.load();
+                              }
+                            }}
+                            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-lg transition-colors"
+                          >
+                            Retry Loading
+                          </button>
+                          <p className="text-xs text-gray-500 mt-2 max-w-xs text-center break-all">
+                            URL: {analysisResult.annotated_video_url}
+                          </p>
+                        </div>
+                      </div>
+                    ) : videoLoading ? (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 text-white p-4 z-10">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
+                        <p className="text-sm text-gray-400">Loading video...</p>
+                        <p className="text-xs text-gray-500 mt-2">This may take a few moments</p>
+                      </div>
+                    ) : null}
                     <video
                       controls
                       className="w-full h-full"
                       src={analysisResult.annotated_video_url}
+                      crossOrigin="anonymous"
+                      preload="metadata"
+                      onLoadStart={() => {
+                        console.log('Video load started:', analysisResult.annotated_video_url);
+                        setVideoLoading(true);
+                      }}
+                      onLoadedData={() => {
+                        console.log('Video loaded successfully');
+                        setVideoLoading(false);
+                        setVideoLoadError(false);
+                      }}
+                      onCanPlay={() => {
+                        console.log('Video can play');
+                        setVideoLoading(false);
+                      }}
+                      onError={(e) => {
+                        const videoElement = e.currentTarget;
+                        const error = videoElement.error;
+                        let errorMessage = 'Unknown error';
+                        
+                        if (error) {
+                          switch (error.code) {
+                            case error.MEDIA_ERR_ABORTED:
+                              errorMessage = 'Video loading aborted';
+                              break;
+                            case error.MEDIA_ERR_NETWORK:
+                              errorMessage = 'Network error - video may still be uploading';
+                              break;
+                            case error.MEDIA_ERR_DECODE:
+                              errorMessage = 'Video decode error - codec not supported';
+                              break;
+                            case error.MEDIA_ERR_SRC_NOT_SUPPORTED:
+                              errorMessage = 'Video format not supported';
+                              break;
+                            default:
+                              errorMessage = `Error code: ${error.code}`;
+                          }
+                        }
+                        
+                        console.error('Video loading error:', errorMessage);
+                        console.error('Video URL:', analysisResult.annotated_video_url);
+                        console.error('Error details:', error);
+                        
+                        // Check if URL is accessible
+                        fetch(analysisResult.annotated_video_url, { method: 'HEAD' })
+                          .then(response => {
+                            console.log('Video URL accessibility check:', response.status, response.statusText);
+                            if (response.status === 200) {
+                              console.log('Video exists but may have CORS or codec issues');
+                            } else {
+                              console.log('Video may not be available yet or was deleted');
+                            }
+                          })
+                          .catch(fetchError => {
+                            console.error('Cannot access video URL:', fetchError);
+                          });
+                        
+                        setVideoLoadError(true);
+                        setVideoLoading(false);
+                      }}
+                      onWaiting={() => {
+                        console.log('Video waiting for data...');
+                        setVideoLoading(true);
+                      }}
+                      onPlaying={() => {
+                        console.log('Video playing');
+                        setVideoLoading(false);
+                      }}
                     >
                       Your browser does not support the video tag.
                     </video>
@@ -399,21 +573,53 @@ export default function Dashboard() {
                 </motion.div>
               )}
 
-              {/* Action Classification */}
-              <ActionResult
-                action={analysisResult.action.label}
-                confidence={analysisResult.action.confidence}
-                probabilities={analysisResult.action.probabilities}
-              />
+              {/* Skill Improvement Focus - Recommendations First */}
+              {analysisResult.recommendations && analysisResult.recommendations.length > 0 ? (
+                <RecommendationCard recommendations={analysisResult.recommendations} />
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6"
+                >
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                    💡 Recommendations
+                  </h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    No specific recommendations available. Continue practicing to improve your skills!
+                  </p>
+                </motion.div>
+              )}
+
+              {/* Action Timeline - All Actions Detected */}
+              {analysisResult.timeline && analysisResult.timeline.length > 0 ? (
+                <ActionTimeline 
+                  timeline={analysisResult.timeline}
+                  totalDuration={Math.max(...analysisResult.timeline.map(s => s.end_time))}
+                />
+              ) : analysisResult.action ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6"
+                >
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                    📊 Actions Detected
+                  </h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    Primary Action: <span className="font-semibold capitalize">{analysisResult.action.label.replace(/_/g, ' ')}</span> ({(analysisResult.action.confidence * 100).toFixed(0)}% confidence)
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-500">
+                    Timeline analysis not available. The system detected one primary action in this video.
+                  </p>
+                </motion.div>
+              ) : null}
 
               {/* Performance Metrics */}
               <MetricsDisplay metrics={analysisResult.metrics} />
 
               {/* Radar Chart */}
               <RadarChart metrics={analysisResult.metrics} />
-
-              {/* Recommendations */}
-              <RecommendationCard recommendations={analysisResult.recommendations} />
 
               {/* Progress Chart */}
               {historicalData.length > 0 ? (
@@ -452,7 +658,7 @@ export default function Dashboard() {
                   Download Report
                 </button>
               </motion.div>
-            </>
+            </div>
           )}
         </div>
       </main>

@@ -35,6 +35,13 @@ export default function RealTimeVisualization({
 
     // Connect to WebSocket with dynamic URL
     const wsUrl = getWebSocketUrl(`/ws/video-stream/${videoId}`);
+    
+    // Only connect if we're processing or if we don't have an existing connection
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      // Already connected, don't create a new connection
+      return;
+    }
+    
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {

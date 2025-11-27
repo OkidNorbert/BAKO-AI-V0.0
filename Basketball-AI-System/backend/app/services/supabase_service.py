@@ -38,12 +38,15 @@ class SupabaseService:
                 except json.JSONDecodeError:
                     history = []
             
+            # Create a copy to avoid mutating the original dict
+            data_copy = data.copy()
+            
             # Add timestamp if missing
-            if 'created_at' not in data:
-                data['created_at'] = datetime.now().isoformat()
+            if 'created_at' not in data_copy:
+                data_copy['created_at'] = datetime.now().isoformat()
                 
             # Prepend new record (newest first)
-            history.insert(0, data)
+            history.insert(0, data_copy)
             
             # Keep only last 100 records locally
             history = history[:100]
@@ -86,30 +89,113 @@ class SupabaseService:
             try:
                 self.client.storage.from_(bucket_name).list()
             except Exception as bucket_error:
-                if "not found" in str(bucket_error).lower() or "404" in str(bucket_error):
+                # Check for bucket not found in various error formats
+                error_str = str(bucket_error).lower()
+                error_repr = repr(bucket_error).lower()
+                is_bucket_error = (
+                    "not found" in error_str or 
+                    "404" in error_str or 
+                    "bucket not found" in error_str or
+                    "bucket not found" in error_repr or
+                    (hasattr(bucket_error, 'statusCode') and bucket_error.statusCode == 404) or
+                    (isinstance(bucket_error, dict) and bucket_error.get('statusCode') == 404)
+                )
+                if is_bucket_error:
                     logger.warning(f"⚠️  Supabase bucket '{bucket_name}' not found. Skipping video upload.")
                     logger.info("   💡 Create the bucket in Supabase dashboard: Storage > Create bucket > 'videos'")
                     return None
                 raise  # Re-raise if it's a different error
             
+            # Check if file exists
+            if not os.path.exists(file_path):
+                logger.warning(f"⚠️  Video file not found for upload: {file_path}")
+                return None
+            
+            # Clean filename (remove path separators)
+            clean_filename = os.path.basename(filename)
+            
             # Upload video
-            with open(file_path, 'rb') as f:
-                self.client.storage.from_(bucket_name).upload(
-                    path=filename,
-                    file=f,
-                    file_options={"content-type": "video/mp4"}
+            try:
+                # Check file size first
+                file_size = os.path.getsize(file_path)
+                if file_size == 0:
+                    logger.warning(f"⚠️  Video file is empty: {file_path}")
+                    return None
+                
+                # Supabase storage upload expects a file-like object, not bytes
+                # Use the file path directly or open file in binary mode
+                with open(file_path, 'rb') as f:
+                    # Try upload with upsert first
+                    try:
+                        response = self.client.storage.from_(bucket_name).upload(
+                            path=clean_filename,
+                            file=f,
+                            file_options={"content-type": "video/mp4", "upsert": "true"}
+                        )
+                    except Exception as upsert_error:
+                        # If upsert fails, try without it (might not be supported)
+                        f.seek(0)  # Reset file pointer
+                        response = self.client.storage.from_(bucket_name).upload(
+                            path=clean_filename,
+                            file=f,
+                            file_options={"content-type": "video/mp4"}
+                        )
+                
+                # Get public URL
+                public_url = self.client.storage.from_(bucket_name).get_public_url(clean_filename)
+                logger.info(f"✅ Video uploaded to Supabase: {public_url} ({file_size/(1024*1024):.2f}MB)")
+                return public_url
+            except Exception as upload_error:
+                error_str = str(upload_error).lower()
+                error_repr = repr(upload_error).lower()
+                
+                # Check if it's a bucket not found error (404)
+                is_bucket_error = (
+                    "bucket not found" in error_str or
+                    "bucket not found" in error_repr or
+                    (hasattr(upload_error, 'statusCode') and upload_error.statusCode == 404) or
+                    (isinstance(upload_error, dict) and upload_error.get('statusCode') == 404) or
+                    (hasattr(upload_error, 'get') and upload_error.get('statusCode') == 404)
                 )
                 
-            # Get public URL
-            public_url = self.client.storage.from_(bucket_name).get_public_url(filename)
-            logger.info(f"✅ Video uploaded to Supabase: {public_url}")
-            return public_url
-            
+                if is_bucket_error:
+                    logger.warning(f"⚠️  Supabase bucket '{bucket_name}' not found during upload. Skipping.")
+                    logger.info("   💡 Create the bucket in Supabase dashboard: Storage > Create bucket > 'videos'")
+                    return None
+                elif "400" in str(upload_error) or "bad request" in error_str:
+                    logger.warning(f"⚠️  Supabase upload failed (400 Bad Request): {upload_error}")
+                    logger.debug(f"   File: {file_path}")
+                    logger.debug(f"   Filename: {clean_filename}")
+                    logger.debug(f"   Size: {file_size if 'file_size' in locals() else 'unknown'} bytes")
+                    logger.debug(f"   Error details: {type(upload_error).__name__}")
+                    # Check if it's a file format or size issue
+                    if 'file_size' in locals() and file_size > 50 * 1024 * 1024:  # 50MB
+                        logger.debug("   💡 File might be too large for Supabase storage limits")
+                    return None
+                else:
+                    logger.warning(f"⚠️  Supabase upload error: {upload_error}")
+                    return None
+                
         except Exception as e:
             error_str = str(e).lower()
-            if "not found" in error_str or "404" in error_str or "bucket" in error_str:
-                logger.debug(f"⚠️  Supabase bucket not configured. Video upload skipped. (This is optional)")
-                logger.debug("   💡 To enable: Create 'videos' bucket in Supabase Storage dashboard")
+            error_repr = repr(e).lower()
+            
+            # Check for bucket not found in various formats
+            is_bucket_error = (
+                "not found" in error_str or 
+                "404" in error_str or 
+                "bucket" in error_str or
+                "bucket not found" in error_repr or
+                (hasattr(e, 'statusCode') and e.statusCode == 404) or
+                (isinstance(e, dict) and e.get('statusCode') == 404)
+            )
+            
+            if is_bucket_error:
+                logger.warning(f"⚠️  Supabase bucket 'videos' not found. Video upload skipped. (This is optional)")
+                logger.info("   💡 To enable: Create 'videos' bucket in Supabase Storage dashboard")
+            elif "400" in str(e) or "bad request" in error_str:
+                logger.warning(f"⚠️  Video upload failed (400 Bad Request): {e}")
+                logger.debug(f"   This might be due to file size limits, bucket permissions, or file format issues")
             else:
                 logger.warning(f"⚠️  Video upload failed: {e}")
             return None

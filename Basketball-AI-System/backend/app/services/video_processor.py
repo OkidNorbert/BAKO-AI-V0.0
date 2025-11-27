@@ -13,6 +13,8 @@ from typing import Dict, List, Optional, Tuple
 import logging
 from datetime import datetime
 import uuid
+import subprocess
+import shutil
 
 from app.core.config import settings
 
@@ -23,7 +25,12 @@ from app.models.metrics_engine import PerformanceMetricsEngine
 from app.models.shot_outcome_detector import ShotOutcomeDetector
 from app.models.ai_coach import AICoach
 from app.models.court_detector import CourtDetector
-from app.core.schemas import VideoAnalysisResult, ActionClassification, PerformanceMetrics, ActionProbabilities, Recommendation, ShotOutcome, TimelineSegment
+from app.models.form_quality_analyzer import FormQualityAnalyzer
+from app.models.action_segmenter import ActionSegmenter
+from app.models.pose_normalizer import PoseNormalizer, PoseSmoother
+from app.models.biomechanics_engine import BiomechanicsEngine
+from app.models.rule_based_evaluator import RuleBasedEvaluator
+from app.core.schemas import VideoAnalysisResult, ActionClassification, PerformanceMetrics, ActionProbabilities, Recommendation, ShotOutcome, TimelineSegment, FormQualityAssessment, FormQualityIssue
 
 logger = logging.getLogger(__name__)
 
@@ -65,10 +72,20 @@ class VideoProcessor:
             self.metrics_engine = PerformanceMetricsEngine()
             self.shot_outcome_detector = ShotOutcomeDetector()
             self.court_detector = CourtDetector()
+            self.form_quality_analyzer = FormQualityAnalyzer()
+            
+            # Enhanced components for coaching pipeline
+            self.action_segmenter = ActionSegmenter(window_size=settings.SEQUENCE_LENGTH, stride=8, smoothing_method='median')
+            self.pose_normalizer = PoseNormalizer()
+            self.pose_smoother = PoseSmoother(method='one_euro', beta=0.1)
+            self.biomechanics_engine = BiomechanicsEngine(fps=30.0)  # Will be updated with actual fps
+            self.rule_based_evaluator = RuleBasedEvaluator()
             
             # Initialize AI Coach
             # LLaMA 3.1 requires Hugging Face authentication for gated models
             # Skip it if not authenticated to avoid errors
+            # Initialize to None first to ensure attribute exists
+            self.ai_coach = None
             try:
                 import os
                 from huggingface_hub import whoami
@@ -116,10 +133,10 @@ class VideoProcessor:
                         try_llama = False
                 
                 # If LLaMA didn't work, try API alternatives or use fallback
-                if not try_llama:
+                if not try_llama or self.ai_coach is None:
                     # Try DeepSeek API (if key available)
                     deepseek_key = os.getenv("DEEPSEEK_API_KEY")
-                    if deepseek_key:
+                    if deepseek_key and self.ai_coach is None:
                         try:
                             self.ai_coach = AICoach(model_type="deepseek", model_name="deepseek-chat", api_key=deepseek_key)
                             logger.info("✅ AI Coach initialized with DeepSeek API")
@@ -143,8 +160,15 @@ class VideoProcessor:
                         
             except Exception as e:
                 logger.warning(f"⚠️  AI Coach initialization error: {str(e)[:150]}")
-                self.ai_coach = AICoach(model_type="fallback")
-                logger.info("✅ AI Coach initialized with fallback mode")
+                # Ensure ai_coach is always set, even if initialization fails
+                if self.ai_coach is None:
+                    try:
+                        self.ai_coach = AICoach(model_type="fallback")
+                        logger.info("✅ AI Coach initialized with fallback mode")
+                    except Exception as fallback_error:
+                        logger.error(f"❌ Failed to initialize fallback AI Coach: {fallback_error}")
+                        # Set to None if even fallback fails (shouldn't happen, but be safe)
+                        self.ai_coach = None
             
             logger.info("✅ All models loaded successfully!")
             
@@ -159,9 +183,12 @@ class VideoProcessor:
         pose_landmarks,
         basketball_detections: List[Dict] = None,
         court_info: Dict = None,
-        hoop_info: Dict = None
+        hoop_info: Dict = None,
+        current_action: Optional[str] = None,
+        action_confidence: float = 0.0,
+        form_quality: Optional[FormQualityAssessment] = None
     ) -> np.ndarray:
-        """Draw bounding boxes and pose landmarks on frame"""
+        """Draw bounding boxes, pose landmarks, and action labels on frame"""
         annotated_frame = frame.copy()
         
         # Draw pose landmarks
@@ -290,6 +317,102 @@ class VideoProcessor:
             # Draw hoop label
             cv2.putText(annotated_frame, "HOOP", (center_x - 20, center_y - radius - 10),
                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
+        
+        # Draw current action label (REAL-TIME ACTION DETECTION)
+        if current_action:
+            h, w = annotated_frame.shape[:2]
+            
+            # Format action label (capitalize, replace underscores)
+            action_display = current_action.replace('_', ' ').title()
+            
+            # Choose color based on action type
+            if 'shot' in current_action.lower() or 'free_throw' in current_action.lower() or 'layup' in current_action.lower() or 'dunk' in current_action.lower():
+                action_color = (255, 100, 100)  # Red for shooting
+            elif 'dribbl' in current_action.lower():
+                action_color = (100, 255, 100)  # Green for dribbling
+            elif 'pass' in current_action.lower():
+                action_color = (100, 100, 255)  # Blue for passing
+            elif 'defense' in current_action.lower():
+                action_color = (255, 255, 100)  # Yellow for defense
+            else:
+                action_color = (200, 200, 200)  # Gray for other actions
+            
+            # Draw action label background box
+            label_text = f"{action_display}"
+            if action_confidence > 0:
+                label_text += f" ({action_confidence:.0%})"
+            
+            # Calculate text size
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            font_scale = 0.8
+            thickness = 2
+            (text_width, text_height), baseline = cv2.getTextSize(label_text, font, font_scale, thickness)
+            
+            # Position at top-left corner
+            padding = 10
+            box_x1 = padding
+            box_y1 = padding
+            box_x2 = box_x1 + text_width + padding * 2
+            box_y2 = box_y1 + text_height + padding * 2
+            
+            # Draw semi-transparent background
+            overlay = annotated_frame.copy()
+            cv2.rectangle(overlay, (box_x1, box_y1), (box_x2, box_y2), (0, 0, 0), -1)
+            cv2.addWeighted(overlay, 0.6, annotated_frame, 0.4, 0, annotated_frame)
+            
+            # Draw action label text
+            text_y = box_y1 + text_height + padding
+            cv2.putText(annotated_frame, label_text, (box_x1 + padding, text_y), 
+                       font, font_scale, action_color, thickness)
+            
+            # Draw form quality indicator if available
+            if form_quality:
+                quality_rating = form_quality.quality_rating
+                if quality_rating == "excellent":
+                    quality_color = (0, 255, 0)  # Green
+                    quality_text = "✓ Excellent Form"
+                elif quality_rating == "good":
+                    quality_color = (0, 255, 255)  # Yellow
+                    quality_text = "✓ Good Form"
+                elif quality_rating == "needs_improvement":
+                    quality_color = (0, 165, 255)  # Orange
+                    quality_text = "⚠ Needs Improvement"
+                else:  # poor
+                    quality_color = (0, 0, 255)  # Red
+                    quality_text = "✗ Poor Form"
+                
+                # Draw quality indicator below action label
+                quality_y = box_y2 + padding + text_height
+                (quality_width, quality_height), _ = cv2.getTextSize(quality_text, font, 0.6, 1)
+                quality_box_x2 = box_x1 + quality_width + padding * 2
+                quality_box_y2 = quality_y + quality_height + padding
+                
+                # Draw quality background
+                overlay = annotated_frame.copy()
+                cv2.rectangle(overlay, (box_x1, box_y2 + padding), (quality_box_x2, quality_box_y2), (0, 0, 0), -1)
+                cv2.addWeighted(overlay, 0.6, annotated_frame, 0.4, 0, annotated_frame)
+                
+                # Draw quality text
+                cv2.putText(annotated_frame, quality_text, (box_x1 + padding, quality_y + quality_height), 
+                           font, 0.6, quality_color, 1)
+                
+                # Show top issue if form needs improvement
+                if form_quality.issues and quality_rating in ["needs_improvement", "poor"]:
+                    top_issue = form_quality.issues[0]
+                    issue_text = f"Fix: {top_issue.issue_type.replace('_', ' ').title()}"
+                    issue_y = quality_box_y2 + padding + quality_height
+                    (issue_width, issue_height), _ = cv2.getTextSize(issue_text, font, 0.5, 1)
+                    issue_box_x2 = box_x1 + issue_width + padding * 2
+                    issue_box_y2 = issue_y + issue_height + padding
+                    
+                    # Draw issue background
+                    overlay = annotated_frame.copy()
+                    cv2.rectangle(overlay, (box_x1, quality_box_y2 + padding), (issue_box_x2, issue_box_y2), (0, 0, 0), -1)
+                    cv2.addWeighted(overlay, 0.6, annotated_frame, 0.4, 0, annotated_frame)
+                    
+                    # Draw issue text
+                    cv2.putText(annotated_frame, issue_text, (box_x1 + padding, issue_y + issue_height), 
+                               font, 0.5, quality_color, 1)
                        
         return annotated_frame
 
@@ -320,8 +443,42 @@ class VideoProcessor:
         # Prepare output video
         output_filename = f"processed_{os.path.basename(video_path)}"
         output_path = os.path.join(os.path.dirname(video_path), output_filename)
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
+        
+        # Use H.264 codec for browser compatibility (avc1/h264)
+        # Try different codecs in order of preference
+        fourcc_options = [
+            ('avc1', 'H.264 (avc1)'),  # Best browser support
+            ('H264', 'H.264 (H264)'),  # Alternative H.264
+            ('XVID', 'Xvid'),          # Fallback
+            ('mp4v', 'MPEG-4 Part 2')  # Last resort
+        ]
+        
+        out = None
+        used_codec = None
+        for fourcc_code, codec_name in fourcc_options:
+            try:
+                fourcc = cv2.VideoWriter_fourcc(*fourcc_code)
+                out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
+                if out.isOpened():
+                    used_codec = codec_name
+                    logger.info(f"✅ Using video codec: {codec_name}")
+                    break
+            except Exception as e:
+                logger.warning(f"⚠️  Failed to initialize {codec_name}: {e}")
+                if out:
+                    out.release()
+                out = None
+                continue
+        
+        if out is None or not out.isOpened():
+            # Final fallback to mp4v
+            logger.warning("⚠️  All codecs failed, using mp4v as last resort")
+            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+            out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
+            used_codec = 'MPEG-4 Part 2 (fallback)'
+        
+        if not out.isOpened():
+            raise ValueError("Failed to initialize video writer with any codec")
         
         frames_buffer = []
         keypoints_buffer = []
@@ -344,6 +501,18 @@ class VideoProcessor:
         frame_count = 0
         window_size = settings.SEQUENCE_LENGTH
         stride = 8  # Overlap windows
+        
+        # Update biomechanics engine with actual fps
+        self.biomechanics_engine.fps = fps
+        self.biomechanics_engine.dt = 1.0 / fps
+        
+        # Track current action and form quality for real-time display
+        current_action_label = None
+        current_action_confidence = 0.0
+        current_form_quality = None
+        
+        # Store raw keypoints for normalization and biomechanics
+        raw_keypoints_buffer = []
         
         try:
             while cap.isOpened():
@@ -478,14 +647,17 @@ class VideoProcessor:
                 frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 pose_results = self.pose_model.process(frame_rgb)
                 
-                # Draw annotations (players + basketballs + court + hoop)
+                # Draw annotations (players + basketballs + court + hoop + current action)
                 annotated_frame = self._draw_annotations(
                     frame, 
                     detections, 
                     pose_results.pose_landmarks, 
                     basketball_detections,
                     court_info,
-                    hoop_info
+                    hoop_info,
+                    current_action=current_action_label,
+                    action_confidence=current_action_confidence,
+                    form_quality=current_form_quality
                 )
                 out.write(annotated_frame)
                 
@@ -559,12 +731,228 @@ class VideoProcessor:
                         except Exception as e:
                             logger.debug(f"Court-based shot classification enhancement failed: {e}")
                     
+                    # Update current action for real-time display
+                    current_action_label = action_label
+                    current_action_confidence = confidence
+                    
                     # Calculate Metrics for this window (needs keypoints)
                     # Filter out empty keypoints if needed, or engine handles it
-                    valid_keypoints = [k for k in keypoints_window if k]
-                    if valid_keypoints:
-                        window_metrics = self._calculate_metrics(valid_keypoints, action_label)
+                    valid_keypoints = [np.array(k) for k in keypoints_window if k and len(k) > 0]
+                    
+                    # For portrait videos or videos with fewer detections, be more flexible
+                    # Require at least 2 valid keypoints (minimum for any calculation)
+                    min_keypoints_required = 2
+                    if len(valid_keypoints) >= min_keypoints_required:
+                        # ENHANCED: Normalize and smooth keypoints before analysis
+                        try:
+                            # Normalize to player-centric coordinates
+                            normalized_sequence, _ = self.pose_normalizer.normalize_sequence(valid_keypoints)
+                            
+                            # Apply temporal smoothing
+                            smoothed_keypoints = self.pose_smoother.smooth_sequence(normalized_sequence, fps=fps)
+                            
+                            # Compute comprehensive biomechanics features
+                            biomechanics_features = self.biomechanics_engine.compute_all_biomechanics(
+                                smoothed_keypoints,
+                                action_type=action_label,
+                                ball_positions=ball_trajectory[-len(smoothed_keypoints):] if ball_trajectory else None
+                            )
+                            
+                            # Ensure biomechanics_features is always a dict (never None) for safe access
+                            if biomechanics_features is None:
+                                biomechanics_features = {}
+                            
+                            # Use smoothed keypoints for metrics
+                            window_metrics = self._calculate_metrics(smoothed_keypoints, action_label)
+                            
+                            # Add biomechanics features to metrics
+                            if biomechanics_features:
+                                # Merge biomechanics features into metrics (if not already present)
+                                # Validate values before adding (no NaN/Inf, only scalar types)
+                                # Skip complex types (lists, dicts) that aren't part of PerformanceMetrics schema
+                                for key, value in biomechanics_features.items():
+                                    # Skip complex types that aren't valid PerformanceMetrics fields
+                                    if isinstance(value, (list, dict)):
+                                        continue
+                                    
+                                    if key not in window_metrics.model_dump():
+                                        # Validate value (skip NaN/Inf)
+                                        if value is not None:
+                                            if isinstance(value, (int, float)):
+                                                if not (np.isnan(value) or np.isinf(value)):
+                                                    # Only set if the field exists in PerformanceMetrics schema
+                                                    if hasattr(window_metrics, key):
+                                                        try:
+                                                            setattr(window_metrics, key, float(value))
+                                                        except (ValueError, AttributeError):
+                                                            # Field might not be settable or value invalid
+                                                            logger.debug(f"Skipping biomechanics feature '{key}': not a valid PerformanceMetrics field")
+                                                    else:
+                                                        logger.debug(f"Skipping biomechanics feature '{key}': not in PerformanceMetrics schema")
+                            
+                            all_metrics.append(window_metrics)
+                            
+                            # ENHANCED: Rule-based form evaluation
+                            # Initialize form_quality to None to ensure it's always defined
+                            form_quality = None
+                            
+                            # Get key frame for rule-based checks (mid-frame or release frame)
+                            mid_frame_idx = len(smoothed_keypoints) // 2
+                            if mid_frame_idx < len(smoothed_keypoints) and smoothed_keypoints[mid_frame_idx] is not None:
+                                key_frame_kp = smoothed_keypoints[mid_frame_idx]
+                                
+                                # Rule-based evaluation (action-specific)
+                                # Include all shooting actions: shot, free_throw, layup, and dunk
+                                if ('shot' in action_label.lower() or 
+                                    'free_throw' in action_label.lower() or 
+                                    'layup' in action_label.lower() or 
+                                    'dunk' in action_label.lower()):
+                                    # Shooting form evaluation (applies to all shooting actions)
+                                    wrist_velocities = []
+                                    release_frame_idx = biomechanics_features.get('release_frame')
+                                    
+                                    # Compute wrist velocities if available
+                                    if len(smoothed_keypoints) > 1:
+                                        for i in range(1, len(smoothed_keypoints)):
+                                            if smoothed_keypoints[i] is not None and smoothed_keypoints[i-1] is not None:
+                                                # Get wrist position
+                                                wrist_pos = smoothed_keypoints[i][16][:2]  # RIGHT_WRIST
+                                                prev_wrist_pos = smoothed_keypoints[i-1][16][:2]
+                                                velocity = np.linalg.norm(wrist_pos - prev_wrist_pos) / (1.0/fps)
+                                                wrist_velocities.append(velocity)
+                                    
+                                    rule_results = self.rule_based_evaluator.evaluate_shooting_form(
+                                        key_frame_kp,
+                                        ball_trajectory=ball_trajectory[-10:] if ball_trajectory else None,
+                                        wrist_velocities=wrist_velocities if wrist_velocities else None,
+                                        release_frame_idx=release_frame_idx
+                                    )
+                                    
+                                    # Convert rule results to form quality issues
+                                    rule_issues = []
+                                    for check_name, result in rule_results.items():
+                                        if check_name != 'overall' and not result.get('pass', True):
+                                            # Ensure all string fields are never None
+                                            drill = result.get('drill') or ''
+                                            message = result.get('message') or ''
+                                            severity = result.get('severity') or 'moderate'
+                                            
+                                            rule_issues.append({
+                                                'issue_type': check_name,
+                                                'severity': severity,
+                                                'description': message,
+                                                'current_value': result.get('value'),
+                                                'optimal_value': result.get('optimal_value'),
+                                                'recommendation': drill
+                                            })
+                                    
+                                    # Merge with existing form quality analysis
+                                    form_quality = self._analyze_form_quality(valid_keypoints, action_label)
+                                    if form_quality and rule_issues:
+                                        # Add rule-based issues to form quality
+                                        for rule_issue in rule_issues:
+                                            form_quality.issues.append(FormQualityIssue(**rule_issue))
+                                
+                                elif 'dribbl' in action_label.lower():
+                                    # Dribbling form evaluation
+                                    # Extract hand positions and COM
+                                    hand_positions = []
+                                    com_positions = []
+                                    for kp in smoothed_keypoints:
+                                        if kp is not None and len(kp) >= 25:
+                                            # Hand position (wrist)
+                                            hand_positions.append(kp[16][:2])  # RIGHT_WRIST
+                                            # COM (mid-hip)
+                                            left_hip = kp[23][:2]
+                                            right_hip = kp[24][:2]
+                                            com = (left_hip + right_hip) / 2
+                                            com_positions.append(com)
+                                    
+                                    if hand_positions and com_positions:
+                                        rule_results = self.rule_based_evaluator.evaluate_dribbling_form(
+                                            smoothed_keypoints,
+                                            hand_positions,
+                                            np.array(com_positions)
+                                        )
+                                        
+                                        # Convert to form quality issues
+                                        rule_issues = []
+                                        for check_name, result in rule_results.items():
+                                            if check_name != 'overall' and isinstance(result, dict) and not result.get('pass', True):
+                                                # Ensure all string fields are never None
+                                                drill = result.get('drill') or ''
+                                                message = result.get('message') or ''
+                                                severity = result.get('severity') or 'moderate'
+                                                
+                                                rule_issues.append({
+                                                    'issue_type': check_name,
+                                                    'severity': severity,
+                                                    'description': message,
+                                                    'current_value': result.get('value'),
+                                                    'optimal_value': result.get('optimal_value'),
+                                                    'recommendation': drill
+                                                })
+                                        
+                                        form_quality = self._analyze_form_quality(valid_keypoints, action_label)
+                                        if form_quality and rule_issues:
+                                            for rule_issue in rule_issues:
+                                                form_quality.issues.append(FormQualityIssue(**rule_issue))
+                            
+                            # If no rule-based evaluation, use existing form quality
+                            if not form_quality:
+                                form_quality = self._analyze_form_quality(valid_keypoints, action_label)
+                            
+                            # Update current form quality for real-time display
+                            current_form_quality = form_quality
+                            
+                            # Add to timeline - create proper ActionClassification object
+                            timestamp = frame_count / fps
+                            action_classification = ActionClassification(
+                                label=action_label,
+                                confidence=confidence,
+                                probabilities=ActionProbabilities(**action_probs)
+                            )
+                            timeline.append(TimelineSegment(
+                                start_time=max(0, timestamp - (window_size/fps)),
+                                end_time=timestamp,
+                                action=action_classification,
+                                metrics=window_metrics,
+                                form_quality=form_quality
+                            ))
+                            
+                        except Exception as e:
+                            logger.warning(f"Enhanced biomechanics processing failed: {e}, using fallback")
+                            # Fallback to original method
+                            window_metrics = self._calculate_metrics(valid_keypoints, action_label)
+                            all_metrics.append(window_metrics)
+                            form_quality = self._analyze_form_quality(valid_keypoints, action_label)
+                            
+                            # Update current form quality for real-time display
+                            current_form_quality = form_quality
+                            
+                            # Add to timeline even in fallback
+                            timestamp = frame_count / fps
+                            action_classification = ActionClassification(
+                                label=action_label,
+                                confidence=confidence,
+                                probabilities=ActionProbabilities(**action_probs)
+                            )
+                            timeline.append(TimelineSegment(
+                                start_time=max(0, timestamp - (window_size/fps)),
+                                end_time=timestamp,
+                                action=action_classification,
+                                metrics=window_metrics,
+                                form_quality=form_quality
+                            ))
+                    else:
+                        # Fallback: Use default metrics if not enough valid keypoints
+                        logger.debug(f"Only {len(valid_keypoints)} valid keypoint frames in window, using default metrics")
+                        window_metrics = self._calculate_metrics(valid_keypoints if valid_keypoints else [[]], action_label)
                         all_metrics.append(window_metrics)
+                        form_quality = self._analyze_form_quality(valid_keypoints if valid_keypoints else [[]], action_label)
+                        
+                        # Update current form quality for real-time display
+                        current_form_quality = form_quality
                         
                         # Add to timeline - create proper ActionClassification object
                         timestamp = frame_count / fps
@@ -577,7 +965,8 @@ class VideoProcessor:
                             start_time=max(0, timestamp - (window_size/fps)),
                             end_time=timestamp,
                             action=action_classification,
-                            metrics=window_metrics
+                            metrics=window_metrics,
+                            form_quality=form_quality
                         ))
                     
                     # Slide window
@@ -588,23 +977,83 @@ class VideoProcessor:
                 
         finally:
             cap.release()
-            out.release()
+            if out:
+                out.release()
+        
+        # Re-encode video with ffmpeg for browser compatibility (H.264)
+        # This ensures the video can be played in all modern browsers
+        if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
+            try:
+                # Check if ffmpeg is available
+                ffmpeg_path = shutil.which('ffmpeg')
+                if ffmpeg_path:
+                    temp_output = output_path + '.tmp.mp4'
+                    # Re-encode to H.264 with browser-compatible settings
+                    cmd = [
+                        ffmpeg_path,
+                        '-i', output_path,
+                        '-c:v', 'libx264',  # H.264 codec
+                        '-preset', 'medium',  # Encoding speed vs quality
+                        '-crf', '23',  # Quality (18-28, lower is better)
+                        '-c:a', 'aac',  # Audio codec
+                        '-movflags', '+faststart',  # Enable fast start for web streaming
+                        '-pix_fmt', 'yuv420p',  # Pixel format for compatibility
+                        '-y',  # Overwrite output file
+                        temp_output
+                    ]
+                    
+                    result = subprocess.run(
+                        cmd,
+                        capture_output=True,
+                        text=True,
+                        timeout=300  # 5 minute timeout
+                    )
+                    
+                    if result.returncode == 0 and os.path.exists(temp_output):
+                        # Replace original with re-encoded version
+                        os.replace(temp_output, output_path)
+                        logger.info(f"✅ Video re-encoded with H.264 for browser compatibility")
+                    else:
+                        logger.warning(f"⚠️  FFmpeg re-encoding failed: {result.stderr}")
+                        if os.path.exists(temp_output):
+                            os.remove(temp_output)
+                else:
+                    logger.warning("⚠️  FFmpeg not found, skipping re-encoding. Video may not play in all browsers.")
+            except subprocess.TimeoutExpired:
+                logger.warning("⚠️  FFmpeg re-encoding timed out, using original video")
+            except Exception as e:
+                logger.warning(f"⚠️  Failed to re-encode video with ffmpeg: {e}")
             
         if not timeline:
             # If no timeline, maybe video was too short or no poses found
+            # Be more flexible for portrait videos or videos with fewer detections
             if frame_count < window_size:
-                 raise ValueError(f"Video too short for analysis. Need at least {window_size} frames.")
-            raise ValueError("Insufficient frames with detected poses to analyze video")
-            
+                # Try with smaller window if video is short
+                min_frames_required = max(8, window_size // 2)  # At least 8 frames or half window
+                if frame_count < min_frames_required:
+                    raise ValueError(f"Video too short for analysis. Need at least {min_frames_required} frames (got {frame_count}).")
+                else:
+                    logger.warning(f"Video has {frame_count} frames (less than ideal {window_size}), but proceeding with analysis")
+                    # Continue with available frames - but timeline is still empty, so raise error
+                    raise ValueError("Insufficient frames with detected poses to analyze video. Ensure player is clearly visible in the video.")
+            else:
+                raise ValueError("Insufficient frames with detected poses to analyze video. Ensure player is clearly visible in the video.")
+        
+        # Ensure timeline is not empty before proceeding (defensive check)
+        if not timeline or len(timeline) == 0:
+            raise ValueError("Timeline is empty. Cannot proceed with analysis.")
+        
         # Aggregate results
         # Find most frequent action
         actions = [t.action.label for t in timeline]
+        if not actions:
+            raise ValueError("No actions detected in timeline. Cannot determine main action.")
         main_action = max(set(actions), key=actions.count)
         
         # Average metrics
         avg_metrics = self._aggregate_metrics(timeline)
         
-        # Average confidence
+        # Average confidence (safe division - already checked timeline is not empty)
         avg_confidence = sum(t.action.confidence for t in timeline) / len(timeline)
         
         # Aggregate probabilities (average across all segments)
@@ -614,23 +1063,47 @@ class VideoProcessor:
                          "blocking", "picking", "ball_in_hand", "idle"]:
             all_probs[prob_key] = sum(getattr(t.action.probabilities, prob_key) for t in timeline) / len(timeline)
         
+        # Coalesce timeline segments (do this first, before using it)
+        coalesced_timeline = self._coalesce_timeline(timeline)
+        
         # Detect shot outcome if applicable (using court and hoop detection)
         shot_outcome = None
         if "shot" in main_action or "free_throw" in main_action or "layup" in main_action or "dunk" in main_action:
             shot_outcome = self._detect_shot_outcome_with_court(ball_trajectory, hoop_info, court_info)
         
-        # Generate recommendations
+        # Generate recommendations based on form quality issues and action-specific analysis
         # Convert PerformanceMetrics Pydantic object to dict for AI coach
         metrics_dict = avg_metrics.model_dump() if hasattr(avg_metrics, 'model_dump') else avg_metrics.dict()
         shot_outcome_dict = None
         if shot_outcome:
             shot_outcome_dict = shot_outcome.model_dump() if hasattr(shot_outcome, 'model_dump') else shot_outcome.dict()
         
-        recommendations_dicts = self.ai_coach.generate_initial_recommendations(
-            action_type=main_action,
-            metrics=metrics_dict,
-            shot_outcome=shot_outcome_dict
-        )
+        # Collect form quality issues from timeline segments
+        form_quality_issues = []
+        form_strengths = []
+        for segment in coalesced_timeline if coalesced_timeline else []:
+            if segment.form_quality:
+                form_quality_issues.extend(segment.form_quality.issues)
+                form_strengths.extend(segment.form_quality.strengths)
+        
+        # Generate action-specific recommendations based on form quality
+        # Check if ai_coach is available before calling
+        if self.ai_coach is None:
+            logger.warning("⚠️  AI Coach not available, using fallback recommendations")
+            recommendations_dicts = []
+        else:
+            try:
+                recommendations_dicts = self.ai_coach.generate_skill_improvement_recommendations(
+                    action_type=main_action,
+                    metrics=metrics_dict,
+                    shot_outcome=shot_outcome_dict,
+                    form_quality_issues=form_quality_issues,
+                    form_strengths=form_strengths,
+                    timeline=coalesced_timeline if coalesced_timeline else []
+                )
+            except Exception as e:
+                logger.error(f"❌ Error generating recommendations: {e}")
+                recommendations_dicts = []
         
         # Convert dicts to Recommendation Pydantic objects
         recommendations = [Recommendation(**rec) for rec in recommendations_dicts]
@@ -639,10 +1112,17 @@ class VideoProcessor:
         annotated_video_url = None
         try:
             from app.services.supabase_service import supabase_service
-            if supabase_service.enabled:
-                annotated_video_url = supabase_service.upload_video(output_path, output_filename)
+            if supabase_service.enabled and os.path.exists(output_path):
+                # Check file size to ensure it was written properly
+                file_size = os.path.getsize(output_path)
+                if file_size > 0:
+                    annotated_video_url = supabase_service.upload_video(output_path, output_filename)
+                else:
+                    logger.warning(f"⚠️  Processed video file is empty, skipping upload: {output_path}")
+            elif supabase_service.enabled:
+                logger.warning(f"⚠️  Processed video file not found, skipping upload: {output_path}")
         except Exception as e:
-            logger.error(f"Failed to upload annotated video: {e}")
+            logger.warning(f"⚠️  Failed to upload annotated video: {e}")
 
         # Create main action classification
         main_action_classification = ActionClassification(
@@ -657,7 +1137,7 @@ class VideoProcessor:
             metrics=avg_metrics,
             recommendations=recommendations,
             shot_outcome=shot_outcome,
-            timeline=timeline if len(timeline) > 1 else None,  # Only include timeline if multiple segments
+            timeline=coalesced_timeline if coalesced_timeline else None,
             annotated_video_url=annotated_video_url
         )
 
@@ -677,6 +1157,38 @@ class VideoProcessor:
         """Calculate metrics for a window of keypoints"""
         metrics_dict = self.metrics_engine.compute_all_metrics(keypoints, action_label)
         return PerformanceMetrics(**metrics_dict)
+    
+    def _analyze_form_quality(self, keypoints: List[List[float]], action_label: str) -> Optional[FormQualityAssessment]:
+        """Analyze form quality for a window of keypoints"""
+        try:
+            # Determine which form analyzer to use based on action
+            if "shot" in action_label.lower() or "free_throw" in action_label.lower() or "layup" in action_label.lower() or "dunk" in action_label.lower():
+                # Shooting form analysis
+                assessment_dict = self.form_quality_analyzer.analyze_shooting_form(keypoints, action_label)
+            elif "dribbl" in action_label.lower():
+                # Dribbling form analysis
+                assessment_dict = self.form_quality_analyzer.analyze_dribbling_form(keypoints)
+            elif "pass" in action_label.lower():
+                # Passing form analysis
+                assessment_dict = self.form_quality_analyzer.analyze_passing_form(keypoints)
+            else:
+                # No form analysis for other actions (defense, idle, etc.)
+                return None
+            
+            # Convert dict to Pydantic model
+            issues = [FormQualityIssue(**issue) for issue in assessment_dict.get('issues', [])]
+            form_quality = FormQualityAssessment(
+                overall_score=assessment_dict['overall_score'],
+                quality_rating=assessment_dict['quality_rating'],
+                issues=issues,
+                strengths=assessment_dict.get('strengths', [])
+            )
+            
+            return form_quality
+        except Exception as e:
+            logger.warning(f"Form quality analysis failed: {e}")
+            return None
+
 
     def _detect_shot_outcome(self, detections: List[List[Dict]]) -> Optional[ShotOutcome]:
         """Detect shot outcome from detections (legacy method)"""
@@ -731,6 +1243,113 @@ class VideoProcessor:
         
         return None
 
+
+    def _coalesce_timeline(self, timeline: List[TimelineSegment]) -> List[TimelineSegment]:
+        """
+        Merge adjacent timeline segments with the same action label
+        
+        Args:
+            timeline: List of timeline segments
+            
+        Returns:
+            Coalesced timeline with merged adjacent segments
+        """
+        if not timeline:
+            return []
+        
+        if len(timeline) == 1:
+            return timeline
+        
+        coalesced = []
+        current_segment = timeline[0]
+        
+        for i in range(1, len(timeline)):
+            next_segment = timeline[i]
+            
+            # Check if segments are adjacent and have the same action
+            time_gap = next_segment.start_time - current_segment.end_time
+            same_action = current_segment.action.label == next_segment.action.label
+            
+            # Merge if same action and adjacent (within 0.5 seconds)
+            if same_action and time_gap <= 0.5:
+                # Merge segments: extend end time, average metrics, combine form quality
+                current_segment.end_time = next_segment.end_time
+                
+                # Average confidence
+                current_segment.action.confidence = (
+                    current_segment.action.confidence + next_segment.action.confidence
+                ) / 2
+                
+                # Average probabilities
+                for prob_key in ["free_throw", "two_point_shot", "three_point_shot", "layup", "dunk",
+                                "dribbling", "passing", "defense", "running", "walking",
+                                "blocking", "picking", "ball_in_hand", "idle"]:
+                    current_prob = getattr(current_segment.action.probabilities, prob_key)
+                    next_prob = getattr(next_segment.action.probabilities, prob_key)
+                    setattr(current_segment.action.probabilities, prob_key, (current_prob + next_prob) / 2)
+                
+                # Average metrics
+                current_segment.metrics.jump_height = (
+                    current_segment.metrics.jump_height + next_segment.metrics.jump_height
+                ) / 2
+                current_segment.metrics.movement_speed = (
+                    current_segment.metrics.movement_speed + next_segment.metrics.movement_speed
+                ) / 2
+                current_segment.metrics.form_score = (
+                    current_segment.metrics.form_score + next_segment.metrics.form_score
+                ) / 2
+                current_segment.metrics.reaction_time = (
+                    current_segment.metrics.reaction_time + next_segment.metrics.reaction_time
+                ) / 2
+                current_segment.metrics.pose_stability = (
+                    current_segment.metrics.pose_stability + next_segment.metrics.pose_stability
+                ) / 2
+                current_segment.metrics.energy_efficiency = (
+                    current_segment.metrics.energy_efficiency + next_segment.metrics.energy_efficiency
+                ) / 2
+                
+                # Merge form quality issues (combine unique issues)
+                if next_segment.form_quality and current_segment.form_quality:
+                    # Combine issues (avoid duplicates)
+                    existing_issue_types = {issue.issue_type for issue in current_segment.form_quality.issues}
+                    for issue in next_segment.form_quality.issues:
+                        if issue.issue_type not in existing_issue_types:
+                            current_segment.form_quality.issues.append(issue)
+                            existing_issue_types.add(issue.issue_type)
+                    
+                    # Average overall score
+                    current_segment.form_quality.overall_score = (
+                        current_segment.form_quality.overall_score + next_segment.form_quality.overall_score
+                    ) / 2
+                    
+                    # Combine strengths (unique)
+                    existing_strengths = set(current_segment.form_quality.strengths)
+                    for strength in next_segment.form_quality.strengths:
+                        if strength not in existing_strengths:
+                            current_segment.form_quality.strengths.append(strength)
+                    
+                    # Update quality rating based on new score
+                    score = current_segment.form_quality.overall_score
+                    if score >= 0.85:
+                        current_segment.form_quality.quality_rating = "excellent"
+                    elif score >= 0.70:
+                        current_segment.form_quality.quality_rating = "good"
+                    elif score >= 0.50:
+                        current_segment.form_quality.quality_rating = "needs_improvement"
+                    else:
+                        current_segment.form_quality.quality_rating = "poor"
+                elif next_segment.form_quality:
+                    # If current doesn't have form quality but next does, use next
+                    current_segment.form_quality = next_segment.form_quality
+            else:
+                # Different action or gap too large - save current and start new
+                coalesced.append(current_segment)
+                current_segment = next_segment
+        
+        # Add last segment
+        coalesced.append(current_segment)
+        
+        return coalesced
 
     def _map_probabilities(self, model_probs: Dict[str, float]) -> Dict[str, float]:
         """Map model class names to schema class names"""

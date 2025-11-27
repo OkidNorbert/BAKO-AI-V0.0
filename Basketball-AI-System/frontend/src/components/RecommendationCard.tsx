@@ -47,6 +47,26 @@ const PRIORITY_COLORS = {
 };
 
 export default function RecommendationCard({ recommendations }: RecommendationCardProps) {
+  // Safety check
+  if (!recommendations || !Array.isArray(recommendations) || recommendations.length === 0) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="card"
+      >
+        <div className="mb-6">
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+            💡 AI-Generated Recommendations
+          </h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            No recommendations available at this time.
+          </p>
+        </div>
+      </motion.div>
+    );
+  }
+
   // Sort by priority
   const sortedRecommendations = [...recommendations].sort((a, b) => {
     const priorityOrder = { high: 0, medium: 1, low: 2 };

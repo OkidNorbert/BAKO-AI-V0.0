@@ -38,6 +38,17 @@ export interface PerformanceMetrics {
   reaction_time: number;    // seconds
   pose_stability: number;   // 0-1
   energy_efficiency: number; // 0-1
+  // Enhanced biomechanics features (optional)
+  elbow_angle?: number;     // degrees
+  release_angle?: number;   // degrees
+  knee_angle?: number;     // degrees
+  shoulder_angle?: number;  // degrees
+  stability_score?: number; // 0-1
+  smoothness_score?: number; // 0-1
+  follow_through_score?: number; // 0-1
+  dribble_height?: number;  // normalized units
+  dribble_frequency?: number; // Hz
+  consistency?: number;     // 0-1
 }
 
 export interface Recommendation {
@@ -45,6 +56,34 @@ export interface Recommendation {
   title: string;
   message: string;
   priority: 'low' | 'medium' | 'high';
+}
+
+export interface FormQualityIssue {
+  issue_type: string;
+  severity: 'minor' | 'moderate' | 'major';
+  description: string;
+  current_value?: number;
+  optimal_value?: string;
+  recommendation: string;
+}
+
+export interface FormQualityAssessment {
+  overall_score: number;
+  quality_rating: 'excellent' | 'good' | 'needs_improvement' | 'poor';
+  issues: FormQualityIssue[];
+  strengths: string[];
+}
+
+export interface TimelineSegment {
+  start_time: number;
+  end_time: number;
+  action: {
+    label: string;
+    confidence: number;
+    probabilities: ActionProbabilities;
+  };
+  metrics: PerformanceMetrics;
+  form_quality?: FormQualityAssessment;
 }
 
 export interface VideoAnalysisResult {
@@ -56,6 +95,7 @@ export interface VideoAnalysisResult {
   };
   metrics: PerformanceMetrics;
   recommendations: Recommendation[];
+  timeline?: TimelineSegment[];
   keypoints?: number[][][]; // For visualization
   annotated_video_url?: string;
   timestamp: string;

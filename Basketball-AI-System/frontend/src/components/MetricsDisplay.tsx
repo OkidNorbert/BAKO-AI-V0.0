@@ -91,11 +91,20 @@ function MetricCard({ icon, label, value, unit, trend, color, delay }: MetricCar
 }
 
 export default function MetricsDisplay({ metrics }: MetricsDisplayProps) {
-  const metricsConfig = [
+  // Helper function to safely format numbers
+  const safeFormat = (value: number | null | undefined, decimals: number = 2): string => {
+    if (value === null || value === undefined || isNaN(value)) {
+      return 'N/A';
+    }
+    return value.toFixed(decimals);
+  };
+
+  // Core metrics (always shown)
+  const coreMetrics = [
     {
       icon: <Zap className="w-6 h-6 text-white" />,
       label: 'Jump Height',
-      value: metrics.jump_height.toFixed(2),
+      value: safeFormat(metrics.jump_height, 2),
       unit: 'm',
       trend: 8,
       color: 'from-orange-500 to-red-500',
@@ -103,7 +112,7 @@ export default function MetricsDisplay({ metrics }: MetricsDisplayProps) {
     {
       icon: <Activity className="w-6 h-6 text-white" />,
       label: 'Movement Speed',
-      value: metrics.movement_speed.toFixed(1),
+      value: safeFormat(metrics.movement_speed, 1),
       unit: 'm/s',
       trend: 12,
       color: 'from-blue-500 to-cyan-500',
@@ -111,7 +120,7 @@ export default function MetricsDisplay({ metrics }: MetricsDisplayProps) {
     {
       icon: <Target className="w-6 h-6 text-white" />,
       label: 'Form Score',
-      value: metrics.form_score.toFixed(2),
+      value: safeFormat(metrics.form_score, 2),
       unit: '/1.0',
       trend: 5,
       color: 'from-green-500 to-emerald-500',
@@ -119,7 +128,7 @@ export default function MetricsDisplay({ metrics }: MetricsDisplayProps) {
     {
       icon: <Clock className="w-6 h-6 text-white" />,
       label: 'Reaction Time',
-      value: metrics.reaction_time.toFixed(2),
+      value: safeFormat(metrics.reaction_time, 2),
       unit: 's',
       trend: -3,
       color: 'from-purple-500 to-pink-500',
@@ -127,7 +136,7 @@ export default function MetricsDisplay({ metrics }: MetricsDisplayProps) {
     {
       icon: <Wind className="w-6 h-6 text-white" />,
       label: 'Pose Stability',
-      value: metrics.pose_stability.toFixed(2),
+      value: safeFormat(metrics.pose_stability, 2),
       unit: '/1.0',
       trend: 6,
       color: 'from-indigo-500 to-blue-500',
@@ -135,23 +144,88 @@ export default function MetricsDisplay({ metrics }: MetricsDisplayProps) {
     {
       icon: <Battery className="w-6 h-6 text-white" />,
       label: 'Energy Efficiency',
-      value: metrics.energy_efficiency.toFixed(2),
+      value: safeFormat(metrics.energy_efficiency, 2),
       unit: '/1.0',
       trend: 4,
       color: 'from-yellow-500 to-orange-500',
     },
   ];
 
+  // Enhanced biomechanics metrics (shown if available)
+  const biomechanicsMetrics = [];
+  
+  if (metrics.elbow_angle !== undefined && metrics.elbow_angle !== null) {
+    biomechanicsMetrics.push({
+      icon: <Target className="w-6 h-6 text-white" />,
+      label: 'Elbow Angle',
+      value: safeFormat(metrics.elbow_angle, 1),
+      unit: '°',
+      color: 'from-red-500 to-orange-500',
+    });
+  }
+  
+  if (metrics.release_angle !== undefined && metrics.release_angle !== null) {
+    biomechanicsMetrics.push({
+      icon: <TrendingUp className="w-6 h-6 text-white" />,
+      label: 'Release Angle',
+      value: safeFormat(metrics.release_angle, 1),
+      unit: '°',
+      color: 'from-yellow-500 to-orange-500',
+    });
+  }
+  
+  if (metrics.stability_score !== undefined && metrics.stability_score !== null) {
+    biomechanicsMetrics.push({
+      icon: <Wind className="w-6 h-6 text-white" />,
+      label: 'Balance Score',
+      value: safeFormat((metrics.stability_score * 100), 0),
+      unit: '%',
+      color: 'from-blue-500 to-indigo-500',
+    });
+  }
+  
+  if (metrics.smoothness_score !== undefined && metrics.smoothness_score !== null) {
+    biomechanicsMetrics.push({
+      icon: <Activity className="w-6 h-6 text-white" />,
+      label: 'Movement Smoothness',
+      value: safeFormat((metrics.smoothness_score * 100), 0),
+      unit: '%',
+      color: 'from-green-500 to-teal-500',
+    });
+  }
+  
+  if (metrics.follow_through_score !== undefined && metrics.follow_through_score !== null) {
+    biomechanicsMetrics.push({
+      icon: <Zap className="w-6 h-6 text-white" />,
+      label: 'Follow-Through',
+      value: safeFormat((metrics.follow_through_score * 100), 0),
+      unit: '%',
+      color: 'from-purple-500 to-pink-500',
+    });
+  }
+
+  const metricsConfig = [...coreMetrics, ...biomechanicsMetrics];
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-          📊 Performance Metrics
-        </h3>
-        <button className="text-sm text-primary-600 dark:text-primary-400 hover:underline font-medium">
-          View Detailed Analysis →
-        </button>
+        <div>
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            📊 Performance Metrics & Biomechanics
+          </h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            Comprehensive analysis of your movement, form, and technique
+          </p>
+        </div>
       </div>
+      
+      {biomechanicsMetrics.length > 0 && (
+        <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+          <p className="text-sm text-blue-800 dark:text-blue-200">
+            ✨ <strong>Enhanced Analysis:</strong> Biomechanics features detected. See detailed metrics below.
+          </p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {metricsConfig.map((metric, index) => (
@@ -181,7 +255,10 @@ export default function MetricsDisplay({ metrics }: MetricsDisplayProps) {
           </div>
           <div className="text-center">
             <div className="text-5xl font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
-              {((metrics.form_score + metrics.pose_stability + metrics.energy_efficiency) / 3 * 100).toFixed(0)}
+              {safeFormat(
+                ((metrics.form_score ?? 0) + (metrics.pose_stability ?? 0) + (metrics.energy_efficiency ?? 0)) / 3 * 100,
+                0
+              )}
             </div>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">out of 100</p>
           </div>
