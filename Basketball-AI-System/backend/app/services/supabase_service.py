@@ -219,6 +219,9 @@ class SupabaseService:
         """
         Save analysis result to Supabase Database AND local storage
         """
+        # Initialize local_save_success at the start to ensure it's always in scope
+        local_save_success = False
+        
         # Always save locally first as backup
         try:
             serialized_result = self._serialize_for_json(result)
@@ -242,12 +245,13 @@ class SupabaseService:
                 "created_at": datetime.now().isoformat()
             }
             
-            # Save locally
-            self._save_local(data)
+            # Save locally (critical backup)
+            local_save_success = self._save_local(data)
             
             # Then try Supabase
             if not self.enabled or not self.client:
-                return True # Return true since we saved locally
+                # Return success only if local save succeeded
+                return local_save_success
                 
             table_name = "analysis_results"
             
@@ -258,7 +262,7 @@ class SupabaseService:
                 error_str = str(table_check_error).lower()
                 if "not found" in error_str or "404" in error_str or "pgrst205" in error_str or "table" in error_str:
                     logger.debug(f"⚠️  Supabase table '{table_name}' not found. Analysis saved LOCALLY only.")
-                    return True
+                    return local_save_success
                 raise  # Re-raise if it's a different error
             
             # Table exists, insert data
@@ -269,11 +273,24 @@ class SupabaseService:
                 
             self.client.table(table_name).insert(db_data).execute()
             logger.info("✅ Analysis result saved to Supabase DB")
-            return True
+            
+            # Return True only if both local and Supabase saves succeeded
+            # (as per docstring: "Save analysis result to Supabase Database AND local storage")
+            if local_save_success:
+                return True
+            else:
+                logger.warning("⚠️  Supabase save succeeded but local save failed. Returning False.")
+                return False
             
         except Exception as e:
-            logger.warning(f"⚠️  Failed to save to Supabase (saved locally): {e}")
-            return True # Still return true as we saved locally
+            # local_save_success is initialized at the start, so it's always in scope
+            if local_save_success:
+                logger.warning(f"⚠️  Failed to save to Supabase (saved locally): {e}")
+            else:
+                logger.error(f"❌ Failed to save analysis (both local and Supabase failed): {e}")
+            # Return False when Supabase save fails, regardless of local save status
+            # (as per docstring: "Save analysis result to Supabase Database AND local storage")
+            return False
 
     def get_history(self, limit: int = 50) -> list:
         """

@@ -14,6 +14,18 @@ import jsPDF from 'jspdf';
 import confetti from 'canvas-confetti';
 import { useDarkMode } from '../App';
 
+// Helper function to convert relative URLs to absolute URLs
+const getVideoUrl = (url: string | undefined): string | undefined => {
+  if (!url) return undefined;
+  // If URL is already absolute (starts with http:// or https://), return as-is
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  // If relative URL, prepend API base URL
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  return `${API_BASE_URL}${url.startsWith('/') ? url : '/' + url}`;
+};
+
 export default function Dashboard() {
   const [uploadProgress, setUploadProgress] = useState<UploadProgress>({
     progress: 0,
@@ -430,119 +442,123 @@ export default function Dashboard() {
               })()}
               
               {/* Annotated Video Playback */}
-              {analysisResult.annotated_video_url && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6"
-                >
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    AI-Annotated Video
-                  </h2>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    Watch your video with AI detections: YOLO bounding boxes, MediaPipe pose keypoints, and court/hoop detection
-                  </p>
-                  <div className="relative rounded-lg overflow-hidden bg-black" style={{ aspectRatio: '16/9' }}>
-                    {videoLoadError ? (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 text-white p-4 z-10">
-                        <svg className="w-12 h-12 mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <p className="text-sm text-center font-medium mb-1">Video playback unavailable</p>
-                        <p className="text-xs text-gray-400 mb-2 text-center max-w-md">
-                          The video may still be processing, or there may be a CORS/codec compatibility issue.
-                        </p>
-                        <p className="text-xs text-gray-500 mb-4 text-center">
-                          The analysis results are still available below.
-                        </p>
-                        <div className="flex flex-col gap-2 items-center">
-                          <a
-                            href={analysisResult.annotated_video_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
-                          >
-                            Try opening video in new tab
-                          </a>
-                          <button
-                            onClick={() => {
-                              setVideoLoadError(false);
-                              setVideoLoading(true);
-                              // Force video reload
-                              const video = document.querySelector('video');
-                              if (video) {
-                                video.load();
-                              }
-                            }}
-                            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-lg transition-colors"
-                          >
-                            Retry Loading
-                          </button>
-                          <p className="text-xs text-gray-500 mt-2 max-w-xs text-center break-all">
-                            URL: {analysisResult.annotated_video_url}
+              {(() => {
+                const videoUrl = getVideoUrl(analysisResult.annotated_video_url);
+                if (!videoUrl) return null;
+                
+                return (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6"
+                  >
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                      <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      AI-Annotated Video
+                    </h2>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                      Watch your video with AI detections: YOLO bounding boxes, MediaPipe pose keypoints, and court/hoop detection
+                    </p>
+                    <div className="relative rounded-lg overflow-hidden bg-black" style={{ aspectRatio: '16/9' }}>
+                      {videoLoadError ? (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 text-white p-4 z-10">
+                          <svg className="w-12 h-12 mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <p className="text-sm text-center font-medium mb-1">Video playback unavailable</p>
+                          <p className="text-xs text-gray-400 mb-2 text-center max-w-md">
+                            The video may still be processing, or there may be a CORS/codec compatibility issue.
                           </p>
+                          <p className="text-xs text-gray-500 mb-4 text-center">
+                            The analysis results are still available below.
+                          </p>
+                          <div className="flex flex-col gap-2 items-center">
+                            <a
+                              href={videoUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
+                            >
+                              Try opening video in new tab
+                            </a>
+                            <button
+                              onClick={() => {
+                                setVideoLoadError(false);
+                                setVideoLoading(true);
+                                // Force video reload
+                                const video = document.querySelector('video');
+                                if (video) {
+                                  video.load();
+                                }
+                              }}
+                              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-lg transition-colors"
+                            >
+                              Retry Loading
+                            </button>
+                            <p className="text-xs text-gray-500 mt-2 max-w-xs text-center break-all">
+                              URL: {videoUrl}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    ) : videoLoading ? (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 text-white p-4 z-10">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
-                        <p className="text-sm text-gray-400">Loading video...</p>
-                        <p className="text-xs text-gray-500 mt-2">This may take a few moments</p>
-                      </div>
-                    ) : null}
-                    <video
-                      controls
-                      className="w-full h-full"
-                      src={analysisResult.annotated_video_url}
-                      crossOrigin="anonymous"
-                      preload="metadata"
-                      onLoadStart={() => {
-                        console.log('Video load started:', analysisResult.annotated_video_url);
-                        setVideoLoading(true);
-                      }}
-                      onLoadedData={() => {
-                        console.log('Video loaded successfully');
-                        setVideoLoading(false);
-                        setVideoLoadError(false);
-                      }}
-                      onCanPlay={() => {
-                        console.log('Video can play');
-                        setVideoLoading(false);
-                      }}
-                      onError={(e) => {
-                        const videoElement = e.currentTarget;
-                        const error = videoElement.error;
-                        let errorMessage = 'Unknown error';
-                        
-                        if (error) {
-                          switch (error.code) {
-                            case error.MEDIA_ERR_ABORTED:
-                              errorMessage = 'Video loading aborted';
-                              break;
-                            case error.MEDIA_ERR_NETWORK:
-                              errorMessage = 'Network error - video may still be uploading';
-                              break;
-                            case error.MEDIA_ERR_DECODE:
-                              errorMessage = 'Video decode error - codec not supported';
-                              break;
-                            case error.MEDIA_ERR_SRC_NOT_SUPPORTED:
-                              errorMessage = 'Video format not supported';
-                              break;
-                            default:
-                              errorMessage = `Error code: ${error.code}`;
+                      ) : videoLoading ? (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 text-white p-4 z-10">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
+                          <p className="text-sm text-gray-400">Loading video...</p>
+                          <p className="text-xs text-gray-500 mt-2">This may take a few moments</p>
+                        </div>
+                      ) : null}
+                      <video
+                        controls
+                        className="w-full h-full"
+                        src={videoUrl}
+                        crossOrigin="anonymous"
+                        preload="metadata"
+                        onLoadStart={() => {
+                          console.log('Video load started:', videoUrl);
+                          setVideoLoading(true);
+                        }}
+                        onLoadedData={() => {
+                          console.log('Video loaded successfully');
+                          setVideoLoading(false);
+                          setVideoLoadError(false);
+                        }}
+                        onCanPlay={() => {
+                          console.log('Video can play');
+                          setVideoLoading(false);
+                        }}
+                        onError={(e) => {
+                          const videoElement = e.currentTarget;
+                          const error = videoElement.error;
+                          let errorMessage = 'Unknown error';
+                          
+                          if (error) {
+                            switch (error.code) {
+                              case error.MEDIA_ERR_ABORTED:
+                                errorMessage = 'Video loading aborted';
+                                break;
+                              case error.MEDIA_ERR_NETWORK:
+                                errorMessage = 'Network error - video may still be uploading';
+                                break;
+                              case error.MEDIA_ERR_DECODE:
+                                errorMessage = 'Video decode error - codec not supported';
+                                break;
+                              case error.MEDIA_ERR_SRC_NOT_SUPPORTED:
+                                errorMessage = 'Video format not supported';
+                                break;
+                              default:
+                                errorMessage = `Error code: ${error.code}`;
+                            }
                           }
-                        }
-                        
-                        console.error('Video loading error:', errorMessage);
-                        console.error('Video URL:', analysisResult.annotated_video_url);
-                        console.error('Error details:', error);
-                        
-                        // Check if URL is accessible
-                        fetch(analysisResult.annotated_video_url, { method: 'HEAD' })
+                          
+                          console.error('Video loading error:', errorMessage);
+                          console.error('Video URL:', videoUrl);
+                          console.error('Error details:', error);
+                          
+                          // Check if URL is accessible
+                          fetch(videoUrl, { method: 'HEAD' })
                           .then(response => {
                             console.log('Video URL accessibility check:', response.status, response.statusText);
                             if (response.status === 200) {
@@ -571,7 +587,8 @@ export default function Dashboard() {
                     </video>
                   </div>
                 </motion.div>
-              )}
+                );
+              })()}
 
               {/* Skill Improvement Focus - Recommendations First */}
               {analysisResult.recommendations && analysisResult.recommendations.length > 0 ? (

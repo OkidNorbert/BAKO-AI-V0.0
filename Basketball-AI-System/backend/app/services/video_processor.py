@@ -15,6 +15,7 @@ from datetime import datetime
 import uuid
 import subprocess
 import shutil
+import copy
 
 from app.core.config import settings
 
@@ -436,9 +437,15 @@ class VideoProcessor:
         logger.info(f"🎥 Processing video: {video_path}")
         logger.info(f"   Properties: {width}x{height} @ {fps}fps, {total_frames} frames")
         
+        # Validate video properties including fps
         if width == 0 or height == 0 or total_frames == 0:
             logger.error("❌ Invalid video properties detected")
             raise ValueError("Invalid video file: dimensions or frame count is zero")
+        
+        # Validate fps to prevent division by zero errors
+        if fps <= 0:
+            logger.warning(f"⚠️  Invalid or zero FPS detected ({fps}). Using default FPS of 30.")
+            fps = 30  # Default to 30 fps for common video formats
         
         # Prepare output video
         output_filename = f"processed_{os.path.basename(video_path)}"
@@ -742,6 +749,8 @@ class VideoProcessor:
                     # For portrait videos or videos with fewer detections, be more flexible
                     # Require at least 2 valid keypoints (minimum for any calculation)
                     min_keypoints_required = 2
+                    # Initialize metrics_appended before try block to ensure it's always in scope
+                    metrics_appended = False
                     if len(valid_keypoints) >= min_keypoints_required:
                         # ENHANCED: Normalize and smooth keypoints before analysis
                         try:
@@ -762,7 +771,8 @@ class VideoProcessor:
                             if biomechanics_features is None:
                                 biomechanics_features = {}
                             
-                            # Use smoothed keypoints for metrics
+                            # Calculate metrics first (before any processing that might fail)
+                            # This ensures metrics are calculated even if subsequent processing fails
                             window_metrics = self._calculate_metrics(smoothed_keypoints, action_label)
                             
                             # Add biomechanics features to metrics
@@ -790,11 +800,11 @@ class VideoProcessor:
                                                     else:
                                                         logger.debug(f"Skipping biomechanics feature '{key}': not in PerformanceMetrics schema")
                             
-                            all_metrics.append(window_metrics)
-                            
                             # ENHANCED: Rule-based form evaluation
                             # Initialize form_quality to None to ensure it's always defined
                             form_quality = None
+                            # Initialize rule_issues to preserve them even if form_quality is None
+                            rule_issues = []
                             
                             # Get key frame for rule-based checks (mid-frame or release frame)
                             mid_frame_idx = len(smoothed_keypoints) // 2
@@ -847,11 +857,17 @@ class VideoProcessor:
                                             })
                                     
                                     # Merge with existing form quality analysis
-                                    form_quality = self._analyze_form_quality(valid_keypoints, action_label)
-                                    if form_quality and rule_issues:
-                                        # Add rule-based issues to form quality
-                                        for rule_issue in rule_issues:
-                                            form_quality.issues.append(FormQualityIssue(**rule_issue))
+                                    # Use smoothed_keypoints (normalized) for consistency with metrics calculation
+                                    form_quality = self._analyze_form_quality(smoothed_keypoints, action_label)
+                                    # Merge rule-based issues into form quality (even if form_quality was None initially)
+                                    if rule_issues:
+                                        if form_quality:
+                                            # Add rule-based issues to existing form quality
+                                            for rule_issue in rule_issues:
+                                                form_quality.issues.append(FormQualityIssue(**rule_issue))
+                                        else:
+                                            # form_quality is None, but we have rule_issues - create FormQualityAssessment from them
+                                            form_quality = self._create_form_quality_from_rule_issues(rule_issues)
                                 
                                 elif 'dribbl' in action_label.lower():
                                     # Dribbling form evaluation
@@ -875,7 +891,7 @@ class VideoProcessor:
                                             np.array(com_positions)
                                         )
                                         
-                                        # Convert to form quality issues
+                                        # Convert to form quality issues (reuse existing list)
                                         rule_issues = []
                                         for check_name, result in rule_results.items():
                                             if check_name != 'overall' and isinstance(result, dict) and not result.get('pass', True):
@@ -893,17 +909,39 @@ class VideoProcessor:
                                                     'recommendation': drill
                                                 })
                                         
-                                        form_quality = self._analyze_form_quality(valid_keypoints, action_label)
-                                        if form_quality and rule_issues:
-                                            for rule_issue in rule_issues:
-                                                form_quality.issues.append(FormQualityIssue(**rule_issue))
+                                        # Use smoothed_keypoints (normalized) for consistency with metrics calculation
+                                        form_quality = self._analyze_form_quality(smoothed_keypoints, action_label)
+                                        # Merge rule-based issues into form quality (even if form_quality was None initially)
+                                        if rule_issues:
+                                            if form_quality:
+                                                # Add rule-based issues to existing form quality
+                                                for rule_issue in rule_issues:
+                                                    form_quality.issues.append(FormQualityIssue(**rule_issue))
+                                            else:
+                                                # form_quality is None, but we have rule_issues - create FormQualityAssessment from them
+                                                form_quality = self._create_form_quality_from_rule_issues(rule_issues)
                             
                             # If no rule-based evaluation, use existing form quality
+                            # Use smoothed_keypoints (normalized) for consistency with metrics calculation
                             if not form_quality:
-                                form_quality = self._analyze_form_quality(valid_keypoints, action_label)
+                                form_quality = self._analyze_form_quality(smoothed_keypoints, action_label)
+                                # If we have rule_issues that weren't merged yet (because form_quality was None),
+                                # merge them now into the newly created form_quality
+                                if rule_issues:
+                                    if form_quality:
+                                        # Add rule-based issues to existing form quality
+                                        for rule_issue in rule_issues:
+                                            form_quality.issues.append(FormQualityIssue(**rule_issue))
+                                    else:
+                                        # form_quality is still None, but we have rule_issues - create FormQualityAssessment from them
+                                        form_quality = self._create_form_quality_from_rule_issues(rule_issues)
                             
                             # Update current form quality for real-time display
                             current_form_quality = form_quality
+                            
+                            # Append metrics only once, after all processing is complete
+                            all_metrics.append(window_metrics)
+                            metrics_appended = True
                             
                             # Add to timeline - create proper ActionClassification object
                             timestamp = frame_count / fps
@@ -923,9 +961,26 @@ class VideoProcessor:
                         except Exception as e:
                             logger.warning(f"Enhanced biomechanics processing failed: {e}, using fallback")
                             # Fallback to original method
-                            window_metrics = self._calculate_metrics(valid_keypoints, action_label)
-                            all_metrics.append(window_metrics)
-                            form_quality = self._analyze_form_quality(valid_keypoints, action_label)
+                            # Metrics may have been calculated at line 767, but if exception occurred before that,
+                            # we need to calculate them now
+                            if 'window_metrics' not in locals() or window_metrics is None:
+                                # Try to use smoothed_keypoints if available, otherwise fall back to valid_keypoints
+                                if 'smoothed_keypoints' in locals() and smoothed_keypoints is not None:
+                                    window_metrics = self._calculate_metrics(smoothed_keypoints, action_label)
+                                else:
+                                    window_metrics = self._calculate_metrics(valid_keypoints, action_label)
+                            
+                            # Only append if metrics haven't been appended yet
+                            # metrics_appended is initialized before try block, so it's always in scope
+                            if not metrics_appended:
+                                all_metrics.append(window_metrics)
+                                metrics_appended = True
+                            
+                            # Try to use smoothed_keypoints if available, otherwise fall back to valid_keypoints
+                            if 'smoothed_keypoints' in locals() and smoothed_keypoints is not None:
+                                form_quality = self._analyze_form_quality(smoothed_keypoints, action_label)
+                            else:
+                                form_quality = self._analyze_form_quality(valid_keypoints, action_label)
                             
                             # Update current form quality for real-time display
                             current_form_quality = form_quality
@@ -1087,10 +1142,24 @@ class VideoProcessor:
                 form_strengths.extend(segment.form_quality.strengths)
         
         # Generate action-specific recommendations based on form quality
-        # Check if ai_coach is available before calling
+        # Use fallback rule-based recommendations if AI Coach is not available
         if self.ai_coach is None:
-            logger.warning("⚠️  AI Coach not available, using fallback recommendations")
-            recommendations_dicts = []
+            logger.warning("⚠️  AI Coach not available, using fallback rule-based recommendations")
+            # Create a temporary fallback AICoach instance for rule-based recommendations
+            try:
+                from app.models.ai_coach import AICoach
+                fallback_coach = AICoach(model_type="fallback")
+                recommendations_dicts = fallback_coach.generate_skill_improvement_recommendations(
+                    action_type=main_action,
+                    metrics=metrics_dict,
+                    shot_outcome=shot_outcome_dict,
+                    form_quality_issues=form_quality_issues,
+                    form_strengths=form_strengths,
+                    timeline=coalesced_timeline if coalesced_timeline else []
+                )
+            except Exception as e:
+                logger.error(f"❌ Error generating fallback recommendations: {e}")
+                recommendations_dicts = []
         else:
             try:
                 recommendations_dicts = self.ai_coach.generate_skill_improvement_recommendations(
@@ -1103,12 +1172,26 @@ class VideoProcessor:
                 )
             except Exception as e:
                 logger.error(f"❌ Error generating recommendations: {e}")
-                recommendations_dicts = []
+                # Try fallback if main AI coach fails
+                try:
+                    from app.models.ai_coach import AICoach
+                    fallback_coach = AICoach(model_type="fallback")
+                    recommendations_dicts = fallback_coach.generate_skill_improvement_recommendations(
+                        action_type=main_action,
+                        metrics=metrics_dict,
+                        shot_outcome=shot_outcome_dict,
+                        form_quality_issues=form_quality_issues,
+                        form_strengths=form_strengths,
+                        timeline=coalesced_timeline if coalesced_timeline else []
+                    )
+                except Exception as fallback_error:
+                    logger.error(f"❌ Fallback recommendations also failed: {fallback_error}")
+                    recommendations_dicts = []
         
         # Convert dicts to Recommendation Pydantic objects
         recommendations = [Recommendation(**rec) for rec in recommendations_dicts]
 
-        # Upload annotated video to Supabase if available
+        # Upload annotated video to Supabase if available, otherwise serve locally
         annotated_video_url = None
         try:
             from app.services.supabase_service import supabase_service
@@ -1117,12 +1200,36 @@ class VideoProcessor:
                 file_size = os.path.getsize(output_path)
                 if file_size > 0:
                     annotated_video_url = supabase_service.upload_video(output_path, output_filename)
+                    if not annotated_video_url:
+                        # Upload failed, fall back to local serving
+                        logger.info(f"📹 Supabase upload failed, serving video locally: {output_filename}")
+                        from app.core.config import settings
+                        # Use relative path that will be served by /api/videos endpoint
+                        annotated_video_url = f"/api/videos/{output_filename}"
                 else:
                     logger.warning(f"⚠️  Processed video file is empty, skipping upload: {output_path}")
             elif supabase_service.enabled:
                 logger.warning(f"⚠️  Processed video file not found, skipping upload: {output_path}")
+            
+            # If Supabase is not enabled or upload failed, serve locally
+            if not annotated_video_url and os.path.exists(output_path):
+                file_size = os.path.getsize(output_path)
+                if file_size > 0:
+                    logger.info(f"📹 Supabase not available, serving annotated video locally: {output_filename}")
+                    from app.core.config import settings
+                    # Use relative path that will be served by /api/videos endpoint
+                    annotated_video_url = f"/api/videos/{output_filename}"
+                else:
+                    logger.warning(f"⚠️  Processed video file is empty: {output_path}")
         except Exception as e:
             logger.warning(f"⚠️  Failed to upload annotated video: {e}")
+            # Try to serve locally as fallback
+            if os.path.exists(output_path):
+                file_size = os.path.getsize(output_path)
+                if file_size > 0:
+                    logger.info(f"📹 Serving annotated video locally after upload error: {output_filename}")
+                    from app.core.config import settings
+                    annotated_video_url = f"/api/videos/{output_filename}"
 
         # Create main action classification
         main_action_classification = ActionClassification(
@@ -1189,6 +1296,48 @@ class VideoProcessor:
             logger.warning(f"Form quality analysis failed: {e}")
             return None
 
+    def _create_form_quality_from_rule_issues(self, rule_issues: List[Dict]) -> FormQualityAssessment:
+        """
+        Create a FormQualityAssessment from rule-based issues when form_quality analysis returns None.
+        This ensures rule_issues are never lost.
+        """
+        if not rule_issues:
+            # Should not be called with empty rule_issues, but handle gracefully
+            return FormQualityAssessment(
+                overall_score=0.5,
+                quality_rating="needs_improvement",
+                issues=[],
+                strengths=[]
+            )
+        
+        # Calculate overall_score based on number and severity of issues
+        # More issues or more severe issues = lower score
+        severity_weights = {'major': 0.3, 'moderate': 0.2, 'minor': 0.1}
+        total_penalty = sum(severity_weights.get(issue.get('severity', 'moderate'), 0.2) for issue in rule_issues)
+        # Cap penalty at 0.8 (so score is at least 0.2)
+        total_penalty = min(total_penalty, 0.8)
+        overall_score = max(0.2, 1.0 - total_penalty)
+        
+        # Determine quality_rating based on score
+        if overall_score >= 0.8:
+            quality_rating = "excellent"
+        elif overall_score >= 0.6:
+            quality_rating = "good"
+        elif overall_score >= 0.4:
+            quality_rating = "needs_improvement"
+        else:
+            quality_rating = "poor"
+        
+        # Convert rule_issues to FormQualityIssue objects
+        issues = [FormQualityIssue(**issue) for issue in rule_issues]
+        
+        return FormQualityAssessment(
+            overall_score=overall_score,
+            quality_rating=quality_rating,
+            issues=issues,
+            strengths=[]  # No strengths when only rule-based issues exist
+        )
+
 
     def _detect_shot_outcome(self, detections: List[List[Dict]]) -> Optional[ShotOutcome]:
         """Detect shot outcome from detections (legacy method)"""
@@ -1252,19 +1401,22 @@ class VideoProcessor:
             timeline: List of timeline segments
             
         Returns:
-            Coalesced timeline with merged adjacent segments
+            Coalesced timeline with merged adjacent segments (new objects, original unchanged)
         """
         if not timeline:
             return []
         
         if len(timeline) == 1:
-            return timeline
+            # Return a copy to avoid mutating the original
+            return [copy.deepcopy(timeline[0])]
         
         coalesced = []
-        current_segment = timeline[0]
+        # Create a deep copy of the first segment to avoid mutating the original
+        current_segment = copy.deepcopy(timeline[0])
         
         for i in range(1, len(timeline)):
-            next_segment = timeline[i]
+            # Create a deep copy of next_segment to avoid mutating the original
+            next_segment = copy.deepcopy(timeline[i])
             
             # Check if segments are adjacent and have the same action
             time_gap = next_segment.start_time - current_segment.end_time
@@ -1288,25 +1440,48 @@ class VideoProcessor:
                     next_prob = getattr(next_segment.action.probabilities, prob_key)
                     setattr(current_segment.action.probabilities, prob_key, (current_prob + next_prob) / 2)
                 
-                # Average metrics
-                current_segment.metrics.jump_height = (
-                    current_segment.metrics.jump_height + next_segment.metrics.jump_height
-                ) / 2
-                current_segment.metrics.movement_speed = (
-                    current_segment.metrics.movement_speed + next_segment.metrics.movement_speed
-                ) / 2
-                current_segment.metrics.form_score = (
-                    current_segment.metrics.form_score + next_segment.metrics.form_score
-                ) / 2
-                current_segment.metrics.reaction_time = (
-                    current_segment.metrics.reaction_time + next_segment.metrics.reaction_time
-                ) / 2
-                current_segment.metrics.pose_stability = (
-                    current_segment.metrics.pose_stability + next_segment.metrics.pose_stability
-                ) / 2
-                current_segment.metrics.energy_efficiency = (
-                    current_segment.metrics.energy_efficiency + next_segment.metrics.energy_efficiency
-                ) / 2
+                # Average metrics (with None checks to prevent TypeError)
+                if current_segment.metrics.jump_height is not None and next_segment.metrics.jump_height is not None:
+                    current_segment.metrics.jump_height = (
+                        current_segment.metrics.jump_height + next_segment.metrics.jump_height
+                    ) / 2
+                elif current_segment.metrics.jump_height is None:
+                    current_segment.metrics.jump_height = next_segment.metrics.jump_height
+                
+                if current_segment.metrics.movement_speed is not None and next_segment.metrics.movement_speed is not None:
+                    current_segment.metrics.movement_speed = (
+                        current_segment.metrics.movement_speed + next_segment.metrics.movement_speed
+                    ) / 2
+                elif current_segment.metrics.movement_speed is None:
+                    current_segment.metrics.movement_speed = next_segment.metrics.movement_speed
+                
+                if current_segment.metrics.form_score is not None and next_segment.metrics.form_score is not None:
+                    current_segment.metrics.form_score = (
+                        current_segment.metrics.form_score + next_segment.metrics.form_score
+                    ) / 2
+                elif current_segment.metrics.form_score is None:
+                    current_segment.metrics.form_score = next_segment.metrics.form_score
+                
+                if current_segment.metrics.reaction_time is not None and next_segment.metrics.reaction_time is not None:
+                    current_segment.metrics.reaction_time = (
+                        current_segment.metrics.reaction_time + next_segment.metrics.reaction_time
+                    ) / 2
+                elif current_segment.metrics.reaction_time is None:
+                    current_segment.metrics.reaction_time = next_segment.metrics.reaction_time
+                
+                if current_segment.metrics.pose_stability is not None and next_segment.metrics.pose_stability is not None:
+                    current_segment.metrics.pose_stability = (
+                        current_segment.metrics.pose_stability + next_segment.metrics.pose_stability
+                    ) / 2
+                elif current_segment.metrics.pose_stability is None:
+                    current_segment.metrics.pose_stability = next_segment.metrics.pose_stability
+                
+                if current_segment.metrics.energy_efficiency is not None and next_segment.metrics.energy_efficiency is not None:
+                    current_segment.metrics.energy_efficiency = (
+                        current_segment.metrics.energy_efficiency + next_segment.metrics.energy_efficiency
+                    ) / 2
+                elif current_segment.metrics.energy_efficiency is None:
+                    current_segment.metrics.energy_efficiency = next_segment.metrics.energy_efficiency
                 
                 # Merge form quality issues (combine unique issues)
                 if next_segment.form_quality and current_segment.form_quality:
@@ -1344,6 +1519,7 @@ class VideoProcessor:
             else:
                 # Different action or gap too large - save current and start new
                 coalesced.append(current_segment)
+                # next_segment is already a copy, so we can use it directly
                 current_segment = next_segment
         
         # Add last segment

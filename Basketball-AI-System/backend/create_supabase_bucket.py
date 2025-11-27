@@ -7,12 +7,23 @@ Run this script to automatically create the 'videos' bucket in Supabase
 import sys
 import os
 
-# Supabase credentials
-SUPABASE_URL = "https://qpvkuhcmhntsamgabovo.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFwdmt1aGNtaG50c2FtZ2Fib3ZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3Mzk4NDMsImV4cCI6MjA3OTMxNTg0M30.atEXiMulOroQLzXkZpyI5ERj59tBDI0_zLAl2Yu8bJk"
+# Supabase credentials - loaded from environment variables
+SUPABASE_URL = os.getenv("SUPABASE_URL", "")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
 
 def create_bucket():
     """Create the 'videos' bucket in Supabase Storage using SQL"""
+    
+    # Validate credentials are provided
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        print("❌ Supabase credentials not found!")
+        print("   Please set SUPABASE_URL and SUPABASE_KEY environment variables:")
+        print("   export SUPABASE_URL='https://your-project.supabase.co'")
+        print("   export SUPABASE_KEY='your-anon-key'")
+        print("\n   Or create a .env file with:")
+        print("   SUPABASE_URL=https://your-project.supabase.co")
+        print("   SUPABASE_KEY=your-anon-key")
+        return False
     
     try:
         from supabase import create_client, Client

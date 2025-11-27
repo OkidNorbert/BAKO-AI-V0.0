@@ -5,7 +5,8 @@ Main application with video upload and analysis endpoints
 
 from fastapi import FastAPI, File, UploadFile, HTTPException, status, BackgroundTasks, Form
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 import logging
 import torch
 from pathlib import Path
@@ -14,6 +15,7 @@ import uuid
 import shutil
 from datetime import datetime
 from typing import Optional
+import os
 
 from app.core.config import settings
 from app.core.schemas import VideoAnalysisResult, HealthResponse, AnalysisStatus
@@ -57,6 +59,30 @@ app.add_middleware(
 app.include_router(chat.router)
 app.include_router(websocket.router)
 app.include_router(websocket_video.router)
+
+# Mount static file serving for annotated videos
+# This allows serving processed videos when Supabase is not available
+@app.get("/api/videos/{filename:path}")
+async def serve_video(filename: str):
+    """Serve annotated videos from uploads directory"""
+    # Security: Only allow files from uploads directory
+    video_path = os.path.join(settings.UPLOAD_DIR, filename)
+    
+    # Prevent directory traversal
+    if not os.path.abspath(video_path).startswith(os.path.abspath(settings.UPLOAD_DIR)):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    if not os.path.exists(video_path):
+        raise HTTPException(status_code=404, detail="Video not found")
+    
+    return FileResponse(
+        video_path,
+        media_type="video/mp4",
+        headers={
+            "Accept-Ranges": "bytes",
+            "Cache-Control": "public, max-age=3600"
+        }
+    )
 
 # Initialize video processor
 video_processor: Optional[VideoProcessor] = None
