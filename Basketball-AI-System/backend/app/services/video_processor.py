@@ -457,6 +457,8 @@ class VideoProcessor:
         
         # Use H.264 codec for browser compatibility (avc1/h264)
         # Try different codecs in order of preference
+        # Note: OpenCV/FFMPEG may print warnings to stderr, but these are non-fatal
+        # The codec selection will automatically fall back to working codecs
         fourcc_options = [
             ('avc1', 'H.264 (avc1)'),  # Best browser support
             ('H264', 'H.264 (H264)'),  # Alternative H.264
@@ -466,27 +468,55 @@ class VideoProcessor:
         
         out = None
         used_codec = None
-        for fourcc_code, codec_name in fourcc_options:
-            try:
-                fourcc = cv2.VideoWriter_fourcc(*fourcc_code)
-                out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
-                if out.isOpened():
-                    used_codec = codec_name
-                    logger.info(f"✅ Using video codec: {codec_name}")
-                    break
-            except Exception as e:
-                logger.warning(f"⚠️  Failed to initialize {codec_name}: {e}")
-                if out:
-                    out.release()
-                out = None
-                continue
         
-        if out is None or not out.isOpened():
-            # Final fallback to mp4v
-            logger.warning("⚠️  All codecs failed, using mp4v as last resort")
-            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-            out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
-            used_codec = 'MPEG-4 Part 2 (fallback)'
+        # Suppress OpenCV/FFMPEG stderr output during codec selection
+        # OpenCV writes directly to file descriptor, so we need FD-level redirection
+        import sys
+        devnull_fd = None
+        original_stderr_fd = None
+        
+        try:
+            # Open /dev/null for writing
+            devnull_fd = os.open(os.devnull, os.O_WRONLY)
+            # Save original stderr file descriptor
+            original_stderr_fd = os.dup(sys.stderr.fileno())
+            # Redirect stderr to /dev/null
+            os.dup2(devnull_fd, sys.stderr.fileno())
+            
+            for fourcc_code, codec_name in fourcc_options:
+                try:
+                    fourcc = cv2.VideoWriter_fourcc(*fourcc_code)
+                    out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
+                    if out.isOpened():
+                        used_codec = codec_name
+                        logger.info(f"✅ Using video codec: {codec_name}")
+                        break
+                except Exception as e:
+                    logger.debug(f"⚠️  Failed to initialize {codec_name}: {e}")
+                    if out:
+                        out.release()
+                    out = None
+                    continue
+            
+            if out is None or not out.isOpened():
+                # Final fallback to mp4v
+                logger.warning("⚠️  All preferred codecs failed, trying mp4v as last resort")
+                try:
+                    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+                    out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
+                    if out.isOpened():
+                        used_codec = 'MPEG-4 Part 2 (fallback)'
+                        logger.info(f"✅ Using fallback codec: {used_codec}")
+                except Exception as e:
+                    logger.error(f"❌ Failed to initialize fallback codec: {e}")
+                    raise ValueError("Failed to initialize video writer with any codec")
+        finally:
+            # Restore original stderr
+            if original_stderr_fd is not None:
+                os.dup2(original_stderr_fd, sys.stderr.fileno())
+                os.close(original_stderr_fd)
+            if devnull_fd is not None:
+                os.close(devnull_fd)
         
         if not out.isOpened():
             raise ValueError("Failed to initialize video writer with any codec")
@@ -1224,7 +1254,6 @@ class VideoProcessor:
                     if not annotated_video_url:
                         # Upload failed, fall back to local serving
                         logger.info(f"📹 Supabase upload failed, serving video locally: {output_filename}")
-                        from app.core.config import settings
                         # Use relative path that will be served by /api/videos endpoint
                         annotated_video_url = f"/api/videos/{output_filename}"
                 else:
@@ -1237,7 +1266,6 @@ class VideoProcessor:
                 file_size = os.path.getsize(output_path)
                 if file_size > 0:
                     logger.info(f"📹 Supabase not available, serving annotated video locally: {output_filename}")
-                    from app.core.config import settings
                     # Use relative path that will be served by /api/videos endpoint
                     annotated_video_url = f"/api/videos/{output_filename}"
                 else:
@@ -1249,7 +1277,6 @@ class VideoProcessor:
                 file_size = os.path.getsize(output_path)
                 if file_size > 0:
                     logger.info(f"📹 Serving annotated video locally after upload error: {output_filename}")
-                    from app.core.config import settings
                     annotated_video_url = f"/api/videos/{output_filename}"
 
         # Create main action classification

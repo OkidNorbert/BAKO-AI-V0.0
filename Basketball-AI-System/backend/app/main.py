@@ -1,5 +1,5 @@
 """
-Basketball AI Performance Analysis - FastAPI Backend
+BakoAI - FastAPI Backend
 Main application with video upload and analysis endpoints
 """
 
@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
-    description="AI-powered basketball performance analysis with action classification and metrics",
+    description="Bako - AI-powered basketball performance analysis with action classification and metrics",
     docs_url="/docs",
     redoc_url="/redoc"
 )
@@ -93,7 +93,7 @@ async def startup_event():
     """Initialize models on startup"""
     global video_processor
     
-    logger.info("🚀 Starting Basketball AI Backend...")
+    logger.info("🚀 Starting Bako Backend...")
     logger.info(f"   GPU Available: {torch.cuda.is_available()}")
     
     if torch.cuda.is_available():
@@ -113,14 +113,14 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_event():
     """Cleanup on shutdown"""
-    logger.info("🛑 Shutting down Basketball AI Backend...")
+    logger.info("🛑 Shutting down Bako Backend...")
 
 
 @app.get("/")
 async def root():
     """Root endpoint"""
     return {
-        "message": "Basketball AI Performance Analysis API",
+        "message": "Bako API",
         "version": settings.APP_VERSION,
         "docs": "/docs",
         "status": "running"

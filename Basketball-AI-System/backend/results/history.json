@@ -1,6 +1,1729 @@
 [
   {
     "action": "two_point_shot",
+    "confidence": 0.20615530924664605,
+    "metrics": {
+      "jump_height": 0.0,
+      "movement_speed": 0.0,
+      "form_score": 0.9111475362383109,
+      "reaction_time": 0.0,
+      "pose_stability": 0.9111475362383109,
+      "energy_efficiency": 1.0,
+      "elbow_angle": null,
+      "release_angle": null,
+      "knee_angle": null,
+      "shoulder_angle": null,
+      "stability_score": null,
+      "com_variance": null,
+      "com_variance_x": null,
+      "com_variance_y": null,
+      "smoothness_score": null,
+      "follow_through_score": null,
+      "angular_velocity": null,
+      "dribble_height": null,
+      "dribble_frequency": null,
+      "consistency": null,
+      "release_frame": null,
+      "peak_frame": null,
+      "baseline_height": null,
+      "displacement_pixels": null
+    },
+    "recommendations": [
+      {
+        "type": "improvement",
+        "title": "Fix Knee Bend",
+        "message": "Insufficient knee bend (168.2\u00b0, target: 110-130\u00b0). Need more flexion for power. Current: 168.15392875624613, Target: 110-130\u00b0. Chair sits: Practice sitting into chair position, hold for 3 seconds, stand. Squat jumps: 3\u00d710 reps. Focus on getting lower before jumping.",
+        "priority": "high"
+      },
+      {
+        "type": "improvement",
+        "title": "Fix Elbow Alignment",
+        "message": "Elbow flaring by 36.8\u00b0 (target: < 12\u00b0) Current: 36.846626608283984, Target: < 12\u00b0. Wall elbow drill: Stand 1 foot from wall, practice shooting motion keeping elbow under ball. 3\u00d750 reps daily.",
+        "priority": "high"
+      },
+      {
+        "type": "improvement",
+        "title": "Shooting Form: Jump Height",
+        "message": "Your jump height is 0.00m (target: 0.50-0.75m for jump shots). Increase leg power for better elevation. Practice plyometric exercises: Box jumps, squat jumps, 3\u00d710 reps.",
+        "priority": "medium"
+      }
+    ],
+    "video_url": null,
+    "raw_result": {
+      "video_id": "1764342990262-ijz70opum",
+      "action": {
+        "label": "two_point_shot",
+        "confidence": 0.20615530924664605,
+        "probabilities": {
+          "free_throw": 0.16148780037959418,
+          "two_point_shot": 0.20580821567111546,
+          "three_point_shot": 0.12380146524972385,
+          "layup": 0.0,
+          "dunk": 0.0,
+          "dribbling": 0.13045590702030394,
+          "passing": 0.1027723571492566,
+          "defense": 0.16229103008906046,
+          "running": 0.0,
+          "walking": 0.0,
+          "blocking": 0.0,
+          "picking": 0.0,
+          "ball_in_hand": 0.0,
+          "idle": 0.12065757811069489
+        }
+      },
+      "metrics": {
+        "jump_height": 0.0,
+        "movement_speed": 0.0,
+        "form_score": 0.9111475362383109,
+        "reaction_time": 0.0,
+        "pose_stability": 0.9111475362383109,
+        "energy_efficiency": 1.0,
+        "elbow_angle": null,
+        "release_angle": null,
+        "knee_angle": null,
+        "shoulder_angle": null,
+        "stability_score": null,
+        "com_variance": null,
+        "com_variance_x": null,
+        "com_variance_y": null,
+        "smoothness_score": null,
+        "follow_through_score": null,
+        "angular_velocity": null,
+        "dribble_height": null,
+        "dribble_frequency": null,
+        "consistency": null,
+        "release_frame": null,
+        "peak_frame": null,
+        "baseline_height": null,
+        "displacement_pixels": null
+      },
+      "recommendations": [
+        {
+          "type": "improvement",
+          "title": "Fix Knee Bend",
+          "message": "Insufficient knee bend (168.2\u00b0, target: 110-130\u00b0). Need more flexion for power. Current: 168.15392875624613, Target: 110-130\u00b0. Chair sits: Practice sitting into chair position, hold for 3 seconds, stand. Squat jumps: 3\u00d710 reps. Focus on getting lower before jumping.",
+          "priority": "high"
+        },
+        {
+          "type": "improvement",
+          "title": "Fix Elbow Alignment",
+          "message": "Elbow flaring by 36.8\u00b0 (target: < 12\u00b0) Current: 36.846626608283984, Target: < 12\u00b0. Wall elbow drill: Stand 1 foot from wall, practice shooting motion keeping elbow under ball. 3\u00d750 reps daily.",
+          "priority": "high"
+        },
+        {
+          "type": "improvement",
+          "title": "Shooting Form: Jump Height",
+          "message": "Your jump height is 0.00m (target: 0.50-0.75m for jump shots). Increase leg power for better elevation. Practice plyometric exercises: Box jumps, squat jumps, 3\u00d710 reps.",
+          "priority": "medium"
+        }
+      ],
+      "shot_outcome": null,
+      "timeline": [
+        {
+          "start_time": 0.0,
+          "end_time": 3.7,
+          "action": {
+            "label": "two_point_shot",
+            "confidence": 0.1998604095824703,
+            "probabilities": {
+              "free_throw": 0.16185462552311947,
+              "two_point_shot": 0.1998604095824703,
+              "three_point_shot": 0.12068936198193114,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.13613558400902548,
+              "passing": 0.09736930912549724,
+              "defense": 0.1764956507649913,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10759509190756944
+            }
+          },
+          "metrics": {
+            "jump_height": 0.0,
+            "movement_speed": 0.0,
+            "form_score": 0.854807339188306,
+            "reaction_time": 0.0,
+            "pose_stability": 0.854807339188306,
+            "energy_efficiency": 1.0,
+            "elbow_angle": null,
+            "release_angle": null,
+            "knee_angle": null,
+            "shoulder_angle": null,
+            "stability_score": null,
+            "com_variance": null,
+            "com_variance_x": null,
+            "com_variance_y": null,
+            "smoothness_score": null,
+            "follow_through_score": null,
+            "angular_velocity": null,
+            "dribble_height": null,
+            "dribble_frequency": null,
+            "consistency": null,
+            "release_frame": null,
+            "peak_frame": null,
+            "baseline_height": null,
+            "displacement_pixels": null
+          },
+          "form_quality": {
+            "overall_score": 0.5,
+            "quality_rating": "needs_improvement",
+            "issues": [
+              {
+                "issue_type": "knee_bend",
+                "severity": "major",
+                "description": "Insufficient knee bend (168.2\u00b0, target: 110-130\u00b0). Need more flexion for power.",
+                "current_value": 168.15392875624613,
+                "optimal_value": "110-130\u00b0",
+                "recommendation": "Chair sits: Practice sitting into chair position, hold for 3 seconds, stand. Squat jumps: 3\u00d710 reps. Focus on getting lower before jumping."
+              },
+              {
+                "issue_type": "shooting_arc",
+                "severity": "unknown",
+                "description": "Cannot evaluate shooting_arc: Insufficient trajectory data",
+                "current_value": null,
+                "optimal_value": "N/A",
+                "recommendation": ""
+              },
+              {
+                "issue_type": "elbow_alignment",
+                "severity": "major",
+                "description": "Elbow flaring by 36.8\u00b0 (target: < 12\u00b0)",
+                "current_value": 36.846626608283984,
+                "optimal_value": "< 12\u00b0",
+                "recommendation": "Wall elbow drill: Stand 1 foot from wall, practice shooting motion keeping elbow under ball. 3\u00d750 reps daily."
+              },
+              {
+                "issue_type": "release_timing",
+                "severity": "unknown",
+                "description": "Cannot evaluate release_timing: Insufficient velocity data",
+                "current_value": null,
+                "optimal_value": "N/A",
+                "recommendation": ""
+              }
+            ],
+            "strengths": []
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 3.4333333333333336,
+          "end_time": 3.966666666666667,
+          "action": {
+            "label": "three_point_shot",
+            "confidence": 0.19538499414920807,
+            "probabilities": {
+              "free_throw": 0.1655920296907425,
+              "two_point_shot": 0.19538499414920807,
+              "three_point_shot": 0.19538499414920807,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.12783685326576233,
+              "passing": 0.11063559353351593,
+              "defense": 0.1677699089050293,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.1133834570646286
+            }
+          },
+          "metrics": {
+            "jump_height": 0.0,
+            "movement_speed": 0.0,
+            "form_score": 0.9202649165799862,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9202649165799862,
+            "energy_efficiency": 1.0,
+            "elbow_angle": null,
+            "release_angle": null,
+            "knee_angle": null,
+            "shoulder_angle": null,
+            "stability_score": null,
+            "com_variance": null,
+            "com_variance_x": null,
+            "com_variance_y": null,
+            "smoothness_score": null,
+            "follow_through_score": null,
+            "angular_velocity": null,
+            "dribble_height": null,
+            "dribble_frequency": null,
+            "consistency": null,
+            "release_frame": null,
+            "peak_frame": null,
+            "baseline_height": null,
+            "displacement_pixels": null
+          },
+          "form_quality": {
+            "overall_score": 0.5,
+            "quality_rating": "needs_improvement",
+            "issues": [
+              {
+                "issue_type": "elbow_alignment",
+                "severity": "moderate",
+                "description": "Elbow flaring by 18.3\u00b0 (target: < 12\u00b0)",
+                "current_value": 18.336873568974305,
+                "optimal_value": "< 12\u00b0",
+                "recommendation": "Wall elbow drill: Stand 1 foot from wall, practice shooting motion keeping elbow under ball. 3\u00d750 reps daily."
+              },
+              {
+                "issue_type": "knee_bend",
+                "severity": "major",
+                "description": "Insufficient knee bend (177.0\u00b0, target: 110-130\u00b0). Need more flexion for power.",
+                "current_value": 176.9993549927039,
+                "optimal_value": "110-130\u00b0",
+                "recommendation": "Chair sits: Practice sitting into chair position, hold for 3 seconds, stand. Squat jumps: 3\u00d710 reps. Focus on getting lower before jumping."
+              }
+            ],
+            "strengths": []
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 3.7,
+          "end_time": 4.233333333333333,
+          "action": {
+            "label": "two_point_shot",
+            "confidence": 0.20363016426563263,
+            "probabilities": {
+              "free_throw": 0.16718941926956177,
+              "two_point_shot": 0.20363016426563263,
+              "three_point_shot": 0.1193840429186821,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.11798331886529922,
+              "passing": 0.11371675133705139,
+              "defense": 0.15171422064304352,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.12638212740421295
+            }
+          },
+          "metrics": {
+            "jump_height": 0.0,
+            "movement_speed": 0.0,
+            "form_score": 0.9066746072966015,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9066746072966015,
+            "energy_efficiency": 1.0,
+            "elbow_angle": null,
+            "release_angle": null,
+            "knee_angle": null,
+            "shoulder_angle": null,
+            "stability_score": null,
+            "com_variance": null,
+            "com_variance_x": null,
+            "com_variance_y": null,
+            "smoothness_score": null,
+            "follow_through_score": null,
+            "angular_velocity": null,
+            "dribble_height": null,
+            "dribble_frequency": null,
+            "consistency": null,
+            "release_frame": null,
+            "peak_frame": null,
+            "baseline_height": null,
+            "displacement_pixels": null
+          },
+          "form_quality": {
+            "overall_score": 0.5,
+            "quality_rating": "needs_improvement",
+            "issues": [
+              {
+                "issue_type": "knee_bend",
+                "severity": "moderate",
+                "description": "Insufficient knee bend (141.5\u00b0, target: 110-130\u00b0). Need more flexion for power.",
+                "current_value": 141.4723718935276,
+                "optimal_value": "110-130\u00b0",
+                "recommendation": "Chair sits: Practice sitting into chair position, hold for 3 seconds, stand. Squat jumps: 3\u00d710 reps. Focus on getting lower before jumping."
+              },
+              {
+                "issue_type": "shooting_arc",
+                "severity": "major",
+                "description": "Low shooting arc (apex: 0.00m, target: 3.0+m). Ball needs more upward trajectory.",
+                "current_value": 0.0,
+                "optimal_value": "3.0-5.0m",
+                "recommendation": "Wrist snap drills: Practice shooting with exaggerated wrist snap. Chair target arc exercises: Place chair 3 feet in front, shoot over it. Focus on upward release angle."
+              },
+              {
+                "issue_type": "release_timing",
+                "severity": "unknown",
+                "description": "Cannot evaluate release_timing: Insufficient velocity data",
+                "current_value": null,
+                "optimal_value": "N/A",
+                "recommendation": ""
+              }
+            ],
+            "strengths": []
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 3.966666666666667,
+          "end_time": 4.5,
+          "action": {
+            "label": "free_throw",
+            "confidence": 0.21597018837928772,
+            "probabilities": {
+              "free_throw": 0.21597018837928772,
+              "two_point_shot": 0.21597018837928772,
+              "three_point_shot": 0.12036079913377762,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.11666430532932281,
+              "passing": 0.11163239181041718,
+              "defense": 0.14741244912147522,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.1269400715827942
+            }
+          },
+          "metrics": {
+            "jump_height": 0.0,
+            "movement_speed": 0.0,
+            "form_score": 0.9299955672673722,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9299955672673722,
+            "energy_efficiency": 1.0,
+            "elbow_angle": null,
+            "release_angle": null,
+            "knee_angle": null,
+            "shoulder_angle": null,
+            "stability_score": null,
+            "com_variance": null,
+            "com_variance_x": null,
+            "com_variance_y": null,
+            "smoothness_score": null,
+            "follow_through_score": null,
+            "angular_velocity": null,
+            "dribble_height": null,
+            "dribble_frequency": null,
+            "consistency": null,
+            "release_frame": null,
+            "peak_frame": null,
+            "baseline_height": null,
+            "displacement_pixels": null
+          },
+          "form_quality": {
+            "overall_score": 0.5,
+            "quality_rating": "needs_improvement",
+            "issues": [
+              {
+                "issue_type": "knee_bend",
+                "severity": "major",
+                "description": "Insufficient knee bend (170.0\u00b0, target: 110-130\u00b0). Need more flexion for power.",
+                "current_value": 169.96301520034717,
+                "optimal_value": "110-130\u00b0",
+                "recommendation": "Chair sits: Practice sitting into chair position, hold for 3 seconds, stand. Squat jumps: 3\u00d710 reps. Focus on getting lower before jumping."
+              },
+              {
+                "issue_type": "shooting_arc",
+                "severity": "major",
+                "description": "Low shooting arc (apex: 0.00m, target: 3.0+m). Ball needs more upward trajectory.",
+                "current_value": 0.0,
+                "optimal_value": "3.0-5.0m",
+                "recommendation": "Wrist snap drills: Practice shooting with exaggerated wrist snap. Chair target arc exercises: Place chair 3 feet in front, shoot over it. Focus on upward release angle."
+              },
+              {
+                "issue_type": "release_timing",
+                "severity": "major",
+                "description": "Release timing issue: Peak velocity occurs 0.167s early (target: < 0.05s). Wrist snap should coincide with release.",
+                "current_value": 0.16666666666666666,
+                "optimal_value": "< 0.05s",
+                "recommendation": "Form shooting close to basket: Focus on synchronizing wrist snap with release. One-handed form shots: 100 reps daily, emphasize timing."
+              }
+            ],
+            "strengths": []
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 4.233333333333333,
+          "end_time": 4.766666666666667,
+          "action": {
+            "label": "two_point_shot",
+            "confidence": 0.2034372091293335,
+            "probabilities": {
+              "free_throw": 0.1461993008852005,
+              "two_point_shot": 0.2034372091293335,
+              "three_point_shot": 0.13054980337619781,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.12124413251876831,
+              "passing": 0.10967572778463364,
+              "defense": 0.1586485058069229,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.1302453875541687
+            }
+          },
+          "metrics": {
+            "jump_height": 0.0,
+            "movement_speed": 0.0,
+            "form_score": 0.9704482091487745,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9704482091487745,
+            "energy_efficiency": 1.0,
+            "elbow_angle": null,
+            "release_angle": null,
+            "knee_angle": null,
+            "shoulder_angle": null,
+            "stability_score": null,
+            "com_variance": null,
+            "com_variance_x": null,
+            "com_variance_y": null,
+            "smoothness_score": null,
+            "follow_through_score": null,
+            "angular_velocity": null,
+            "dribble_height": null,
+            "dribble_frequency": null,
+            "consistency": null,
+            "release_frame": null,
+            "peak_frame": null,
+            "baseline_height": null,
+            "displacement_pixels": null
+          },
+          "form_quality": {
+            "overall_score": 0.5,
+            "quality_rating": "needs_improvement",
+            "issues": [
+              {
+                "issue_type": "knee_bend",
+                "severity": "major",
+                "description": "Insufficient knee bend (175.0\u00b0, target: 110-130\u00b0). Need more flexion for power.",
+                "current_value": 175.03962535919229,
+                "optimal_value": "110-130\u00b0",
+                "recommendation": "Chair sits: Practice sitting into chair position, hold for 3 seconds, stand. Squat jumps: 3\u00d710 reps. Focus on getting lower before jumping."
+              },
+              {
+                "issue_type": "shooting_arc",
+                "severity": "major",
+                "description": "Low shooting arc (apex: 0.00m, target: 3.0+m). Ball needs more upward trajectory.",
+                "current_value": 0.0,
+                "optimal_value": "3.0-5.0m",
+                "recommendation": "Wrist snap drills: Practice shooting with exaggerated wrist snap. Chair target arc exercises: Place chair 3 feet in front, shoot over it. Focus on upward release angle."
+              }
+            ],
+            "strengths": []
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 4.5,
+          "end_time": 5.033333333333333,
+          "action": {
+            "label": "defense",
+            "confidence": 0.20172937214374542,
+            "probabilities": {
+              "free_throw": 0.13635341823101044,
+              "two_point_shot": 0.19548168778419495,
+              "three_point_shot": 0.13652737438678741,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.11445187777280807,
+              "passing": 0.10293468087911606,
+              "defense": 0.20172937214374542,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.11252154409885406
+            }
+          },
+          "metrics": {
+            "jump_height": 0.0,
+            "movement_speed": 0.0,
+            "form_score": 0.8631755254868191,
+            "reaction_time": 0.0,
+            "pose_stability": 0.8631755254868191,
+            "energy_efficiency": 1.0,
+            "elbow_angle": null,
+            "release_angle": null,
+            "knee_angle": null,
+            "shoulder_angle": null,
+            "stability_score": null,
+            "com_variance": null,
+            "com_variance_x": null,
+            "com_variance_y": null,
+            "smoothness_score": null,
+            "follow_through_score": null,
+            "angular_velocity": null,
+            "dribble_height": null,
+            "dribble_frequency": null,
+            "consistency": null,
+            "release_frame": null,
+            "peak_frame": null,
+            "baseline_height": null,
+            "displacement_pixels": null
+          },
+          "form_quality": null,
+          "shot_outcome": null
+        }
+      ],
+      "annotated_video_url": "/api/videos/processed_0626da28-d0d0-47bd-a973-3c39a243ddbb.mp4",
+      "annotated_frame": null,
+      "keypoints": null,
+      "timestamp": "2025-11-28T18:16:55.543336"
+    },
+    "created_at": "2025-11-28T18:16:55.624099"
+  },
+  {
+    "action": "defense",
+    "confidence": 0.17674266112347445,
+    "metrics": {
+      "jump_height": 0.0,
+      "movement_speed": 0.0,
+      "form_score": 0.5171728665562867,
+      "reaction_time": 0.0,
+      "pose_stability": 0.5171728665562867,
+      "energy_efficiency": 1.0,
+      "elbow_angle": null,
+      "release_angle": null,
+      "knee_angle": null,
+      "shoulder_angle": null,
+      "stability_score": null,
+      "com_variance": null,
+      "com_variance_x": null,
+      "com_variance_y": null,
+      "smoothness_score": null,
+      "follow_through_score": null,
+      "angular_velocity": null,
+      "dribble_height": null,
+      "dribble_frequency": null,
+      "consistency": null,
+      "release_frame": null,
+      "peak_frame": null,
+      "baseline_height": null,
+      "displacement_pixels": null
+    },
+    "recommendations": [
+      {
+        "type": "improvement",
+        "title": "Focus on Fundamentals",
+        "message": "Your overall form score is 52%. Practice basic defense fundamentals daily. Focus on consistency and proper technique.",
+        "priority": "medium"
+      }
+    ],
+    "video_url": null,
+    "raw_result": {
+      "video_id": "1764321046636-c7gedlv6m",
+      "action": {
+        "label": "defense",
+        "confidence": 0.17674266112347445,
+        "probabilities": {
+          "free_throw": 0.15080076766510805,
+          "two_point_shot": 0.13811819100131592,
+          "three_point_shot": 0.13969575551648936,
+          "layup": 0.0,
+          "dunk": 0.0,
+          "dribbling": 0.12587616002808014,
+          "passing": 0.13573704846203327,
+          "defense": 0.17674266112347445,
+          "running": 0.0,
+          "walking": 0.0,
+          "blocking": 0.0,
+          "picking": 0.0,
+          "ball_in_hand": 0.0,
+          "idle": 0.13302942054967085
+        }
+      },
+      "metrics": {
+        "jump_height": 0.0,
+        "movement_speed": 0.0,
+        "form_score": 0.5171728665562867,
+        "reaction_time": 0.0,
+        "pose_stability": 0.5171728665562867,
+        "energy_efficiency": 1.0,
+        "elbow_angle": null,
+        "release_angle": null,
+        "knee_angle": null,
+        "shoulder_angle": null,
+        "stability_score": null,
+        "com_variance": null,
+        "com_variance_x": null,
+        "com_variance_y": null,
+        "smoothness_score": null,
+        "follow_through_score": null,
+        "angular_velocity": null,
+        "dribble_height": null,
+        "dribble_frequency": null,
+        "consistency": null,
+        "release_frame": null,
+        "peak_frame": null,
+        "baseline_height": null,
+        "displacement_pixels": null
+      },
+      "recommendations": [
+        {
+          "type": "improvement",
+          "title": "Focus on Fundamentals",
+          "message": "Your overall form score is 52%. Practice basic defense fundamentals daily. Focus on consistency and proper technique.",
+          "priority": "medium"
+        }
+      ],
+      "shot_outcome": null,
+      "timeline": [
+        {
+          "start_time": 0.0,
+          "end_time": 6.862068965517241,
+          "action": {
+            "label": "defense",
+            "confidence": 0.17734122889285509,
+            "probabilities": {
+              "free_throw": 0.16260218476780786,
+              "two_point_shot": 0.12440567170533079,
+              "three_point_shot": 0.14669583031644962,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.13040565883751398,
+              "passing": 0.12389397764964905,
+              "defense": 0.17734122889285509,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.13465544724512668
+            }
+          },
+          "metrics": {
+            "jump_height": 0.0,
+            "movement_speed": 0.0,
+            "form_score": 0.6744827613525128,
+            "reaction_time": 0.0,
+            "pose_stability": 0.6744827613525128,
+            "energy_efficiency": 1.0,
+            "elbow_angle": null,
+            "release_angle": null,
+            "knee_angle": null,
+            "shoulder_angle": null,
+            "stability_score": null,
+            "com_variance": null,
+            "com_variance_x": null,
+            "com_variance_y": null,
+            "smoothness_score": null,
+            "follow_through_score": null,
+            "angular_velocity": null,
+            "dribble_height": null,
+            "dribble_frequency": null,
+            "consistency": null,
+            "release_frame": null,
+            "peak_frame": null,
+            "baseline_height": null,
+            "displacement_pixels": null
+          },
+          "form_quality": null,
+          "shot_outcome": null
+        }
+      ],
+      "annotated_video_url": "/api/videos/processed_14378311-41c8-4a62-abcd-db5639c8bf31.mp4",
+      "annotated_frame": null,
+      "keypoints": null,
+      "timestamp": "2025-11-28T12:11:08.402118"
+    },
+    "created_at": "2025-11-28T12:11:08.403017"
+  },
+  {
+    "action": "two_point_shot",
+    "confidence": 0.18744714844685334,
+    "metrics": {
+      "jump_height": 0.0,
+      "movement_speed": 0.0,
+      "form_score": 0.5628011244537516,
+      "reaction_time": 0.0,
+      "pose_stability": 0.5628011244537516,
+      "energy_efficiency": 0.6538461538461539,
+      "elbow_angle": null,
+      "release_angle": null,
+      "knee_angle": null,
+      "shoulder_angle": null,
+      "stability_score": null,
+      "com_variance": null,
+      "com_variance_x": null,
+      "com_variance_y": null,
+      "smoothness_score": null,
+      "follow_through_score": null,
+      "angular_velocity": null,
+      "dribble_height": null,
+      "dribble_frequency": null,
+      "consistency": null,
+      "release_frame": null,
+      "peak_frame": null,
+      "baseline_height": null,
+      "displacement_pixels": null
+    },
+    "recommendations": [
+      {
+        "type": "improvement",
+        "title": "Fix Release Timing",
+        "message": "Release timing issue: Peak velocity occurs 0.333s early (target: < 0.05s). Wrist snap should coincide with release. Current: 0.3333333333333333, Target: < 0.05s. Form shooting close to basket: Focus on synchronizing wrist snap with release. One-handed form shots: 100 reps daily, emphasize timing.",
+        "priority": "high"
+      },
+      {
+        "type": "improvement",
+        "title": "Shooting Form: Jump Height",
+        "message": "Your jump height is 0.00m (target: 0.50-0.75m for jump shots). Increase leg power for better elevation. Practice plyometric exercises: Box jumps, squat jumps, 3\u00d710 reps.",
+        "priority": "medium"
+      }
+    ],
+    "video_url": null,
+    "raw_result": {
+      "video_id": "1764320627980-cign5eltf",
+      "action": {
+        "label": "two_point_shot",
+        "confidence": 0.18744714844685334,
+        "probabilities": {
+          "free_throw": 0.1694620274580442,
+          "two_point_shot": 0.18472693402033585,
+          "three_point_shot": 0.14764653404171652,
+          "layup": 0.0,
+          "dunk": 0.0,
+          "dribbling": 0.13502205163240433,
+          "passing": 0.08872537228923577,
+          "defense": 0.1611717394911326,
+          "running": 0.0,
+          "walking": 0.0,
+          "blocking": 0.0,
+          "picking": 0.0,
+          "ball_in_hand": 0.0,
+          "idle": 0.1132453424999347
+        }
+      },
+      "metrics": {
+        "jump_height": 0.0,
+        "movement_speed": 0.0,
+        "form_score": 0.5628011244537516,
+        "reaction_time": 0.0,
+        "pose_stability": 0.5628011244537516,
+        "energy_efficiency": 0.6538461538461539,
+        "elbow_angle": null,
+        "release_angle": null,
+        "knee_angle": null,
+        "shoulder_angle": null,
+        "stability_score": null,
+        "com_variance": null,
+        "com_variance_x": null,
+        "com_variance_y": null,
+        "smoothness_score": null,
+        "follow_through_score": null,
+        "angular_velocity": null,
+        "dribble_height": null,
+        "dribble_frequency": null,
+        "consistency": null,
+        "release_frame": null,
+        "peak_frame": null,
+        "baseline_height": null,
+        "displacement_pixels": null
+      },
+      "recommendations": [
+        {
+          "type": "improvement",
+          "title": "Fix Release Timing",
+          "message": "Release timing issue: Peak velocity occurs 0.333s early (target: < 0.05s). Wrist snap should coincide with release. Current: 0.3333333333333333, Target: < 0.05s. Form shooting close to basket: Focus on synchronizing wrist snap with release. One-handed form shots: 100 reps daily, emphasize timing.",
+          "priority": "high"
+        },
+        {
+          "type": "improvement",
+          "title": "Shooting Form: Jump Height",
+          "message": "Your jump height is 0.00m (target: 0.50-0.75m for jump shots). Increase leg power for better elevation. Practice plyometric exercises: Box jumps, squat jumps, 3\u00d710 reps.",
+          "priority": "medium"
+        }
+      ],
+      "shot_outcome": null,
+      "timeline": [
+        {
+          "start_time": 0.0,
+          "end_time": 3.2758620689655173,
+          "action": {
+            "label": "two_point_shot",
+            "confidence": 0.17976397743041161,
+            "probabilities": {
+              "free_throw": 0.1658939934859518,
+              "two_point_shot": 0.17976397743041161,
+              "three_point_shot": 0.14161197627254296,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.143562070603366,
+              "passing": 0.07468144380254671,
+              "defense": 0.16761735030740965,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.1268691695149755
+            }
+          },
+          "metrics": {
+            "jump_height": 0.0,
+            "movement_speed": 0.0,
+            "form_score": 0.5,
+            "reaction_time": 0.0,
+            "pose_stability": 0.5,
+            "energy_efficiency": 0.5,
+            "elbow_angle": null,
+            "release_angle": null,
+            "knee_angle": null,
+            "shoulder_angle": null,
+            "stability_score": null,
+            "com_variance": null,
+            "com_variance_x": null,
+            "com_variance_y": null,
+            "smoothness_score": null,
+            "follow_through_score": null,
+            "angular_velocity": null,
+            "dribble_height": null,
+            "dribble_frequency": null,
+            "consistency": null,
+            "release_frame": null,
+            "peak_frame": null,
+            "baseline_height": null,
+            "displacement_pixels": null
+          },
+          "form_quality": {
+            "overall_score": 0.5,
+            "quality_rating": "needs_improvement",
+            "issues": [],
+            "strengths": []
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 3.0,
+          "end_time": 3.8275862068965516,
+          "action": {
+            "label": "defense",
+            "confidence": 0.18875663727521896,
+            "probabilities": {
+              "free_throw": 0.15680159628391266,
+              "two_point_shot": 0.1788010448217392,
+              "three_point_shot": 0.13661271333694458,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.12570520490407944,
+              "passing": 0.08564183488488197,
+              "defense": 0.18875663727521896,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.1276809647679329
+            }
+          },
+          "metrics": {
+            "jump_height": 0.0,
+            "movement_speed": 0.0,
+            "form_score": 0.5,
+            "reaction_time": 0.0,
+            "pose_stability": 0.5,
+            "energy_efficiency": 0.5,
+            "elbow_angle": null,
+            "release_angle": null,
+            "knee_angle": null,
+            "shoulder_angle": null,
+            "stability_score": null,
+            "com_variance": null,
+            "com_variance_x": null,
+            "com_variance_y": null,
+            "smoothness_score": null,
+            "follow_through_score": null,
+            "angular_velocity": null,
+            "dribble_height": null,
+            "dribble_frequency": null,
+            "consistency": null,
+            "release_frame": null,
+            "peak_frame": null,
+            "baseline_height": null,
+            "displacement_pixels": null
+          },
+          "form_quality": null,
+          "shot_outcome": null
+        },
+        {
+          "start_time": 3.5517241379310347,
+          "end_time": 6.0344827586206895,
+          "action": {
+            "label": "two_point_shot",
+            "confidence": 0.19373611884657294,
+            "probabilities": {
+              "free_throw": 0.16861623898148537,
+              "two_point_shot": 0.19373611884657294,
+              "three_point_shot": 0.15966166695579886,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.13385861506685615,
+              "passing": 0.09340322250500321,
+              "defense": 0.1583271035924554,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.09239701047772542
+            }
+          },
+          "metrics": {
+            "jump_height": 0.0,
+            "movement_speed": 0.0,
+            "form_score": 0.6792874022472966,
+            "reaction_time": 0.0,
+            "pose_stability": 0.6792874022472966,
+            "energy_efficiency": 0.9375,
+            "elbow_angle": null,
+            "release_angle": null,
+            "knee_angle": null,
+            "shoulder_angle": null,
+            "stability_score": null,
+            "com_variance": null,
+            "com_variance_x": null,
+            "com_variance_y": null,
+            "smoothness_score": null,
+            "follow_through_score": null,
+            "angular_velocity": null,
+            "dribble_height": null,
+            "dribble_frequency": null,
+            "consistency": null,
+            "release_frame": null,
+            "peak_frame": null,
+            "baseline_height": null,
+            "displacement_pixels": null
+          },
+          "form_quality": {
+            "overall_score": 0.5,
+            "quality_rating": "needs_improvement",
+            "issues": [
+              {
+                "issue_type": "knee_bend",
+                "severity": "moderate",
+                "description": "Insufficient knee bend (131.3\u00b0, target: 110-130\u00b0). Need more flexion for power.",
+                "current_value": 131.2536120228914,
+                "optimal_value": "110-130\u00b0",
+                "recommendation": "Chair sits: Practice sitting into chair position, hold for 3 seconds, stand. Squat jumps: 3\u00d710 reps. Focus on getting lower before jumping."
+              },
+              {
+                "issue_type": "release_timing",
+                "severity": "major",
+                "description": "Release timing issue: Peak velocity occurs 0.333s early (target: < 0.05s). Wrist snap should coincide with release.",
+                "current_value": 0.3333333333333333,
+                "optimal_value": "< 0.05s",
+                "recommendation": "Form shooting close to basket: Focus on synchronizing wrist snap with release. One-handed form shots: 100 reps daily, emphasize timing."
+              }
+            ],
+            "strengths": []
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 5.758620689655173,
+          "end_time": 7.137931034482759,
+          "action": {
+            "label": "free_throw",
+            "confidence": 0.18103225529193878,
+            "probabilities": {
+              "free_throw": 0.18103225529193878,
+              "two_point_shot": 0.16556479409337044,
+              "three_point_shot": 0.15377476066350937,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.13271534070372581,
+              "passing": 0.09681974910199642,
+              "defense": 0.1643042340874672,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.10578884463757277
+            }
+          },
+          "metrics": {
+            "jump_height": 0.0,
+            "movement_speed": 0.0,
+            "form_score": 0.7062079744172967,
+            "reaction_time": 0.0,
+            "pose_stability": 0.7062079744172967,
+            "energy_efficiency": 1.0,
+            "elbow_angle": null,
+            "release_angle": null,
+            "knee_angle": null,
+            "shoulder_angle": null,
+            "stability_score": null,
+            "com_variance": null,
+            "com_variance_x": null,
+            "com_variance_y": null,
+            "smoothness_score": null,
+            "follow_through_score": null,
+            "angular_velocity": null,
+            "dribble_height": null,
+            "dribble_frequency": null,
+            "consistency": null,
+            "release_frame": null,
+            "peak_frame": null,
+            "baseline_height": null,
+            "displacement_pixels": null
+          },
+          "form_quality": {
+            "overall_score": 0.5,
+            "quality_rating": "needs_improvement",
+            "issues": [
+              {
+                "issue_type": "elbow_alignment",
+                "severity": "moderate",
+                "description": "Elbow flaring by 13.7\u00b0 (target: < 12\u00b0)",
+                "current_value": 13.654341359261327,
+                "optimal_value": "< 12\u00b0",
+                "recommendation": "Wall elbow drill: Stand 1 foot from wall, practice shooting motion keeping elbow under ball. 3\u00d750 reps daily."
+              },
+              {
+                "issue_type": "knee_bend",
+                "severity": "minor",
+                "description": "Excessive knee bend (105.4\u00b0). May reduce explosiveness.",
+                "current_value": 105.37686797256035,
+                "optimal_value": "110-130\u00b0",
+                "recommendation": "Moderate depth jumps: Focus on quick, explosive movement rather than deep squat."
+              },
+              {
+                "issue_type": "release_timing",
+                "severity": "major",
+                "description": "Release timing issue: Peak velocity occurs 0.400s late (target: < 0.05s). Wrist snap should coincide with release.",
+                "current_value": 0.4,
+                "optimal_value": "< 0.05s",
+                "recommendation": "Form shooting close to basket: Focus on synchronizing wrist snap with release. One-handed form shots: 100 reps daily, emphasize timing."
+              }
+            ],
+            "strengths": []
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 6.862068965517241,
+          "end_time": 7.413793103448276,
+          "action": {
+            "label": "two_point_shot",
+            "confidence": 0.18710659444332123,
+            "probabilities": {
+              "free_throw": 0.18002645671367645,
+              "two_point_shot": 0.18710659444332123,
+              "three_point_shot": 0.1438068300485611,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.12800130248069763,
+              "passing": 0.0929001122713089,
+              "defense": 0.1694101095199585,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.09874868392944336
+            }
+          },
+          "metrics": {
+            "jump_height": 0.0,
+            "movement_speed": 0.0,
+            "form_score": 0.7719126370068533,
+            "reaction_time": 0.0,
+            "pose_stability": 0.7719126370068533,
+            "energy_efficiency": 1.0,
+            "elbow_angle": null,
+            "release_angle": null,
+            "knee_angle": null,
+            "shoulder_angle": null,
+            "stability_score": null,
+            "com_variance": null,
+            "com_variance_x": null,
+            "com_variance_y": null,
+            "smoothness_score": null,
+            "follow_through_score": null,
+            "angular_velocity": null,
+            "dribble_height": null,
+            "dribble_frequency": null,
+            "consistency": null,
+            "release_frame": null,
+            "peak_frame": null,
+            "baseline_height": null,
+            "displacement_pixels": null
+          },
+          "form_quality": {
+            "overall_score": 0.5,
+            "quality_rating": "needs_improvement",
+            "issues": [
+              {
+                "issue_type": "elbow_alignment",
+                "severity": "moderate",
+                "description": "Elbow flaring by 14.1\u00b0 (target: < 12\u00b0)",
+                "current_value": 14.128539562486216,
+                "optimal_value": "< 12\u00b0",
+                "recommendation": "Wall elbow drill: Stand 1 foot from wall, practice shooting motion keeping elbow under ball. 3\u00d750 reps daily."
+              },
+              {
+                "issue_type": "release_timing",
+                "severity": "major",
+                "description": "Release timing issue: Peak velocity occurs 0.333s late (target: < 0.05s). Wrist snap should coincide with release.",
+                "current_value": 0.3333333333333333,
+                "optimal_value": "< 0.05s",
+                "recommendation": "Form shooting close to basket: Focus on synchronizing wrist snap with release. One-handed form shots: 100 reps daily, emphasize timing."
+              }
+            ],
+            "strengths": []
+          },
+          "shot_outcome": null
+        }
+      ],
+      "annotated_video_url": "/api/videos/processed_174db2cc-8e0f-4e0f-aa71-0d7c500d3a21.mp4",
+      "annotated_frame": null,
+      "keypoints": null,
+      "timestamp": "2025-11-28T12:04:06.018787"
+    },
+    "created_at": "2025-11-28T12:04:06.019475"
+  },
+  {
+    "action": "three_point_shot",
+    "confidence": 0.18294965369360788,
+    "metrics": {
+      "jump_height": 0.0,
+      "movement_speed": 0.0,
+      "form_score": 0.9065393395064911,
+      "reaction_time": 0.0,
+      "pose_stability": 0.9065393395064911,
+      "energy_efficiency": 1.0,
+      "elbow_angle": null,
+      "release_angle": null,
+      "knee_angle": null,
+      "shoulder_angle": null,
+      "stability_score": null,
+      "com_variance": null,
+      "com_variance_x": null,
+      "com_variance_y": null,
+      "smoothness_score": null,
+      "follow_through_score": null,
+      "angular_velocity": null,
+      "dribble_height": null,
+      "dribble_frequency": null,
+      "consistency": null,
+      "release_frame": null,
+      "peak_frame": null,
+      "baseline_height": null,
+      "displacement_pixels": null
+    },
+    "recommendations": [
+      {
+        "type": "improvement",
+        "title": "Fix Elbow Alignment",
+        "message": "Elbow flaring by 64.7\u00b0 (target: < 12\u00b0) Current: 64.7008985654769, Target: < 12\u00b0. Wall elbow drill: Stand 1 foot from wall, practice shooting motion keeping elbow under ball. 3\u00d750 reps daily.",
+        "priority": "high"
+      },
+      {
+        "type": "improvement",
+        "title": "Fix Knee Bend",
+        "message": "Insufficient knee bend (169.8\u00b0, target: 110-130\u00b0). Need more flexion for power. Current: 169.77260038028882, Target: 110-130\u00b0. Chair sits: Practice sitting into chair position, hold for 3 seconds, stand. Squat jumps: 3\u00d710 reps. Focus on getting lower before jumping.",
+        "priority": "high"
+      },
+      {
+        "type": "improvement",
+        "title": "Shooting Form: Jump Height",
+        "message": "Your jump height is 0.00m (target: 0.50-0.75m for jump shots). Increase leg power for better elevation. Practice plyometric exercises: Box jumps, squat jumps, 3\u00d710 reps.",
+        "priority": "medium"
+      }
+    ],
+    "video_url": null,
+    "raw_result": {
+      "video_id": "1764320221006-jtt10bttz",
+      "action": {
+        "label": "three_point_shot",
+        "confidence": 0.18294965369360788,
+        "probabilities": {
+          "free_throw": 0.16479139987911498,
+          "two_point_shot": 0.151186680155141,
+          "three_point_shot": 0.18223256085600173,
+          "layup": 0.0,
+          "dunk": 0.0,
+          "dribbling": 0.13121383637189865,
+          "passing": 0.1226220711001328,
+          "defense": 0.11572058179548808,
+          "running": 0.0,
+          "walking": 0.0,
+          "blocking": 0.0,
+          "picking": 0.0,
+          "ball_in_hand": 0.0,
+          "idle": 0.13306881487369537
+        }
+      },
+      "metrics": {
+        "jump_height": 0.0,
+        "movement_speed": 0.0,
+        "form_score": 0.9065393395064911,
+        "reaction_time": 0.0,
+        "pose_stability": 0.9065393395064911,
+        "energy_efficiency": 1.0,
+        "elbow_angle": null,
+        "release_angle": null,
+        "knee_angle": null,
+        "shoulder_angle": null,
+        "stability_score": null,
+        "com_variance": null,
+        "com_variance_x": null,
+        "com_variance_y": null,
+        "smoothness_score": null,
+        "follow_through_score": null,
+        "angular_velocity": null,
+        "dribble_height": null,
+        "dribble_frequency": null,
+        "consistency": null,
+        "release_frame": null,
+        "peak_frame": null,
+        "baseline_height": null,
+        "displacement_pixels": null
+      },
+      "recommendations": [
+        {
+          "type": "improvement",
+          "title": "Fix Elbow Alignment",
+          "message": "Elbow flaring by 64.7\u00b0 (target: < 12\u00b0) Current: 64.7008985654769, Target: < 12\u00b0. Wall elbow drill: Stand 1 foot from wall, practice shooting motion keeping elbow under ball. 3\u00d750 reps daily.",
+          "priority": "high"
+        },
+        {
+          "type": "improvement",
+          "title": "Fix Knee Bend",
+          "message": "Insufficient knee bend (169.8\u00b0, target: 110-130\u00b0). Need more flexion for power. Current: 169.77260038028882, Target: 110-130\u00b0. Chair sits: Practice sitting into chair position, hold for 3 seconds, stand. Squat jumps: 3\u00d710 reps. Focus on getting lower before jumping.",
+          "priority": "high"
+        },
+        {
+          "type": "improvement",
+          "title": "Shooting Form: Jump Height",
+          "message": "Your jump height is 0.00m (target: 0.50-0.75m for jump shots). Increase leg power for better elevation. Practice plyometric exercises: Box jumps, squat jumps, 3\u00d710 reps.",
+          "priority": "medium"
+        }
+      ],
+      "shot_outcome": null,
+      "timeline": [
+        {
+          "start_time": 0.0,
+          "end_time": 2.1,
+          "action": {
+            "label": "three_point_shot",
+            "confidence": 0.178700607502833,
+            "probabilities": {
+              "free_throw": 0.16063302336260676,
+              "two_point_shot": 0.15292270155623555,
+              "three_point_shot": 0.178700607502833,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.1262374243233353,
+              "passing": 0.12651309999637306,
+              "defense": 0.11806576396338642,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.136927381856367
+            }
+          },
+          "metrics": {
+            "jump_height": 0.0,
+            "movement_speed": 0.0,
+            "form_score": 0.8520118320167385,
+            "reaction_time": 0.0,
+            "pose_stability": 0.8520118320167385,
+            "energy_efficiency": 1.0,
+            "elbow_angle": null,
+            "release_angle": null,
+            "knee_angle": null,
+            "shoulder_angle": null,
+            "stability_score": null,
+            "com_variance": null,
+            "com_variance_x": null,
+            "com_variance_y": null,
+            "smoothness_score": null,
+            "follow_through_score": null,
+            "angular_velocity": null,
+            "dribble_height": null,
+            "dribble_frequency": null,
+            "consistency": null,
+            "release_frame": null,
+            "peak_frame": null,
+            "baseline_height": null,
+            "displacement_pixels": null
+          },
+          "form_quality": {
+            "overall_score": 0.5,
+            "quality_rating": "needs_improvement",
+            "issues": [
+              {
+                "issue_type": "elbow_alignment",
+                "severity": "major",
+                "description": "Elbow flaring by 64.7\u00b0 (target: < 12\u00b0)",
+                "current_value": 64.7008985654769,
+                "optimal_value": "< 12\u00b0",
+                "recommendation": "Wall elbow drill: Stand 1 foot from wall, practice shooting motion keeping elbow under ball. 3\u00d750 reps daily."
+              },
+              {
+                "issue_type": "knee_bend",
+                "severity": "major",
+                "description": "Insufficient knee bend (169.8\u00b0, target: 110-130\u00b0). Need more flexion for power.",
+                "current_value": 169.77260038028882,
+                "optimal_value": "110-130\u00b0",
+                "recommendation": "Chair sits: Practice sitting into chair position, hold for 3 seconds, stand. Squat jumps: 3\u00d710 reps. Focus on getting lower before jumping."
+              },
+              {
+                "issue_type": "shooting_arc",
+                "severity": "unknown",
+                "description": "Cannot evaluate shooting_arc: Insufficient trajectory data",
+                "current_value": null,
+                "optimal_value": "N/A",
+                "recommendation": ""
+              },
+              {
+                "issue_type": "release_timing",
+                "severity": "unknown",
+                "description": "Cannot evaluate release_timing: Insufficient velocity data",
+                "current_value": null,
+                "optimal_value": "N/A",
+                "recommendation": ""
+              }
+            ],
+            "strengths": []
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 1.8333333333333335,
+          "end_time": 2.6333333333333333,
+          "action": {
+            "label": "free_throw",
+            "confidence": 0.17456182837486267,
+            "probabilities": {
+              "free_throw": 0.17456182837486267,
+              "two_point_shot": 0.14946473389863968,
+              "three_point_shot": 0.16954217851161957,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.12430144846439362,
+              "passing": 0.13141056895256042,
+              "defense": 0.12100087478756905,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.1297183781862259
+            }
+          },
+          "metrics": {
+            "jump_height": 0.0,
+            "movement_speed": 0.0,
+            "form_score": 0.9183497649816678,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9183497649816678,
+            "energy_efficiency": 1.0,
+            "elbow_angle": null,
+            "release_angle": null,
+            "knee_angle": null,
+            "shoulder_angle": null,
+            "stability_score": null,
+            "com_variance": null,
+            "com_variance_x": null,
+            "com_variance_y": null,
+            "smoothness_score": null,
+            "follow_through_score": null,
+            "angular_velocity": null,
+            "dribble_height": null,
+            "dribble_frequency": null,
+            "consistency": null,
+            "release_frame": null,
+            "peak_frame": null,
+            "baseline_height": null,
+            "displacement_pixels": null
+          },
+          "form_quality": {
+            "overall_score": 0.5,
+            "quality_rating": "needs_improvement",
+            "issues": [
+              {
+                "issue_type": "elbow_alignment",
+                "severity": "moderate",
+                "description": "Elbow flaring by 12.0\u00b0 (target: < 12\u00b0)",
+                "current_value": 12.005565977777636,
+                "optimal_value": "< 12\u00b0",
+                "recommendation": "Wall elbow drill: Stand 1 foot from wall, practice shooting motion keeping elbow under ball. 3\u00d750 reps daily."
+              },
+              {
+                "issue_type": "knee_bend",
+                "severity": "major",
+                "description": "Insufficient knee bend (179.4\u00b0, target: 110-130\u00b0). Need more flexion for power.",
+                "current_value": 179.39886633185662,
+                "optimal_value": "110-130\u00b0",
+                "recommendation": "Chair sits: Practice sitting into chair position, hold for 3 seconds, stand. Squat jumps: 3\u00d710 reps. Focus on getting lower before jumping."
+              },
+              {
+                "issue_type": "shooting_arc",
+                "severity": "major",
+                "description": "Low shooting arc (apex: 0.00m, target: 3.0+m). Ball needs more upward trajectory.",
+                "current_value": 0.0,
+                "optimal_value": "3.0-5.0m",
+                "recommendation": "Wrist snap drills: Practice shooting with exaggerated wrist snap. Chair target arc exercises: Place chair 3 feet in front, shoot over it. Focus on upward release angle."
+              },
+              {
+                "issue_type": "release_timing",
+                "severity": "major",
+                "description": "Release timing issue: Peak velocity occurs 0.267s late (target: < 0.05s). Wrist snap should coincide with release.",
+                "current_value": 0.26666666666666666,
+                "optimal_value": "< 0.05s",
+                "recommendation": "Form shooting close to basket: Focus on synchronizing wrist snap with release. One-handed form shots: 100 reps daily, emphasize timing."
+              }
+            ],
+            "strengths": []
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 2.3666666666666667,
+          "end_time": 2.9,
+          "action": {
+            "label": "three_point_shot",
+            "confidence": 0.17853641510009766,
+            "probabilities": {
+              "free_throw": 0.16009175777435303,
+              "two_point_shot": 0.14322443306446075,
+              "three_point_shot": 0.17853641510009766,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.12836705148220062,
+              "passing": 0.13581983745098114,
+              "defense": 0.11997585743665695,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.13398467004299164
+            }
+          },
+          "metrics": {
+            "jump_height": 0.0,
+            "movement_speed": 0.0,
+            "form_score": 0.9907943527446141,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9907943527446141,
+            "energy_efficiency": 1.0,
+            "elbow_angle": null,
+            "release_angle": null,
+            "knee_angle": null,
+            "shoulder_angle": null,
+            "stability_score": null,
+            "com_variance": null,
+            "com_variance_x": null,
+            "com_variance_y": null,
+            "smoothness_score": null,
+            "follow_through_score": null,
+            "angular_velocity": null,
+            "dribble_height": null,
+            "dribble_frequency": null,
+            "consistency": null,
+            "release_frame": null,
+            "peak_frame": null,
+            "baseline_height": null,
+            "displacement_pixels": null
+          },
+          "form_quality": {
+            "overall_score": 0.5,
+            "quality_rating": "needs_improvement",
+            "issues": [
+              {
+                "issue_type": "knee_bend",
+                "severity": "major",
+                "description": "Insufficient knee bend (176.8\u00b0, target: 110-130\u00b0). Need more flexion for power.",
+                "current_value": 176.79933937098954,
+                "optimal_value": "110-130\u00b0",
+                "recommendation": "Chair sits: Practice sitting into chair position, hold for 3 seconds, stand. Squat jumps: 3\u00d710 reps. Focus on getting lower before jumping."
+              },
+              {
+                "issue_type": "release_timing",
+                "severity": "moderate",
+                "description": "Release timing issue: Peak velocity occurs 0.067s early (target: < 0.05s). Wrist snap should coincide with release.",
+                "current_value": 0.06666666666666667,
+                "optimal_value": "< 0.05s",
+                "recommendation": "Form shooting close to basket: Focus on synchronizing wrist snap with release. One-handed form shots: 100 reps daily, emphasize timing."
+              }
+            ],
+            "strengths": []
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 2.6333333333333333,
+          "end_time": 3.1666666666666665,
+          "action": {
+            "label": "two_point_shot",
+            "confidence": 0.17259478569030762,
+            "probabilities": {
+              "free_throw": 0.16677750647068024,
+              "two_point_shot": 0.17259478569030762,
+              "three_point_shot": 0.17259478569030762,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.12281829118728638,
+              "passing": 0.12764690816402435,
+              "defense": 0.11749055981636047,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.13178040087223053
+            }
+          },
+          "metrics": {
+            "jump_height": 0.0,
+            "movement_speed": 0.0,
+            "form_score": 0.9718909677765843,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9718909677765843,
+            "energy_efficiency": 1.0,
+            "elbow_angle": null,
+            "release_angle": null,
+            "knee_angle": null,
+            "shoulder_angle": null,
+            "stability_score": null,
+            "com_variance": null,
+            "com_variance_x": null,
+            "com_variance_y": null,
+            "smoothness_score": null,
+            "follow_through_score": null,
+            "angular_velocity": null,
+            "dribble_height": null,
+            "dribble_frequency": null,
+            "consistency": null,
+            "release_frame": null,
+            "peak_frame": null,
+            "baseline_height": null,
+            "displacement_pixels": null
+          },
+          "form_quality": {
+            "overall_score": 0.5,
+            "quality_rating": "needs_improvement",
+            "issues": [
+              {
+                "issue_type": "knee_bend",
+                "severity": "major",
+                "description": "Insufficient knee bend (177.3\u00b0, target: 110-130\u00b0). Need more flexion for power.",
+                "current_value": 177.317658388411,
+                "optimal_value": "110-130\u00b0",
+                "recommendation": "Chair sits: Practice sitting into chair position, hold for 3 seconds, stand. Squat jumps: 3\u00d710 reps. Focus on getting lower before jumping."
+              },
+              {
+                "issue_type": "release_timing",
+                "severity": "moderate",
+                "description": "Release timing issue: Peak velocity occurs 0.067s early (target: < 0.05s). Wrist snap should coincide with release.",
+                "current_value": 0.06666666666666667,
+                "optimal_value": "< 0.05s",
+                "recommendation": "Form shooting close to basket: Focus on synchronizing wrist snap with release. One-handed form shots: 100 reps daily, emphasize timing."
+              }
+            ],
+            "strengths": []
+          },
+          "shot_outcome": null
+        },
+        {
+          "start_time": 2.9,
+          "end_time": 3.966666666666667,
+          "action": {
+            "label": "three_point_shot",
+            "confidence": 0.18741673231124878,
+            "probabilities": {
+              "free_throw": 0.1650366298854351,
+              "two_point_shot": 0.15099117904901505,
+              "three_point_shot": 0.18741673231124878,
+              "layup": 0.0,
+              "dunk": 0.0,
+              "dribbling": 0.1483650580048561,
+              "passing": 0.11518289521336555,
+              "defense": 0.1145168375223875,
+              "running": 0.0,
+              "walking": 0.0,
+              "blocking": 0.0,
+              "picking": 0.0,
+              "ball_in_hand": 0.0,
+              "idle": 0.1184906680136919
+            }
+          },
+          "metrics": {
+            "jump_height": 0.0,
+            "movement_speed": 0.0,
+            "form_score": 0.9687644527730797,
+            "reaction_time": 0.0,
+            "pose_stability": 0.9687644527730797,
+            "energy_efficiency": 1.0,
+            "elbow_angle": null,
+            "release_angle": null,
+            "knee_angle": null,
+            "shoulder_angle": null,
+            "stability_score": null,
+            "com_variance": null,
+            "com_variance_x": null,
+            "com_variance_y": null,
+            "smoothness_score": null,
+            "follow_through_score": null,
+            "angular_velocity": null,
+            "dribble_height": null,
+            "dribble_frequency": null,
+            "consistency": null,
+            "release_frame": null,
+            "peak_frame": null,
+            "baseline_height": null,
+            "displacement_pixels": null
+          },
+          "form_quality": {
+            "overall_score": 0.5,
+            "quality_rating": "needs_improvement",
+            "issues": [
+              {
+                "issue_type": "knee_bend",
+                "severity": "major",
+                "description": "Insufficient knee bend (177.9\u00b0, target: 110-130\u00b0). Need more flexion for power.",
+                "current_value": 177.86650586454863,
+                "optimal_value": "110-130\u00b0",
+                "recommendation": "Chair sits: Practice sitting into chair position, hold for 3 seconds, stand. Squat jumps: 3\u00d710 reps. Focus on getting lower before jumping."
+              },
+              {
+                "issue_type": "release_timing",
+                "severity": "unknown",
+                "description": "Cannot evaluate release_timing: Insufficient velocity data",
+                "current_value": null,
+                "optimal_value": "N/A",
+                "recommendation": ""
+              }
+            ],
+            "strengths": []
+          },
+          "shot_outcome": null
+        }
+      ],
+      "annotated_video_url": "/api/videos/processed_bdc034ab-2eb7-46b5-a77c-6e9e761a8048.mp4",
+      "annotated_frame": null,
+      "keypoints": null,
+      "timestamp": "2025-11-28T11:57:22.567994"
+    },
+    "created_at": "2025-11-28T11:57:22.633542"
+  },
+  {
+    "action": "two_point_shot",
     "confidence": 0.19289053004720938,
     "metrics": {
       "jump_height": 0.0,

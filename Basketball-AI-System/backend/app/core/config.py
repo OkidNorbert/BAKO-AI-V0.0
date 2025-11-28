@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     """Application settings"""
     
     # App Info
-    APP_NAME: str = "Basketball AI Performance Analysis API"
+    APP_NAME: str = "Bako API"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = True
     

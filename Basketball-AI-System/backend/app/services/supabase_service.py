@@ -28,14 +28,19 @@ class SupabaseService:
             logger.warning("⚠️  Supabase credentials not found. Supabase integration disabled.")
 
     def _save_local(self, data: Dict[str, Any]) -> bool:
-        """Save analysis result to local JSON file"""
+        """Save analysis result to local JSON file with corruption prevention"""
         try:
             history = []
             if os.path.exists(self.local_history_file):
                 try:
-                    with open(self.local_history_file, 'r') as f:
+                    with open(self.local_history_file, 'r', encoding='utf-8') as f:
                         history = json.load(f)
-                except json.JSONDecodeError:
+                    # Validate it's a list
+                    if not isinstance(history, list):
+                        logger.warning("⚠️  History file is not a list, resetting")
+                        history = []
+                except (json.JSONDecodeError, ValueError) as e:
+                    logger.warning(f"⚠️  History file corrupted, resetting: {e}")
                     history = []
             
             # Create a copy to avoid mutating the original dict
@@ -48,30 +53,118 @@ class SupabaseService:
             # Prepend new record (newest first)
             history.insert(0, data_copy)
             
-            # Keep only last 100 records locally
+            # Keep only last 100 records locally to prevent file from growing too large
             history = history[:100]
             
-            with open(self.local_history_file, 'w') as f:
-                json.dump(history, f, indent=2)
+            # Write atomically: write to temp file first, then rename
+            import tempfile
+            temp_file = self.local_history_file + '.tmp'
+            try:
+                with open(temp_file, 'w', encoding='utf-8') as f:
+                    json.dump(history, f, indent=2, ensure_ascii=False)
+                    f.flush()
+                    os.fsync(f.fileno())  # Ensure data is written to disk
                 
-            logger.info(f"✅ Analysis saved locally to {self.local_history_file}")
-            return True
+                # Atomic rename
+                os.replace(temp_file, self.local_history_file)
+                
+                logger.info(f"✅ Analysis saved locally to {self.local_history_file}")
+                return True
+            except Exception as write_error:
+                # Clean up temp file on error
+                if os.path.exists(temp_file):
+                    try:
+                        os.remove(temp_file)
+                    except:
+                        pass
+                raise write_error
+                
         except Exception as e:
             logger.error(f"❌ Failed to save local history: {e}")
             return False
 
     def _get_local(self, limit: int = 50) -> list:
-        """Get history from local JSON file"""
+        """Get history from local JSON file with corruption recovery"""
         try:
             if not os.path.exists(self.local_history_file):
                 return []
+            
+            # Try to read the file
+            try:
+                with open(self.local_history_file, 'r', encoding='utf-8') as f:
+                    history = json.load(f)
+                    
+                # Validate it's a list
+                if not isinstance(history, list):
+                    logger.warning("⚠️  History file is not a list, resetting")
+                    return []
+                    
+                return history[:limit]
+            except (json.JSONDecodeError, ValueError) as e:
+                # JSON is corrupted - try to recover or reset
+                logger.warning(f"⚠️  History file is corrupted (line {getattr(e, 'lineno', 'unknown')}): {getattr(e, 'msg', str(e))}")
+                logger.info("🔄 Attempting to recover history file...")
                 
-            with open(self.local_history_file, 'r') as f:
-                history = json.load(f)
+                # Backup corrupted file
+                backup_file = self.local_history_file + '.corrupted.' + datetime.now().strftime('%Y%m%d_%H%M%S')
+                try:
+                    import shutil
+                    shutil.copy2(self.local_history_file, backup_file)
+                    logger.info(f"📦 Backed up corrupted file to {backup_file}")
+                except Exception as backup_error:
+                    logger.warning(f"⚠️  Failed to backup corrupted file: {backup_error}")
                 
-            return history[:limit]
+                # Simple recovery: try to read file and extract valid JSON objects
+                recovered_history = []
+                try:
+                    with open(self.local_history_file, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                        # Try to find and parse individual JSON objects
+                        # Look for complete objects between [ and ]
+                        import re
+                        # Match complete JSON objects (handles nested objects)
+                        # This regex finds objects that are properly closed
+                        json_obj_pattern = r'\{(?:[^{}]|(?:\{[^{}]*\}))*\}'
+                        matches = re.finditer(json_obj_pattern, content)
+                        
+                        for match in matches:
+                            try:
+                                obj = json.loads(match.group(0))
+                                if isinstance(obj, dict):
+                                    recovered_history.append(obj)
+                            except (json.JSONDecodeError, ValueError):
+                                continue
+                        
+                        if recovered_history:
+                            logger.info(f"✅ Recovered {len(recovered_history)} records from corrupted file")
+                            # Save recovered data (keep only last 100)
+                            recovered_history = recovered_history[:100]
+                            with open(self.local_history_file, 'w', encoding='utf-8') as f:
+                                json.dump(recovered_history, f, indent=2, ensure_ascii=False)
+                            return recovered_history[:limit]
+                        else:
+                            logger.warning("⚠️  No valid records found in corrupted file")
+                except Exception as recover_error:
+                    logger.error(f"❌ Recovery failed: {recover_error}")
+                
+                # If recovery failed, reset to empty
+                logger.warning("⚠️  Resetting history file to empty")
+                try:
+                    with open(self.local_history_file, 'w', encoding='utf-8') as f:
+                        json.dump([], f, indent=2)
+                except Exception as reset_error:
+                    logger.error(f"❌ Failed to reset history file: {reset_error}")
+                return []
+                
         except Exception as e:
             logger.error(f"❌ Failed to read local history: {e}")
+            # If file is completely unreadable, reset it
+            try:
+                with open(self.local_history_file, 'w', encoding='utf-8') as f:
+                    json.dump([], f, indent=2)
+                logger.info("✅ Reset corrupted history file")
+            except:
+                pass
             return []
 
     def upload_video(self, file_path: str, filename: str) -> Optional[str]:
