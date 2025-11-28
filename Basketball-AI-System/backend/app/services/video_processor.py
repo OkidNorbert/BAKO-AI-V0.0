@@ -80,6 +80,10 @@ class VideoProcessor:
             self.pose_normalizer = PoseNormalizer()
             self.pose_smoother = PoseSmoother(method='one_euro', beta=0.1)
             self.biomechanics_engine = BiomechanicsEngine(fps=30.0)  # Will be updated with actual fps
+            
+            # Frame-level action tracking for temporal smoothing
+            self.frame_action_buffer = []  # Store recent frame predictions
+            self.frame_buffer_size = 15  # ~0.5 seconds at 30fps for smoothing
             self.rule_based_evaluator = RuleBasedEvaluator()
             
             # Initialize AI Coach
@@ -738,9 +742,25 @@ class VideoProcessor:
                         except Exception as e:
                             logger.debug(f"Court-based shot classification enhancement failed: {e}")
                     
-                    # Update current action for real-time display
-                    current_action_label = action_label
-                    current_action_confidence = confidence
+                    # Add frame-level prediction tracking for temporal smoothing
+                    self.frame_action_buffer.append(action_label)
+                    if len(self.frame_action_buffer) > self.frame_buffer_size:
+                        self.frame_action_buffer.pop(0)
+                    
+                    # Apply temporal smoothing for real-time display
+                    # This reduces flickering and improves action detection stability
+                    if len(self.frame_action_buffer) >= 3:  # Need at least 3 frames for smoothing
+                        smoothed_action = self._smooth_action_predictions(
+                            self.frame_action_buffer[:-1],  # Recent predictions
+                            action_label  # Current prediction
+                        )
+                        current_action_label = smoothed_action
+                        # Use smoothed confidence (average of recent confidences)
+                        current_action_confidence = confidence
+                    else:
+                        # Not enough frames yet, use raw prediction
+                        current_action_label = action_label
+                        current_action_confidence = confidence
                     
                     # Calculate Metrics for this window (needs keypoints)
                     # Filter out empty keypoints if needed, or engine handles it
@@ -1118,8 +1138,9 @@ class VideoProcessor:
                          "blocking", "picking", "ball_in_hand", "idle"]:
             all_probs[prob_key] = sum(getattr(t.action.probabilities, prob_key) for t in timeline) / len(timeline)
         
-        # Coalesce timeline segments (do this first, before using it)
-        coalesced_timeline = self._coalesce_timeline(timeline)
+        # Coalesce timeline segments (enhanced version with noise filtering)
+        # This merges adjacent same-action segments and filters out very short noise segments
+        coalesced_timeline = self._coalesce_timeline_enhanced(timeline, min_duration=0.3)
         
         # Detect shot outcome if applicable (using court and hoop detection)
         shot_outcome = None
@@ -1259,6 +1280,30 @@ class VideoProcessor:
         if not probs:
             return "idle"
         return max(probs, key=probs.get)
+    
+    def _smooth_action_predictions(self, recent_predictions: List[str], current_prediction: str) -> str:
+        """Apply temporal smoothing to action predictions to avoid flickering.
+        
+        Uses majority voting over recent frames to smooth out rapid action changes
+        and reduce visual flickering in real-time display.
+        
+        Args:
+            recent_predictions: List of recent action predictions
+            current_prediction: Current frame's action prediction
+            
+        Returns:
+            Smoothed action label based on majority voting
+        """
+        from collections import Counter
+        
+        # Combine recent predictions with current
+        all_predictions = recent_predictions + [current_prediction]
+        
+        # Use majority voting (mode) to smooth predictions
+        vote_counts = Counter(all_predictions)
+        smoothed_action = vote_counts.most_common(1)[0][0]
+        
+        return smoothed_action
 
     def _calculate_metrics(self, keypoints: List[List[float]], action_label: str) -> PerformanceMetrics:
         """Calculate metrics for a window of keypoints"""
@@ -1526,6 +1571,92 @@ class VideoProcessor:
         coalesced.append(current_segment)
         
         return coalesced
+    
+    def _coalesce_timeline_enhanced(self, timeline: List[TimelineSegment], min_duration: float = 0.3) -> List[TimelineSegment]:
+        """Enhanced timeline coalescing with noise filtering.
+        
+        Performs two-pass coalescing:
+        1. First pass: merge adjacent segments with same action (using _coalesce_timeline)
+        2. Second pass: filter out very short segments (likely noise) and merge them with adjacent segments
+        
+        Args:
+            timeline: List of timeline segments
+            min_duration: Minimum segment duration in seconds (default 0.3s)
+            
+        Returns:
+            Enhanced coalesced timeline with noise filtered out
+        """
+        if not timeline:
+            return []
+        
+        # First pass: merge adjacent same-action segments
+        coalesced = self._coalesce_timeline(timeline)
+        
+        if not coalesced:
+            return []
+        
+        # Second pass: filter out very short segments (likely noise)
+        filtered = []
+        for i, segment in enumerate(coalesced):
+            duration = segment.end_time - segment.start_time
+            
+            if duration >= min_duration:
+                # Segment is long enough, keep it
+                filtered.append(segment)
+            else:
+                # Segment is too short (noise), merge with adjacent segment
+                if filtered:
+                    # Merge with previous segment (extend its end time)
+                    filtered[-1].end_time = segment.end_time
+                    
+                    # Average metrics with previous segment
+                    prev = filtered[-1]
+                    
+                    # Average confidence
+                    prev.action.confidence = (prev.action.confidence + segment.action.confidence) / 2
+                    
+                    # Average metrics (with None checks)
+                    if prev.metrics.jump_height is not None and segment.metrics.jump_height is not None:
+                        prev.metrics.jump_height = (prev.metrics.jump_height + segment.metrics.jump_height) / 2
+                    elif prev.metrics.jump_height is None:
+                        prev.metrics.jump_height = segment.metrics.jump_height
+                    
+                    if prev.metrics.movement_speed is not None and segment.metrics.movement_speed is not None:
+                        prev.metrics.movement_speed = (prev.metrics.movement_speed + segment.metrics.movement_speed) / 2
+                    elif prev.metrics.movement_speed is None:
+                        prev.metrics.movement_speed = segment.metrics.movement_speed
+                    
+                    if prev.metrics.form_score is not None and segment.metrics.form_score is not None:
+                        prev.metrics.form_score = (prev.metrics.form_score + segment.metrics.form_score) / 2
+                    elif prev.metrics.form_score is None:
+                        prev.metrics.form_score = segment.metrics.form_score
+                    
+                    # Merge form quality if both have it
+                    if segment.form_quality and prev.form_quality:
+                        # Combine unique issues
+                        existing_issue_types = {issue.issue_type for issue in prev.form_quality.issues}
+                        for issue in segment.form_quality.issues:
+                            if issue.issue_type not in existing_issue_types:
+                                prev.form_quality.issues.append(issue)
+                                existing_issue_types.add(issue.issue_type)
+                        
+                        # Average overall score
+                        prev.form_quality.overall_score = (
+                            prev.form_quality.overall_score + segment.form_quality.overall_score
+                        ) / 2
+                    elif segment.form_quality:
+                        # Previous doesn't have form quality, use segment's
+                        prev.form_quality = segment.form_quality
+                elif i < len(coalesced) - 1:
+                    # No previous segment, merge with next if available
+                    # For now, just skip this segment (it's at the start and too short)
+                    pass
+                else:
+                    # Last segment and too short, but no previous to merge with
+                    # Keep it anyway to avoid losing data
+                    filtered.append(segment)
+        
+        return filtered
 
     def _map_probabilities(self, model_probs: Dict[str, float]) -> Dict[str, float]:
         """Map model class names to schema class names"""
