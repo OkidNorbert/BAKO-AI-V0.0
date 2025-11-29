@@ -1,8 +1,12 @@
-# 🏀 AI Basketball Performance Analysis System
+# 🏀 We present to you Bako
 
-**AI-Powered Basketball Analytics for African Players**
+Personalised AI Basketball Skill Analysis System.
 
-> Making elite-level sports analytics accessible through cutting-edge AI technology
+> Making elite-level skill analytics accessible through cutting-edge AI technology
+
+here is the link to the hosted demo website 
+
+https://frontend-smoky-eta-61.vercel.app/
 
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![React](https://img.shields.io/badge/React-18.3+-61DAFB.svg?logo=react)](https://reactjs.org/)
