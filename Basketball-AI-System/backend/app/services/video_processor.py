@@ -1199,7 +1199,7 @@ class VideoProcessor:
         
         for action_type, segments in action_groups.items():
             logger.info(f"🔍 Analyzing action: {action_type} ({len(segments)} segments)")
-            
+        
             # Aggregate metrics for this action
             action_metrics = self._aggregate_metrics(segments)
             overall_metrics_list.append(action_metrics)
@@ -1207,7 +1207,7 @@ class VideoProcessor:
             # Calculate action statistics
             action_confidence = sum(s.action.confidence for s in segments) / len(segments)
             total_duration = sum(s.end_time - s.start_time for s in segments)
-            
+        
             # Collect form quality issues for this action
             action_form_issues = []
             action_form_strengths = []
@@ -1274,8 +1274,8 @@ class VideoProcessor:
                 if self.ai_coach:
                     rec_dicts = self.ai_coach.generate_skill_improvement_recommendations(
                         action_type=action_type,
-                        metrics=metrics_dict,
-                        shot_outcome=shot_outcome_dict,
+                    metrics=metrics_dict,
+                    shot_outcome=shot_outcome_dict,
                         form_quality_issues=form_issues_dicts,
                         form_strengths=list(set(action_form_strengths)),
                         timeline=segments
@@ -1903,7 +1903,7 @@ class VideoProcessor:
             elbow_angle=sum(m.elbow_angle for m in metrics_list if m.elbow_angle is not None) / max(1, sum(1 for m in metrics_list if m.elbow_angle is not None)) if any(m.elbow_angle is not None for m in metrics_list) else None,
             release_angle=sum(m.release_angle for m in metrics_list if m.release_angle is not None) / max(1, sum(1 for m in metrics_list if m.release_angle is not None)) if any(m.release_angle is not None for m in metrics_list) else None,
         )
-    
+
     def _aggregate_metrics(self, segments: List[TimelineSegment]) -> PerformanceMetrics:
         """Average metrics across segments"""
         if not segments:
@@ -1938,7 +1938,7 @@ class VideoProcessor:
         self.metrics_engine.fps = live_fps
         self.biomechanics_engine.fps = live_fps
         self.biomechanics_engine.dt = 1.0 / live_fps
-        
+            
         # Extract keypoints for all frames
         all_keypoints = []
         valid_frames = []

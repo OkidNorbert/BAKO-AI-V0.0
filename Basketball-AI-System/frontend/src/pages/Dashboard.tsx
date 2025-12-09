@@ -156,7 +156,9 @@ export default function Dashboard() {
       // Handle different error types
       let errorMessage = 'Failed to analyze video. Please try again.';
 
-      if (err?.code === 'NO_PLAYER_DETECTED') {
+      if (err?.code === 'TIMEOUT' || err?.code === 'ECONNABORTED' || err?.message?.includes('timeout')) {
+        errorMessage = 'Video analysis is taking longer than expected. This may happen with longer videos. Please try again or use a shorter video (under 30 seconds recommended).';
+      } else if (err?.code === 'NO_PLAYER_DETECTED') {
         // Show structured error with suggestions
         errorMessage = err.originalMessage || err.message;
         if (err.suggestions && Array.isArray(err.suggestions)) {
