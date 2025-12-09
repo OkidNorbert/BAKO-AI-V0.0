@@ -1,5 +1,6 @@
 """
 Pydantic schemas for Basketball AI API
+Skill-Based System: Each action is individually analyzed and validated
 """
 
 from pydantic import BaseModel, Field
@@ -115,19 +116,67 @@ class TimelineSegment(BaseModel):
     shot_outcome: Optional[ShotOutcome] = None
 
 
+class IndividualActionAnalysis(BaseModel):
+    """
+    Individual analysis for a single detected action type
+    Each action in the video is analyzed separately with its own form validation
+    """
+    action_type: str = Field(description="Type of action (e.g., 'free_throw', 'dribbling')")
+    action_label: str = Field(description="Human-readable action label")
+    confidence: float = Field(ge=0.0, le=1.0, description="Average confidence across all instances")
+    occurrence_count: int = Field(description="Number of times this action was detected")
+    total_duration: float = Field(description="Total duration of this action in seconds")
+    
+    # Aggregated metrics for this action type
+    metrics: PerformanceMetrics = Field(description="Average metrics for this action")
+    
+    # Form validation and skill assessment
+    form_quality: Optional[FormQualityAssessment] = Field(default=None, description="Form quality assessment for this action")
+    skill_level: str = Field(description="Skill level: beginner, intermediate, advanced, expert")
+    is_valid_skill: bool = Field(description="Whether this action meets proper form requirements")
+    validation_issues: List[str] = Field(default_factory=list, description="List of validation issues preventing proper skill execution")
+    
+    # Action-specific recommendations
+    recommendations: List[Recommendation] = Field(default_factory=list, description="Recommendations specific to this action")
+    
+    # Shot outcome (if applicable)
+    shot_outcome: Optional[ShotOutcome] = None
+    
+    # Timeline segments for this action
+    segments: List[TimelineSegment] = Field(default_factory=list, description="All timeline segments for this action")
+
 
 class VideoAnalysisResult(BaseModel):
-    """Complete video analysis result"""
+    """
+    Complete video analysis result - Skill-Based System
+    Each detected action is individually analyzed and validated
+    """
     video_id: str
-    action: ActionClassification
-    metrics: PerformanceMetrics
-    recommendations: List[Recommendation]
-    shot_outcome: Optional[ShotOutcome] = Field(default=None, description="Shot outcome (only for shooting actions)")
-    timeline: Optional[List[TimelineSegment]] = Field(default=None, description="Timeline of actions for long videos")
+    duration: float = Field(description="Video duration in seconds")
+    
+    # Individual action analyses (one per detected action type)
+    actions: List[IndividualActionAnalysis] = Field(description="Individual analysis for each detected action")
+    
+    # Summary (for backward compatibility and quick overview)
+    primary_action: Optional[ActionClassification] = Field(default=None, description="Most frequent action (if any)")
+    overall_metrics: Optional[PerformanceMetrics] = Field(default=None, description="Overall metrics across all actions")
+    overall_recommendations: List[Recommendation] = Field(default_factory=list, description="Overall recommendations")
+    
+    # Complete timeline (all segments)
+    timeline: Optional[List[TimelineSegment]] = Field(default=None, description="Complete timeline of all actions")
+    
+    # Video output
     annotated_video_url: Optional[str] = None
     annotated_frame: Optional[str] = None  # Base64 string for live analysis
     keypoints: Optional[List] = None
+    
     timestamp: datetime = Field(default_factory=datetime.now)
+    
+    # Legacy fields (for backward compatibility)
+    action: Optional[ActionClassification] = None
+    metrics: Optional[PerformanceMetrics] = None
+    recommendations: Optional[List[Recommendation]] = None
+    shot_outcome: Optional[ShotOutcome] = None
 
 
 class AnalysisStatus(BaseModel):
@@ -144,4 +193,3 @@ class HealthResponse(BaseModel):
     version: str
     models_loaded: bool
     gpu_available: bool
-

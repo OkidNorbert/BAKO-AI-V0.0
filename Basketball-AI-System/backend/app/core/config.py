@@ -60,10 +60,10 @@ class Settings(BaseSettings):
     # Per-action confidence thresholds (higher = more strict)
     # Actions with less training data should have higher thresholds
     ACTION_CONFIDENCE_THRESHOLDS: Dict[str, float] = {
-        "free_throw_shot": 0.4,  # Well-trained, lower threshold
+        "free_throw_shot": 0.3,  # Lower threshold for free throws (main training data)
         "2point_shot": 0.4,
         "3point_shot": 0.4,
-        "dribbling": 0.4,
+        "dribbling": 0.5,  # Higher threshold to reduce false positives
         "passing": 0.8,  # High threshold if enabled (not well-trained)
         "defense": 0.5,
         "idle": 0.3,  # Lower threshold for fallback
