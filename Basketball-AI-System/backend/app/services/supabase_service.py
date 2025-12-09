@@ -88,12 +88,12 @@ class SupabaseService:
         try:
             if not os.path.exists(self.local_history_file):
                 return []
-            
+                
             # Try to read the file
             try:
                 with open(self.local_history_file, 'r', encoding='utf-8') as f:
                     history = json.load(f)
-                    
+                
                 # Validate it's a list
                 if not isinstance(history, list):
                     logger.warning("⚠️  History file is not a list, resetting")
