@@ -748,6 +748,10 @@ class VideoProcessor:
                     action_label = self._get_action_label(action_probs)
                     confidence = float(max(action_probs.values())) if action_probs else 0.0
                     
+                    # Log action detection for debugging (especially free throws)
+                    if "free_throw" in action_label.lower() or "free_throw" in str(action_probs).lower():
+                        logger.info(f"🎯 Free throw detected: label={action_label}, confidence={confidence:.2f}, probs={action_probs}")
+                    
                     # Enhance action classification with court-based shot zones if available
                     # If model detected a generic "shot", refine it using court position
                     if "shot" in action_label.lower() and basketball_detections and hoop_info and court_info:
@@ -1155,8 +1159,28 @@ class VideoProcessor:
             raise ValueError("No actions detected in timeline. Cannot determine main action.")
         main_action = max(set(actions), key=actions.count)
         
+        # Log detected actions for debugging
+        action_counts = {action: actions.count(action) for action in set(actions)}
+        logger.info(f"📊 Detected actions: {action_counts}")
+        logger.info(f"🎯 Main action: {main_action} (appears {action_counts.get(main_action, 0)} times)")
+        
+        # Special handling for free throw detection
+        if "free_throw" in main_action.lower():
+            logger.info(f"✅ Free throw detected as main action! Total segments: {len(timeline)}")
+            # Ensure free throw is properly recognized
+            if main_action != "free_throw":
+                logger.warning(f"⚠️  Action label mismatch: got '{main_action}', expected 'free_throw'. Normalizing...")
+                main_action = "free_throw"
+        
         # Average metrics
         avg_metrics = self._aggregate_metrics(timeline)
+        
+        # Log metrics for free throws
+        if "free_throw" in main_action.lower():
+            logger.info(f"📈 Free throw metrics: jump_height={avg_metrics.jump_height:.3f}m, "
+                       f"movement_speed={avg_metrics.movement_speed:.2f}m/s, "
+                       f"form_score={avg_metrics.form_score:.2f}, "
+                       f"stability={avg_metrics.pose_stability:.2f}")
         
         # Average confidence (safe division - already checked timeline is not empty)
         avg_confidence = sum(t.action.confidence for t in timeline) / len(timeline)
@@ -1299,7 +1323,14 @@ class VideoProcessor:
     def _classify_action(self, frames: List[np.ndarray]) -> Dict[str, float]:
         """Classify action for a window of frames"""
         # Classifier expects list of RGB frames
-        _, _, probabilities = self.action_classifier.classify(frames, return_probabilities=True)
+        # Use enabled actions and confidence thresholds
+        _, _, probabilities = self.action_classifier.classify(
+            frames, 
+            return_probabilities=True,
+            enabled_actions=settings.ENABLED_ACTIONS,
+            confidence_thresholds=settings.ACTION_CONFIDENCE_THRESHOLDS,
+            min_confidence=settings.MIN_ACTION_CONFIDENCE
+        )
         return self._map_probabilities(probabilities)
 
     def _get_action_label(self, probs: Dict[str, float]) -> str:
@@ -1731,14 +1762,26 @@ class VideoProcessor:
 
     async def process_sequence(self, frames: List[np.ndarray]) -> Optional[VideoAnalysisResult]:
         """
-        Process a sequence of frames (real-time)
+        Process a sequence of frames (real-time) for live analysis
+        Returns result with annotated frame for display
         """
         if not frames:
             return None
             
+        # Use the last frame for annotation (most recent)
+        last_frame = frames[-1].copy()
+        
+        # Estimate FPS for live analysis (assume ~10 fps based on send interval)
+        live_fps = 10.0
+        self.metrics_engine.fps = live_fps
+        self.biomechanics_engine.fps = live_fps
+        self.biomechanics_engine.dt = 1.0 / live_fps
+        
         # Extract keypoints for all frames
         all_keypoints = []
         valid_frames = []
+        last_detection = None
+        last_pose_landmarks = None
         
         for frame in frames:
             # Detect player
@@ -1749,29 +1792,79 @@ class VideoProcessor:
                 pose_result = self.pose_extractor.extract_keypoints(roi)
                 
                 if pose_result:
-                    keypoints_2d, _, _ = pose_result
+                    keypoints_2d, landmarks, _ = pose_result
+                    # Keypoints are normalized (0-1) relative to ROI
+                    # For metrics calculation, we can use them as-is since metrics engine
+                    # handles normalized coordinates, but we need to ensure proper scaling
                     all_keypoints.append(keypoints_2d)
                     valid_frames.append(cv2.cvtColor(roi, cv2.COLOR_BGR2RGB))
+                    
+                    # Store last detection and pose for annotation
+                    last_detection = {
+                        'bbox': bbox,
+                        'confidence': detections[0][4] if len(detections[0]) > 4 else 0.9,
+                        'class': 'player'
+                    }
+                    last_pose_landmarks = landmarks
         
         if len(valid_frames) < 8: # Minimum frames for valid analysis
             return None
             
-        # Classify action
+        # Classify action (only return enabled actions with sufficient confidence)
         action_label, confidence, probabilities = self.action_classifier.classify(
             valid_frames,
-            return_probabilities=True
+            return_probabilities=True,
+            enabled_actions=settings.ENABLED_ACTIONS,
+            confidence_thresholds=settings.ACTION_CONFIDENCE_THRESHOLDS,
+            min_confidence=settings.MIN_ACTION_CONFIDENCE
         )
         
-        # Compute metrics
-        metrics_dict = self.metrics_engine.compute_all_metrics(
-            all_keypoints,
-            action_label
-        )
+        # Compute metrics with proper keypoints
+        # Ensure keypoints are in correct format (T, 33, 3)
+        if all_keypoints and len(all_keypoints) >= 2:
+            # Convert list of (33, 3) arrays to (T, 33, 3) array
+            keypoints_array = np.array(all_keypoints)
+            
+            # Log for debugging
+            logger.debug(f"Computing metrics for {len(keypoints_array)} frames, action: {action_label}")
+            
+            metrics_dict = self.metrics_engine.compute_all_metrics(
+                keypoints_array,
+                action_label
+            )
+            
+            # Ensure all metrics are valid numbers
+            for key, value in metrics_dict.items():
+                if np.isnan(value) or np.isinf(value):
+                    metrics_dict[key] = 0.0 if key in ['jump_height', 'movement_speed', 'reaction_time'] else 0.5
+        else:
+            # Fallback if no keypoints or insufficient frames
+            logger.debug(f"Insufficient keypoints for metrics: {len(all_keypoints) if all_keypoints else 0} frames")
+            metrics_dict = self.metrics_engine._default_metrics()
         
         # Map probabilities
         mapped_probs = self._map_probabilities(probabilities)
         
-        # Create result (simplified for real-time)
+        # Draw annotations on last frame
+        annotated_frame = last_frame.copy()
+        if last_detection and last_pose_landmarks:
+            # Draw annotations on full frame
+            annotated_frame = self._draw_annotations(
+                annotated_frame,
+                [last_detection],
+                last_pose_landmarks,
+                basketball_detections=None,
+                court_info=None,
+                hoop_info=None,
+                current_action=action_label,
+                action_confidence=confidence
+            )
+        
+        # Encode annotated frame to base64
+        _, buffer = cv2.imencode('.jpg', annotated_frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
+        annotated_frame_b64 = base64.b64encode(buffer).decode('utf-8')
+        
+        # Create result with annotated frame
         result = VideoAnalysisResult(
             video_id="realtime",
             action=ActionClassification(
@@ -1781,6 +1874,7 @@ class VideoProcessor:
             ),
             metrics=PerformanceMetrics(**metrics_dict),
             recommendations=[], # Skip recommendations for real-time to save time
+            annotated_frame=annotated_frame_b64,  # Add annotated frame for live display
             timestamp=datetime.now()
         )
         

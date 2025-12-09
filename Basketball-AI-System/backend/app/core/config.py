@@ -44,6 +44,34 @@ class Settings(BaseSettings):
     NMS_THRESHOLD: float = 0.4
     POSE_CONFIDENCE: float = 0.5
     
+    # Action Classification Settings
+    # Only detect actions that have been well-trained
+    # Set to False for actions with limited training data
+    ENABLED_ACTIONS: Dict[str, bool] = {
+        "free_throw_shot": True,
+        "2point_shot": True,
+        "3point_shot": True,
+        "dribbling": True,
+        "passing": False,  # Not well-trained yet
+        "defense": True,
+        "idle": True,  # Always enabled as fallback
+    }
+    
+    # Per-action confidence thresholds (higher = more strict)
+    # Actions with less training data should have higher thresholds
+    ACTION_CONFIDENCE_THRESHOLDS: Dict[str, float] = {
+        "free_throw_shot": 0.4,  # Well-trained, lower threshold
+        "2point_shot": 0.4,
+        "3point_shot": 0.4,
+        "dribbling": 0.4,
+        "passing": 0.8,  # High threshold if enabled (not well-trained)
+        "defense": 0.5,
+        "idle": 0.3,  # Lower threshold for fallback
+    }
+    
+    # Minimum confidence to return any action (global threshold)
+    MIN_ACTION_CONFIDENCE: float = 0.3
+    
     # Action Classes (Enhanced with specific shooting types)
     ACTION_CLASSES: List[str] = [
         # Shooting (3 types based on court position)

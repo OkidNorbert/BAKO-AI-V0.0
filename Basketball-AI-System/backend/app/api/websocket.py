@@ -47,18 +47,36 @@ async def websocket_endpoint(websocket: WebSocket):
                     
                 buffer.append(frame)
                 
-                # Process when buffer is full
+                # Process when buffer is full (or every few frames for faster response)
                 if len(buffer) >= BUFFER_SIZE:
                     # Process sequence
                     result = await video_processor.process_sequence(buffer)
                     
                     if result:
+                        # Convert to dict and ensure JSON serializable
+                        result_dict = result.model_dump(mode='json') if hasattr(result, 'model_dump') else result.dict()
+                        
+                        # Format response to match frontend expectations
+                        response = {
+                            "action": {
+                                "label": result_dict.get("action", {}).get("label", "unknown"),
+                                "confidence": result_dict.get("action", {}).get("confidence", 0.0)
+                            },
+                            "metrics": {
+                                "jump_height": result_dict.get("metrics", {}).get("jump_height", 0.0),
+                                "movement_speed": result_dict.get("metrics", {}).get("movement_speed", 0.0),
+                                "form_score": result_dict.get("metrics", {}).get("form_score", 0.0),
+                                "pose_stability": result_dict.get("metrics", {}).get("pose_stability", 0.0),
+                                "reaction_time": result_dict.get("metrics", {}).get("reaction_time", 0.0),
+                                "energy_efficiency": result_dict.get("metrics", {}).get("energy_efficiency", 0.0)
+                            },
+                            "annotated_frame": result_dict.get("annotated_frame")
+                        }
+                        
                         # Send result back
-                        await websocket.send_json(result.dict())
+                        await websocket.send_json(response)
                     
-                    # Slide window (keep last 8 frames for overlap, or clear all?)
-                    # For real-time, maybe clear all to avoid lag?
-                    # Or keep some for continuity. Let's keep 8.
+                    # Slide window (keep last 8 frames for overlap)
                     buffer = buffer[8:]
                     
             except Exception as e:
