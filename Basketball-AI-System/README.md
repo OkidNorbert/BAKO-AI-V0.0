@@ -1,488 +1,336 @@
-# 🏀 Basketball AI Performance Analysis System
+# 🏀 Basketball Shooting Analysis System
 
-**The Complete Guide to Your AI-Powered Basketball Analytics Platform**
-
----
-
-## 🎯 What Is This?
-
-This is a **state-of-the-art basketball performance analysis system** that uses:
-- **Computer Vision** to detect players and track movements
-- **Deep Learning** to classify basketball actions
-- **Pose Estimation** to analyze player form
-- **Performance Analytics** to measure jump height, speed, and more
-- **AI Recommendations** to provide personalized training advice
-
-### Why This Matters
-Traditional sports analytics costs **$10,000+** and requires specialized equipment. This system makes professional-grade analysis **free and accessible** to African basketball players.
+**Focus:** Jump shooting mechanics, form consistency, and shot outcome detection  
+**Approach:** Player-specific baseline (not global ideal comparison)  
+**Status:** Core modules implemented, ready for testing
 
 ---
 
-## 📊 System Overview
+## 🎯 System Overview
+
+This system analyzes basketball jump shooting mechanics to help players improve their shooting consistency. Unlike traditional systems that compare players to a "perfect" form, this system:
+
+1. **Captures your baseline** - Records your most effective shooting form from 20-30 successful shots
+2. **Analyzes deviations** - Compares each shot to YOUR baseline, not a generic ideal
+3. **Detects outcomes** - Automatically identifies made vs missed shots
+4. **Tracks consistency** - Monitors form repeatability over time
+
+---
+
+## 📊 Supported Actions
+
+### Primary Focus: Shooting
+
+| Action | Description | Dataset Requirement |
+|--------|-------------|---------------------|
+| **Jump Shots** | Mid-range and three-point shots | 150 videos |
+| **Layups** | Close-range layups (left/right hand) | 100 videos |
+| **Free Throws** | Free throw line shots | 50 videos |
+
+**Total Dataset:** 300 videos (reduced from 700!)
+
+---
+
+## 🏗️ System Architecture
 
 ```
-USER → Upload Video → AI Analysis → Get Results
-         (5-10 sec)     (<5 sec)      (Instant)
-
-Results Include:
-✅ Action Type (Shooting, Dribbling, Passing, Defense, Idle)
-✅ Confidence Score (85%+ accuracy)
-✅ Performance Metrics (Jump height, Speed, Form score)
-✅ AI Recommendations (Personalized training advice)
-```
-
----
-
-## 🛠 Tech Stack
-
-### **Frontend (React Dashboard)** - 30% of Work
-- ⚛️ React 18 + TypeScript
-- ⚡ Vite (blazing fast builds)
-- 🎨 TailwindCSS (modern styling)
-- 📊 Recharts (interactive charts)
-- 🎬 Framer Motion (smooth animations)
-
-### **Backend & AI** - 70% of Work
-- 🐍 Python 3.11+ with FastAPI
-- 🔥 PyTorch 2.5 (deep learning)
-- 🤖 YOLOv11 (object detection - JUST RELEASED!)
-- 💪 MediaPipe (pose estimation)
-- 🧠 Vision Transformers (action classification)
-
----
-
-## 📁 Project Structure
-
-```
-Basketball-AI-System/
-│
-├── frontend/                      # React Dashboard
-│   ├── src/
-│   │   ├── components/           # UI Components
-│   │   │   ├── VideoUpload.tsx   # Drag & drop upload
-│   │   │   ├── ActionResult.tsx  # Show classification
-│   │   │   ├── MetricsDisplay.tsx # Performance cards
-│   │   │   ├── RadarChart.tsx    # Visual metrics
-│   │   │   ├── ProgressChart.tsx # Trend analysis
-│   │   │   └── RecommendationCard.tsx # AI advice
-│   │   │
-│   │   ├── pages/
-│   │   │   └── Dashboard.tsx     # Main dashboard
-│   │   │
-│   │   ├── services/
-│   │   │   └── api.ts            # API integration
-│   │   │
-│   │   └── types/
-│   │       └── index.ts          # TypeScript types
-│   │
-│   ├── package.json
-│   └── vite.config.ts
-│
-├── backend/                       # FastAPI Server
-│   ├── app/
-│   │   ├── main.py               # FastAPI application
-│   │   │
-│   │   ├── models/               # AI Models (70% of work!)
-│   │   │   ├── pose_extractor.py      # MediaPipe pose
-│   │   │   ├── yolo_detector.py       # YOLOv11
-│   │   │   ├── action_classifier.py   # Vision Transformer
-│   │   │   └── metrics_engine.py      # Performance calc
-│   │   │
-│   │   ├── services/
-│   │   │   └── video_processor.py # Video processing
-│   │   │
-│   │   └── core/
-│   │       ├── config.py         # Configuration
-│   │       └── schemas.py        # Data models
-│   │
-│   ├── requirements.txt          # Python dependencies
-│   └── venv/                     # Virtual environment
-│
-├── 2_pose_extraction/            # Pose extraction tools
-│   ├── extract_keypoints.py
-│   └── extract_keypoints_v2.py
-│
-├── training/                     # Model training scripts
-│   └── train_videomae.py
-│
-├── dataset/                      # Your training data
-│   └── raw_videos/
-│       ├── shooting/             # 140+ videos
-│       ├── dribbling/            # 140+ videos
-│       ├── passing/              # 140+ videos
-│       ├── defense/              # 140+ videos
-│       └── idle/                 # 140+ videos
-│
-└── README.md                     # This file
+┌─────────────────────────────────────────────────────────┐
+│                   FRONTEND (React)                       │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│  │  Baseline    │  │   Shooting   │  │  Consistency │  │
+│  │  Setup       │  │   Analysis   │  │   Dashboard  │  │
+│  └──────────────┘  └──────────────┘  └──────────────┘  │
+└────────────────────────┬────────────────────────────────┘
+                         │ REST API
+                         ▼
+┌─────────────────────────────────────────────────────────┐
+│                BACKEND (FastAPI)                         │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│  │   Baseline   │  │   Feature    │  │    Shot      │  │
+│  │   Capture    │  │  Extractor   │  │   Outcome    │  │
+│  └──────────────┘  └──────────────┘  └──────────────┘  │
+└────────────────────────┬────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────┐
+│              COMPUTER VISION PIPELINE                    │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│  │   YOLOv11    │  │  MediaPipe   │  │   Tracking   │  │
+│  │   Detection  │→ │     Pose     │→ │   System     │  │
+│  └──────────────┘  └──────────────┘  └──────────────┘  │
+└─────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🚀 Quick Start Guide
+## 🚀 Quick Start
 
-### Step 1: Setup Backend (15 minutes)
+### 1. Install Dependencies
 
 ```bash
-cd /home/student/Documents/Final-Year-Project/Basketball-AI-System/backend
+cd Basketball-AI-System
 
-# Create virtual environment
-python3.11 -m venv venv
-source venv/bin/activate
-
-# Install dependencies (takes 5-10 minutes)
+# Backend
+cd backend
 pip install -r requirements.txt
 
-# Run backend server
+# Frontend
+cd ../frontend
+npm install
+```
+
+### 2. Start Backend
+
+```bash
+cd backend
 python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-**✅ Backend running at:** http://localhost:8000  
-**📚 API docs at:** http://localhost:8000/docs
-
-### Step 2: Setup Frontend (10 minutes)
+### 3. Start Frontend
 
 ```bash
-cd /home/student/Documents/Final-Year-Project/Basketball-AI-System/frontend
-
-# Install dependencies (takes 2-3 minutes)
-npm install
-
-# Run development server
+cd frontend
 npm run dev
 ```
 
-**✅ Frontend running at:** http://localhost:5173
+### 4. Access System
 
-### Step 3: Test the System
-
-1. Open http://localhost:5173 in your browser
-2. Upload a basketball video (5-10 seconds)
-3. Click "Analyze"
-4. See results in <5 seconds!
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:8000
+- API Docs: http://localhost:8000/docs
 
 ---
 
-## 🎬 How It Works
+## 📁 Core Modules
 
-### Processing Pipeline
+### 1. shooting_features.py
+**Purpose:** Data structures for shooting analysis
 
-```
-1. VIDEO UPLOAD
-   User uploads video → Saved temporarily
-   
-2. OBJECT DETECTION (YOLOv11)
-   Detect: Players, Basketball, Court
-   
-3. POSE EXTRACTION (MediaPipe)
-   Extract: 33 keypoints per frame
-   - Head, shoulders, elbows, wrists
-   - Hips, knees, ankles
-   - 3D coordinates (x, y, z)
-   
-4. ACTION CLASSIFICATION (Vision Transformer)
-   Classify: Shooting, Dribbling, Passing, Defense, Idle
-   Confidence: 85%+ accuracy
-   
-5. METRICS CALCULATION
-   Compute:
-   - Jump height (from hip displacement)
-   - Movement speed (from position changes)
-   - Reaction time (time to first movement)
-   - Shooting form (elbow/release angles)
-   
-6. AI RECOMMENDATIONS
-   Generate personalized advice based on:
-   - Form analysis
-   - Performance comparison
-   - Common mistakes
-   
-7. RESULTS DISPLAY
-   Show in beautiful React dashboard
-```
+**Key Classes:**
+- `ShootingFeatures` - Complete feature set (setup, loading, release, follow-through, timing)
+- `PlayerBaseline` - Player-specific statistical baseline
+- `ShootingAnalysis` - Single shot analysis result
 
----
+### 2. shooting_feature_extractor.py
+**Purpose:** Extract biomechanical features from videos
 
-## 📊 Performance Metrics Explained
+**Capabilities:**
+- Automatic phase detection (setup → loading → release → follow-through)
+- Joint angle calculations (knee, elbow, shoulder, wrist)
+- Balance and stability scoring
+- Temporal feature extraction
 
-### Jump Height
-- **How:** Measure hip position change from lowest to highest point
-- **Target:** 0.70m+ (elite: 0.85m+)
+### 3. baseline_capture.py
+**Purpose:** Capture player-specific baseline
 
-### Movement Speed
-- **How:** Calculate distance traveled per second
-- **Target:** 6.0 m/s+ (elite: 7.0 m/s+)
+**Workflow:**
+1. Record 20-30 stationary jump shots
+2. Extract features from each shot
+3. Filter for made shots (need ≥10)
+4. Calculate mean ± std for all features
+5. Select 5 reference shots
+6. Save baseline as JSON
 
-### Shooting Form Score
-- **Factors:**
-  - Release angle (optimal: 40-50°)
-  - Elbow angle (optimal: 85-95°)
-  - Wrist snap timing
-  - Body alignment
-- **Target:** 0.85+ (out of 1.0)
+### 4. shot_outcome_detector.py
+**Purpose:** Detect made vs missed shots
 
-### Reaction Time
-- **How:** Time from video start to first significant movement
-- **Target:** <0.25s (elite: <0.20s)
+**Method:**
+- Rule-based trajectory analysis
+- Hoop position detection
+- Downward crossing detection
+- Confidence scoring
 
 ---
 
 ## 🎯 Dataset Requirements
 
-### CRITICAL: You Need 700+ Videos!
-
-**Why This Is 50% of Your Project Success:**
-- AI models are only as good as their training data
-- More diverse data = better accuracy
-- Quality matters more than quantity
-
 ### Recording Guidelines
 
-#### Quantity
-- **700+ total videos** (5-10 seconds each)
-- **140+ per category:**
-  - Shooting (140+)
-  - Dribbling (140+)
-  - Passing (140+)
-  - Defense (140+)
-  - Idle/Standing (140+)
+**Equipment:**
+- Phone camera (1080p, 30 FPS minimum)
+- Tripod (recommended)
+- Good lighting
 
-#### Quality
-- **Resolution:** 1080p or 720p (phone camera is fine!)
-- **FPS:** 30 FPS minimum
-- **Duration:** 5-10 seconds per clip
-- **Framing:** Full body visible, not too far
-- **Lighting:** Good lighting (avoid shadows)
-- **Background:** Clear view of player
+**Camera Setup:**
+- Position: Side view, 45° angle
+- Distance: 10-15 feet from player
+- Height: Chest to head level
+- Framing: Full body visible
 
-#### Diversity
-- **Multiple players:** Different heights, builds, skin tones
-- **Multiple locations:** Indoor, outdoor courts
-- **Multiple angles:** Front, side, 45-degree
-- **Multiple conditions:** Day, evening, different lighting
+**Video Specs:**
+- Duration: 5-10 seconds per clip
+- Orientation: Horizontal (landscape)
+- Format: MP4, MOV, or AVI
+- Quality: 1080p minimum
 
-#### How to Record
+### Dataset Structure
 
-```bash
-# 1. Create directory structure
-mkdir -p dataset/raw_videos/{shooting,dribbling,passing,defense,idle}
-
-# 2. Record videos with your phone
-#    - Use horizontal orientation
-#    - Keep camera steady
-#    - Record 5-10 second clips
-#    - Do one action per clip
-
-# 3. Transfer to folders
-#    - shooting_player1_001.mp4 → dataset/raw_videos/shooting/
-#    - dribbling_player1_001.mp4 → dataset/raw_videos/dribbling/
-#    - etc.
+```
+dataset/raw_videos/
+├── jump_shots/
+│   ├── mid_range/      (50 videos)
+│   ├── three_point/    (50 videos)
+│   └── pull_up/        (50 videos)
+├── layups/
+│   ├── right_hand/     (50 videos)
+│   └── left_hand/      (50 videos)
+└── free_throws/        (50 videos)
 ```
 
 ---
 
-## 🧠 AI Models Deep Dive
+## 🧪 Testing
 
-### 1. YOLOv11 (Object Detection)
-**What it does:** Detects players, basketball, and court in each frame
+### Test Feature Extraction
 
-**Why YOLOv11?**
-- Just released in 2024!
-- 10% faster than YOLOv8
-- 5% more accurate
-- Better small object detection (perfect for basketball!)
-
-### 2. MediaPipe Pose (Pose Estimation)
-**What it does:** Tracks 33 body keypoints
-
-**Output:**
 ```python
-{
-  "nose": {"x": 0.5, "y": 0.3, "z": 0.1, "visibility": 0.98},
-  "left_shoulder": {"x": 0.4, "y": 0.4, "z": 0.05, "visibility": 0.95},
-  "right_shoulder": {"x": 0.6, "y": 0.4, "z": 0.05, "visibility": 0.93},
-  # ... 30 more keypoints
-}
+from shooting_feature_extractor import ShootingFeatureExtractor
+
+extractor = ShootingFeatureExtractor()
+features = extractor.extract_shot_features("test_shot.mp4")
+
+print(f"Release elbow angle: {features.release.elbow_angle:.1f}°")
+print(f"Knee flexion: {features.loading.knee_flexion:.1f}°")
+print(f"Shot duration: {features.timing.total_shot_duration:.2f}s")
 ```
 
-### 3. Vision Transformer (Action Classification)
-**What it does:** Classifies the basketball action
+### Test Baseline Capture
 
-**Why Vision Transformer > LSTM?**
-- LSTM (old): 75-80% accuracy
-- ViT (new): 85-90% accuracy
-- Pre-trained on millions of videos
-- Attention mechanism captures long-range patterns
-
----
-
-## 🔧 Development Workflow
-
-### Daily Workflow
-
-```bash
-# Terminal 1: Backend
-cd backend
-source venv/bin/activate
-python -m uvicorn app.main:app --reload
-
-# Terminal 2: Frontend
-cd frontend
-npm run dev
-
-# Now develop and see changes live!
-```
-
-### Adding New Features
-
-#### Frontend (React)
-```bash
-# Add new component
-cd frontend/src/components
-# Create NewComponent.tsx
-# Import in Dashboard.tsx
-npm run dev  # See changes instantly
-```
-
-#### Backend (Python)
 ```python
-# Add new endpoint in app/main.py
-@app.post("/api/new-feature")
-async def new_feature():
-    return {"message": "New feature!"}
+from baseline_capture import BaselineCapture
 
-# Backend reloads automatically with --reload flag
+capture = BaselineCapture()
+
+baseline = capture.capture_baseline(
+    player_id="player_001",
+    shot_videos=["shot_001.mp4", "shot_002.mp4", ...],
+    shot_outcomes=["made", "made", "missed", ...]
+)
+
+print(f"Baseline created: {baseline.num_made_shots} made shots")
+```
+
+### Test Outcome Detection
+
+```python
+from shot_outcome_detector import ShotOutcomeDetector
+
+detector = ShotOutcomeDetector()
+
+outcome = detector.detect_outcome(
+    ball_trajectory=[(x1, y1), (x2, y2), ...],
+    hoop_position=(hoop_x, hoop_y)
+)
+
+print(f"Outcome: {outcome.outcome}")
+print(f"Confidence: {outcome.confidence:.2f}")
 ```
 
 ---
 
-## 🎓 Academic Requirements
+## 📊 Features Analyzed
 
-### Project Distribution
-- **70% AI/ML:**
-  - YOLOv11 object detection
-  - MediaPipe pose estimation
-  - Vision Transformer classification
-  - Performance metrics calculation
-  - AI recommendations generation
+### Setup Phase
+- Stance width
+- Shoulder alignment
+- Ball position
+- Head alignment
 
-- **30% Visualization:**
-  - React dashboard
-  - Interactive charts
-  - Real-time updates
-  - Modern UI/UX
+### Loading Phase
+- Knee flexion angle
+- Hip flexion
+- Elbow angle
+- Loading depth
+- Loading duration
 
-### SDG Alignment
-- **SDG 3:** Injury prevention through form analysis
-- **SDG 4:** Accessible education for youth athletes
-- **SDG 9:** Innovation in sports technology
+### Release Phase
+- Elbow angle at release
+- Wrist flexion
+- Release height
+- Shoulder angle
+- Release angle
+- Balance score
 
-### Innovation Points
-1. Combines multiple SOTA AI models
-2. Real-time video analysis
-3. Accessible to African youth
-4. Professional-grade analytics at zero cost
+### Follow-Through Phase
+- Wrist snap angle
+- Arm extension
+- Follow-through duration
+- Balance recovery
 
----
-
-## 🐛 Troubleshooting
-
-### Backend Won't Start
-```bash
-# Check Python version
-python3.11 --version  # Should be 3.11+
-
-# Recreate venv
-rm -rf venv
-python3.11 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
-
-### Frontend Won't Start
-```bash
-# Clear node_modules
-rm -rf node_modules package-lock.json
-npm install
-
-# Or use npm cache clean
-npm cache clean --force
-npm install
-```
-
-### GPU Not Detected
-```bash
-# Check CUDA
-nvidia-smi  # Should show GPU
-
-# Reinstall PyTorch with CUDA
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
-```
-
-### Video Upload Fails
-- Check file size (max 100MB)
-- Check format (mp4, avi, mov only)
-- Check backend is running
-- Check CORS settings
+### Timing
+- Total shot duration
+- Loading to release time
+- Rhythm consistency
 
 ---
 
-## 📈 Next Steps
+## 🗓️ Development Timeline
 
-### Phase 1: Setup (Today - 1 hour)
-- [x] Backend setup
-- [x] Frontend setup  
-- [ ] Test system works
+### Month 1: Core Development (Current)
+- ✅ Week 1: Core modules complete
+- ⏳ Week 2: Integration & testing
+- ⏳ Week 3: API endpoints
+- ⏳ Week 4: Frontend pages
 
-### Phase 2: Dataset (Week 1-2)
-- [ ] Record 700+ videos
-- [ ] Organize by category
-- [ ] Verify quality
+### Month 2: Dataset & Validation
+- Week 5-6: Record 300 videos
+- Week 7: Capture baselines
+- Week 8: Testing & refinement
 
-### Phase 3: Training (Week 3)
-- [ ] Extract poses from videos
-- [ ] Train action classifier
-- [ ] Evaluate model accuracy
+### Month 3: Finalization
+- Week 9-10: Frontend polish
+- Week 11: User testing
+- Week 12: Demo & delivery
 
-### Phase 4: Integration (Week 4)
-- [ ] Integrate models into backend
-- [ ] Test end-to-end
-- [ ] Polish frontend
+---
 
-### Phase 5: Documentation (Week 5)
-- [ ] Write final report
-- [ ] Create demo video
-- [ ] Prepare presentation
+## 📚 Documentation
+
+- [Implementation Plan](/.gemini/antigravity/brain/*/shooting_analysis_implementation_plan.md)
+- [Dataset Requirements](/.gemini/antigravity/brain/*/simplified_dataset_requirements.md)
+- [Implementation Walkthrough](/.gemini/antigravity/brain/*/implementation_walkthrough.md)
+
+---
+
+## 🎓 Academic Contributions
+
+### Novel Aspects
+
+1. **Player-Specific Baseline Approach**
+   - Personalized to each player's effective form
+   - Not comparing to generic "ideal"
+   - More actionable feedback
+
+2. **Explainable Shot Outcome Detection**
+   - Rule-based (not black-box ML)
+   - Geometric trajectory analysis
+   - Transparent decision-making
+
+3. **Phase-Based Biomechanical Analysis**
+   - Automatic phase detection
+   - Phase-specific feature extraction
+   - Comprehensive shooting motion analysis
+
+---
+
+## 🤝 Contributing
+
+This is a final year computer science project focused on AI-based basketball skill improvement.
+
+**Student:** Okidi Norbert  
+**Institution:** Uganda Christian University (UCU)  
+**Timeline:** 3 months (January - March 2026)
 
 ---
 
 ## 📞 Support
 
-**Need Help?**
-- Check [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
-- Open an issue on GitHub
-- Email: oknorbert6@gmail.com
+For questions or issues:
+1. Check documentation in `/.gemini/antigravity/brain/*/`
+2. Review implementation walkthrough
+3. Test with sample videos first
 
 ---
 
-## 🎉 Success Criteria
-
-Your project is successful when:
-- ✅ System runs without errors
-- ✅ Can analyze videos in <5 seconds
-- ✅ Action classification ≥85% accurate
-- ✅ Dashboard is responsive and beautiful
-- ✅ 700+ videos in dataset
-- ✅ Complete documentation
-
----
-
-**You're building something AMAZING! Let's make African basketball players world-class! 🏀🚀**
-
----
-
-**Author:** Okidi Norbert  
-**Institution:** Uganda Christian University  
-**Year:** 2025  
-**Project:** Final Year Project  
-**Department:** Computer Science
-
+**Last Updated:** January 9, 2026  
+**Status:** Core modules complete, ready for integration and testing
