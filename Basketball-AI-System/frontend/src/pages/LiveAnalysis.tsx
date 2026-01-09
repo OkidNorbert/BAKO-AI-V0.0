@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Camera, Video, Activity, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import BakoLogo from '../components/BakoLogo';
 import { getWebSocketUrl } from '../utils/websocket';
 
 interface AnalysisResult {
@@ -81,13 +83,26 @@ const LiveAnalysis: React.FC = () => {
         };
 
         ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            setResult(data);
+            try {
+                const data = JSON.parse(event.data);
+                setResult(data);
+                setError(null); // Clear any previous errors
+            } catch (err) {
+                console.error('Error parsing WebSocket message:', err);
+                setError("Failed to parse analysis result");
+            }
         };
 
         ws.onerror = (err) => {
             console.error('WebSocket error:', err);
-            setError("Live analysis unavailable. Please try uploading a video instead.");
+            setError("Live analysis unavailable. Please ensure the backend is running and try again.");
+        };
+        
+        ws.onclose = () => {
+            console.log('WebSocket closed');
+            if (isStreaming) {
+                setError("Connection lost. Please restart the camera.");
+            }
         };
 
         wsRef.current = ws;
@@ -99,25 +114,38 @@ const LiveAnalysis: React.FC = () => {
         const ctx = canvasRef.current.getContext('2d');
         let lastTime = Date.now();
         let frameCount = 0;
+        let lastSentTime = 0;
+        const SEND_INTERVAL = 100; // Send frame every 100ms (10 fps to backend)
 
         const sendFrame = () => {
             if (!isStreaming || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
 
             if (videoRef.current && ctx && canvasRef.current) {
+                const now = Date.now();
+                
                 // Draw video frame to canvas
                 canvasRef.current.width = videoRef.current.videoWidth;
                 canvasRef.current.height = videoRef.current.videoHeight;
                 ctx.drawImage(videoRef.current, 0, 0);
 
-                // Convert to base64
-                const dataUrl = canvasRef.current.toDataURL('image/jpeg', 0.7);
+                // Only send frame if enough time has passed (throttle to 10 fps)
+                if (now - lastSentTime >= SEND_INTERVAL) {
+                    try {
+                        // Convert to base64
+                        const dataUrl = canvasRef.current.toDataURL('image/jpeg', 0.7);
 
-                // Send to server
-                wsRef.current.send(dataUrl);
+                        // Send to server
+                        if (wsRef.current.readyState === WebSocket.OPEN) {
+                            wsRef.current.send(dataUrl);
+                            lastSentTime = now;
+                        }
+                    } catch (err) {
+                        console.error('Error sending frame:', err);
+                    }
+                }
 
-                // Calculate FPS
+                // Calculate FPS for display
                 frameCount++;
-                const now = Date.now();
                 if (now - lastTime >= 1000) {
                     setFps(frameCount);
                     frameCount = 0;
@@ -135,18 +163,18 @@ const LiveAnalysis: React.FC = () => {
         <div className="min-h-screen bg-gray-900 text-white p-6">
             <header className="mb-8 flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                    <button
-                        onClick={() => window.location.href = '/'}
+                    <Link
+                        to="/"
                         className="p-2 hover:bg-gray-800 rounded-full transition-colors"
                     >
                         <ArrowLeft className="w-6 h-6" />
-                    </button>
+                    </Link>
                     <div>
-                        <h1 className="text-3xl font-bold flex items-center gap-3">
-                            <Activity className="w-8 h-8 text-blue-500" />
-                            Live Analysis
-                        </h1>
-                        <p className="text-gray-400 mt-2">Real-time basketball performance tracking</p>
+                        <div className="flex items-center gap-3 mb-2">
+                            <BakoLogo size="md" showText={true} />
+                            <span className="text-2xl font-bold text-white">Live Analysis</span>
+                        </div>
+                        <p className="text-gray-400">Real-time skill tracking and performance analysis</p>
                     </div>
                 </div>
             </header>
@@ -170,7 +198,7 @@ const LiveAnalysis: React.FC = () => {
 
                         <video
                             ref={videoRef}
-                            className={`w - full h - full object - cover ${result?.annotated_frame ? 'hidden' : ''} `}
+                            className={`w-full h-full object-cover ${result?.annotated_frame ? 'hidden' : ''}`}
                             playsInline
                             muted
                         />
@@ -178,7 +206,7 @@ const LiveAnalysis: React.FC = () => {
                         {/* Annotated Frame Overlay */}
                         {result?.annotated_frame && (
                             <img
-                                src={`data: image / jpeg; base64, ${result.annotated_frame} `}
+                                src={`data:image/jpeg;base64,${result.annotated_frame}`}
                                 className="w-full h-full object-cover absolute inset-0"
                                 alt="Analysis Overlay"
                             />

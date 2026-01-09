@@ -9,6 +9,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 30000, // 30 second timeout for all requests
 });
 
 /**
@@ -27,10 +28,12 @@ export async function analyzeVideo(
 
   try {
     // Upload progress callback
+    // Video analysis can take several minutes, so use a much longer timeout (10 minutes)
     const response = await api.post<VideoAnalysisResult>('/api/analyze', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+      timeout: 600000, // 10 minutes (600,000ms) for video analysis
       onUploadProgress: (progressEvent) => {
         if (progressEvent.total) {
           const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
@@ -45,6 +48,15 @@ export async function analyzeVideo(
 
     return response.data;
   } catch (error: any) {
+    // Handle timeout errors specifically
+    if (error?.code === 'ECONNABORTED' || error?.message?.includes('timeout')) {
+      const timeoutError = new Error('Video analysis is taking longer than expected. This may happen with longer videos. Please try again or use a shorter video.');
+      (timeoutError as any).code = 'TIMEOUT';
+      (timeoutError as any).originalError = error;
+      console.error('Video analysis timeout:', timeoutError);
+      throw timeoutError;
+    }
+    
     // Handle network errors
     if (error?.code === 'ERR_NETWORK' || error?.code === 'ERR_CONNECTION_REFUSED') {
       const helpfulError = new Error('Backend server is not running. Please start the backend server first.');
@@ -110,11 +122,18 @@ export async function getHistory(limit: number = 10): Promise<HistoricalData[]> 
   try {
     const response = await api.get<HistoricalData[]>('/api/history', {
       params: { limit },
+      timeout: 15000, // 15 second timeout for history endpoint
     });
     return response.data;
   } catch (error: any) {
     // If endpoint returns 501 (not implemented) or empty array, return empty array
     if (error?.response?.status === 501 || error?.response?.status === 404) {
+      console.warn('History endpoint not available, returning empty array');
+      return [];
+    }
+    // Handle timeout errors
+    if (error?.code === 'ECONNABORTED' || error?.message?.includes('timeout')) {
+      console.warn('History request timed out, returning empty array');
       return [];
     }
     // If connection refused, backend might not be running - return empty array gracefully
@@ -123,7 +142,8 @@ export async function getHistory(limit: number = 10): Promise<HistoricalData[]> 
       return [];
     }
     console.error('Get history error:', error);
-    throw error;
+    // Return empty array on any error to prevent UI from hanging
+    return [];
   }
 }
 

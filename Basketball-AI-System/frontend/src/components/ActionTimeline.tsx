@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Clock, TrendingUp, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Clock, AlertCircle, CheckCircle2 } from 'lucide-react';
 import type { TimelineSegment } from '../types';
 
 interface ActionTimelineProps {

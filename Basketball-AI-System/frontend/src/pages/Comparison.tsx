@@ -17,17 +17,19 @@ export default function Comparison() {
 
     const loadHistory = async () => {
         try {
+            setIsLoading(true);
             const data = await getHistory();
-            setHistory(data);
+            setHistory(data || []);
             // Auto-select first two if available
-            if (data.length >= 2) {
+            if (data && data.length >= 2) {
                 setSelectedId1(0);
                 setSelectedId2(1);
-            } else if (data.length === 1) {
+            } else if (data && data.length === 1) {
                 setSelectedId1(0);
             }
         } catch (err) {
             console.error('Failed to load history:', err);
+            setHistory([]); // Set empty array on error
         } finally {
             setIsLoading(false);
         }

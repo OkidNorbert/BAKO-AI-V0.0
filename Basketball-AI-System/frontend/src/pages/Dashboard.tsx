@@ -156,7 +156,9 @@ export default function Dashboard() {
       // Handle different error types
       let errorMessage = 'Failed to analyze video. Please try again.';
 
-      if (err?.code === 'NO_PLAYER_DETECTED') {
+      if (err?.code === 'TIMEOUT' || err?.code === 'ECONNABORTED' || err?.message?.includes('timeout')) {
+        errorMessage = 'Video analysis is taking longer than expected. This may happen with longer videos. Please try again or use a shorter video (under 30 seconds recommended).';
+      } else if (err?.code === 'NO_PLAYER_DETECTED') {
         // Show structured error with suggestions
         errorMessage = err.originalMessage || err.message;
         if (err.suggestions && Array.isArray(err.suggestions)) {
@@ -260,7 +262,7 @@ export default function Dashboard() {
             <div>
               <BakoLogo size="lg" showText={true} />
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 ml-1">
-                Upload a video to analyze your basketball performance
+                Upload a video to track your skills and improve your game
               </p>
             </div>
             <div className="flex gap-4 items-center">
@@ -689,8 +691,9 @@ export default function Dashboard() {
                 <BakoLogo size="md" showText={true} />
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 max-w-md">
-                AI-powered basketball performance analysis. Get instant feedback on your shooting form, 
-                movement patterns, and skill development with advanced computer vision and machine learning.
+                A comprehensive skill-based system for basketball development. Track your progress, 
+                identify areas for improvement, and master fundamental skills through data-driven analysis 
+                and personalized coaching recommendations.
               </p>
               <div className="flex gap-4">
                 <a 

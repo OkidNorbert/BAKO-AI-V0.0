@@ -31,7 +31,11 @@ from app.models.action_segmenter import ActionSegmenter
 from app.models.pose_normalizer import PoseNormalizer, PoseSmoother
 from app.models.biomechanics_engine import BiomechanicsEngine
 from app.models.rule_based_evaluator import RuleBasedEvaluator
-from app.core.schemas import VideoAnalysisResult, ActionClassification, PerformanceMetrics, ActionProbabilities, Recommendation, ShotOutcome, TimelineSegment, FormQualityAssessment, FormQualityIssue
+from app.core.schemas import (
+    VideoAnalysisResult, ActionClassification, PerformanceMetrics, ActionProbabilities, 
+    Recommendation, ShotOutcome, TimelineSegment, FormQualityAssessment, FormQualityIssue,
+    IndividualActionAnalysis
+)
 
 logger = logging.getLogger(__name__)
 
@@ -61,13 +65,26 @@ class VideoProcessor:
             self.mp_drawing_styles = mp.solutions.drawing_styles
             
             # Try to load trained model first (if available)
+            # Check multiple possible locations for trained models
             project_root = Path(__file__).parent.parent.parent.parent
-            trained_model_path = project_root / "models" / "best_model"
-            if trained_model_path.exists():
-                logger.info(f"📂 Found trained model at: {trained_model_path}")
+            trained_model_paths = [
+                project_root / "models" / "best_model",
+                project_root / "models" / "videomae_model_20251124_210835",  # Most recent
+                project_root / "models" / "videomae_model_20251124_203327",
+                project_root / "models" / "videomae_model_20251124_192838",
+            ]
+            
+            trained_model_path = None
+            for path in trained_model_paths:
+                if path.exists() and (path / "model.safetensors").exists():
+                    trained_model_path = path
+                    logger.info(f"📂 Found trained model at: {trained_model_path}")
+                    break
+            
+            if trained_model_path:
                 self.action_classifier = ActionClassifier(model_path=str(trained_model_path))
             else:
-                logger.info("📂 No trained model found, using pre-trained VideoMAE")
+                logger.warning("⚠️  No trained model found, using pre-trained VideoMAE (may have poor accuracy)")
                 self.action_classifier = ActionClassifier()
             
             self.metrics_engine = PerformanceMetricsEngine()
@@ -748,6 +765,10 @@ class VideoProcessor:
                     action_label = self._get_action_label(action_probs)
                     confidence = float(max(action_probs.values())) if action_probs else 0.0
                     
+                    # Log action detection for debugging (especially free throws)
+                    if "free_throw" in action_label.lower() or "free_throw" in str(action_probs).lower():
+                        logger.info(f"🎯 Free throw detected: label={action_label}, confidence={confidence:.2f}, probs={action_probs}")
+                    
                     # Enhance action classification with court-based shot zones if available
                     # If model detected a generic "shot", refine it using court position
                     if "shot" in action_label.lower() and basketball_detections and hoop_info and court_info:
@@ -1148,99 +1169,169 @@ class VideoProcessor:
         if not timeline or len(timeline) == 0:
             raise ValueError("Timeline is empty. Cannot proceed with analysis.")
         
-        # Aggregate results
-        # Find most frequent action
-        actions = [t.action.label for t in timeline]
-        if not actions:
-            raise ValueError("No actions detected in timeline. Cannot determine main action.")
-        main_action = max(set(actions), key=actions.count)
+        # SKILL-BASED SYSTEM: Analyze each detected action individually
+        # Group timeline segments by action type
+        action_groups = {}
+        for segment in timeline:
+            action_label = segment.action.label
+            # Skip "idle" actions - they're not skills to analyze
+            if action_label.lower() == "idle":
+                continue
+            if action_label not in action_groups:
+                action_groups[action_label] = []
+            action_groups[action_label].append(segment)
         
-        # Average metrics
-        avg_metrics = self._aggregate_metrics(timeline)
+        # Log detected actions
+        logger.info(f"📊 Detected {len(action_groups)} unique action(s): {list(action_groups.keys())}")
+        for action, segments in action_groups.items():
+            logger.info(f"   - {action}: {len(segments)} segment(s), total duration: {sum(s.end_time - s.start_time for s in segments):.2f}s")
         
-        # Average confidence (safe division - already checked timeline is not empty)
-        avg_confidence = sum(t.action.confidence for t in timeline) / len(timeline)
-        
-        # Aggregate probabilities (average across all segments)
-        all_probs = {}
-        for prob_key in ["free_throw", "two_point_shot", "three_point_shot", "layup", "dunk",
-                         "dribbling", "passing", "defense", "running", "walking",
-                         "blocking", "picking", "ball_in_hand", "idle"]:
-            all_probs[prob_key] = sum(getattr(t.action.probabilities, prob_key) for t in timeline) / len(timeline)
+        if not action_groups:
+            raise ValueError("No valid actions detected in timeline (only 'idle' detected). Cannot analyze skills.")
         
         # Coalesce timeline segments (enhanced version with noise filtering)
-        # This merges adjacent same-action segments and filters out very short noise segments
         coalesced_timeline = self._coalesce_timeline_enhanced(timeline, min_duration=0.3)
         
-        # Detect shot outcome if applicable (using court and hoop detection)
-        shot_outcome = None
-        if "shot" in main_action or "free_throw" in main_action or "layup" in main_action or "dunk" in main_action:
-            shot_outcome = self._detect_shot_outcome_with_court(ball_trajectory, hoop_info, court_info)
+        # Analyze each action individually
+        individual_analyses = []
+        overall_metrics_list = []
+        overall_recommendations_list = []
         
-        # Generate recommendations based on form quality issues and action-specific analysis
-        # Convert PerformanceMetrics Pydantic object to dict for AI coach
-        metrics_dict = avg_metrics.model_dump() if hasattr(avg_metrics, 'model_dump') else avg_metrics.dict()
-        shot_outcome_dict = None
-        if shot_outcome:
-            shot_outcome_dict = shot_outcome.model_dump() if hasattr(shot_outcome, 'model_dump') else shot_outcome.dict()
+        for action_type, segments in action_groups.items():
+            logger.info(f"🔍 Analyzing action: {action_type} ({len(segments)} segments)")
         
-        # Collect form quality issues from timeline segments
-        form_quality_issues = []
-        form_strengths = []
-        for segment in coalesced_timeline if coalesced_timeline else []:
-            if segment.form_quality:
-                form_quality_issues.extend(segment.form_quality.issues)
-                form_strengths.extend(segment.form_quality.strengths)
+            # Aggregate metrics for this action
+            action_metrics = self._aggregate_metrics(segments)
+            overall_metrics_list.append(action_metrics)
+            
+            # Calculate action statistics
+            action_confidence = sum(s.action.confidence for s in segments) / len(segments)
+            total_duration = sum(s.end_time - s.start_time for s in segments)
         
-        # Generate action-specific recommendations based on form quality
-        # Use fallback rule-based recommendations if AI Coach is not available
-        if self.ai_coach is None:
-            logger.warning("⚠️  AI Coach not available, using fallback rule-based recommendations")
-            # Create a temporary fallback AICoach instance for rule-based recommendations
+            # Collect form quality issues for this action
+            action_form_issues = []
+            action_form_strengths = []
+            action_form_scores = []
+            for segment in segments:
+                if segment.form_quality:
+                    action_form_issues.extend(segment.form_quality.issues)
+                    action_form_strengths.extend(segment.form_quality.strengths)
+                    action_form_scores.append(segment.form_quality.overall_score)
+            
+            # Aggregate form quality assessment
+            avg_form_score = sum(action_form_scores) / len(action_form_scores) if action_form_scores else action_metrics.form_score
+            form_quality_assessment = None
+            if action_form_issues or action_form_strengths:
+                # Determine quality rating
+                if avg_form_score >= 0.85:
+                    quality_rating = "excellent"
+                elif avg_form_score >= 0.70:
+                    quality_rating = "good"
+                elif avg_form_score >= 0.50:
+                    quality_rating = "needs_improvement"
+                else:
+                    quality_rating = "poor"
+                
+                form_quality_assessment = FormQualityAssessment(
+                    overall_score=avg_form_score,
+                    quality_rating=quality_rating,
+                    issues=action_form_issues,
+                    strengths=list(set(action_form_strengths))  # Remove duplicates
+                )
+            
+            # Skill validation: Determine if action meets proper form requirements
+            is_valid_skill, validation_issues, skill_level = self._validate_skill_execution(
+                action_type, action_metrics, form_quality_assessment
+            )
+            
+            # Detect shot outcome if applicable
+            action_shot_outcome = None
+            if "shot" in action_type.lower() or "free_throw" in action_type.lower() or "layup" in action_type.lower() or "dunk" in action_type.lower():
+                # Get segments for shot outcome detection
+                shooting_segments = [s for s in segments if s.start_time <= (segments[0].start_time + total_duration / 2)]
+                if shooting_segments:
+                    action_shot_outcome = self._detect_shot_outcome_with_court(ball_trajectory, hoop_info, court_info)
+            
+            # Generate action-specific recommendations
+            metrics_dict = action_metrics.model_dump() if hasattr(action_metrics, 'model_dump') else action_metrics.dict()
+            shot_outcome_dict = None
+            if action_shot_outcome:
+                shot_outcome_dict = action_shot_outcome.model_dump() if hasattr(action_shot_outcome, 'model_dump') else action_shot_outcome.dict()
+            
+            # Convert form issues to dicts
+            form_issues_dicts = []
+            for issue in action_form_issues:
+                if hasattr(issue, 'model_dump'):
+                    form_issues_dicts.append(issue.model_dump())
+                elif hasattr(issue, 'dict'):
+                    form_issues_dicts.append(issue.dict())
+                elif isinstance(issue, dict):
+                    form_issues_dicts.append(issue)
+            
+            # Generate recommendations for this action
+            action_recommendations = []
             try:
-                from app.models.ai_coach import AICoach
-                fallback_coach = AICoach(model_type="fallback")
-                recommendations_dicts = fallback_coach.generate_skill_improvement_recommendations(
-                    action_type=main_action,
+                if self.ai_coach:
+                    rec_dicts = self.ai_coach.generate_skill_improvement_recommendations(
+                        action_type=action_type,
                     metrics=metrics_dict,
                     shot_outcome=shot_outcome_dict,
-                    form_quality_issues=form_quality_issues,
-                    form_strengths=form_strengths,
-                    timeline=coalesced_timeline if coalesced_timeline else []
-                )
-            except Exception as e:
-                logger.error(f"❌ Error generating fallback recommendations: {e}")
-                recommendations_dicts = []
-        else:
-            try:
-                recommendations_dicts = self.ai_coach.generate_skill_improvement_recommendations(
-                    action_type=main_action,
-                    metrics=metrics_dict,
-                    shot_outcome=shot_outcome_dict,
-                    form_quality_issues=form_quality_issues,
-                    form_strengths=form_strengths,
-                    timeline=coalesced_timeline if coalesced_timeline else []
-                )
-            except Exception as e:
-                logger.error(f"❌ Error generating recommendations: {e}")
-                # Try fallback if main AI coach fails
-                try:
+                        form_quality_issues=form_issues_dicts,
+                        form_strengths=list(set(action_form_strengths)),
+                        timeline=segments
+                    )
+                else:
                     from app.models.ai_coach import AICoach
                     fallback_coach = AICoach(model_type="fallback")
-                    recommendations_dicts = fallback_coach.generate_skill_improvement_recommendations(
-                        action_type=main_action,
+                    rec_dicts = fallback_coach.generate_skill_improvement_recommendations(
+                        action_type=action_type,
                         metrics=metrics_dict,
                         shot_outcome=shot_outcome_dict,
-                        form_quality_issues=form_quality_issues,
-                        form_strengths=form_strengths,
-                        timeline=coalesced_timeline if coalesced_timeline else []
+                        form_quality_issues=form_issues_dicts,
+                        form_strengths=list(set(action_form_strengths)),
+                        timeline=segments
                     )
-                except Exception as fallback_error:
-                    logger.error(f"❌ Fallback recommendations also failed: {fallback_error}")
-                    recommendations_dicts = []
+                action_recommendations = [Recommendation(**rec) for rec in rec_dicts]
+                overall_recommendations_list.extend(action_recommendations)
+            except Exception as e:
+                logger.error(f"❌ Error generating recommendations for {action_type}: {e}")
+            
+            # Create individual action analysis
+            individual_analysis = IndividualActionAnalysis(
+                action_type=action_type,
+                action_label=action_type.replace("_", " ").title(),
+                confidence=float(action_confidence),
+                occurrence_count=len(segments),
+                total_duration=total_duration,
+                metrics=action_metrics,
+                form_quality=form_quality_assessment,
+                skill_level=skill_level,
+                is_valid_skill=is_valid_skill,
+                validation_issues=validation_issues,
+                recommendations=action_recommendations,
+                shot_outcome=action_shot_outcome,
+                segments=segments
+            )
+            
+            individual_analyses.append(individual_analysis)
+            logger.info(f"✅ {action_type}: skill_level={skill_level}, is_valid={is_valid_skill}, form_score={avg_form_score:.2f}, recommendations={len(action_recommendations)}")
         
-        # Convert dicts to Recommendation Pydantic objects
-        recommendations = [Recommendation(**rec) for rec in recommendations_dicts]
+        # Calculate overall metrics (average across all actions)
+        if overall_metrics_list:
+            overall_metrics = self._average_metrics(overall_metrics_list)
+        else:
+            overall_metrics = None
+        
+        # Determine primary action (most frequent or longest duration)
+        primary_action = None
+        if individual_analyses:
+            # Sort by duration, then by occurrence count
+            primary_analysis = max(individual_analyses, key=lambda a: (a.total_duration, a.occurrence_count))
+            primary_action = ActionClassification(
+                label=primary_analysis.action_type,
+                confidence=primary_analysis.confidence,
+                probabilities=ActionProbabilities(**{k: 0.0 for k in ["free_throw", "two_point_shot", "three_point_shot", "layup", "dunk", "dribbling", "passing", "defense", "running", "walking", "blocking", "picking", "ball_in_hand", "idle"]})
+            )
 
         # Upload annotated video to Supabase if available, otherwise serve locally
         annotated_video_url = None
@@ -1279,27 +1370,44 @@ class VideoProcessor:
                     logger.info(f"📹 Serving annotated video locally after upload error: {output_filename}")
                     annotated_video_url = f"/api/videos/{output_filename}"
 
-        # Create main action classification
-        main_action_classification = ActionClassification(
-            label=main_action,
-            confidence=float(avg_confidence),
-            probabilities=ActionProbabilities(**all_probs)
+        # Get video duration
+        cap = cv2.VideoCapture(video_path)
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        video_duration = frame_count / fps if fps > 0 else 0.0
+        cap.release()
+        
+        # Create result with individual action analyses
+        result = VideoAnalysisResult(
+            video_id=video_id or str(uuid.uuid4()),
+            duration=video_duration,
+            actions=individual_analyses,
+            primary_action=primary_action,
+            overall_metrics=overall_metrics,
+            overall_recommendations=overall_recommendations_list[:10],  # Limit to top 10
+            timeline=coalesced_timeline if coalesced_timeline else None,
+            annotated_video_url=annotated_video_url,
+            # Legacy fields for backward compatibility
+            action=primary_action,
+            metrics=overall_metrics,
+            recommendations=overall_recommendations_list[:10],
+            shot_outcome=individual_analyses[0].shot_outcome if individual_analyses and individual_analyses[0].shot_outcome else None
         )
         
-        return VideoAnalysisResult(
-            video_id=video_id or str(uuid.uuid4()),
-            action=main_action_classification,
-            metrics=avg_metrics,
-            recommendations=recommendations,
-            shot_outcome=shot_outcome,
-            timeline=coalesced_timeline if coalesced_timeline else None,
-            annotated_video_url=annotated_video_url
-        )
+        logger.info(f"✅ Analysis complete: {len(individual_analyses)} action(s) analyzed, {len(coalesced_timeline) if coalesced_timeline else 0} timeline segments")
+        return result
 
     def _classify_action(self, frames: List[np.ndarray]) -> Dict[str, float]:
         """Classify action for a window of frames"""
         # Classifier expects list of RGB frames
-        _, _, probabilities = self.action_classifier.classify(frames, return_probabilities=True)
+        # Use enabled actions and confidence thresholds
+        _, _, probabilities = self.action_classifier.classify(
+            frames, 
+            return_probabilities=True,
+            enabled_actions=settings.ENABLED_ACTIONS,
+            confidence_thresholds=settings.ACTION_CONFIDENCE_THRESHOLDS,
+            min_confidence=settings.MIN_ACTION_CONFIDENCE
+        )
         return self._map_probabilities(probabilities)
 
     def _get_action_label(self, probs: Dict[str, float]) -> str:
@@ -1711,6 +1819,91 @@ class VideoProcessor:
         
         return schema_probs
 
+    def _validate_skill_execution(
+        self, 
+        action_type: str, 
+        metrics: PerformanceMetrics, 
+        form_quality: Optional[FormQualityAssessment]
+    ) -> Tuple[bool, List[str], str]:
+        """
+        Validate if an action meets proper skill execution requirements
+        Returns: (is_valid, validation_issues, skill_level)
+        """
+        validation_issues = []
+        action_lower = action_type.lower()
+        
+        # Determine skill level based on form score and metrics
+        form_score = form_quality.overall_score if form_quality else metrics.form_score
+        
+        if form_score >= 0.85:
+            skill_level = "expert"
+        elif form_score >= 0.70:
+            skill_level = "advanced"
+        elif form_score >= 0.50:
+            skill_level = "intermediate"
+        else:
+            skill_level = "beginner"
+        
+        # Action-specific validation rules
+        if "free_throw" in action_lower:
+            # Free throws: Should not jump, should be stationary
+            if metrics.jump_height > 0.15:  # More than 15cm is incorrect
+                validation_issues.append(f"Jumping detected ({metrics.jump_height*100:.1f}cm). Free throws require staying grounded.")
+            if metrics.movement_speed > 0.5:  # More than 0.5 m/s is too much movement
+                validation_issues.append(f"Excessive movement ({metrics.movement_speed:.2f}m/s). Free throws require staying stationary.")
+            if form_score < 0.60:
+                validation_issues.append(f"Form score too low ({form_score:.2f}). Focus on proper shooting mechanics.")
+        elif "shot" in action_lower or "layup" in action_lower or "dunk" in action_lower:
+            # Shooting actions: Should have proper form
+            if metrics.form_score < 0.50:
+                validation_issues.append(f"Form score too low ({form_score:.2f}). Practice shooting fundamentals.")
+            if metrics.pose_stability < 0.60:
+                validation_issues.append(f"Poor balance/stability ({metrics.pose_stability:.2f}). Work on core strength and balance.")
+        elif "dribbl" in action_lower:
+            # Dribbling: Should have good ball control
+            if metrics.pose_stability < 0.65:
+                validation_issues.append(f"Poor stability ({metrics.pose_stability:.2f}). Improve balance for better ball control.")
+            if metrics.form_score < 0.55:
+                validation_issues.append(f"Form score too low ({form_score:.2f}). Focus on dribbling fundamentals.")
+        
+        # General validation: Check for major form issues
+        if form_quality:
+            major_issues = [issue for issue in form_quality.issues if issue.severity == "major"]
+            if major_issues:
+                validation_issues.extend([f"Major form issue: {issue.description}" for issue in major_issues[:3]])
+        
+        # Determine if skill is valid (no critical issues)
+        is_valid = len(validation_issues) == 0 or (form_score >= 0.60 and len([i for i in validation_issues if "Major" in i]) == 0)
+        
+        return is_valid, validation_issues, skill_level
+    
+    def _average_metrics(self, metrics_list: List[PerformanceMetrics]) -> PerformanceMetrics:
+        """Average multiple PerformanceMetrics objects"""
+        if not metrics_list:
+            # Return default metrics
+            return PerformanceMetrics(
+                jump_height=0.0,
+                movement_speed=0.0,
+                form_score=0.5,
+                reaction_time=0.0,
+                pose_stability=0.5,
+                energy_efficiency=0.5
+            )
+        
+        # Average all numeric fields
+        n = len(metrics_list)
+        return PerformanceMetrics(
+            jump_height=sum(m.jump_height for m in metrics_list) / n,
+            movement_speed=sum(m.movement_speed for m in metrics_list) / n,
+            form_score=sum(m.form_score for m in metrics_list) / n,
+            reaction_time=sum(m.reaction_time for m in metrics_list) / n,
+            pose_stability=sum(m.pose_stability for m in metrics_list) / n,
+            energy_efficiency=sum(m.energy_efficiency for m in metrics_list) / n,
+            # Optional fields - average if present
+            elbow_angle=sum(m.elbow_angle for m in metrics_list if m.elbow_angle is not None) / max(1, sum(1 for m in metrics_list if m.elbow_angle is not None)) if any(m.elbow_angle is not None for m in metrics_list) else None,
+            release_angle=sum(m.release_angle for m in metrics_list if m.release_angle is not None) / max(1, sum(1 for m in metrics_list if m.release_angle is not None)) if any(m.release_angle is not None for m in metrics_list) else None,
+        )
+
     def _aggregate_metrics(self, segments: List[TimelineSegment]) -> PerformanceMetrics:
         """Average metrics across segments"""
         if not segments:
@@ -1731,14 +1924,26 @@ class VideoProcessor:
 
     async def process_sequence(self, frames: List[np.ndarray]) -> Optional[VideoAnalysisResult]:
         """
-        Process a sequence of frames (real-time)
+        Process a sequence of frames (real-time) for live analysis
+        Returns result with annotated frame for display
         """
         if not frames:
             return None
             
+        # Use the last frame for annotation (most recent)
+        last_frame = frames[-1].copy()
+        
+        # Estimate FPS for live analysis (assume ~10 fps based on send interval)
+        live_fps = 10.0
+        self.metrics_engine.fps = live_fps
+        self.biomechanics_engine.fps = live_fps
+        self.biomechanics_engine.dt = 1.0 / live_fps
+            
         # Extract keypoints for all frames
         all_keypoints = []
         valid_frames = []
+        last_detection = None
+        last_pose_landmarks = None
         
         for frame in frames:
             # Detect player
@@ -1749,29 +1954,94 @@ class VideoProcessor:
                 pose_result = self.pose_extractor.extract_keypoints(roi)
                 
                 if pose_result:
-                    keypoints_2d, _, _ = pose_result
+                    keypoints_2d, landmarks, _ = pose_result
+                    # Keypoints are normalized (0-1) relative to ROI
+                    # For metrics calculation, we can use them as-is since metrics engine
+                    # handles normalized coordinates, but we need to ensure proper scaling
                     all_keypoints.append(keypoints_2d)
                     valid_frames.append(cv2.cvtColor(roi, cv2.COLOR_BGR2RGB))
+                    
+                    # Store last detection and pose for annotation
+                    last_detection = {
+                        'bbox': bbox,
+                        'confidence': detections[0][4] if len(detections[0]) > 4 else 0.9,
+                        'class': 'player'
+                    }
+                    last_pose_landmarks = landmarks
         
         if len(valid_frames) < 8: # Minimum frames for valid analysis
             return None
             
-        # Classify action
+        # Classify action (only return enabled actions with sufficient confidence)
         action_label, confidence, probabilities = self.action_classifier.classify(
             valid_frames,
-            return_probabilities=True
+            return_probabilities=True,
+            enabled_actions=settings.ENABLED_ACTIONS,
+            confidence_thresholds=settings.ACTION_CONFIDENCE_THRESHOLDS,
+            min_confidence=settings.MIN_ACTION_CONFIDENCE
         )
         
-        # Compute metrics
-        metrics_dict = self.metrics_engine.compute_all_metrics(
-            all_keypoints,
-            action_label
-        )
+        # Log action detection for debugging (especially free throws)
+        logger.info(f"🎯 Live analysis - Detected action: {action_label} (confidence: {confidence:.3f})")
+        logger.info(f"📊 Action probabilities: {sorted(probabilities.items(), key=lambda x: x[1], reverse=True)[:3]}")
+        
+        # Special handling: If free_throw_shot has high probability but wasn't selected, log it
+        if "free_throw" in probabilities:
+            free_throw_prob = probabilities.get("free_throw_shot", probabilities.get("free_throw", 0.0))
+            if free_throw_prob > 0.3 and action_label != "free_throw" and action_label != "free_throw_shot":
+                logger.warning(f"⚠️  Free throw probability ({free_throw_prob:.3f}) is high but {action_label} was selected instead!")
+        
+        # Normalize action label (free_throw_shot -> free_throw)
+        if action_label == "free_throw_shot":
+            action_label = "free_throw"
+            logger.info(f"✅ Normalized action label: free_throw_shot -> free_throw")
+        
+        # Compute metrics with proper keypoints
+        # Ensure keypoints are in correct format (T, 33, 3)
+        if all_keypoints and len(all_keypoints) >= 2:
+            # Convert list of (33, 3) arrays to (T, 33, 3) array
+            keypoints_array = np.array(all_keypoints)
+            
+            # Log for debugging
+            logger.debug(f"Computing metrics for {len(keypoints_array)} frames, action: {action_label}")
+            
+            metrics_dict = self.metrics_engine.compute_all_metrics(
+                keypoints_array,
+                action_label
+            )
+            
+            # Ensure all metrics are valid numbers
+            for key, value in metrics_dict.items():
+                if np.isnan(value) or np.isinf(value):
+                    metrics_dict[key] = 0.0 if key in ['jump_height', 'movement_speed', 'reaction_time'] else 0.5
+        else:
+            # Fallback if no keypoints or insufficient frames
+            logger.debug(f"Insufficient keypoints for metrics: {len(all_keypoints) if all_keypoints else 0} frames")
+            metrics_dict = self.metrics_engine._default_metrics()
         
         # Map probabilities
         mapped_probs = self._map_probabilities(probabilities)
         
-        # Create result (simplified for real-time)
+        # Draw annotations on last frame
+        annotated_frame = last_frame.copy()
+        if last_detection and last_pose_landmarks:
+            # Draw annotations on full frame
+            annotated_frame = self._draw_annotations(
+                annotated_frame,
+                [last_detection],
+                last_pose_landmarks,
+                basketball_detections=None,
+                court_info=None,
+                hoop_info=None,
+                current_action=action_label,
+                action_confidence=confidence
+            )
+        
+        # Encode annotated frame to base64
+        _, buffer = cv2.imencode('.jpg', annotated_frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
+        annotated_frame_b64 = base64.b64encode(buffer).decode('utf-8')
+        
+        # Create result with annotated frame
         result = VideoAnalysisResult(
             video_id="realtime",
             action=ActionClassification(
@@ -1781,6 +2051,7 @@ class VideoProcessor:
             ),
             metrics=PerformanceMetrics(**metrics_dict),
             recommendations=[], # Skip recommendations for real-time to save time
+            annotated_frame=annotated_frame_b64,  # Add annotated frame for live display
             timestamp=datetime.now()
         )
         
