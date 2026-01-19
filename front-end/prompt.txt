@@ -1,0 +1,250 @@
+You are a senior frontend architect and product engineer.
+
+Your task is to adapt an existing frontend UI template (keep all colors, layout, typography, spacing, animations, and visual identity unchanged) into a Basketball Performance Analysis Web Application.
+
+⚠️ Do NOT redesign the UI.
+⚠️ Do NOT change the color theme or component styling.
+Your work is content mapping, page structure, features, and frontend logic only.
+
+🎯 Product Overview
+
+The system is an AI-powered basketball analytics platform that supports two user account types:
+
+Team / Organization Account
+
+Personal Player Account
+
+Both account types share the same UI components but see different content, pages, and features based on role.
+
+🧩 Frontend Architecture Requirements
+1️⃣ Global App Structure
+
+SPA architecture (React / Next.js / Vue — use existing stack)
+
+Role-based routing
+
+Protected routes (auth required)
+
+Responsive (mobile-first)
+
+2️⃣ Authentication & Account Selection
+Pages:
+
+Login
+
+Register
+
+Account Type Selection (Team or Personal)
+
+Logic:
+
+On first registration, user selects:
+
+Team / Organization
+
+Personal Player
+
+Store accountType in auth state
+
+Use accountType to control routing and feature visibility
+
+3️⃣ Navigation & Layout (Do NOT change UI)
+Shared Components:
+
+Sidebar
+
+Topbar
+
+Footer
+
+Notifications
+
+Profile Menu
+
+Dynamic Behavior:
+
+Menu items change based on account type
+
+Shared layout, different content
+
+🔵 TEAM / ORGANIZATION ACCOUNT
+Core Pages & Features
+📊 Dashboard
+
+Team overview metrics
+
+Number of players
+
+Matches analyzed
+
+Recent analysis activity
+
+Performance trends (charts)
+
+👥 Team Management
+
+Create / Edit Team
+
+Add Players
+
+Player Profiles (name, number, position, photo)
+
+Assign players to detected IDs in videos
+
+🎥 Video Analysis
+
+Upload full match videos
+
+View processing status
+
+Video player with overlays:
+
+Bounding boxes
+
+Player IDs
+
+Timeline events
+
+📈 Analytics
+
+Team statistics
+
+Player comparison
+
+Heatmaps
+
+Possession & movement metrics
+
+⚙️ Settings
+
+Team details
+
+Members & roles
+
+Subscription / limits (UI only)
+
+🟢 PERSONAL PLAYER ACCOUNT
+Core Pages & Features
+📊 Dashboard
+
+Personal training summary
+
+Sessions analyzed
+
+Skill improvement trends
+
+🎥 Training Video Analysis
+
+Upload personal training videos
+
+Single-player detection only
+
+View pose overlays
+
+Skill feedback panels
+
+🏀 Skill Analytics
+
+Shooting frequency
+
+Dribble intensity
+
+Movement speed
+
+Session comparison
+
+👤 Profile
+
+Player info
+
+Training history
+
+Progress over time
+
+⚙️ Settings
+
+Account details
+
+Preferences
+
+🔁 Shared Pages (Both Accounts)
+
+Profile
+
+Notifications
+
+Help / Support
+
+Logout
+
+🧠 Frontend Logic Rules
+
+Never show team pages to personal accounts
+
+Never show personal-only analytics to teams
+
+Reuse components wherever possible
+
+Add basketball like photos and animations to the UI where possible.
+
+Design a suitable logo for the application but app name is 'BAKO'.
+
+All analytics data is read-only (backend-driven)
+
+Show loading, processing, and error states
+
+🔌 API Integration (Frontend Side)
+
+Auth service
+
+Video upload service
+
+Analysis status polling
+
+Analytics data fetch
+
+Role-based API calls
+
+DO not Use mock data, if backend endpoints are missing or not implemented just put a placeholder as we wait for end integration.
+
+🧪 UX Behavior Expectations
+
+Clear empty states (e.g. “Upload your first video”)
+
+Status indicators (processing, completed, failed)
+
+Friendly tooltips for non-technical users
+
+Smooth transitions (reuse existing animations)
+
+🧾 Deliverables Expected
+
+Updated page routing structure
+
+Role-based navigation logic
+
+Component reuse map
+
+Placeholder data integration
+
+Clean, scalable folder structure
+
+❌ Explicitly Forbidden
+
+Changing UI colors or theme
+
+Removing existing components
+
+Introducing new design systems
+
+Overengineering animations
+
+✅ Goal
+
+Deliver a production-ready frontend structure that visually matches the original template but functionally supports:
+
+✔ Team-level basketball analysis
+✔ Individual player training analysis
+✔ African low-resource deployment use cases
+
+END OF PROMPT
