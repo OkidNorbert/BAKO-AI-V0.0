@@ -1,0 +1,322 @@
+✅ FINAL BACKEND ARCHITECTURE PROMPT (UPDATED – COPY & PASTE)
+
+You are a senior backend engineer, computer vision architect, and AI systems designer.
+
+Your task is to extend and adapt an existing backend template whose core logic resides inside a folder called template/.
+
+This backend powers an AI-driven basketball performance analysis platform and must align fully with an already-defined frontend architecture.
+
+🧠 Core Constraints (VERY IMPORTANT)
+
+✅ The template/ folder contains reusable, application-agnostic logic
+
+✅ The template already includes YOLO-based vision pipelines
+
+✅ Supabase is the ONLY database, authentication, and storage provider
+
+✅ The backend must support GPU acceleration (RTX 4080 Super available)
+
+✅ Multiple YOLO versions may be used simultaneously, based on task strength
+
+❌ Do NOT remove or rewrite template logic
+
+❌ Do NOT hardcode application-specific assumptions into the template
+
+🎯 System Objective
+
+Design a backend system that supports two analysis contexts using the same core template:
+
+analysis_mode = TEAM | PERSONAL
+
+
+This flag determines:
+
+Which YOLO models are used
+
+How detections are interpreted
+
+How analytics are generated
+
+How results are stored in Supabase
+
+🧩 High-Level Architecture
+Client (Web / Mobile)
+        ↓
+API Layer (Role-Aware)
+        ↓
+Analysis Dispatcher
+        ↓
+Template Vision Engine (YOLO multi-version)
+        ↓
+Analytics & Persistence Layer (Supabase)
+
+
+The template remains generic; application-specific logic lives around it.
+
+🗂️ Backend Folder Structure (EXTEND, DO NOT BREAK)
+backend/
+├── template/                     # CORE, REUSABLE (KEEP INTACT)
+│   ├── detection/
+│   │   ├── yolo_v5.py             # Ball detection specialist
+│   │   ├── yolo_v8.py             # Player detection & tracking
+│   │   ├── yolo_v11.py            # (if available) improved tracking
+│   │   ├── yolo_v12.py            # (optional) SOTA experiments
+│   ├── tracking/
+│   ├── inference/
+│   └── utils/
+│
+├── analysis/
+│   ├── dispatcher.py              # Routes TEAM vs PERSONAL
+│   ├── team_analysis.py           # Uses template as-is
+│   └── personal_analysis.py       # NEW logic layer
+│
+├── supabase/
+│   ├── client.py
+│   ├── auth.py
+│   └── storage.py
+│
+├── api/
+│   ├── auth.py
+│   ├── videos.py
+│   ├── analysis.py
+│   ├── teams.py
+│   └── players.py
+│
+├── analytics/
+│   ├── metrics.py
+│   └── aggregations.py
+│
+└── main.py
+
+🔐 Authentication & Roles (Supabase)
+Account Types (stored in Supabase user metadata)
+
+TEAM
+
+PERSONAL
+
+Authorization Rules
+
+TEAM users:
+
+Manage organizations
+
+Manage player profiles
+
+Analyze multi-player videos
+
+PERSONAL users:
+
+Analyze only their own training videos
+
+No access to team endpoints
+
+🧾 Supabase Database (Integrated into Template)
+
+Supabase logic must be accessed from within the template, not duplicated.
+
+Core Tables
+users
+
+id
+
+account_type
+
+organizations
+
+id
+
+name
+
+owner_id
+
+players
+
+id
+
+organization_id (TEAM)
+
+user_id (PERSONAL)
+
+videos
+
+id
+
+uploader_id
+
+analysis_mode
+
+status
+
+storage_path
+
+detections
+
+video_id
+
+frame
+
+object_type (player / ball)
+
+track_id
+
+bbox
+
+confidence
+
+keypoints (optional)
+
+analytics
+
+player_id
+
+metric_type
+
+value
+
+timestamp
+
+🎥 Analysis Job Lifecycle
+1️⃣ Video Upload
+
+Stored in Supabase Storage
+
+Metadata saved in videos
+
+Job queued with analysis_mode
+
+2️⃣ Dispatcher Logic
+if analysis_mode == "TEAM":
+    run_team_analysis(video)
+elif analysis_mode == "PERSONAL":
+    run_personal_analysis(video)
+
+🔵 TEAM ANALYSIS (YOLO MULTI-VERSION PIPELINE)
+
+Use the best YOLO version per task:
+
+YOLOv5 → Ball detection (proven precision)
+
+YOLOv8 / v11 → Player detection & tracking
+
+YOLOv12 (if stable) → Experimental improvements
+
+Behavior
+
+Multi-player detection
+
+Persistent tracking IDs
+
+Team/player mapping
+
+Event detection (passes, shots, possession)
+
+⚠️ This logic mostly already exists — reuse it.
+
+🟢 PERSONAL ANALYSIS (BEST MODEL – NO LIMITATION)
+
+Since GPU is available, use SOTA hybrid pipeline:
+
+Recommended Stack
+
+YOLOv8-Pose / YOLOv11-Pose → Pose + detection
+
+Optional refinement:
+
+Temporal smoothing
+
+Keypoint velocity analysis
+
+Logic
+
+Detect all players
+
+Select primary subject:
+
+Largest bounding box
+
+Longest presence
+
+Ignore others
+
+Extract:
+
+Joint angles
+
+Motion speed
+
+Repetition counts
+
+Bind analytics strictly to:
+
+player_id = authenticated_user_id
+
+📊 Personal Skill Metrics
+
+Shot attempts & form consistency
+
+Dribble frequency & rhythm
+
+Acceleration & deceleration
+
+Training load per session
+
+Progress over time
+
+🔁 Template Reusability Rule
+
+The template must:
+
+Remain application-neutral
+
+Accept configuration flags
+
+Support different YOLO versions dynamically
+
+Be usable by future sports or vision systems
+
+🔌 API CONTRACT (Aligned with Frontend)
+Shared
+
+POST /videos/upload
+
+GET /videos/{id}/status
+
+GET /analytics/player/{id}
+
+Team-only
+
+POST /teams
+
+POST /players
+
+POST /analysis/team
+
+Personal-only
+
+POST /analysis/personal
+
+GET /skills/summary
+
+⚙️ Hardware & Performance
+
+GPU acceleration enabled by default
+
+CPU fallback supported
+
+Batch inference allowed
+
+Async processing mandatory
+
+✅ Final Outcome
+
+Deliver a backend that:
+
+✔ Keeps template logic reusable
+✔ Integrates Supabase deeply
+✔ Uses the best YOLO versions per task
+✔ Supports team and personal workflows
+✔ Fully matches frontend behavior
+✔ Is future-proof and research-grade
+
+END OF PROMPT
