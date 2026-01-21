@@ -22,3 +22,6 @@ httpx==0.26.0
 
 # Supabase (optional - for production)
 supabase==2.3.0
+
+# Training GUI
+customtkinter==5.2.1
