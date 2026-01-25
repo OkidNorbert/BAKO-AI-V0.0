@@ -6,13 +6,13 @@ to analyze multi-player basketball footage for team-level insights.
 """
 import os
 import sys
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 # Add parent directory for template imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-async def run_team_analysis(video_path: str) -> Dict[str, Any]:
+async def run_team_analysis(video_path: str, options: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """
     Run team analysis pipeline on a video.
     
@@ -123,6 +123,63 @@ async def run_team_analysis(video_path: str) -> Dict[str, Any]:
     unique_players = set()
     for frame_tracks in player_tracks:
         unique_players.update(frame_tracks.keys())
+
+    # Build per-frame detections for overlays (optional, can be large)
+    detections_stride = 1
+    max_detections = 200_000
+    if options:
+        try:
+            detections_stride = int(options.get("detections_stride", detections_stride))
+        except Exception:
+            pass
+        try:
+            max_detections = int(options.get("max_detections", max_detections))
+        except Exception:
+            pass
+
+    detections_stride = max(1, min(30, detections_stride))
+    max_detections = max(1_000, max_detections)
+
+    detections: List[Dict[str, Any]] = []
+    for frame_idx in range(0, total_frames, detections_stride):
+        # Players
+        assignment = player_assignment[frame_idx] if frame_idx < len(player_assignment) else {}
+        possession_player = ball_possession[frame_idx] if frame_idx < len(ball_possession) else -1
+        current_player_tracks = player_tracks[frame_idx] if frame_idx < len(player_tracks) else []
+        for track_id, track in (current_player_tracks or {}).items():
+            bbox = track.get("bbox")
+            if not bbox:
+                continue
+            detections.append({
+                "frame": frame_idx,
+                "object_type": "player",
+                "track_id": int(track_id),
+                "bbox": bbox,
+                "confidence": float(track.get("confidence", 1.0)),
+                "team_id": assignment.get(track_id, {}).get("team"),
+                "has_ball": possession_player == track_id,
+                "keypoints": None,
+            })
+            if len(detections) >= max_detections:
+                break
+
+        if len(detections) >= max_detections:
+            break
+
+        # Ball
+        current_ball_tracks = ball_tracks[frame_idx] if frame_idx < len(ball_tracks) else []
+        ball = (current_ball_tracks or {}).get(1)
+        if ball and ball.get("bbox"):
+            detections.append({
+                "frame": frame_idx,
+                "object_type": "ball",
+                "track_id": 1,
+                "bbox": ball.get("bbox"),
+                "confidence": float(ball.get("confidence", 1.0)),
+                "team_id": None,
+                "has_ball": False,
+                "keypoints": None,
+            })
     
     # Build events list
     events = []
@@ -165,4 +222,5 @@ async def run_team_analysis(video_path: str) -> Dict[str, Any]:
         "total_passes": len(passes),
         "total_interceptions": len(interceptions),
         "events": events,
+        "detections": detections,
     }

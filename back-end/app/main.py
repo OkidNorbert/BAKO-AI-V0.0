@@ -16,6 +16,7 @@ from fastapi.staticfiles import StaticFiles
 from app.config import get_settings
 from app.core import BasketballAPIException
 from app.api import auth, videos, analysis, teams, players, analytics
+from app.middleware.timeout import TimeoutMiddleware
 
 
 @asynccontextmanager
@@ -97,6 +98,9 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # Request timeout (avoid resource exhaustion)
+    app.add_middleware(TimeoutMiddleware, timeout_seconds=settings.request_timeout_seconds)
     
     # Register exception handlers
     register_exception_handlers(app)

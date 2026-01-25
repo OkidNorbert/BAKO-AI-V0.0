@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     # Server settings
     host: str = "0.0.0.0"
     port: int = 8000
+    request_timeout_seconds: int = 120
     
     # Supabase configuration
     supabase_url: Optional[str] = None

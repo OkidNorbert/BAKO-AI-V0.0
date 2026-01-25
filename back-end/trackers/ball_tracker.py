@@ -77,7 +77,7 @@ class BallTracker:
                         max_confidence = confidence
 
             if chosen_bbox is not None:
-                tracks[frame_num][1] = {"bbox":chosen_bbox}
+                tracks[frame_num][1] = {"bbox": chosen_bbox, "confidence": float(max_confidence)}
 
         save_stub(stub_path,tracks)
         

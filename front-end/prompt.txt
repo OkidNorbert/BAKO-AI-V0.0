@@ -242,7 +242,7 @@ Overengineering animations
 ✅ Goal
 
 Deliver a production-ready frontend structure that visually matches the original template but functionally supports:
-
+ keep the home page design only change its content to match our new systems informations
 ✔ Team-level basketball analysis
 ✔ Individual player training analysis
 ✔ African low-resource deployment use cases

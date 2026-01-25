@@ -24,6 +24,15 @@ from app.services.supabase_client import SupabaseService
 
 router = APIRouter()
 
+def _parse_ts(ts: Optional[str]) -> Optional[datetime]:
+    if not ts:
+        return None
+    try:
+        # Accept both "Z" and "+00:00" ISO formats
+        return datetime.fromisoformat(ts.replace("Z", "+00:00"))
+    except Exception:
+        return None
+
 
 @router.get("/player/{player_id}", response_model=PlayerAnalyticsSummary)
 async def get_player_analytics(
@@ -57,15 +66,26 @@ async def get_player_analytics(
     # Calculate period
     period_end = date.today()
     period_start = period_end - timedelta(days=period_days)
+    period_start_dt = datetime.combine(period_start, datetime.min.time())
+    period_end_dt = datetime.combine(period_end, datetime.max.time())
     
     # Get analytics data
     analytics = await supabase.select("analytics", filters={"player_id": player_id})
+    # Filter by period when timestamps exist
+    analytics = [
+        a for a in analytics
+        if (ts := _parse_ts(a.get("timestamp"))) is None or (period_start_dt <= ts <= period_end_dt)
+    ]
     
     # Aggregate metrics
     total_distance = sum(a.get("value", 0) for a in analytics if a.get("metric_type") == "distance_km")
     speed_values = [a.get("value") for a in analytics if a.get("metric_type") == "avg_speed_kmh" and a.get("value")]
     max_speed_values = [a.get("value") for a in analytics if a.get("metric_type") == "max_speed_kmh" and a.get("value")]
-    shot_attempts = sum(1 for a in analytics if a.get("metric_type") == "shot_attempt")
+    shot_attempts = sum(
+        int(a.get("value", 0) or 0)
+        for a in analytics
+        if a.get("metric_type") == "shot_attempt"
+    )
     form_scores = [a.get("value") for a in analytics if a.get("metric_type") == "form_consistency" and a.get("value")]
     dribbles = sum(a.get("value", 0) for a in analytics if a.get("metric_type") == "dribble_count")
     
@@ -74,10 +94,18 @@ async def get_player_analytics(
     
     # Calculate training time from videos
     training_minutes = 0.0
-    for vid in video_ids:
-        video = await supabase.select_one("videos", vid)
-        if video and video.get("duration_seconds"):
-            training_minutes += video["duration_seconds"] / 60
+    if video_ids:
+        # Best-effort batch fetch if supported
+        try:
+            vids = await supabase.select_in("videos", "id", list(video_ids), columns="id,duration_seconds")
+            for v in vids:
+                if v and v.get("duration_seconds"):
+                    training_minutes += float(v["duration_seconds"]) / 60
+        except Exception:
+            for vid in video_ids:
+                video = await supabase.select_one("videos", vid)
+                if video and video.get("duration_seconds"):
+                    training_minutes += float(video["duration_seconds"]) / 60
     
     return PlayerAnalyticsSummary(
         player_id=player_id,
@@ -124,6 +152,8 @@ async def get_team_analytics(
     
     period_end = date.today()
     period_start = period_end - timedelta(days=period_days)
+    period_start_dt = datetime.combine(period_start, datetime.min.time())
+    period_end_dt = datetime.combine(period_end, datetime.max.time())
     
     # Get team videos
     videos = await supabase.select("videos", filters={"organization_id": org_id})
@@ -136,6 +166,11 @@ async def get_team_analytics(
     all_analytics = []
     for pid in player_ids:
         analytics = await supabase.select("analytics", filters={"player_id": pid})
+        # Filter by period when timestamps exist
+        analytics = [
+            a for a in analytics
+            if (ts := _parse_ts(a.get("timestamp"))) is None or (period_start_dt <= ts <= period_end_dt)
+        ]
         all_analytics.extend(analytics)
     
     # Aggregate team metrics
@@ -266,6 +301,8 @@ async def get_player_progress(
     
     period_end = date.today()
     period_start = period_end - timedelta(days=period_days)
+    period_start_dt = datetime.combine(period_start, datetime.min.time())
+    period_end_dt = datetime.combine(period_end, datetime.max.time())
     
     # Map user-friendly names to internal metric types
     metric_map = {
@@ -279,6 +316,10 @@ async def get_player_progress(
     # Get analytics data
     analytics = await supabase.select("analytics", filters={"player_id": player_id})
     metric_data = [a for a in analytics if a.get("metric_type") == internal_metric]
+    metric_data = [
+        a for a in metric_data
+        if (ts := _parse_ts(a.get("timestamp"))) is None or (period_start_dt <= ts <= period_end_dt)
+    ]
     
     # Build data points (mock aggregation by date)
     data_points = []

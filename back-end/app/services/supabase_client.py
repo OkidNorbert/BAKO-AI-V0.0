@@ -120,6 +120,20 @@ class SupabaseService:
         
         response = await self._run_sync(lambda: self.client.table(table).insert(data).execute())
         return response.data[0] if response.data else {}
+
+    async def insert_many(self, table: str, rows: list[dict], chunk_size: int = 500) -> int:
+        """Insert many records (chunked). Returns inserted row count (best-effort)."""
+        if not rows:
+            return 0
+        if not self.is_connected:
+            return len(rows)
+
+        inserted = 0
+        for i in range(0, len(rows), chunk_size):
+            chunk = rows[i : i + chunk_size]
+            response = await self._run_sync(lambda: self.client.table(table).insert(chunk).execute())
+            inserted += len(response.data or [])
+        return inserted
     
     async def select(
         self, 

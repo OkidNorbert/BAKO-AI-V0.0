@@ -13,7 +13,7 @@ from typing import Dict, Any, List, Tuple, Optional
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-async def run_personal_analysis(video_path: str) -> Dict[str, Any]:
+async def run_personal_analysis(video_path: str, options: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """
     Run personal analysis pipeline on a training video.
     
@@ -121,6 +121,43 @@ async def run_personal_analysis(video_path: str) -> Dict[str, Any]:
     
     # Filter detections for primary player
     primary_detections = [d for d in all_detections if d["track_id"] == primary_player]
+
+    # Build per-frame detections for overlays (optional, can be large)
+    detections_stride = 1
+    max_detections = 200_000
+    if options:
+        try:
+            detections_stride = int(options.get("detections_stride", detections_stride))
+        except Exception:
+            pass
+        try:
+            max_detections = int(options.get("max_detections", max_detections))
+        except Exception:
+            pass
+
+    detections_stride = max(1, min(30, detections_stride))
+    max_detections = max(1_000, max_detections)
+
+    detections: List[Dict[str, Any]] = []
+    for det in primary_detections:
+        frame_num = int(det.get("frame", 0))
+        if frame_num % detections_stride != 0:
+            continue
+        bbox = det.get("bbox")
+        if not bbox:
+            continue
+        detections.append({
+            "frame": frame_num,
+            "object_type": "player",
+            "track_id": int(det.get("track_id", 0) or 0),
+            "bbox": bbox,
+            "confidence": 1.0,
+            "keypoints": det.get("keypoints"),
+            "team_id": None,
+            "has_ball": False,
+        })
+        if len(detections) >= max_detections:
+            break
     
     # Analyze pose data for skill metrics
     shot_attempts = 0
@@ -257,6 +294,7 @@ async def run_personal_analysis(video_path: str) -> Dict[str, Any]:
         
         # Training load
         "training_load_score": round(training_load, 1),
+        "detections": detections,
     }
 
 

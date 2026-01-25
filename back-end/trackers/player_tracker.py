@@ -76,9 +76,10 @@ class PlayerTracker:
                 bbox = frame_detection[0].tolist()
                 cls_id = frame_detection[3]
                 track_id = frame_detection[4]
+                confidence = frame_detection[2] if len(frame_detection) > 2 else 1.0
 
                 if cls_id == cls_names_inv['Player']:
-                    tracks[frame_num][track_id] = {"bbox":bbox}
+                    tracks[frame_num][track_id] = {"bbox": bbox, "confidence": float(confidence)}
         
         save_stub(stub_path,tracks)
         return tracks

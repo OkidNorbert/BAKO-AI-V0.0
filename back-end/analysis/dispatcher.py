@@ -7,7 +7,7 @@ analysis pipelines based on the analysis_mode configuration.
 import os
 import sys
 import time
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from datetime import datetime
 
 # Add parent dir to path for template imports
@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.models.video import AnalysisMode
 
 
-async def dispatch_analysis(video_path: str, mode: AnalysisMode) -> Dict[str, Any]:
+async def dispatch_analysis(video_path: str, mode: AnalysisMode, options: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """
     Dispatch video analysis to the appropriate pipeline.
     
@@ -31,10 +31,10 @@ async def dispatch_analysis(video_path: str, mode: AnalysisMode) -> Dict[str, An
     
     if mode == AnalysisMode.TEAM:
         from analysis.team_analysis import run_team_analysis
-        result = await run_team_analysis(video_path)
+        result = await run_team_analysis(video_path, options=options)
     else:
         from analysis.personal_analysis import run_personal_analysis
-        result = await run_personal_analysis(video_path)
+        result = await run_personal_analysis(video_path, options=options)
     
     processing_time = time.time() - start_time
     
