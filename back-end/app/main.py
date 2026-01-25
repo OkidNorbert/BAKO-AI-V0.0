@@ -26,6 +26,10 @@ async def lifespan(app: FastAPI):
     # Startup
     settings = get_settings()
     print(f"🏀 Starting {settings.app_name} v{settings.app_version}")
+
+    # Basic production hardening
+    if not settings.debug and settings.jwt_secret == "your-super-secret-key-change-in-production":
+        raise ValueError("JWT_SECRET must be set in production (refusing to start with default secret).")
     
     # Ensure upload directory exists
     os.makedirs(settings.upload_dir, exist_ok=True)
@@ -76,10 +80,20 @@ def create_app() -> FastAPI:
     )
     
     # Configure CORS
+    # - In production, require explicit origins (settings.cors_origins)
+    # - In debug, allow "*" but disable credentials to avoid insecure/invalid combo
+    cors_origins = settings.cors_origins_list
+    if settings.debug and not cors_origins:
+        allow_origins = ["*"]
+        allow_credentials = False
+    else:
+        allow_origins = cors_origins
+        allow_credentials = True
+
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],  # Configure appropriately in production
-        allow_credentials=True,
+        allow_origins=allow_origins,
+        allow_credentials=allow_credentials,
         allow_methods=["*"],
         allow_headers=["*"],
     )
@@ -90,8 +104,9 @@ def create_app() -> FastAPI:
     # Register API routes
     register_routes(app)
     
-    # Static files for uploads (local development)
-    if os.path.exists(settings.upload_dir):
+    # Static files for uploads (debug/dev only). In production, use authenticated download endpoints
+    # or signed object storage URLs instead of exposing a filesystem-backed directory.
+    if settings.debug and settings.serve_uploads_in_debug and os.path.exists(settings.upload_dir):
         app.mount("/uploads", StaticFiles(directory=settings.upload_dir), name="uploads")
     
     return app

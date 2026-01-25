@@ -64,6 +64,11 @@ class TokenResponse(BaseModel):
     expires_in: int = Field(..., description="Token expiration in seconds")
 
 
+class RefreshTokenRequest(BaseModel):
+    """Request schema for refreshing access tokens."""
+    refresh_token: str
+
+
 class TokenPayload(BaseModel):
     """JWT token payload schema."""
     sub: str  # User ID

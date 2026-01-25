@@ -6,6 +6,7 @@ import shutil
 from uuid import uuid4
 from datetime import datetime
 from typing import Optional
+from urllib.parse import quote
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query, status
 from fastapi.responses import FileResponse
 
@@ -52,13 +53,18 @@ def get_video_info(file_path: str) -> dict:
         }
     except Exception:
         return {}
+    finally:
+        try:
+            cap.release()
+        except Exception:
+            pass
 
 
 @router.post("/upload", response_model=Video, status_code=status.HTTP_201_CREATED)
 async def upload_video(
     file: UploadFile = File(...),
-    title: Optional[str] = Form(None),
-    description: Optional[str] = Form(None),
+    title: Optional[str] = Form(None, max_length=200),
+    description: Optional[str] = Form(None, max_length=1000),
     analysis_mode: AnalysisMode = Form(...),
     organization_id: Optional[str] = Form(None),
     current_user: dict = Depends(get_current_user),
@@ -74,7 +80,14 @@ async def upload_video(
     settings = get_settings()
     
     # Validate file extension
-    ext = file.filename.split(".")[-1].lower() if file.filename else ""
+    if not file.filename:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing filename"
+        )
+
+    _, ext = os.path.splitext(file.filename)
+    ext = ext.lstrip(".").lower()
     if ext not in settings.allowed_extensions_list:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -99,6 +112,18 @@ async def upload_video(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Team analysis requires a TEAM account"
             )
+        if not organization_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="organization_id is required for TEAM analysis"
+            )
+        # Verify org ownership
+        org = await supabase.select_one("organizations", str(organization_id))
+        if not org or org.get("owner_id") != current_user["id"]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have access to this organization"
+            )
     
     # Generate unique filename and save
     video_id = str(uuid4())
@@ -112,6 +137,16 @@ async def upload_video(
     
     # Get video metadata
     video_info = get_video_info(storage_path)
+    if not video_info or not video_info.get("frame_count"):
+        # Reject unreadable / non-video uploads
+        try:
+            os.remove(storage_path)
+        except Exception:
+            pass
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Uploaded file is not a readable video"
+        )
     
     # Create database record
     video_record = {
@@ -129,7 +164,11 @@ async def upload_video(
     
     await supabase.insert("videos", video_record)
     
-    return Video(**video_record, created_at=datetime.utcnow())
+    return Video(
+        **video_record,
+        created_at=datetime.utcnow(),
+        download_url=f"/api/videos/{video_id}/download",
+    )
 
 
 @router.get("", response_model=VideoListResponse)
@@ -161,7 +200,10 @@ async def list_videos(
     paginated = videos[start:end]
     
     return VideoListResponse(
-        videos=[Video(**v) for v in paginated],
+        videos=[
+            Video(**v, download_url=f"/api/videos/{v.get('id')}/download")
+            for v in paginated
+        ],
         total=total,
         page=page,
         page_size=page_size,
@@ -192,7 +234,40 @@ async def get_video(
             detail="You don't have access to this video"
         )
     
-    return Video(**video)
+    return Video(**video, download_url=f"/api/videos/{video_id}/download")
+
+
+@router.get("/{video_id}/download")
+async def download_video(
+    video_id: str,
+    current_user: dict = Depends(get_current_user),
+    supabase: SupabaseService = Depends(get_supabase),
+):
+    """
+    Download a previously uploaded video.
+    Authenticated and ownership-checked.
+    """
+    video = await supabase.select_one("videos", video_id)
+    if not video:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Video not found")
+
+    if video.get("uploader_id") != current_user["id"]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You don't have access to this video")
+
+    storage_path = video.get("storage_path")
+    if not storage_path or not os.path.exists(storage_path):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Video file not found on server")
+
+    # Prefer the original filename for download if available
+    original_title = (video.get("title") or f"{video_id}").strip()
+    safe_name = quote(original_title.replace("/", "_").replace("\\", "_"))
+    _, ext = os.path.splitext(storage_path)
+    ext = ext if ext else ".mp4"
+    return FileResponse(
+        path=storage_path,
+        filename=f"{safe_name}{ext}",
+        media_type="application/octet-stream",
+    )
 
 
 @router.get("/{video_id}/status", response_model=VideoStatusResponse)
@@ -253,6 +328,20 @@ async def delete_video(
     # Delete file
     if os.path.exists(video["storage_path"]):
         os.remove(video["storage_path"])
+
+    # Best-effort cascade delete related rows
+    try:
+        await supabase.delete_where("analysis_results", {"video_id": video_id})
+    except Exception:
+        pass
+    try:
+        await supabase.delete_where("detections", {"video_id": video_id})
+    except Exception:
+        pass
+    try:
+        await supabase.delete_where("analytics", {"video_id": video_id})
+    except Exception:
+        pass
     
     # Delete database record
     await supabase.delete("videos", video_id)

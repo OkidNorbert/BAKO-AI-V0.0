@@ -4,8 +4,9 @@ Analysis API endpoints for triggering and retrieving video analysis.
 import asyncio
 from uuid import uuid4
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Union
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, status
+import anyio
 
 from app.dependencies import (
     get_current_user,
@@ -26,6 +27,12 @@ from app.services.supabase_client import SupabaseService
 router = APIRouter()
 
 
+def _run_dispatch_in_thread(video_path: str, mode: AnalysisMode):
+    """Run async dispatch in a dedicated thread event loop."""
+    from analysis.dispatcher import dispatch_analysis
+    return asyncio.run(dispatch_analysis(video_path, mode))
+
+
 async def run_analysis_background(video_id: str, mode: str, supabase: SupabaseService):
     """
     Background task for running video analysis.
@@ -43,12 +50,19 @@ async def run_analysis_background(video_id: str, mode: str, supabase: SupabaseSe
         video = await supabase.select_one("videos", video_id)
         if not video:
             return
-        
-        # Import analysis modules (lazy import to avoid circular deps)
-        from analysis.dispatcher import dispatch_analysis
-        
-        # Run analysis based on mode
-        result = await dispatch_analysis(video["storage_path"], AnalysisMode(mode))
+
+        # Run analysis based on mode (offload CPU/GPU-heavy work to a thread)
+        result = await anyio.to_thread.run_sync(
+            _run_dispatch_in_thread,
+            video["storage_path"],
+            AnalysisMode(mode),
+        )
+
+        # For PERSONAL mode, attach the user's player_id if available
+        if mode == AnalysisMode.PERSONAL.value:
+            players = await supabase.select("players", filters={"user_id": video["uploader_id"]})
+            if players:
+                result["player_id"] = players[0].get("id")
         
         # Store results
         analysis_id = str(uuid4())
@@ -175,7 +189,7 @@ async def trigger_personal_analysis(
     }
 
 
-@router.get("/{analysis_id}", response_model=AnalysisResult)
+@router.get("/{analysis_id}", response_model=Union[AnalysisResult, PersonalAnalysisResult])
 async def get_analysis_result(
     analysis_id: str,
     current_user: dict = Depends(get_current_user),
@@ -199,7 +213,11 @@ async def get_analysis_result(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have access to this analysis"
         )
-    
+
+    # Return model based on video's analysis_mode
+    if video.get("analysis_mode") == AnalysisMode.PERSONAL.value:
+        return PersonalAnalysisResult(**result)
+
     return AnalysisResult(**result)
 
 

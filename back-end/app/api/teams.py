@@ -170,7 +170,42 @@ async def delete_organization(
             detail="You don't have permission to delete this organization"
         )
     
-    # Note: In production, you'd want to cascade delete players, videos, etc.
+    # Best-effort cascade delete associated data
+    videos = await supabase.select("videos", filters={"organization_id": org_id})
+    video_ids = [v.get("id") for v in videos if v.get("id")]
+
+    # Delete analysis/detections/analytics linked to videos
+    for vid in video_ids:
+        try:
+            await supabase.delete_where("analysis_results", {"video_id": vid})
+        except Exception:
+            pass
+        try:
+            await supabase.delete_where("detections", {"video_id": vid})
+        except Exception:
+            pass
+        try:
+            await supabase.delete_where("analytics", {"video_id": vid})
+        except Exception:
+            pass
+        try:
+            await supabase.delete("videos", vid)
+        except Exception:
+            pass
+
+    # Delete players for the org
+    players = await supabase.select("players", filters={"organization_id": org_id})
+    player_ids = [p.get("id") for p in players if p.get("id")]
+    for pid in player_ids:
+        try:
+            await supabase.delete_where("analytics", {"player_id": pid})
+        except Exception:
+            pass
+        try:
+            await supabase.delete("players", pid)
+        except Exception:
+            pass
+
     await supabase.delete("organizations", org_id)
     
     return None

@@ -2,7 +2,7 @@
 Supabase client service for database and storage operations.
 """
 from typing import Optional
-from functools import lru_cache
+import anyio
 
 from app.config import get_settings
 
@@ -63,6 +63,10 @@ class SupabaseService:
     def is_connected(self) -> bool:
         """Check if Supabase is connected and available."""
         return self.client is not None
+
+    async def _run_sync(self, fn):
+        """Run a blocking function in a thread to avoid blocking the event loop."""
+        return await anyio.to_thread.run_sync(fn)
     
     # ==================== Auth Operations ====================
     
@@ -78,11 +82,11 @@ class SupabaseService:
                 }
             }
         
-        response = self.client.auth.sign_up({
+        response = await self._run_sync(lambda: self.client.auth.sign_up({
             "email": email,
             "password": password,
             "options": {"data": metadata or {}}
-        })
+        }))
         return response
     
     async def sign_in(self, email: str, password: str) -> dict:
@@ -93,10 +97,10 @@ class SupabaseService:
                 "session": {"access_token": "mock-token"}
             }
         
-        response = self.client.auth.sign_in_with_password({
+        response = await self._run_sync(lambda: self.client.auth.sign_in_with_password({
             "email": email,
             "password": password
-        })
+        }))
         return response
     
     async def get_user(self, token: str) -> Optional[dict]:
@@ -104,7 +108,7 @@ class SupabaseService:
         if not self.is_connected:
             return {"id": "mock-user-id", "email": "mock@example.com"}
         
-        response = self.client.auth.get_user(token)
+        response = await self._run_sync(lambda: self.client.auth.get_user(token))
         return response.user if response else None
     
     # ==================== Database Operations ====================
@@ -114,7 +118,7 @@ class SupabaseService:
         if not self.is_connected:
             return {"id": "mock-id", **data}
         
-        response = self.client.table(table).insert(data).execute()
+        response = await self._run_sync(lambda: self.client.table(table).insert(data).execute())
         return response.data[0] if response.data else {}
     
     async def select(
@@ -142,15 +146,46 @@ class SupabaseService:
         if limit:
             query = query.limit(limit)
         
-        response = query.execute()
+        response = await self._run_sync(lambda: query.execute())
         return response.data or []
     
+    async def select_in(
+        self,
+        table: str,
+        column: str,
+        values: list,
+        columns: str = "*",
+        filters: dict = None,
+        limit: int = None,
+        order_by: str = None,
+        ascending: bool = True,
+    ) -> list:
+        """Select records where column is in values."""
+        if not self.is_connected:
+            return []
+        if not values:
+            return []
+
+        query = self.client.table(table).select(columns).in_(column, values)
+        if filters:
+            for key, value in filters.items():
+                query = query.eq(key, value)
+        if order_by:
+            query = query.order(order_by, desc=not ascending)
+        if limit:
+            query = query.limit(limit)
+
+        response = await self._run_sync(lambda: query.execute())
+        return response.data or []
+
     async def select_one(self, table: str, id: str, columns: str = "*") -> Optional[dict]:
         """Select a single record by ID."""
         if not self.is_connected:
             return None
         
-        response = self.client.table(table).select(columns).eq("id", id).single().execute()
+        response = await self._run_sync(
+            lambda: self.client.table(table).select(columns).eq("id", id).single().execute()
+        )
         return response.data
     
     async def update(self, table: str, id: str, data: dict) -> dict:
@@ -158,7 +193,7 @@ class SupabaseService:
         if not self.is_connected:
             return {"id": id, **data}
         
-        response = self.client.table(table).update(data).eq("id", id).execute()
+        response = await self._run_sync(lambda: self.client.table(table).update(data).eq("id", id).execute())
         return response.data[0] if response.data else {}
     
     async def delete(self, table: str, id: str) -> bool:
@@ -166,7 +201,21 @@ class SupabaseService:
         if not self.is_connected:
             return True
         
-        self.client.table(table).delete().eq("id", id).execute()
+        await self._run_sync(lambda: self.client.table(table).delete().eq("id", id).execute())
+        return True
+
+    async def delete_where(self, table: str, filters: dict) -> bool:
+        """Delete records matching equality filters."""
+        if not self.is_connected:
+            return True
+        if not filters:
+            raise ValueError("delete_where requires filters")
+
+        query = self.client.table(table).delete()
+        for key, value in filters.items():
+            query = query.eq(key, value)
+
+        await self._run_sync(lambda: query.execute())
         return True
     
     # ==================== Storage Operations ====================
@@ -189,11 +238,11 @@ class SupabaseService:
                 f.write(file_data)
             return local_path
         
-        self.client.storage.from_(bucket).upload(
+        await self._run_sync(lambda: self.client.storage.from_(bucket).upload(
             path,
             file_data,
             {"content-type": content_type}
-        )
+        ))
         return f"{self._settings.supabase_url}/storage/v1/object/public/{bucket}/{path}"
     
     async def get_file_url(self, bucket: str, path: str, expires_in: int = 3600) -> str:
@@ -201,7 +250,7 @@ class SupabaseService:
         if not self.is_connected:
             return f"/uploads/{path}"
         
-        response = self.client.storage.from_(bucket).create_signed_url(path, expires_in)
+        response = await self._run_sync(lambda: self.client.storage.from_(bucket).create_signed_url(path, expires_in))
         return response.get("signedURL", "")
     
     async def delete_file(self, bucket: str, path: str) -> bool:
@@ -214,7 +263,7 @@ class SupabaseService:
                 os.remove(local_path)
             return True
         
-        self.client.storage.from_(bucket).remove([path])
+        await self._run_sync(lambda: self.client.storage.from_(bucket).remove([path]))
         return True
 
 

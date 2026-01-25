@@ -42,7 +42,8 @@ class Video(VideoBase):
     """Complete video model returned from API."""
     id: UUID
     uploader_id: UUID
-    storage_path: str
+    # Do not expose local filesystem paths to clients
+    download_url: Optional[str] = None
     duration_seconds: Optional[float] = None
     frame_count: Optional[int] = None
     fps: Optional[float] = None

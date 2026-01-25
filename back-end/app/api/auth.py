@@ -20,6 +20,7 @@ from app.models.user import (
     UserUpdate,
     User,
     TokenResponse,
+    RefreshTokenRequest,
     AccountType,
 )
 from app.services.supabase_client import SupabaseService
@@ -127,7 +128,7 @@ async def login(
 
 @router.post("/refresh", response_model=TokenResponse)
 async def refresh_token(
-    refresh_token: str,
+    body: RefreshTokenRequest,
     supabase: SupabaseService = Depends(get_supabase),
 ):
     """
@@ -135,7 +136,7 @@ async def refresh_token(
     """
     settings = get_settings()
     
-    payload = decode_access_token(refresh_token)
+    payload = decode_access_token(body.refresh_token)
     if not payload or payload.get("type") != "refresh":
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

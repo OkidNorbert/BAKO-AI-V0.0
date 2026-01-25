@@ -36,11 +36,15 @@ class Settings(BaseSettings):
     jwt_secret: str = "your-super-secret-key-change-in-production"
     jwt_algorithm: str = "HS256"
     jwt_expiration_minutes: int = 60 * 24  # 24 hours
+
+    # CORS (comma-separated list). Example: "http://localhost:5173,https://yourapp.com"
+    cors_origins: str = ""
     
     # File storage
     upload_dir: str = "./uploads"
     max_upload_size_mb: int = 500
     allowed_video_extensions: str = "mp4,avi,mov,mkv"
+    serve_uploads_in_debug: bool = True
     
     # GPU settings
     gpu_enabled: bool = True
@@ -61,6 +65,13 @@ class Settings(BaseSettings):
         """Get allowed video extensions as a list."""
         return [ext.strip().lower() for ext in self.allowed_video_extensions.split(",")]
     
+    @property
+    def cors_origins_list(self) -> list[str]:
+        """Get CORS origins as a list."""
+        if not self.cors_origins:
+            return []
+        return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+
     @property
     def max_upload_size_bytes(self) -> int:
         """Get max upload size in bytes."""

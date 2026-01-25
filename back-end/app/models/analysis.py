@@ -73,7 +73,7 @@ class PersonalAnalysisResult(BaseModel):
     """Personal analysis results with skill metrics."""
     id: UUID
     video_id: UUID
-    player_id: UUID
+    player_id: Optional[UUID] = None
     total_frames: int
     duration_seconds: float
     

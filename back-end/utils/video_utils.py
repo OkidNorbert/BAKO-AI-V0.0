@@ -19,12 +19,20 @@ def read_video(video_path):
         list: List of video frames as numpy arrays.
     """
     cap = cv2.VideoCapture(video_path)
+    if not cap.isOpened():
+        cap.release()
+        return []
+
     frames = []
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
-        frames.append(frame)
+    try:
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+            frames.append(frame)
+    finally:
+        cap.release()
+
     return frames
 
 def save_video(ouput_video_frames,output_video_path):
