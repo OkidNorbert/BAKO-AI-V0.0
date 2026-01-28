@@ -15,7 +15,7 @@ const ScheduleVisit = () => {
     fullName: '',
     email: '',
     phone: '',
-    childAge: '',
+    playerAge: '',
     visitDate: '',
     visitTime: '',
     additionalInfo: ''
@@ -45,7 +45,7 @@ const ScheduleVisit = () => {
       // Create notification for admin
       const notificationData = {
         title: 'New Visit Request',
-        message: `${formData.fullName} has requested a visit on ${formattedDate} at ${formData.visitTime} for a child in the ${formData.childAge} age group. Contact: ${formData.email}, ${formData.phone}`,
+        message: `${formData.fullName} has requested a visit on ${formattedDate} at ${formData.visitTime} for a player in the ${formData.playerAge} age group. Contact: ${formData.email}, ${formData.phone}`,
         type: 'info',
         recipients: 'admin',
         priority: 'high'
@@ -71,7 +71,7 @@ const ScheduleVisit = () => {
         fullName: '',
         email: '',
         phone: '',
-        childAge: '',
+        playerAge: '',
         visitDate: '',
         visitTime: '',
         additionalInfo: ''
@@ -121,7 +121,7 @@ const ScheduleVisit = () => {
             Schedule a Visit
           </h1>
           <p className={`mt-4 text-lg ${isDarkMode ? 'text-indigo-200' : 'text-indigo-700'}`}>
-            We'd love to show you around our daycare center and answer any questions you might have.
+            We'd love to show you around our academy center and answer any questions you might have.
           </p>
         </div>
       </div>
@@ -215,13 +215,13 @@ const ScheduleVisit = () => {
                   </div>
                   
                   <div>
-                    <label htmlFor="childAge" className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                      Child's Age
+                    <label htmlFor="playerAge" className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                      Player's Age
                     </label>
                     <select
-                      id="childAge"
-                      name="childAge"
-                      value={formData.childAge}
+                      id="playerAge"
+                      name="playerAge"
+                      value={formData.playerAge}
                       onChange={handleChange}
                       required
                       className={`block w-full px-4 py-3 rounded-lg ${
@@ -236,7 +236,7 @@ const ScheduleVisit = () => {
                       <option value="2-3">Early Preschool (2-3 years)</option>
                       <option value="3-4">Preschool (3-4 years)</option>
                       <option value="4-5">Pre-K (4-5 years)</option>
-                      <option value="multiple">Multiple Children</option>
+                      <option value="multiple">Multiple Players</option>
                     </select>
                   </div>
                   
@@ -382,7 +382,7 @@ const ScheduleVisit = () => {
                     <Star className="h-4 w-4 text-indigo-600" />
                   </div>
                   <p className={`ml-3 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    Get answers to all your childcare questions
+                    Get answers to all your playercare questions
                   </p>
                 </li>
               </ul>

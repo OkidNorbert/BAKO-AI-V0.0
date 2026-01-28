@@ -18,9 +18,9 @@ const GuardianManagement = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
-  const [isChildrenModalOpen, setIsChildrenModalOpen] = useState(false);
-  const [children, setChildren] = useState([]);
-  const [allChildren, setAllChildren] = useState([]);
+  const [isPlayersModalOpen, setIsPlayersModalOpen] = useState(false);
+  const [children, setPlayers] = useState([]);
+  const [allPlayers, setAllPlayers] = useState([]);
   const [currentGuardian, setCurrentGuardian] = useState(null);
   const [formData, setFormData] = useState({
     firstName: '',
@@ -36,7 +36,7 @@ const GuardianManagement = () => {
   // Fetch guardians on component mount
   useEffect(() => {
     fetchGuardians();
-    fetchAllChildren();
+    fetchAllPlayers();
   }, []);
 
   const fetchGuardians = async () => {
@@ -67,10 +67,10 @@ const GuardianManagement = () => {
     }
   };
 
-  const fetchAllChildren = async () => {
+  const fetchAllPlayers = async () => {
     try {
       const response = await api.get('/admin/children');
-      setAllChildren(response.data);
+      setAllPlayers(response.data);
     } catch (err) {
       console.error('Error fetching all children:', err);
       toast.error('Failed to fetch children');
@@ -129,18 +129,18 @@ const GuardianManagement = () => {
     setIsResetModalOpen(true);
   };
 
-  const openChildrenModal = (guardian) => {
+  const openPlayersModal = (guardian) => {
     setCurrentGuardian(guardian);
-    setChildren(guardian.children || []);
-    setIsChildrenModalOpen(true);
+    setPlayers(guardian.children || []);
+    setIsPlayersModalOpen(true);
   };
 
-  const handleAssignChildren = async (childIds) => {
+  const handleAssignPlayers = async (playerIds) => {
     setLoading(true);
     try {
-      await api.post(`/guardians/${currentGuardian._id}/children`, { childIds });
-      toast.success('Children updated successfully');
-      setIsChildrenModalOpen(false);
+      await api.post(`/guardians/${currentGuardian._id}/children`, { playerIds });
+      toast.success('Players updated successfully');
+      setIsPlayersModalOpen(false);
       
       // Update the guardian in the local state with the new children
       const updatedGuardians = guardians.map(guardian => {
@@ -165,22 +165,22 @@ const GuardianManagement = () => {
     }
   };
 
-  const handleRemoveChild = async (childId) => {
+  const handleRemovePlayer = async (playerId) => {
     setLoading(true);
     try {
-      await api.delete(`/guardians/${currentGuardian._id}/children/${childId}`);
-      toast.success('Child removed successfully');
+      await api.delete(`/guardians/${currentGuardian._id}/children/${playerId}`);
+      toast.success('Player removed successfully');
       
       // Update the children array in the current guardian
-      const updatedChildren = children.filter(child => child._id !== childId);
-      setChildren(updatedChildren);
+      const updatedPlayers = children.filter(player => player._id !== playerId);
+      setPlayers(updatedPlayers);
       
       // Update the guardian in the local state
       const updatedGuardians = guardians.map(guardian => {
         if (guardian._id === currentGuardian._id) {
           return {
             ...guardian,
-            children: updatedChildren
+            children: updatedPlayers
           };
         }
         return guardian;
@@ -191,8 +191,8 @@ const GuardianManagement = () => {
       // Also fetch fresh data
       fetchGuardians();
     } catch (err) {
-      console.error('Error removing child:', err);
-      toast.error(err.response?.data?.message || 'Failed to remove child');
+      console.error('Error removing player:', err);
+      toast.error(err.response?.data?.message || 'Failed to remove player');
     } finally {
       setLoading(false);
     }
@@ -373,7 +373,7 @@ const GuardianManagement = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Name</th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Email</th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Phone</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Children</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Players</th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
                 </tr>
               </thead>
@@ -422,13 +422,13 @@ const GuardianManagement = () => {
                             {guardian.children?.length || 0} children
                           </div>
                           <button
-                            onClick={() => openChildrenModal(guardian)}
+                            onClick={() => openPlayersModal(guardian)}
                             className={`ml-2 p-1.5 rounded-full ${
                               isDarkMode 
                                 ? 'bg-indigo-900 text-indigo-300 hover:bg-indigo-800' 
                                 : 'bg-indigo-100 text-indigo-600 hover:bg-indigo-200'
                             }`}
-                            title="Manage Children"
+                            title="Manage Players"
                           >
                             <Baby size={16} />
                           </button>
@@ -599,9 +599,9 @@ const GuardianManagement = () => {
                     }`}
                   >
                     <option value="">Select Relationship</option>
-                    <option value="Parent">Parent</option>
+                    <option value="Contact">Contact</option>
                     <option value="Guardian">Guardian</option>
-                    <option value="Grandparent">Grandparent</option>
+                    <option value="Grandcontact">Grandcontact</option>
                     <option value="Other">Other</option>
                   </select>
                 </div>
@@ -783,9 +783,9 @@ const GuardianManagement = () => {
                     }`}
                   >
                     <option value="">Select Relationship</option>
-                    <option value="Parent">Parent</option>
+                    <option value="Contact">Contact</option>
                     <option value="Guardian">Guardian</option>
-                    <option value="Grandparent">Grandparent</option>
+                    <option value="Grandcontact">Grandcontact</option>
                     <option value="Other">Other</option>
                   </select>
                 </div>
@@ -967,55 +967,55 @@ const GuardianManagement = () => {
         </div>
       </Modal>
 
-      {/* Children Management Modal */}
+      {/* Players Management Modal */}
       <Modal
-        isOpen={isChildrenModalOpen}
-        onClose={() => setIsChildrenModalOpen(false)}
-        title={`Children for ${currentGuardian?.firstName} ${currentGuardian?.lastName}`}
+        isOpen={isPlayersModalOpen}
+        onClose={() => setIsPlayersModalOpen(false)}
+        title={`Players for ${currentGuardian?.firstName} ${currentGuardian?.lastName}`}
       >
         <div className={`p-6 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
           <div className="space-y-6">
             {/* Current children section */}
             <div>
               <h3 className={`text-lg font-medium mb-3 ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-                Assigned Children
+                Assigned Players
               </h3>
               {children && children.length > 0 ? (
                 <div className="space-y-3">
-                  {children.map(child => (
-                    <div key={child._id} className={`flex justify-between items-center p-3 rounded-lg ${
+                  {children.map(player => (
+                    <div key={player._id} className={`flex justify-between items-center p-3 rounded-lg ${
                       isDarkMode ? 'bg-gray-700' : 'bg-white border border-gray-200'
                     }`}>
                       <div className="flex items-center">
                         <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                          child.gender === 'female'
+                          player.gender === 'female'
                             ? isDarkMode ? 'bg-gradient-to-r from-pink-600 to-purple-600' : 'bg-gradient-to-r from-pink-500 to-purple-500'
                             : isDarkMode ? 'bg-gradient-to-r from-blue-600 to-indigo-600' : 'bg-gradient-to-r from-blue-500 to-indigo-500'
                         }`}>
                           <span className="text-white font-medium">
-                            {child.firstName.charAt(0).toUpperCase()}
+                            {player.firstName.charAt(0).toUpperCase()}
                           </span>
                         </div>
                         <div className="ml-3">
                           <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                            {child.firstName} {child.lastName}
+                            {player.firstName} {player.lastName}
                           </p>
                           <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                            {child.dateOfBirth 
-                              ? `${new Date(child.dateOfBirth).toLocaleDateString()} (${new Date().getFullYear() - new Date(child.dateOfBirth).getFullYear()} yrs)` 
+                            {player.dateOfBirth 
+                              ? `${new Date(player.dateOfBirth).toLocaleDateString()} (${new Date().getFullYear() - new Date(player.dateOfBirth).getFullYear()} yrs)` 
                               : 'No DOB'
                             }
                           </p>
                         </div>
                       </div>
                       <button
-                        onClick={() => handleRemoveChild(child._id)}
+                        onClick={() => handleRemovePlayer(player._id)}
                         className={`p-1.5 rounded-full ${
                           isDarkMode 
                             ? 'bg-gray-600 text-red-300 hover:bg-gray-500' 
                             : 'bg-gray-100 text-red-500 hover:bg-red-100'
                         }`}
-                        title="Remove child"
+                        title="Remove player"
                       >
                         <X size={18} />
                       </button>
@@ -1039,11 +1039,11 @@ const GuardianManagement = () => {
             {/* Add children section */}
             <div>
               <h3 className={`text-lg font-medium mb-3 ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-                Add Children
+                Add Players
               </h3>
               <div className="mb-4">
                 <select
-                  id="childSelect"
+                  id="playerSelect"
                   className={`block w-full rounded-md shadow-sm py-2 px-3 ${
                     isDarkMode 
                       ? 'bg-gray-700 border-gray-600 text-white focus:border-indigo-500 focus:ring-indigo-500' 
@@ -1051,19 +1051,19 @@ const GuardianManagement = () => {
                   }`}
                   onChange={(e) => {
                     if (!e.target.value) return;
-                    const selectedChild = allChildren.find(c => c._id === e.target.value);
-                    if (selectedChild && !children.some(c => c._id === selectedChild._id)) {
-                      setChildren([...children, selectedChild]);
+                    const selectedPlayer = allPlayers.find(c => c._id === e.target.value);
+                    if (selectedPlayer && !children.some(c => c._id === selectedPlayer._id)) {
+                      setPlayers([...children, selectedPlayer]);
                     }
                     e.target.value = ''; // Reset select after selection
                   }}
                 >
-                  <option value="">Select a child to add</option>
-                  {allChildren
-                    .filter(child => !children.some(c => c._id === child._id))
-                    .map(child => (
-                      <option key={child._id} value={child._id}>
-                        {child.firstName} {child.lastName}
+                  <option value="">Select a player to add</option>
+                  {allPlayers
+                    .filter(player => !children.some(c => c._id === player._id))
+                    .map(player => (
+                      <option key={player._id} value={player._id}>
+                        {player.firstName} {player.lastName}
                       </option>
                     ))
                   }
@@ -1074,7 +1074,7 @@ const GuardianManagement = () => {
 
           <div className="flex justify-end space-x-3 mt-6">
             <button
-              onClick={() => setIsChildrenModalOpen(false)}
+              onClick={() => setIsPlayersModalOpen(false)}
               className={`px-4 py-2 rounded-md text-sm font-medium ${
                 isDarkMode 
                   ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' 
@@ -1084,7 +1084,7 @@ const GuardianManagement = () => {
               Cancel
             </button>
             <button
-              onClick={() => handleAssignChildren(children.map(c => c._id))}
+              onClick={() => handleAssignPlayers(children.map(c => c._id))}
               disabled={loading}
               className={`px-4 py-2 rounded-md text-sm font-medium ${
                 isDarkMode 

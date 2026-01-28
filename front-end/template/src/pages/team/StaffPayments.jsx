@@ -3,41 +3,41 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { showToast } from '../../components/shared/Toast';
 
-const BabysitterPayments = () => {
+const CoachPayments = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [babysitter, setBabysitter] = useState(null);
+  const [coach, setCoach] = useState(null);
   const [payments, setPayments] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     date: '',
     sessionType: 'HALF_DAY',
-    numberOfChildren: 1,
+    numberOfPlayers: 1,
     notes: ''
   });
 
   useEffect(() => {
-    fetchBabysitterDetails();
+    fetchCoachDetails();
     fetchPayments();
   }, [id]);
 
-  const fetchBabysitterDetails = async () => {
+  const fetchCoachDetails = async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `http://localhost:5000/api/admin/babysitters/${id}`,
+        `http://localhost:5000/api/admin/coachs/${id}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         }
       );
-      setBabysitter(response.data);
+      setCoach(response.data);
     } catch (error) {
-      console.error('Error fetching babysitter details:', error);
+      console.error('Error fetching coach details:', error);
       showToast(
-        error.response?.data?.error || 'Failed to fetch babysitter details',
+        error.response?.data?.error || 'Failed to fetch coach details',
         'error'
       );
     }
@@ -47,7 +47,7 @@ const BabysitterPayments = () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `http://localhost:5000/api/admin/babysitters/${id}/payments`,
+        `http://localhost:5000/api/admin/coachs/${id}/payments`,
         {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -79,7 +79,7 @@ const BabysitterPayments = () => {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `http://localhost:5000/api/admin/babysitters/${id}/payments`,
+        `http://localhost:5000/api/admin/coachs/${id}/payments`,
         formData,
         {
           headers: {
@@ -92,7 +92,7 @@ const BabysitterPayments = () => {
       setFormData({
         date: '',
         sessionType: 'HALF_DAY',
-        numberOfChildren: 1,
+        numberOfPlayers: 1,
         notes: ''
       });
       fetchPayments();
@@ -109,7 +109,7 @@ const BabysitterPayments = () => {
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        `http://localhost:5000/api/admin/babysitters/payments/${paymentId}`,
+        `http://localhost:5000/api/admin/coachs/payments/${paymentId}`,
         { status },
         {
           headers: {
@@ -140,15 +140,15 @@ const BabysitterPayments = () => {
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-2xl font-bold">Babysitter Payments</h1>
-          {babysitter && babysitter.user && (
+          <h1 className="text-2xl font-bold">Coach Payments</h1>
+          {coach && coach.user && (
             <p className="text-gray-600 mt-2">
-              {`${babysitter.user.firstName} ${babysitter.user.lastName}`}
+              {`${coach.user.firstName} ${coach.user.lastName}`}
             </p>
           )}
-          {babysitter && !babysitter.user && (
+          {coach && !coach.user && (
             <p className="text-gray-600 mt-2">
-              {`${babysitter.firstName} ${babysitter.lastName}`}
+              {`${coach.firstName} ${coach.lastName}`}
             </p>
           )}
         </div>
@@ -185,16 +185,16 @@ const BabysitterPayments = () => {
                   required
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 >
-                  <option value="HALF_DAY">Half Day (2,000K per child)</option>
-                  <option value="FULL_DAY">Full Day (5,000K per child)</option>
+                  <option value="HALF_DAY">Half Day (2,000K per player)</option>
+                  <option value="FULL_DAY">Full Day (5,000K per player)</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Number of Children</label>
+                <label className="block text-sm font-medium text-gray-700">Number of Players</label>
                 <input
                   type="number"
-                  name="numberOfChildren"
-                  value={formData.numberOfChildren}
+                  name="numberOfPlayers"
+                  value={formData.numberOfPlayers}
                   onChange={handleChange}
                   min="1"
                   required
@@ -235,7 +235,7 @@ const BabysitterPayments = () => {
                 Session Type
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Children
+                Players
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Amount
@@ -270,7 +270,7 @@ const BabysitterPayments = () => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900">
-                    {payment.numberOfChildren}
+                    {payment.numberOfPlayers}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -326,4 +326,4 @@ const BabysitterPayments = () => {
   );
 };
 
-export default BabysitterPayments;
+export default CoachPayments;

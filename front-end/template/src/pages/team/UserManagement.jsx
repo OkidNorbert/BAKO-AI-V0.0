@@ -37,16 +37,16 @@ const UserManagement = () => {
     phoneNumber: '',
     address: ''
   });
-  const [modalRole, setModalRole] = useState('admin'); // 'admin' or 'babysitter'
+  const [modalRole, setModalRole] = useState('admin'); // 'admin' or 'coach'
   const [newUser, setNewUser] = useState({
     firstName: '',
     lastName: '',
     email: '',
     password: '',
-    role: 'babysitter',
+    role: 'coach',
     phoneNumber: '',
     address: '',
-    // Additional fields for babysitters
+    // Additional fields for coachs
     specialties: '',
     certifications: '',
     experience: '',
@@ -100,7 +100,7 @@ const UserManagement = () => {
         }
       }
       
-      const response = await api.get('/admin/users?roles=babysitter,admin');
+      const response = await api.get('/admin/users?roles=coach,admin');
       setUsers(response.data || []);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -111,7 +111,7 @@ const UserManagement = () => {
           // Try to refresh the token
           await refreshAccessToken();
           // If successful, retry the request
-          const retryResponse = await api.get('/admin/users?roles=babysitter,admin');
+          const retryResponse = await api.get('/admin/users?roles=coach,admin');
           setUsers(retryResponse.data || []);
           return;
         } catch (refreshError) {
@@ -329,9 +329,9 @@ const UserManagement = () => {
   };
 
   const handleAddButtonClick = (role) => {
-    if (role === 'babysitter') {
-      // Redirect to the full babysitter registration page
-      navigate('/admin/babysitter-registration');
+    if (role === 'coach') {
+      // Redirect to the full coach registration page
+      navigate('/admin/coach-registration');
     } else {
       // For admin, show the modal form
       setModalRole(role);
@@ -417,7 +417,7 @@ const UserManagement = () => {
         lastName: '',
         email: '',
         password: '',
-        role: 'babysitter',
+        role: 'coach',
         phoneNumber: '',
         address: '',
         specialties: '',
@@ -483,12 +483,12 @@ const UserManagement = () => {
                 : 'text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600'
             }`}>User Account Management</h1>
             <p className={`mt-1 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              Create and manage user accounts for babysitters and administrators
+              Create and manage user accounts for coachs and administrators
             </p>
           </div>
           <div className="flex space-x-3">
             <button
-              onClick={() => handleAddButtonClick('babysitter')}
+              onClick={() => handleAddButtonClick('coach')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-full shadow-md transition-all duration-200 hover:shadow-lg hover:scale-105 ${
                 isDarkMode
                   ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white'
@@ -496,7 +496,7 @@ const UserManagement = () => {
               }`}
             >
               <Users className="h-4 w-4" />
-              <span>Create Babysitter Account</span>
+              <span>Create Coach Account</span>
             </button>
             <button
               onClick={() => handleAddButtonClick('admin')}
@@ -512,7 +512,7 @@ const UserManagement = () => {
           </div>
         </div>
         
-        {/* Information banner about activating babysitters */}
+        {/* Information banner about activating coachs */}
         <div className={`border-l-4 p-4 mb-6 rounded-md ${
           isDarkMode 
             ? 'bg-blue-900/30 border-blue-700 text-blue-300' 
@@ -527,7 +527,7 @@ const UserManagement = () => {
             <div className="ml-3">
               <h3 className={`text-sm font-medium ${isDarkMode ? 'text-blue-300' : 'text-blue-800'}`}>Important Notice</h3>
               <div className="mt-2 text-sm">
-                <p>Babysitters must be <strong>activated</strong> before they can be paid. Find any babysitter with "Pending" status and click the "Activate" button to enable them for payments.</p>
+                <p>Coachs must be <strong>activated</strong> before they can be paid. Find any coach with "Pending" status and click the "Activate" button to enable them for payments.</p>
               </div>
             </div>
           </div>
@@ -570,7 +570,7 @@ const UserManagement = () => {
                 >
                   <option value="all" className={isDarkMode ? 'bg-gray-700' : 'bg-white'}>All Roles</option>
                   <option value="admin" className={isDarkMode ? 'bg-gray-700' : 'bg-white'}>Admin</option>
-                  <option value="babysitter" className={isDarkMode ? 'bg-gray-700' : 'bg-white'}>Babysitter</option>
+                  <option value="coach" className={isDarkMode ? 'bg-gray-700' : 'bg-white'}>Coach</option>
                 </select>
               </div>
             </div>
@@ -651,7 +651,7 @@ const UserManagement = () => {
                             ? isDarkMode ? 'bg-purple-900 text-purple-200' : 'bg-purple-100 text-purple-800'
                             : isDarkMode ? 'bg-green-900 text-green-200' : 'bg-green-100 text-green-800'
                         }`}>
-                          {user.role === 'admin' ? 'Admin' : 'Babysitter'}
+                          {user.role === 'admin' ? 'Admin' : 'Coach'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -759,7 +759,7 @@ const UserManagement = () => {
                     ? 'text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-yellow-400' 
                     : 'text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-pink-600'
                 }`}>
-                  {modalRole === 'admin' ? 'Add New Administrator' : 'Create Babysitter Account'}
+                  {modalRole === 'admin' ? 'Add New Administrator' : 'Create Coach Account'}
                 </h2>
                 <p className={`mt-1 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                   Fill in the details to create a new account
@@ -783,10 +783,10 @@ const UserManagement = () => {
               </div>
             )}
             
-            {modalRole === 'babysitter' && (
+            {modalRole === 'coach' && (
               <div className={`mb-6 p-4 rounded-xl ${isDarkMode ? 'bg-blue-900/40 text-blue-200 border border-blue-800/30' : 'bg-blue-50 text-blue-800 border border-blue-100'}`}>
                 <p className="text-sm">
-                  <strong>Note:</strong> This form is for creating simple user accounts only. For complete babysitter registration with all details, please use the dedicated "Create Babysitter Account" option.
+                  <strong>Note:</strong> This form is for creating simple user accounts only. For complete coach registration with all details, please use the dedicated "Create Coach Account" option.
                 </p>
               </div>
             )}
@@ -979,7 +979,7 @@ const UserManagement = () => {
                         : 'bg-gradient-to-r from-green-500 to-teal-500 text-white hover:from-green-600 hover:to-teal-600'
                   }`}
                 >
-                  {loading ? 'Creating...' : `Create ${modalRole === 'admin' ? 'Admin' : 'Babysitter'} Account`}
+                  {loading ? 'Creating...' : `Create ${modalRole === 'admin' ? 'Admin' : 'Coach'} Account`}
                 </button>
               </div>
             </form>
@@ -1083,7 +1083,7 @@ const UserManagement = () => {
           }`}>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">
-                Edit {selectedUser.role === 'admin' ? 'Administrator' : 'Babysitter'} Details
+                Edit {selectedUser.role === 'admin' ? 'Administrator' : 'Coach'} Details
               </h2>
               <button
                 onClick={() => setShowEditModal(false)}

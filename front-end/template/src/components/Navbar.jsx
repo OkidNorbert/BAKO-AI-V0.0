@@ -16,8 +16,8 @@ const Navbar = () => {
     switch (user.role) {
       case 'admin':
         return '/admin';
-      case 'babysitter':
-        return '/babysitter';
+      case 'coach':
+        return '/coach';
       default:
         return '/';
     }
@@ -50,12 +50,12 @@ const Navbar = () => {
                       Admin Panel
                     </Link>
                   )}
-                  {user.role === 'babysitter' && (
+                  {user.role === 'coach' && (
                     <Link
                       to="/children"
                       className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
                     >
-                      Children
+                      Players
                     </Link>
                   )}
                 </>

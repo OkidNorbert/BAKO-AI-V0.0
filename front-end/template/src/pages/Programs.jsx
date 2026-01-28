@@ -11,28 +11,28 @@ const Programs = () => {
       name: 'Infants',
       age: '6 weeks - 12 months',
       description: 'Nurturing care in a safe, stimulating environment focused on sensory experiences and developmental milestones.',
-      ratio: '1:3 (caregiver to child)',
+      ratio: '1:3 (caregiver to player)',
       image: 'https://images.unsplash.com/photo-1554684765-8f7757fd37e9?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80'
     },
     {
       name: 'Toddlers',
       age: '1 - 2 years',
       description: 'Encouraging exploration, independence, and social skills through play-based activities and routines.',
-      ratio: '1:4 (caregiver to child)',
+      ratio: '1:4 (caregiver to player)',
       image: 'https://images.unsplash.com/photo-1587876931567-564ce588bfbd?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80'
     },
     {
       name: 'Preschool',
       age: '3 - 4 years',
       description: 'Structured learning experiences that develop cognitive skills, creativity, and prepare children for kindergarten.',
-      ratio: '1:8 (caregiver to child)',
+      ratio: '1:8 (caregiver to player)',
       image: 'https://images.unsplash.com/photo-1602046819300-71c0a2659342?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80'
     },
     {
       name: 'Pre-K',
       age: '4 - 5 years',
       description: 'Comprehensive kindergarten readiness program focusing on academic, social, and emotional development.',
-      ratio: '1:10 (caregiver to child)',
+      ratio: '1:10 (caregiver to player)',
       image: 'https://images.unsplash.com/photo-1629196867932-643fb3746af1?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80'
     }
   ];
@@ -94,7 +94,7 @@ const Programs = () => {
               isDarkMode ? 'text-yellow-300' : 'text-indigo-700'
             }`}>Our Programs</h1>
             <p className="text-xl max-w-3xl mx-auto">
-              Diverse, engaging activities designed to nurture your child's development at every stage
+              Diverse, engaging activities designed to nurture your player's development at every stage
             </p>
           </div>
         </div>
@@ -174,7 +174,7 @@ const Programs = () => {
                       <h3 className={`font-bold ${
                         isDarkMode ? 'text-white' : 'text-gray-800'
                       }`}>Play-Based Learning</h3>
-                      <p>Child-led exploration and discovery through hands-on activities and play.</p>
+                      <p>Player-led exploration and discovery through hands-on activities and play.</p>
                     </div>
                   </div>
                   
@@ -197,7 +197,7 @@ const Programs = () => {
                     <div>
                       <h3 className={`font-bold ${
                         isDarkMode ? 'text-white' : 'text-gray-800'
-                      }`}>Whole Child Development</h3>
+                      }`}>Whole Player Development</h3>
                       <p>Equal focus on cognitive, social-emotional, physical, and creative growth.</p>
                     </div>
                   </div>
@@ -210,7 +210,7 @@ const Programs = () => {
                       <h3 className={`font-bold ${
                         isDarkMode ? 'text-white' : 'text-gray-800'
                       }`}>Kindergarten Readiness</h3>
-                      <p>Intentional preparation for school success while respecting each child's developmental pace.</p>
+                      <p>Intentional preparation for school success while respecting each player's developmental pace.</p>
                     </div>
                   </div>
                 </div>
@@ -257,7 +257,7 @@ const Programs = () => {
             }`}>Enrichment Programs</h2>
             <p className={`max-w-3xl mx-auto ${
               isDarkMode ? 'text-gray-300' : 'text-gray-600'
-            }`}>Special activities to nurture your child's creative expression and cultural awareness</p>
+            }`}>Special activities to nurture your player's creative expression and cultural awareness</p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -303,7 +303,7 @@ const Programs = () => {
                   'All meals and snacks included',
                   'Full curriculum activities',
                   'Regular progress reports',
-                  'Parent-teacher conferences'
+                  'Contact-teacher conferences'
                 ],
                 cta: 'Schedule a Tour'
               },
@@ -404,7 +404,7 @@ const Programs = () => {
           <div className="text-center mb-12">
             <h2 className={`text-3xl font-bold mb-4 ${
               isDarkMode ? 'text-yellow-300' : 'text-indigo-600'
-            }`}>What Parents Say</h2>
+            }`}>What Contacts Say</h2>
             <p className={`max-w-3xl mx-auto ${
               isDarkMode ? 'text-gray-300' : 'text-gray-600'
             }`}>Hear from families who have experienced our programs</p>
@@ -415,17 +415,17 @@ const Programs = () => {
               {
                 quote: "My son loves the cultural activities! He comes home singing songs and sharing stories about different countries. It's beautiful to see him embracing diversity at such a young age.",
                 author: "Chioma A.",
-                role: "Parent of Preschooler"
+                role: "Contact of Preschooler"
               },
               {
                 quote: "The curriculum here is exceptional. My daughter has developed so much confidence and curiosity. Her teachers truly understand her learning style and nurture her interests.",
                 author: "Michael J.",
-                role: "Parent of Toddler"
+                role: "Contact of Toddler"
               },
               {
-                quote: "As working parents, we needed a place that provided more than just basic care. Daystar has exceeded our expectations with their enrichment programs and loving environment.",
+                quote: "As working contacts, we needed a place that provided more than just basic care. Daystar has exceeded our expectations with their enrichment programs and loving environment.",
                 author: "Fatima & James R.",
-                role: "Parents of Infant"
+                role: "Contacts of Infant"
               }
             ].map((testimonial, index) => (
               <div key={index} className={`rounded-xl p-6 ${

@@ -16,7 +16,7 @@ import {
 
 const SystemSettings = () => {
   const [settings, setSettings] = useState({
-    daycareName: '',
+    academyName: '',
     address: '',
     phone: '',
     email: '',
@@ -29,8 +29,8 @@ const SystemSettings = () => {
       saturday: { open: 'Closed', close: 'Closed' },
       sunday: { open: 'Closed', close: 'Closed' }
     },
-    maxChildrenPerClass: 15,
-    maxBabysitterRatio: 5,
+    maxPlayersPerClass: 15,
+    maxCoachRatio: 5,
     paymentDueDate: 5,
     lateFeePercentage: 10
   });
@@ -141,8 +141,8 @@ const SystemSettings = () => {
               <label className="block text-sm font-medium mb-2">Daycare Name</label>
               <input
                 type="text"
-                value={settings.daycareName}
-                onChange={(e) => handleSettingChange('daycareName', e.target.value)}
+                value={settings.academyName}
+                onChange={(e) => handleSettingChange('academyName', e.target.value)}
                 className={`w-full p-2 rounded-md ${
                   isDarkMode
                     ? 'bg-gray-700 text-white'
@@ -241,11 +241,11 @@ const SystemSettings = () => {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Maximum Children Per Class</label>
+              <label className="block text-sm font-medium mb-2">Maximum Players Per Class</label>
               <input
                 type="number"
-                value={settings.maxChildrenPerClass}
-                onChange={(e) => handleSettingChange('maxChildrenPerClass', parseInt(e.target.value))}
+                value={settings.maxPlayersPerClass}
+                onChange={(e) => handleSettingChange('maxPlayersPerClass', parseInt(e.target.value))}
                 className={`w-full p-2 rounded-md ${
                   isDarkMode
                     ? 'bg-gray-700 text-white'
@@ -254,11 +254,11 @@ const SystemSettings = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Maximum Babysitter Ratio</label>
+              <label className="block text-sm font-medium mb-2">Maximum Coach Ratio</label>
               <input
                 type="number"
-                value={settings.maxBabysitterRatio}
-                onChange={(e) => handleSettingChange('maxBabysitterRatio', parseInt(e.target.value))}
+                value={settings.maxCoachRatio}
+                onChange={(e) => handleSettingChange('maxCoachRatio', parseInt(e.target.value))}
                 className={`w-full p-2 rounded-md ${
                   isDarkMode
                     ? 'bg-gray-700 text-white'

@@ -574,9 +574,9 @@ const Notifications = () => {
                       <span>
                         {notification.recipients === 'all'
                           ? 'All Users'
-                          : notification.recipients === 'parents'
+                          : notification.recipients === 'contacts'
                             ? 'Teams'
-                            : notification.recipients === 'players'
+                            : notification.recipients === 'children'
                               ? 'Players'
                               : notification.recipients}
                       </span>
@@ -685,7 +685,7 @@ const Notifications = () => {
                     >
                       <option value="all">All Users</option>
                       <option value="teams">Teams Only</option>
-                      <option value="players">Players Only</option>
+                      <option value="children">Players Only</option>
                       <option value="admins">Admins Only</option>
                     </select>
                   </div>

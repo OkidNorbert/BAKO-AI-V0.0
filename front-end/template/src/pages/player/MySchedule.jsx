@@ -11,7 +11,7 @@ const MySchedule = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentDay, setCurrentDay] = useState(getCurrentDayName());
-  const [assignedChildren, setAssignedChildren] = useState([]);
+  const [assignedPlayers, setAssignedPlayers] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const { isDarkMode } = useTheme();
   const { user, refreshAccessToken, isAuthenticated } = useAuth();
@@ -33,13 +33,13 @@ const MySchedule = () => {
         toast.loading('Refreshing your schedule...', { id: 'refresh-toast' });
       }
       
-      // Get babysitter's schedule
-      const scheduleResponse = await api.get('/babysitter/schedule');
+      // Get coach's schedule
+      const scheduleResponse = await api.get('/coach/schedule');
       setSchedules(scheduleResponse.data || []);
       
-      // Get children assigned to this babysitter
-      const childrenResponse = await api.get('/babysitter/children');
-      setAssignedChildren(childrenResponse.data || []);
+      // Get children assigned to this coach
+      const childrenResponse = await api.get('/coach/children');
+      setAssignedPlayers(childrenResponse.data || []);
       
       if (showToast) {
         toast.success('Schedule refreshed!', { id: 'refresh-toast' });
@@ -52,11 +52,11 @@ const MySchedule = () => {
         try {
           await refreshAccessToken();
           // Retry the request after token refresh
-          const scheduleResponse = await api.get('/babysitter/schedule');
+          const scheduleResponse = await api.get('/coach/schedule');
           setSchedules(scheduleResponse.data || []);
           
-          const childrenResponse = await api.get('/babysitter/children');
-          setAssignedChildren(childrenResponse.data || []);
+          const childrenResponse = await api.get('/coach/children');
+          setAssignedPlayers(childrenResponse.data || []);
           
           if (showToast) {
             toast.success('Schedule refreshed!', { id: 'refresh-toast' });
@@ -125,7 +125,7 @@ const MySchedule = () => {
   };
 
   // Get children for a specific schedule
-  const getChildrenForSchedule = (scheduleId) => {
+  const getPlayersForSchedule = (scheduleId) => {
     const schedule = schedules.find(s => s._id === scheduleId || s.id === scheduleId);
     if (!schedule || !schedule.children) return [];
     
@@ -150,9 +150,9 @@ const MySchedule = () => {
     return currentTime >= startTime && currentTime <= endTime;
   };
 
-  // Navigate to view a child's details
-  const viewChildDetails = (childId) => {
-    navigate(`/babysitter/children/${childId}`);
+  // Navigate to view a player's details
+  const viewPlayerDetails = (playerId) => {
+    navigate(`/coach/children/${playerId}`);
   };
 
   if (loading && !refreshing) {
@@ -229,7 +229,7 @@ const MySchedule = () => {
             <div className="space-y-6">
               {todaySchedules.map((schedule) => {
                 const isActive = isSessionActive(schedule);
-                const scheduleChildren = getChildrenForSchedule(schedule._id || schedule.id);
+                const schedulePlayers = getPlayersForSchedule(schedule._id || schedule.id);
                 
                 return (
                   <div 
@@ -279,31 +279,31 @@ const MySchedule = () => {
                       </div>
                     )}
                     
-                    {scheduleChildren.length > 0 ? (
+                    {schedulePlayers.length > 0 ? (
                       <div>
                         <h4 className="font-medium mb-2">
-                          Assigned Children ({scheduleChildren.length}/{schedule.maxCapacity || '?'})
+                          Assigned Players ({schedulePlayers.length}/{schedule.maxCapacity || '?'})
                         </h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                          {scheduleChildren.map((child) => (
+                          {schedulePlayers.map((player) => (
                             <div 
-                              key={child._id || child.id} 
+                              key={player._id || player.id} 
                               className={`p-3 rounded-lg flex items-center ${
                                 isDarkMode ? 'bg-gray-700 hover:bg-gray-650' : 'bg-white hover:bg-gray-50'
                               } cursor-pointer transition-colors`}
-                              onClick={() => viewChildDetails(child._id || child.id)}
+                              onClick={() => viewPlayerDetails(player._id || player.id)}
                             >
                               <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                                child.gender === 'male' 
+                                player.gender === 'male' 
                                   ? isDarkMode ? 'bg-blue-900 text-blue-200' : 'bg-blue-100 text-blue-800'
                                   : isDarkMode ? 'bg-pink-900 text-pink-200' : 'bg-pink-100 text-pink-800'
                               }`}>
-                                <span>{child.firstName?.charAt(0) || child.fullName?.charAt(0) || 'C'}</span>
+                                <span>{player.firstName?.charAt(0) || player.fullName?.charAt(0) || 'C'}</span>
                               </div>
                               <div className="ml-3">
-                                <p className="font-medium">{child.firstName ? `${child.firstName} ${child.lastName}` : child.fullName}</p>
+                                <p className="font-medium">{player.firstName ? `${player.firstName} ${player.lastName}` : player.fullName}</p>
                                 <p className="text-xs">
-                                  {child.age || 'Unknown age'} • {child.attendance || 'Full day'}
+                                  {player.age || 'Unknown age'} • {player.attendance || 'Full day'}
                                 </p>
                               </div>
                             </div>

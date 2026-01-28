@@ -15,14 +15,14 @@ import {
 } from 'lucide-react';
 import { showToast } from '../../components/shared/Toast';
 
-const ChildPayment = () => {
-  const [childrenList, setChildrenList] = useState([]);
+const PlayerPayment = () => {
+  const [childrenList, setPlayersList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSession, setFilterSession] = useState('all');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [selectedChild, setSelectedChild] = useState(null);
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [paymentForm, setPaymentForm] = useState({
     amount: '',
     paymentDate: new Date().toISOString().split('T')[0],
@@ -33,7 +33,7 @@ const ChildPayment = () => {
   const { isDarkMode } = useTheme();
   const [paymentHistory, setPaymentHistory] = useState([]);
   const [showPaymentHistory, setShowPaymentHistory] = useState(false);
-  const [currentChildForHistory, setCurrentChildForHistory] = useState(null);
+  const [currentPlayerForHistory, setCurrentPlayerForHistory] = useState(null);
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [revenueBySession, setRevenueBySession] = useState({
     'full-day': 0,
@@ -42,23 +42,23 @@ const ChildPayment = () => {
 
   // Fetch children when component mounts
   useEffect(() => {
-    fetchChildrenWithSessionInfo();
+    fetchPlayersWithSessionInfo();
     fetchTotalRevenue();
   }, []);
 
-  const fetchChildrenWithSessionInfo = async () => {
+  const fetchPlayersWithSessionInfo = async () => {
     try {
       setLoading(true);
-      const response = await adminAPI.getChildren();
+      const response = await adminAPI.getPlayers();
       
       // Enhance children data with session type and payment status
-      const enhancedChildrenList = response.data.map(child => {
-        // Use child's own sessionType property instead of trying to fetch a schedule
-        const sessionType = child.sessionType || 'full-day';
-        const paymentStatus = child.lastPaymentDate ? 'paid' : 'unpaid';
+      const enhancedPlayersList = response.data.map(player => {
+        // Use player's own sessionType property instead of trying to fetch a schedule
+        const sessionType = player.sessionType || 'full-day';
+        const paymentStatus = player.lastPaymentDate ? 'paid' : 'unpaid';
         
         return {
-          ...child,
+          ...player,
           sessionType,
           isEnrolled: true,
           paymentStatus,
@@ -66,7 +66,7 @@ const ChildPayment = () => {
         };
       });
       
-      setChildrenList(enhancedChildrenList);
+      setPlayersList(enhancedPlayersList);
     } catch (error) {
       console.error('Error fetching children:', error);
       setError('Failed to load children. Please try again later.');
@@ -90,10 +90,10 @@ const ChildPayment = () => {
     }
   };
 
-  const fetchChildPaymentHistory = async (childId) => {
+  const fetchPlayerPaymentHistory = async (playerId) => {
     try {
       setLoading(true);
-      const response = await adminAPI.getChildPayments(childId);
+      const response = await adminAPI.getPlayerPayments(playerId);
       
       // Check the structure of the response data
       if (response.data && response.data.payments) {
@@ -116,7 +116,7 @@ const ChildPayment = () => {
       setShowPaymentHistory(true); // Still show the modal with empty state
       
       // Show more informative error message
-      let errorMessage = 'No payment records found for this child';
+      let errorMessage = 'No payment records found for this player';
       
       if (error.response) {
         if (error.response.status === 500) {
@@ -130,36 +130,36 @@ const ChildPayment = () => {
     }
   };
 
-  const handleOpenPaymentModal = (child) => {
-    setSelectedChild(child);
+  const handleOpenPaymentModal = (player) => {
+    setSelectedPlayer(player);
     setPaymentForm({
       ...paymentForm,
-      amount: child.paymentAmount || 5000
+      amount: player.paymentAmount || 5000
     });
     setShowPaymentModal(true);
   };
 
-  const handleViewPaymentHistory = (child) => {
-    setCurrentChildForHistory(child);
-    fetchChildPaymentHistory(child._id);
+  const handleViewPaymentHistory = (player) => {
+    setCurrentPlayerForHistory(player);
+    fetchPlayerPaymentHistory(player._id);
   };
 
   const handlePaymentSubmit = async () => {
-    if (!selectedChild) return;
+    if (!selectedPlayer) return;
     
     try {
       setLoading(true);
       
       const paymentData = {
-        childId: selectedChild._id,
+        playerId: selectedPlayer._id,
         amount: parseFloat(paymentForm.amount),
         paymentDate: paymentForm.paymentDate,
         paymentMethod: paymentForm.paymentMethod,
         description: paymentForm.description || 'Daycare fee payment',
-        sessionType: selectedChild.sessionType
+        sessionType: selectedPlayer.sessionType
       };
       
-      const response = await adminAPI.recordChildPayment(paymentData);
+      const response = await adminAPI.recordPlayerPayment(paymentData);
       
       if (response.data) {
         showToast('Payment recorded successfully', 'success');
@@ -175,7 +175,7 @@ const ChildPayment = () => {
         });
         
         // Refresh data
-        fetchChildrenWithSessionInfo();
+        fetchPlayersWithSessionInfo();
         fetchTotalRevenue();
       }
     } catch (error) {
@@ -187,10 +187,10 @@ const ChildPayment = () => {
   };
 
   // Filter children based on search term and session type
-  const filteredChildren = childrenList.filter(child => {
-    const fullName = `${child.firstName} ${child.lastName}`.toLowerCase();
+  const filteredPlayers = childrenList.filter(player => {
+    const fullName = `${player.firstName} ${player.lastName}`.toLowerCase();
     const searchMatch = fullName.includes(searchTerm.toLowerCase());
-    const sessionMatch = filterSession === 'all' || child.sessionType === filterSession;
+    const sessionMatch = filterSession === 'all' || player.sessionType === filterSession;
     
     return searchMatch && sessionMatch;
   });
@@ -223,7 +223,7 @@ const ChildPayment = () => {
               isDarkMode 
                 ? 'text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400' 
                 : 'text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600'
-            }`}>Child Payment Management</h1>
+            }`}>Player Payment Management</h1>
             <p className={`mt-1 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
               Record payments for children based on their enrollment session
             </p>
@@ -302,7 +302,7 @@ const ChildPayment = () => {
             }`} />
             <input
               type="text"
-              placeholder="Search by child name..."
+              placeholder="Search by player name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className={`w-full py-2 pl-10 pr-4 rounded-lg text-sm ${
@@ -314,7 +314,7 @@ const ChildPayment = () => {
           </div>
         </div>
 
-        {/* Children payment table */}
+        {/* Players payment table */}
         <div className={`rounded-lg overflow-hidden ${
           isDarkMode ? 'bg-gray-800' : 'bg-white'
         } shadow-md`}>
@@ -322,10 +322,10 @@ const ChildPayment = () => {
             <thead className={isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}>
               <tr>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                  Child Name
+                  Player Name
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                  Parent
+                  Contact
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
                   Session Type
@@ -345,62 +345,62 @@ const ChildPayment = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredChildren.length === 0 ? (
+              {filteredPlayers.length === 0 ? (
                 <tr className={isDarkMode ? 'bg-gray-800' : 'bg-white'}>
                   <td colSpan="7" className="px-6 py-4 text-center text-sm">
                     No children found matching your criteria.
                   </td>
                 </tr>
               ) : (
-                filteredChildren.map((child) => (
-                  <tr key={child._id} className={isDarkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-white hover:bg-gray-50'}>
+                filteredPlayers.map((player) => (
+                  <tr key={player._id} className={isDarkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-white hover:bg-gray-50'}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium">
-                        {child.firstName} {child.lastName}
+                        {player.firstName} {player.lastName}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm">
-                        {child.parentName || (child.parent ? `${child.parent.firstName} ${child.parent.lastName}` : 'Not assigned')}
+                        {player.contactName || (player.contact ? `${player.contact.firstName} ${player.contact.lastName}` : 'Not assigned')}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        child.sessionType === 'full-day'
+                        player.sessionType === 'full-day'
                           ? isDarkMode ? 'bg-blue-900 text-blue-300' : 'bg-blue-100 text-blue-800'
                           : isDarkMode ? 'bg-purple-900 text-purple-300' : 'bg-purple-100 text-purple-800'
                       }`}>
-                        {child.sessionType === 'full-day' ? 'Full Day' : 'Half Day'}
+                        {player.sessionType === 'full-day' ? 'Full Day' : 'Half Day'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className={`text-sm font-medium ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>
-                        ${child.paymentAmount.toLocaleString()}
+                        ${player.paymentAmount.toLocaleString()}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        child.paymentStatus === 'paid'
+                        player.paymentStatus === 'paid'
                           ? isDarkMode ? 'bg-green-900 text-green-300' : 'bg-green-100 text-green-800'
                           : isDarkMode ? 'bg-yellow-900 text-yellow-300' : 'bg-yellow-100 text-yellow-800'
                       }`}>
-                        {child.paymentStatus === 'paid' ? 'Paid' : 'Unpaid'}
+                        {player.paymentStatus === 'paid' ? 'Paid' : 'Unpaid'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {child.lastPaymentDate ? new Date(child.lastPaymentDate).toLocaleDateString() : 'No payment record'}
+                      {player.lastPaymentDate ? new Date(player.lastPaymentDate).toLocaleDateString() : 'No payment record'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <div className="flex space-x-2">
                         <button 
-                          onClick={() => handleOpenPaymentModal(child)}
+                          onClick={() => handleOpenPaymentModal(player)}
                           className={`px-3 py-1 rounded-md ${
                             isDarkMode ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700'
                           }`}>
                           <DollarSign className="h-4 w-4" />
                         </button>
                         <button 
-                          onClick={() => handleViewPaymentHistory(child)}
+                          onClick={() => handleViewPaymentHistory(player)}
                           className={`px-3 py-1 rounded-md ${
                             isDarkMode ? 'bg-gray-600 text-white' : 'bg-gray-100 text-gray-700'
                           }`}>
@@ -417,7 +417,7 @@ const ChildPayment = () => {
       </div>
 
       {/* Payment Modal */}
-      {showPaymentModal && selectedChild && (
+      {showPaymentModal && selectedPlayer && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className={`w-full max-w-md p-6 rounded-lg shadow-lg ${
             isDarkMode ? 'bg-gray-800' : 'bg-white'
@@ -425,7 +425,7 @@ const ChildPayment = () => {
             <h2 className={`text-xl font-bold mb-4 ${
               isDarkMode ? 'text-white' : 'text-gray-900'
             }`}>
-              Record Payment for {selectedChild.firstName} {selectedChild.lastName}
+              Record Payment for {selectedPlayer.firstName} {selectedPlayer.lastName}
             </h2>
             
             <div className="mb-4">
@@ -437,7 +437,7 @@ const ChildPayment = () => {
               <div className={`py-2 px-3 bg-opacity-50 rounded ${
                 isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
               }`}>
-                {selectedChild.sessionType === 'full-day' ? 'Full Day' : 'Half Day'}
+                {selectedPlayer.sessionType === 'full-day' ? 'Full Day' : 'Half Day'}
               </div>
             </div>
             
@@ -544,7 +544,7 @@ const ChildPayment = () => {
       )}
 
       {/* Payment History Modal */}
-      {showPaymentHistory && currentChildForHistory && (
+      {showPaymentHistory && currentPlayerForHistory && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className={`w-full max-w-4xl p-6 rounded-lg shadow-lg ${
             isDarkMode ? 'bg-gray-800' : 'bg-white'
@@ -553,7 +553,7 @@ const ChildPayment = () => {
               <h2 className={`text-xl font-bold ${
                 isDarkMode ? 'text-white' : 'text-gray-900'
               }`}>
-                Payment History: {currentChildForHistory.firstName} {currentChildForHistory.lastName}
+                Payment History: {currentPlayerForHistory.firstName} {currentPlayerForHistory.lastName}
               </h2>
               <button
                 onClick={() => setShowPaymentHistory(false)}
@@ -570,7 +570,7 @@ const ChildPayment = () => {
                 isDarkMode ? 'text-gray-400' : 'text-gray-500'
               }`}>
                 <AlertTriangle className="h-10 w-10 mx-auto mb-2" />
-                <p>No payment records found for this child.</p>
+                <p>No payment records found for this player.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -643,4 +643,4 @@ const ChildPayment = () => {
   );
 };
 
-export default ChildPayment; 
+export default PlayerPayment; 

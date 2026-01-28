@@ -19,7 +19,7 @@ import {
 
 const DataManagement = () => {
   const { isDarkMode } = useTheme();
-  const [activeTab, setActiveTab] = useState('babysitters');
+  const [activeTab, setActiveTab] = useState('coachs');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterOptions, setFilterOptions] = useState({
     status: 'all',
@@ -30,9 +30,9 @@ const DataManagement = () => {
   const [error, setError] = useState('');
   
   // Data states
-  const [babysitters, setBabysitters] = useState([]);
+  const [coachs, setCoachs] = useState([]);
   const [guardians, setGuardians] = useState([]);
-  const [children, setChildren] = useState([]);
+  const [children, setPlayers] = useState([]);
   
   // Modal states
   const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -55,9 +55,9 @@ const DataManagement = () => {
       let response;
       
       switch (activeTab) {
-        case 'babysitters':
-          response = await api.get('/admin/babysitters');
-          setBabysitters(response.data || []);
+        case 'coachs':
+          response = await api.get('/admin/coachs');
+          setCoachs(response.data || []);
           break;
         case 'guardians':
           response = await api.get('/guardians');
@@ -65,7 +65,7 @@ const DataManagement = () => {
           break;
         case 'children':
           response = await api.get('/admin/children');
-          setChildren(response.data || []);
+          setPlayers(response.data || []);
           break;
         default:
           break;
@@ -118,7 +118,7 @@ const DataManagement = () => {
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', `${activeTab}-data.csv`);
-      document.body.appendChild(link);
+      document.body.appendPlayer(link);
       link.click();
       link.remove();
       
@@ -158,8 +158,8 @@ const DataManagement = () => {
     let filteredData;
     
     switch (activeTab) {
-      case 'babysitters':
-        filteredData = filterData(babysitters);
+      case 'coachs':
+        filteredData = filterData(coachs);
         break;
       case 'guardians':
         filteredData = filterData(guardians);
@@ -195,8 +195,8 @@ const DataManagement = () => {
         <div className={`rounded-lg p-6 max-w-2xl w-full ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">
-              {activeTab === 'children' ? 'Child Details' : 
-               activeTab === 'guardians' ? 'Guardian Details' : 'Babysitter Details'}
+              {activeTab === 'children' ? 'Player Details' : 
+               activeTab === 'guardians' ? 'Guardian Details' : 'Coach Details'}
             </h2>
             <button
               onClick={() => setShowDetailsModal(false)}
@@ -226,13 +226,13 @@ const DataManagement = () => {
             {/* Special handling for children or other relations */}
             {activeTab === 'guardians' && selectedItem.children && (
               <div className="mt-4">
-                <h3 className="text-lg font-medium mb-2">Children</h3>
+                <h3 className="text-lg font-medium mb-2">Players</h3>
                 {selectedItem.children.length > 0 ? (
                   <ul className="space-y-2">
-                    {selectedItem.children.map((child, index) => (
-                      <li key={child._id || `child-${index}`} className="flex items-center">
+                    {selectedItem.children.map((player, index) => (
+                      <li key={player._id || `player-${index}`} className="flex items-center">
                         <Baby size={16} className="mr-2" />
-                        {child.firstName} {child.lastName}
+                        {player.firstName} {player.lastName}
                       </li>
                     ))}
                   </ul>
@@ -311,9 +311,9 @@ const DataManagement = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Guardian</th>
                 )}
                 {activeTab === 'guardians' && (
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Children</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Players</th>
                 )}
-                {activeTab === 'babysitters' && (
+                {activeTab === 'coachs' && (
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Schedule</th>
                 )}
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Status</th>
@@ -372,7 +372,7 @@ const DataManagement = () => {
                       </div>
                     </td>
                   )}
-                  {activeTab === 'babysitters' && (
+                  {activeTab === 'coachs' && (
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button className="text-sm text-indigo-600 hover:text-indigo-800">
                         View Schedule
@@ -414,9 +414,9 @@ const DataManagement = () => {
               <p className="text-sm text-gray-500">
                 Showing <span className="font-medium">{((page - 1) * itemsPerPage) + 1}</span> to{' '}
                 <span className="font-medium">{Math.min(page * itemsPerPage, 
-                  (activeTab === 'babysitters' ? babysitters : activeTab === 'guardians' ? guardians : children).length)}</span> of{' '}
+                  (activeTab === 'coachs' ? coachs : activeTab === 'guardians' ? guardians : children).length)}</span> of{' '}
                 <span className="font-medium">{
-                  (activeTab === 'babysitters' ? babysitters : activeTab === 'guardians' ? guardians : children).length
+                  (activeTab === 'coachs' ? coachs : activeTab === 'guardians' ? guardians : children).length
                 }</span> results
               </p>
             </div>
@@ -484,14 +484,14 @@ const DataManagement = () => {
         {/* Tabs */}
         <div className="flex space-x-1 mb-6 overflow-x-auto">
           <button
-            onClick={() => setActiveTab('babysitters')}
+            onClick={() => setActiveTab('coachs')}
             className={`px-4 py-2 rounded-md transition-colors ${
-              activeTab === 'babysitters'
+              activeTab === 'coachs'
                 ? isDarkMode ? 'bg-indigo-600 text-white' : 'bg-indigo-100 text-indigo-800'
                 : isDarkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-white hover:bg-gray-100'
             }`}
           >
-            Babysitters
+            Coachs
           </button>
           <button
             onClick={() => setActiveTab('guardians')}
@@ -511,7 +511,7 @@ const DataManagement = () => {
                 : isDarkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-white hover:bg-gray-100'
             }`}
           >
-            Children
+            Players
           </button>
         </div>
         

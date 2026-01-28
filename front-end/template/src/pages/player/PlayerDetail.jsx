@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
-import { babysitterAPI } from '../../services/api';
+import { coachAPI } from '../../services/api';
 import {
   AlertCircle,
   Calendar,
@@ -19,9 +19,9 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
-const ChildDetail = () => {
+const PlayerDetail = () => {
   const { id } = useParams();
-  const [child, setChild] = useState(null);
+  const [player, setPlayer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activities, setActivities] = useState([]);
@@ -33,23 +33,23 @@ const ChildDetail = () => {
   const { isDarkMode } = useTheme();
 
   useEffect(() => {
-    fetchChildDetails();
+    fetchPlayerDetails();
   }, [id]);
 
-  const fetchChildDetails = async () => {
+  const fetchPlayerDetails = async () => {
     try {
       setLoading(true);
       setError('');
       
-      const response = await babysitterAPI.getChildById(id);
-      setChild(response.data);
+      const response = await coachAPI.getPlayerById(id);
+      setPlayer(response.data);
       
       if (response.data.recentActivities) {
         setActivities(response.data.recentActivities);
       }
     } catch (error) {
-      console.error('Error fetching child details:', error);
-      setError('Failed to load child information. Please try again later.');
+      console.error('Error fetching player details:', error);
+      setError('Failed to load player information. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -74,7 +74,7 @@ const ChildDetail = () => {
     }
     
     try {
-      const response = await babysitterAPI.addActivity(id, newActivity);
+      const response = await coachAPI.addActivity(id, newActivity);
       
       // Add the new activity to the list
       setActivities([response.data, ...activities]);
@@ -109,10 +109,10 @@ const ChildDetail = () => {
         isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'
       }`}>
         <AlertCircle className="h-12 w-12 text-red-500 mb-4" />
-        <p className="text-xl font-semibold mb-2">Error Loading Child Information</p>
+        <p className="text-xl font-semibold mb-2">Error Loading Player Information</p>
         <p className="text-center max-w-md mb-6">{error}</p>
         <button
-          onClick={fetchChildDetails}
+          onClick={fetchPlayerDetails}
           className={`px-4 py-2 rounded-lg ${
             isDarkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'
           } text-white font-medium`}
@@ -123,16 +123,16 @@ const ChildDetail = () => {
     );
   }
 
-  if (!child) {
+  if (!player) {
     return (
       <div className={`flex flex-col items-center justify-center min-h-screen ${
         isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'
       }`}>
         <AlertCircle className="h-12 w-12 text-yellow-500 mb-4" />
-        <p className="text-xl font-semibold mb-2">Child Not Found</p>
-        <p className="text-center max-w-md mb-6">The requested child information could not be found.</p>
+        <p className="text-xl font-semibold mb-2">Player Not Found</p>
+        <p className="text-center max-w-md mb-6">The requested player information could not be found.</p>
         <Link
-          to="/babysitter/schedule"
+          to="/coach/schedule"
           className={`px-4 py-2 rounded-lg ${
             isDarkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'
           } text-white font-medium flex items-center`}
@@ -149,7 +149,7 @@ const ChildDetail = () => {
       <div className="max-w-6xl mx-auto p-4 md:p-6">
         {/* Back Button */}
         <Link 
-          to="/babysitter/schedule"
+          to="/coach/schedule"
           className={`inline-flex items-center mb-6 px-3 py-2 rounded-lg transition-colors ${
             isDarkMode 
               ? 'bg-gray-800 hover:bg-gray-700 text-gray-200' 
@@ -160,62 +160,62 @@ const ChildDetail = () => {
           Back to Schedule
         </Link>
         
-        {/* Child Profile Header */}
+        {/* Player Profile Header */}
         <div className={`p-6 rounded-xl shadow-md ${
           isDarkMode ? 'bg-gray-800' : 'bg-white'
         }`}>
           <div className="flex flex-col md:flex-row gap-6">
-            {/* Child Avatar */}
+            {/* Player Avatar */}
             <div className={`flex-shrink-0 w-24 h-24 md:w-32 md:h-32 rounded-full flex items-center justify-center ${
-              child.gender === 'male' 
+              player.gender === 'male' 
                 ? isDarkMode ? 'bg-blue-900 text-blue-200' : 'bg-blue-100 text-blue-800'
                 : isDarkMode ? 'bg-pink-900 text-pink-200' : 'bg-pink-100 text-pink-800'
             }`}>
               <span className="text-4xl font-bold">
-                {child.firstName.charAt(0)}
+                {player.firstName.charAt(0)}
               </span>
             </div>
             
-            {/* Child Info */}
+            {/* Player Info */}
             <div className="flex-grow">
               <h1 className="text-2xl md:text-3xl font-bold mb-2">
-                {child.firstName} {child.lastName}
+                {player.firstName} {player.lastName}
               </h1>
               
               <div className="flex flex-wrap gap-2 mb-4">
                 <span className={`px-2 py-1 rounded-lg text-sm ${
                   isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
                 }`}>
-                  {child.age} years old
+                  {player.age} years old
                 </span>
                 <span className={`px-2 py-1 rounded-lg text-sm ${
-                  child.gender === 'male'
+                  player.gender === 'male'
                     ? isDarkMode ? 'bg-blue-900/30 text-blue-200' : 'bg-blue-100 text-blue-800'
                     : isDarkMode ? 'bg-pink-900/30 text-pink-200' : 'bg-pink-100 text-pink-800'
                 }`}>
-                  {child.gender.charAt(0).toUpperCase() + child.gender.slice(1)}
+                  {player.gender.charAt(0).toUpperCase() + player.gender.slice(1)}
                 </span>
                 <span className={`px-2 py-1 rounded-lg text-sm ${
-                  child.ageGroup === 'infant'
+                  player.ageGroup === 'infant'
                     ? isDarkMode ? 'bg-purple-900/30 text-purple-200' : 'bg-purple-100 text-purple-800'
-                    : child.ageGroup === 'toddler'
+                    : player.ageGroup === 'toddler'
                       ? isDarkMode ? 'bg-green-900/30 text-green-200' : 'bg-green-100 text-green-800'
-                      : child.ageGroup === 'preschool'
+                      : player.ageGroup === 'preschool'
                         ? isDarkMode ? 'bg-blue-900/30 text-blue-200' : 'bg-blue-100 text-blue-800'
                         : isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-800'
                 }`}>
-                  {child.ageGroup ? child.ageGroup.charAt(0).toUpperCase() + child.ageGroup.slice(1) : 'Unknown Age Group'}
+                  {player.ageGroup ? player.ageGroup.charAt(0).toUpperCase() + player.ageGroup.slice(1) : 'Unknown Age Group'}
                 </span>
                 <span className={`px-2 py-1 rounded-lg text-sm ${
-                  child.duration === 'full-day'
+                  player.duration === 'full-day'
                     ? isDarkMode ? 'bg-indigo-900/30 text-indigo-200' : 'bg-indigo-100 text-indigo-800'
-                    : child.duration === 'half-day-morning'
+                    : player.duration === 'half-day-morning'
                       ? isDarkMode ? 'bg-amber-900/30 text-amber-200' : 'bg-amber-100 text-amber-800'
                       : isDarkMode ? 'bg-orange-900/30 text-orange-200' : 'bg-orange-100 text-orange-800'
                 }`}>
-                  {child.duration === 'full-day' 
+                  {player.duration === 'full-day' 
                     ? 'Full Day' 
-                    : child.duration === 'half-day-morning' 
+                    : player.duration === 'half-day-morning' 
                       ? 'Half Day (Morning)' 
                       : 'Half Day (Afternoon)'}
                 </span>
@@ -224,13 +224,13 @@ const ChildDetail = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div className="flex items-center">
                   <Calendar className="h-4 w-4 mr-2" />
-                  <span className="text-sm">Birth Date: {formatDate(child.dateOfBirth)}</span>
+                  <span className="text-sm">Birth Date: {formatDate(player.dateOfBirth)}</span>
                 </div>
                 
-                {child.enrollmentDate && (
+                {player.enrollmentDate && (
                   <div className="flex items-center">
                     <Clock className="h-4 w-4 mr-2" />
-                    <span className="text-sm">Enrolled: {formatDate(child.enrollmentDate)}</span>
+                    <span className="text-sm">Enrolled: {formatDate(player.enrollmentDate)}</span>
                   </div>
                 )}
               </div>
@@ -239,47 +239,47 @@ const ChildDetail = () => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-          {/* Parent Information */}
+          {/* Contact Information */}
           <div className={`p-6 rounded-xl shadow-md ${
             isDarkMode ? 'bg-gray-800' : 'bg-white'
           }`}>
             <h2 className="text-xl font-semibold mb-4 flex items-center">
               <User className="h-5 w-5 mr-2" />
-              Parent Information
+              Contact Information
             </h2>
             
             <div className="space-y-4">
               <div>
-                <h3 className="text-sm font-medium mb-1">Parent Name</h3>
-                <p>{child.parentName}</p>
+                <h3 className="text-sm font-medium mb-1">Contact Name</h3>
+                <p>{player.contactName}</p>
               </div>
               
               <div>
                 <h3 className="text-sm font-medium mb-1">Contact Details</h3>
                 <div className="flex items-center mb-2">
                   <Phone className="h-4 w-4 mr-2" />
-                  <p>{child.parentPhone}</p>
+                  <p>{player.contactPhone}</p>
                 </div>
                 
                 <div className="flex items-center">
                   <Mail className="h-4 w-4 mr-2" />
-                  <p>{child.parentEmail}</p>
+                  <p>{player.contactEmail}</p>
                 </div>
               </div>
               
-              {child.emergencyContact && child.emergencyContact.name && (
+              {player.emergencyContact && player.emergencyContact.name && (
                 <div>
                   <h3 className="text-sm font-medium mb-1">Emergency Contact</h3>
-                  <p>{child.emergencyContact.name}</p>
-                  {child.emergencyContact.relationship && (
+                  <p>{player.emergencyContact.name}</p>
+                  {player.emergencyContact.relationship && (
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      ({child.emergencyContact.relationship})
+                      ({player.emergencyContact.relationship})
                     </p>
                   )}
-                  {child.emergencyContact.phone && (
+                  {player.emergencyContact.phone && (
                     <div className="flex items-center mt-1">
                       <Phone className="h-4 w-4 mr-2" />
-                      <p>{child.emergencyContact.phone}</p>
+                      <p>{player.emergencyContact.phone}</p>
                     </div>
                   )}
                 </div>
@@ -297,14 +297,14 @@ const ChildDetail = () => {
             </h2>
             
             <div className="space-y-4">
-              {(child.allergies && child.allergies.length > 0) && (
+              {(player.allergies && player.allergies.length > 0) && (
                 <div>
                   <h3 className="text-sm font-medium flex items-center mb-2">
                     <AlertTriangle className="h-4 w-4 mr-1 text-red-500" />
                     Allergies
                   </h3>
                   <ul className="list-disc list-inside space-y-1">
-                    {child.allergies.map((allergy, index) => (
+                    {player.allergies.map((allergy, index) => (
                       <li key={index} className={`px-2 py-1 rounded ${
                         isDarkMode ? 'bg-red-900/30 text-red-200' : 'bg-red-50 text-red-800'
                       }`}>{allergy}</li>
@@ -313,51 +313,51 @@ const ChildDetail = () => {
                 </div>
               )}
               
-              {(child.medications && child.medications.length > 0) && (
+              {(player.medications && player.medications.length > 0) && (
                 <div>
                   <h3 className="text-sm font-medium mb-2">Medications</h3>
                   <ul className="list-disc list-inside space-y-1">
-                    {child.medications.map((medication, index) => (
+                    {player.medications.map((medication, index) => (
                       <li key={index}>{medication}</li>
                     ))}
                   </ul>
                 </div>
               )}
               
-              {(child.conditions && child.conditions.length > 0) && (
+              {(player.conditions && player.conditions.length > 0) && (
                 <div>
                   <h3 className="text-sm font-medium mb-2">Medical Conditions</h3>
                   <ul className="list-disc list-inside space-y-1">
-                    {child.conditions.map((condition, index) => (
+                    {player.conditions.map((condition, index) => (
                       <li key={index}>{condition}</li>
                     ))}
                   </ul>
                 </div>
               )}
               
-              {child.specialNeeds && (
+              {player.specialNeeds && (
                 <div>
                   <h3 className="text-sm font-medium mb-2">Special Needs</h3>
                   <p className={`p-2 rounded ${
                     isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
-                  }`}>{child.specialNeeds}</p>
+                  }`}>{player.specialNeeds}</p>
                 </div>
               )}
               
-              {child.medicalNotes && (
+              {player.medicalNotes && (
                 <div>
                   <h3 className="text-sm font-medium mb-2">Medical Notes</h3>
                   <p className={`p-2 rounded ${
                     isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
-                  }`}>{child.medicalNotes}</p>
+                  }`}>{player.medicalNotes}</p>
                 </div>
               )}
               
-              {(!child.allergies || child.allergies.length === 0) && 
-               (!child.medications || child.medications.length === 0) && 
-               (!child.conditions || child.conditions.length === 0) && 
-               !child.specialNeeds && 
-               !child.medicalNotes && (
+              {(!player.allergies || player.allergies.length === 0) && 
+               (!player.medications || player.medications.length === 0) && 
+               (!player.conditions || player.conditions.length === 0) && 
+               !player.specialNeeds && 
+               !player.medicalNotes && (
                 <p className="text-center py-4 text-gray-500">
                   No medical information provided
                 </p>
@@ -380,7 +380,7 @@ const ChildDetail = () => {
                 <div className="grid grid-cols-5 gap-2">
                   {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map((day) => {
                     const dayKey = day.toLowerCase();
-                    const isAttending = child.attendanceDays && child.attendanceDays[dayKey];
+                    const isAttending = player.attendanceDays && player.attendanceDays[dayKey];
                     
                     return (
                       <div 
@@ -406,26 +406,26 @@ const ChildDetail = () => {
               <div>
                 <h3 className="text-sm font-medium mb-2">Care Duration</h3>
                 <div className={`p-2 rounded text-center ${
-                  child.duration === 'full-day'
+                  player.duration === 'full-day'
                     ? isDarkMode ? 'bg-indigo-900/30 text-indigo-200' : 'bg-indigo-100 text-indigo-800'
-                    : child.duration === 'half-day-morning'
+                    : player.duration === 'half-day-morning'
                       ? isDarkMode ? 'bg-amber-900/30 text-amber-200' : 'bg-amber-100 text-amber-800'
                       : isDarkMode ? 'bg-orange-900/30 text-orange-200' : 'bg-orange-100 text-orange-800'
                 }`}>
-                  {child.duration === 'full-day' 
+                  {player.duration === 'full-day' 
                     ? 'Full Day (8:00 AM - 5:00 PM)' 
-                    : child.duration === 'half-day-morning' 
+                    : player.duration === 'half-day-morning' 
                       ? 'Half Day Morning (8:00 AM - 12:00 PM)' 
                       : 'Half Day Afternoon (1:00 PM - 5:00 PM)'}
                 </div>
               </div>
               
-              {child.notes && (
+              {player.notes && (
                 <div>
                   <h3 className="text-sm font-medium mb-2">Additional Notes</h3>
                   <p className={`p-2 rounded ${
                     isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
-                  }`}>{child.notes}</p>
+                  }`}>{player.notes}</p>
                 </div>
               )}
             </div>
@@ -580,4 +580,4 @@ const ChildDetail = () => {
   );
 };
 
-export default ChildDetail; 
+export default PlayerDetail; 

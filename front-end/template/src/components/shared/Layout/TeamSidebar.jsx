@@ -115,4 +115,4 @@ const TeamSidebar = ({ isOpen }) => {
   );
 };
 
-export default AdminSidebar; 
+export default TeamSidebar; 

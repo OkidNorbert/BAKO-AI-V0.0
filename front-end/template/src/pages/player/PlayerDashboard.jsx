@@ -1,8 +1,8 @@
 import React from 'react';
-import BabysitterDashboard from '../../components/babysitter/babysitter-dashboard';
+import CoachDashboard from '../../components/coach/coach-dashboard';
 
-const BabysitterDashboardPage = () => {
-  return <BabysitterDashboard />;
+const CoachDashboardPage = () => {
+  return <CoachDashboard />;
 };
 
-export default BabysitterDashboardPage; 
+export default CoachDashboardPage; 

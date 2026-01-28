@@ -109,7 +109,7 @@ const Analytics = () => {
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', `analytics-report-${dateRange}.pdf`);
-      document.body.appendChild(link);
+      document.body.appendPlayer(link);
       link.click();
       link.remove();
     } catch (error) {

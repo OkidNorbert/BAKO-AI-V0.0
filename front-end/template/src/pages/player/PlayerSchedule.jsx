@@ -14,7 +14,7 @@ import {
   Plus
 } from 'lucide-react';
 
-const BabysitterSchedule = () => {
+const CoachSchedule = () => {
   const [schedule, setSchedule] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -39,7 +39,7 @@ const BabysitterSchedule = () => {
       setLoading(true);
       setError('');
       const token = localStorage.getItem('accessToken');
-      const response = await axios.get('/api/babysitter/schedule', {
+      const response = await axios.get('/api/coach/schedule', {
         headers: { Authorization: `Bearer ${token}` },
         params: {
           date: currentDate.toISOString().split('T')[0]
@@ -71,7 +71,7 @@ const BabysitterSchedule = () => {
     try {
       setError('');
       const token = localStorage.getItem('accessToken');
-      await axios.post('/api/babysitter/schedule', newShift, {
+      await axios.post('/api/coach/schedule', newShift, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setSuccess('Shift added successfully');
@@ -98,7 +98,7 @@ const BabysitterSchedule = () => {
     try {
       setError('');
       const token = localStorage.getItem('accessToken');
-      await axios.delete(`/api/babysitter/schedule/${shiftId}`, {
+      await axios.delete(`/api/coach/schedule/${shiftId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setSuccess('Shift cancelled successfully');
@@ -356,4 +356,4 @@ const BabysitterSchedule = () => {
   );
 };
 
-export default BabysitterSchedule; 
+export default CoachSchedule; 

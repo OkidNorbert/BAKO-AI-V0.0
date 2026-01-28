@@ -17,16 +17,16 @@ import {
 import { format } from 'date-fns';
 
 const IncidentReport = () => {
-  const [children, setChildren] = useState([]);
+  const [children, setPlayers] = useState([]);
   const [incidents, setIncidents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [selectedChild, setSelectedChild] = useState('');
+  const [selectedPlayer, setSelectedPlayer] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
-    childId: '',
+    playerId: '',
     type: 'health',
     severity: 'low',
     description: '',
@@ -37,15 +37,15 @@ const IncidentReport = () => {
   const { isDarkMode } = useTheme();
 
   useEffect(() => {
-    fetchChildren();
+    fetchPlayers();
     fetchIncidents();
   }, []);
 
-  const fetchChildren = async () => {
+  const fetchPlayers = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/babysitter/children');
-      setChildren(response.data || []);
+      const response = await api.get('/coach/children');
+      setPlayers(response.data || []);
     } catch (error) {
       console.error('Error fetching children:', error);
       setError('Failed to fetch children. Please try again.');
@@ -57,7 +57,7 @@ const IncidentReport = () => {
   const fetchIncidents = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/babysitter/incidents');
+      const response = await api.get('/coach/incidents');
       setIncidents(response.data || []);
     } catch (error) {
       console.error('Error fetching incidents:', error);
@@ -72,17 +72,17 @@ const IncidentReport = () => {
     try {
       setLoading(true);
       
-      // Ensure childId is selected
-      if (!formData.childId) {
-        setError('Please select a child.');
+      // Ensure playerId is selected
+      if (!formData.playerId) {
+        setError('Please select a player.');
         setLoading(false);
         return;
       }
       
-      await api.post('/babysitter/incidents', formData);
+      await api.post('/coach/incidents', formData);
       setShowForm(false);
       setFormData({
-        childId: '',
+        playerId: '',
         type: 'health',
         severity: 'low',
         description: '',
@@ -164,9 +164,9 @@ const IncidentReport = () => {
 
   // Filter incidents based on search term and status
   const filteredIncidents = incidents.filter(incident => {
-    const child = children.find(c => c._id === incident.childId);
-    const childName = child ? `${child.firstName} ${child.lastName}`.toLowerCase() : '';
-    const matchesSearch = childName.includes(searchTerm.toLowerCase());
+    const player = children.find(c => c._id === incident.playerId);
+    const playerName = player ? `${player.firstName} ${player.lastName}`.toLowerCase() : '';
+    const matchesSearch = playerName.includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'all' || incident.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
@@ -241,7 +241,7 @@ const IncidentReport = () => {
               }`} />
               <input
                 type="text"
-                placeholder="Search by child name..."
+                placeholder="Search by player name..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className={`w-full pl-10 pr-4 py-2 rounded-md border-none focus:ring-2 ${
@@ -293,10 +293,10 @@ const IncidentReport = () => {
             </div>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                <label className="block mb-1 font-medium">Child</label>
+                <label className="block mb-1 font-medium">Player</label>
                   <select
-                    name="childId"
-                    value={formData.childId}
+                    name="playerId"
+                    value={formData.playerId}
                     onChange={handleInputChange}
                   className={`w-full p-2 rounded-md border-none focus:ring-2 ${
                       isDarkMode
@@ -305,10 +305,10 @@ const IncidentReport = () => {
                     }`}
                   required
                   >
-                    <option value="">Select a child</option>
-                    {children.map(child => (
-                      <option key={child._id} value={child._id}>
-                        {child.firstName} {child.lastName}
+                    <option value="">Select a player</option>
+                    {children.map(player => (
+                      <option key={player._id} value={player._id}>
+                        {player.firstName} {player.lastName}
                       </option>
                     ))}
                   </select>
@@ -434,7 +434,7 @@ const IncidentReport = () => {
           {filteredIncidents.length > 0 ? (
             <div className="divide-y divide-gray-200 dark:divide-gray-700">
               {filteredIncidents.map(incident => {
-                const child = children.find(c => c._id === incident.childId);
+                const player = children.find(c => c._id === incident.playerId);
                 return (
                   <div key={incident._id} className={`p-6 ${
                     isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-indigo-50'
@@ -443,13 +443,13 @@ const IncidentReport = () => {
                       <div className="mb-4 md:mb-0">
                         <div className="flex items-center mb-2">
                           <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${
-                            child?.gender === 'male' 
+                            player?.gender === 'male' 
                             ? isDarkMode ? 'bg-blue-900 text-blue-200' : 'bg-blue-100 text-blue-800'
                             : isDarkMode ? 'bg-pink-900 text-pink-200' : 'bg-pink-100 text-pink-800'
                           }`}>
-                            {child ? (
+                            {player ? (
                               <span className="font-bold">
-                                {child.firstName.charAt(0)}
+                                {player.firstName.charAt(0)}
                               </span>
                             ) : (
                               <User className="h-6 w-6" />
@@ -457,7 +457,7 @@ const IncidentReport = () => {
                           </div>
                           <div>
                             <h3 className="font-semibold">
-                              {child ? `${child.firstName} ${child.lastName}` : 'Unknown Child'}
+                              {player ? `${player.firstName} ${player.lastName}` : 'Unknown Player'}
                             </h3>
                             <div className="flex items-center text-sm">
                               <Calendar className={`h-4 w-4 mr-1 ${

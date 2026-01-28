@@ -6,7 +6,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { Switch } from '@headlessui/react';
 import { Baby, User, Clock } from 'lucide-react';
 
-const ChildRegistration = ({ embedded = false, onComplete }) => {
+const PlayerRegistration = ({ embedded = false, onComplete }) => {
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
   const [loading, setLoading] = useState(false);
@@ -33,13 +33,13 @@ const ChildRegistration = ({ embedded = false, onComplete }) => {
     address: '',
     emergencyContact: '',
     emergencyPhone: '',
-    relationship: 'Parent'
+    relationship: 'Contact'
   });
   const [guardians, setGuardians] = useState([]);
   const [errors, setErrors] = useState({});
   const [guardianErrors, setGuardianErrors] = useState({});
 
-  // Fetch guardians/parents on component mount
+  // Fetch guardians/contacts on component mount
   React.useEffect(() => {
     const fetchGuardians = async () => {
       try {
@@ -47,21 +47,21 @@ const ChildRegistration = ({ embedded = false, onComplete }) => {
         setGuardians(response.data || []);
       } catch (error) {
         console.error('Error fetching guardians:', error);
-        toast.error('Failed to load parent/guardian data');
+        toast.error('Failed to load contact/guardian data');
       }
     };
 
     fetchGuardians();
   }, []);
 
-  const validateChildForm = () => {
+  const validatePlayerForm = () => {
     const newErrors = {};
     
     // Basic validation
     if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
     if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
     if (!formData.dateOfBirth) newErrors.dateOfBirth = 'Date of birth is required';
-    if (!newGuardian && !formData.guardianId) newErrors.guardianId = 'Parent/Guardian is required';
+    if (!newGuardian && !formData.guardianId) newErrors.guardianId = 'Contact/Guardian is required';
     if (!formData.emergencyContact.trim()) newErrors.emergencyContact = 'Emergency contact name is required';
     if (!formData.emergencyPhone.trim()) newErrors.emergencyPhone = 'Emergency contact phone is required';
     if (!formData.duration) newErrors.duration = 'Duration of stay is required';
@@ -85,7 +85,7 @@ const ChildRegistration = ({ embedded = false, onComplete }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleChildChange = (e) => {
+  const handlePlayerChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -120,10 +120,10 @@ const ChildRegistration = ({ embedded = false, onComplete }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    const isChildValid = validateChildForm();
+    const isPlayerValid = validatePlayerForm();
     const isGuardianValid = validateGuardianForm();
     
-    if (!isChildValid || (newGuardian && !isGuardianValid)) {
+    if (!isPlayerValid || (newGuardian && !isGuardianValid)) {
       toast.error('Please fix the errors in the form');
       return;
     }
@@ -138,7 +138,7 @@ const ChildRegistration = ({ embedded = false, onComplete }) => {
         // Make sure the relationship is one of the allowed values from the enum
         const guardianPayload = {
           ...guardianData,
-          relationship: guardianData.relationship || 'Parent'
+          relationship: guardianData.relationship || 'Contact'
         };
         
         try {
@@ -158,20 +158,20 @@ const ChildRegistration = ({ embedded = false, onComplete }) => {
         }
       }
       
-      // Now register the child with the guardian ID
-      const childPayload = {
+      // Now register the player with the guardian ID
+      const playerPayload = {
         ...formData,
         guardian: guardianId
       };
       
       // Remove guardianId field to avoid confusion
-      delete childPayload.guardianId;
+      delete playerPayload.guardianId;
       
-      console.log('Sending child registration payload:', childPayload);
+      console.log('Sending player registration payload:', playerPayload);
       
       try {
-        const childResponse = await api.post('/children/register', childPayload);
-      toast.success('Child registered successfully');
+        const playerResponse = await api.post('/children/register', playerPayload);
+      toast.success('Player registered successfully');
         
         // Reset form or navigate away
         if (embedded) {
@@ -199,7 +199,7 @@ const ChildRegistration = ({ embedded = false, onComplete }) => {
             address: '',
             emergencyContact: '',
             emergencyPhone: '',
-            relationship: 'Parent'
+            relationship: 'Contact'
           });
           
           // Call the onComplete callback if provided
@@ -213,7 +213,7 @@ const ChildRegistration = ({ embedded = false, onComplete }) => {
       } catch (error) {
         console.error('Registration error:', error);
         
-        let errorMessage = 'Failed to register child';
+        let errorMessage = 'Failed to register player';
         
         if (error.response) {
           if (error.response.status === 404) {
@@ -230,7 +230,7 @@ const ChildRegistration = ({ embedded = false, onComplete }) => {
     } catch (error) {
       console.error('Registration error:', error);
       
-      let errorMessage = 'Failed to register child';
+      let errorMessage = 'Failed to register player';
       
       if (error.response) {
         if (error.response.status === 404) {
@@ -271,10 +271,10 @@ const ChildRegistration = ({ embedded = false, onComplete }) => {
               ? 'text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-300 to-orange-400' 
               : 'text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500'
           } animate-gradient`}>
-            Register New Child
+            Register New Player
           </h1>
           <p className={`${isDarkMode ? 'text-gray-300' : 'text-indigo-800'} text-lg`}>
-            Fill in the details to register a child with a guardian
+            Fill in the details to register a player with a guardian
           </p>
         </div>
       )}
@@ -379,9 +379,9 @@ const ChildRegistration = ({ embedded = false, onComplete }) => {
                   onChange={handleGuardianChange}
                   className={inputClassName('relationship', guardianErrors)}
                 >
-                  <option value="Parent">Parent</option>
+                  <option value="Contact">Contact</option>
                   <option value="Guardian">Guardian</option>
-                  <option value="Grandparent">Grandparent</option>
+                  <option value="Grandcontact">Grandcontact</option>
                   <option value="Other">Other</option>
                 </select>
               </div>
@@ -398,14 +398,14 @@ const ChildRegistration = ({ embedded = false, onComplete }) => {
             </div>
           ) : (
             <div>
-              <label className={labelClassName('guardianId', errors)}>Select Parent/Guardian*</label>
+              <label className={labelClassName('guardianId', errors)}>Select Contact/Guardian*</label>
               <select
                 name="guardianId"
                 value={formData.guardianId}
-                onChange={handleChildChange}
+                onChange={handlePlayerChange}
                 className={inputClassName('guardianId', errors)}
               >
-                <option value="">Select Parent/Guardian</option>
+                <option value="">Select Contact/Guardian</option>
                 {guardians.map(guardian => (
                   <option key={guardian._id} value={guardian._id}>
                     {guardian.firstName} {guardian.lastName}
@@ -419,7 +419,7 @@ const ChildRegistration = ({ embedded = false, onComplete }) => {
           )}
         </div>
 
-        {/* Child Information */}
+        {/* Player Information */}
         <div className={`shadow-lg rounded-lg p-6 transition-all duration-300 ${
           isDarkMode 
             ? 'bg-gradient-to-br from-gray-800 to-gray-900' 
@@ -433,7 +433,7 @@ const ChildRegistration = ({ embedded = false, onComplete }) => {
             }`}>
               <Baby className="h-6 w-6 text-white" />
             </div>
-            <h2 className="text-xl font-semibold">Child Information</h2>
+            <h2 className="text-xl font-semibold">Player Information</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -442,7 +442,7 @@ const ChildRegistration = ({ embedded = false, onComplete }) => {
                 type="text"
                 name="firstName"
                 value={formData.firstName}
-                onChange={handleChildChange}
+                onChange={handlePlayerChange}
                 className={inputClassName('firstName', errors)}
               />
               {errors.firstName && (
@@ -455,7 +455,7 @@ const ChildRegistration = ({ embedded = false, onComplete }) => {
                 type="text"
                 name="lastName"
                 value={formData.lastName}
-                onChange={handleChildChange}
+                onChange={handlePlayerChange}
                 className={inputClassName('lastName', errors)}
               />
               {errors.lastName && (
@@ -468,7 +468,7 @@ const ChildRegistration = ({ embedded = false, onComplete }) => {
                 type="date"
                 name="dateOfBirth"
                 value={formData.dateOfBirth}
-                onChange={handleChildChange}
+                onChange={handlePlayerChange}
                 className={inputClassName('dateOfBirth', errors)}
               />
               {errors.dateOfBirth && (
@@ -480,7 +480,7 @@ const ChildRegistration = ({ embedded = false, onComplete }) => {
               <select
                 name="gender"
                 value={formData.gender}
-                onChange={handleChildChange}
+                onChange={handlePlayerChange}
                 className={inputClassName('gender', errors)}
               >
                 <option value="male">Male</option>
@@ -499,7 +499,7 @@ const ChildRegistration = ({ embedded = false, onComplete }) => {
               <select
                   name="duration"
                   value={formData.duration}
-                  onChange={handleChildChange}
+                  onChange={handlePlayerChange}
                   className={inputClassName('duration', errors)}
                 >
                   <option value="half-day-morning">Half-day (Morning)</option>
@@ -527,7 +527,7 @@ const ChildRegistration = ({ embedded = false, onComplete }) => {
               <textarea
                 name="allergies"
                 value={formData.allergies}
-                onChange={handleChildChange}
+                onChange={handlePlayerChange}
                 rows="2"
                 placeholder="List any allergies or write 'None'"
                 className={inputClassName('allergies', errors)}
@@ -538,7 +538,7 @@ const ChildRegistration = ({ embedded = false, onComplete }) => {
               <textarea
                 name="medications"
                 value={formData.medications}
-                onChange={handleChildChange}
+                onChange={handlePlayerChange}
                 rows="2"
                 placeholder="List any medications or write 'None'"
                 className={inputClassName('medications', errors)}
@@ -549,7 +549,7 @@ const ChildRegistration = ({ embedded = false, onComplete }) => {
               <textarea
                 name="specialNeeds"
                 value={formData.specialNeeds}
-                onChange={handleChildChange}
+                onChange={handlePlayerChange}
                 rows="2"
                 placeholder="Describe any special needs or write 'None'"
                 className={inputClassName('specialNeeds', errors)}
@@ -560,7 +560,7 @@ const ChildRegistration = ({ embedded = false, onComplete }) => {
               <textarea
                 name="specialInstructions"
                 value={formData.specialInstructions}
-                onChange={handleChildChange}
+                onChange={handlePlayerChange}
                 rows="3"
                 placeholder="Any additional instructions for care providers"
                 className={inputClassName('specialInstructions', errors)}
@@ -583,7 +583,7 @@ const ChildRegistration = ({ embedded = false, onComplete }) => {
                 type="text"
                 name="emergencyContact"
                 value={formData.emergencyContact}
-                onChange={handleChildChange}
+                onChange={handlePlayerChange}
                 className={inputClassName('emergencyContact', errors)}
               />
               {errors.emergencyContact && (
@@ -596,7 +596,7 @@ const ChildRegistration = ({ embedded = false, onComplete }) => {
                 type="tel"
                 name="emergencyPhone"
                 value={formData.emergencyPhone}
-                onChange={handleChildChange}
+                onChange={handlePlayerChange}
                 className={inputClassName('emergencyPhone', errors)}
               />
               {errors.emergencyPhone && (
@@ -638,7 +638,7 @@ const ChildRegistration = ({ embedded = false, onComplete }) => {
                 Registering...
               </span>
             ) : (
-              'Register Child'
+              'Register Player'
             )}
           </button>
         </div>
@@ -647,4 +647,4 @@ const ChildRegistration = ({ embedded = false, onComplete }) => {
   );
 };
 
-export default ChildRegistration; 
+export default PlayerRegistration; 

@@ -34,7 +34,7 @@ const AdminHome = () => {
     weeklyActivity: [75, 82, 89, 91, 85],
     performanceTrends: [12000, 15000, 13500, 17000, 18000, 16500],
     winRate: 65,
-    playersPerCoach: '12:1',
+    childrenPerCoach: '12:1',
     analysisWaitlist: 3,
     pendingVideos: 7
   });
@@ -54,7 +54,7 @@ const AdminHome = () => {
           weeklyAttendance: response.data.weeklyAttendance || [75, 82, 89, 91, 85],
           monthlyRevenue: response.data.monthlyRevenue || [12000, 15000, 13500, 17000, 18000, 16500],
           occupancyRate: response.data.occupancyRate || 85,
-          staffToChildRatio: response.data.staffToChildRatio || '1:5',
+          staffToPlayerRatio: response.data.staffToPlayerRatio || '1:5',
           incidentReports: response.data.incidentReports || 3,
           pendingRequests: response.data.pendingRequests || 7
         });
@@ -71,26 +71,26 @@ const AdminHome = () => {
 
   const menuItems = [
     { title: 'User Management', icon: Users, link: '/admin/users', color: 'from-blue-500 to-indigo-600' },
-    { title: 'Child Management', icon: Baby, link: '/admin/children', color: 'from-green-500 to-teal-600' },
+    { title: 'Player Management', icon: Baby, link: '/admin/children', color: 'from-green-500 to-teal-600' },
     { title: 'Schedule', icon: Calendar, link: '/admin/schedule', color: 'from-orange-400 to-pink-500' },
     { title: 'Payments', icon: DollarSign, link: '/admin/payments', color: 'from-yellow-400 to-amber-600' },
     { title: 'Reports & Analytics', icon: FileText, link: '/admin/reports', color: 'from-cyan-500 to-blue-600' },
     { title: 'System Settings', icon: Settings, link: '/admin/settings', color: 'from-gray-500 to-gray-600' },
-    { title: 'Parent Alerts', icon: Bell, link: '/admin/notifications', color: 'from-rose-500 to-red-600' },
-    { title: 'Babysitter Registration', icon: UserPlus, link: '/admin/babysitter-registration', color: 'from-pink-500 to-rose-600' },
+    { title: 'Contact Alerts', icon: Bell, link: '/admin/notifications', color: 'from-rose-500 to-red-600' },
+    { title: 'Coach Registration', icon: UserPlus, link: '/admin/coach-registration', color: 'from-pink-500 to-rose-600' },
     { title: 'Attendance', icon: ClipboardList, link: '/admin/attendance', color: 'from-emerald-500 to-green-600' },
     { title: 'Security', icon: Shield, link: '/admin/security', color: 'from-indigo-500 to-purple-600' }
   ];
 
   const quickActions = [
-    { name: 'Register Babysitter', icon: <UserPlus size={20} />, link: '/admin/babysitter-registration' },
+    { name: 'Register Coach', icon: <UserPlus size={20} />, link: '/admin/coach-registration' },
     { name: 'Manage Schedule', icon: <Calendar size={20} />, link: '/admin/schedule' },
     { name: 'View Payments', icon: <DollarSign size={20} />, link: '/admin/payments' },
     { name: 'System Settings', icon: <Settings size={20} />, link: '/admin/system-settings' },
   ];
 
   const recentActivities = [
-    { id: 1, type: 'New Babysitter', name: 'Sarah Johnson', time: '2 hours ago', icon: <UserPlus className={`${isDarkMode ? 'text-green-400' : 'text-green-600'}`} /> },
+    { id: 1, type: 'New Coach', name: 'Sarah Johnson', time: '2 hours ago', icon: <UserPlus className={`${isDarkMode ? 'text-green-400' : 'text-green-600'}`} /> },
     { id: 2, type: 'Payment Received', name: 'James Family - $250', time: '3 hours ago', icon: <DollarSign className={`${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} /> },
     { id: 3, type: 'Appointment Confirmed', name: 'David Williams', time: '5 hours ago', icon: <CheckCircle className={`${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} /> },
     { id: 4, type: 'Report Generated', name: 'Monthly Attendance', time: '1 day ago', icon: <ClipboardList className={`${isDarkMode ? 'text-yellow-400' : 'text-yellow-600'}`} /> },
@@ -190,7 +190,7 @@ const AdminHome = () => {
                 } transition duration-150 ease-in-out flex items-center`}
             >
               <Bell size={16} className="mr-1" />
-              Parent Alerts
+              Contact Alerts
             </Link>
           </div>
         </div>
@@ -273,8 +273,8 @@ const AdminHome = () => {
               color: isDarkMode ? 'text-teal-400' : 'text-teal-600'
             },
             {
-              title: 'Staff-to-Child Ratio',
-              value: stats.staffToChildRatio,
+              title: 'Staff-to-Player Ratio',
+              value: stats.staffToPlayerRatio,
               icon: <Users size={20} />,
               color: isDarkMode ? 'text-blue-400' : 'text-blue-600'
             },

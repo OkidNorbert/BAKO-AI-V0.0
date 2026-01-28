@@ -13,7 +13,7 @@ import {
   CheckCircle
 } from 'lucide-react';
 
-const BabysitterPayments = () => {
+const CoachPayments = () => {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -41,7 +41,7 @@ const BabysitterPayments = () => {
       setLoading(true);
       setError('');
       const token = localStorage.getItem('accessToken');
-      const response = await axios.get('/api/babysitter/payments', {
+      const response = await axios.get('/api/coach/payments', {
         headers: { Authorization: `Bearer ${token}` },
         params: {
           startDate: dateRange.start,
@@ -60,7 +60,7 @@ const BabysitterPayments = () => {
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await axios.get('/api/babysitter/payments/stats', {
+      const response = await axios.get('/api/coach/payments/stats', {
         headers: { Authorization: `Bearer ${token}` },
         params: {
           startDate: dateRange.start,
@@ -76,7 +76,7 @@ const BabysitterPayments = () => {
   const handleDownload = async (paymentId) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await axios.get(`/api/babysitter/payments/${paymentId}/receipt`, {
+      const response = await axios.get(`/api/coach/payments/${paymentId}/receipt`, {
         headers: { Authorization: `Bearer ${token}` },
         responseType: 'blob'
       });
@@ -85,7 +85,7 @@ const BabysitterPayments = () => {
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', `payment-receipt-${paymentId}.pdf`);
-      document.body.appendChild(link);
+      document.body.appendPlayer(link);
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
@@ -307,4 +307,4 @@ const BabysitterPayments = () => {
   );
 };
 
-export default BabysitterPayments; 
+export default CoachPayments; 

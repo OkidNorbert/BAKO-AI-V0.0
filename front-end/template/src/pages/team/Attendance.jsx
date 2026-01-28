@@ -47,13 +47,13 @@ const Attendance = () => {
           id: record._id || record.id,
           checkIn: record.checkIn || record.checkInTime,
           checkOut: record.checkOut || record.checkOutTime,
-          // Ensure child and babysitter fields exist
-          child: record.child || { 
-            id: record.childId, 
+          // Ensure player and coach fields exist
+          player: record.player || { 
+            id: record.playerId, 
             firstName: 'Unknown', 
-            lastName: 'Child' 
+            lastName: 'Player' 
           },
-          babysitter: record.babysitter || null
+          coach: record.coach || null
         })) : [];
         
         console.log('Processed attendance records:', records);
@@ -89,7 +89,7 @@ const Attendance = () => {
         const link = document.createElement('a');
         link.href = url;
         link.setAttribute('download', `${activeTab}-attendance-report-${selectedDate}.pdf`);
-        document.body.appendChild(link);
+        document.body.appendPlayer(link);
         link.click();
         link.remove();
       } else {
@@ -113,8 +113,8 @@ const Attendance = () => {
         if (!record) return false;
         
         let name = '';
-        if (activeTab === 'children' && record.child) {
-          name = `${record.child.firstName || ''} ${record.child.lastName || ''}`.toLowerCase();
+        if (activeTab === 'children' && record.player) {
+          name = `${record.player.firstName || ''} ${record.player.lastName || ''}`.toLowerCase();
         } else if (activeTab === 'staff' && record.staff) {
           name = `${record.staff.firstName || ''} ${record.staff.lastName || ''}`.toLowerCase();
         }
@@ -226,7 +226,7 @@ const Attendance = () => {
             }`}
             onClick={() => setActiveTab('children')}
           >
-            Children
+            Players
           </button>
           <button
             className={`py-2 px-4 font-medium text-sm focus:outline-none ${
@@ -286,7 +286,7 @@ const Attendance = () => {
               }`} />
               <input
                 type="text"
-                placeholder={`Search by ${activeTab === 'children' ? 'child' : 'staff'} name...`}
+                placeholder={`Search by ${activeTab === 'children' ? 'player' : 'staff'} name...`}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className={`w-full pl-10 pr-4 py-2 rounded-md ${
@@ -328,7 +328,7 @@ const Attendance = () => {
               isDarkMode ? 'bg-gray-700' : 'bg-gray-50'
             }`}>
               <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                {activeTab === 'children' ? 'Child Name' : 'Staff Name'}
+                {activeTab === 'children' ? 'Player Name' : 'Staff Name'}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
                 Status
@@ -356,8 +356,8 @@ const Attendance = () => {
                     <div className="flex items-center">
                       {getStatusIcon(record.status)}
                       <span className="ml-2">
-                        {activeTab === 'children' && record.child 
-                          ? `${record.child.firstName} ${record.child.lastName}`
+                        {activeTab === 'children' && record.player 
+                          ? `${record.player.firstName} ${record.player.lastName}`
                           : activeTab === 'staff' && record.staff
                             ? `${record.staff.firstName} ${record.staff.lastName}`
                             : 'Unknown'

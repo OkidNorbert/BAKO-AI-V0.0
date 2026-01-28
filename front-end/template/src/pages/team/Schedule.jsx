@@ -24,10 +24,10 @@ const Schedule = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
-  const [babysitters, setBabysitters] = useState([]);
-  const [children, setChildren] = useState([]);
+  const [coachs, setCoachs] = useState([]);
+  const [children, setPlayers] = useState([]);
   const [newEvent, setNewEvent] = useState({
-    babysitter: '',
+    coach: '',
     children: [],
     days: [],
     startTime: '09:00',
@@ -63,30 +63,30 @@ const Schedule = () => {
     }
   };
 
-  const fetchBabysittersAndChildren = async () => {
+  const fetchCoachsAndPlayers = async () => {
     try {
       // Create an array of promises
-      const [babysittersResponse, childrenResponse] = await Promise.all([
-        adminAPI.getBabysitters().catch(error => {
-          console.error('Error fetching babysitters:', error);
+      const [coachsResponse, childrenResponse] = await Promise.all([
+        adminAPI.getCoachs().catch(error => {
+          console.error('Error fetching coachs:', error);
           return { data: [] };
         }),
         
-        adminAPI.getChildren().catch(error => {
+        adminAPI.getPlayers().catch(error => {
           console.error('Error fetching children:', error);
           return { data: [] };
         })
       ]);
       
-      setBabysitters(babysittersResponse.data || []);
-      setChildren(childrenResponse.data || []);
+      setCoachs(coachsResponse.data || []);
+      setPlayers(childrenResponse.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
   };
 
   const handleAddEventClick = () => {
-    fetchBabysittersAndChildren();
+    fetchCoachsAndPlayers();
     setShowAddModal(true);
   };
 
@@ -97,7 +97,7 @@ const Schedule = () => {
       setLoading(true);
       setError('');
       
-      if (!newEvent.babysitter || newEvent.days.length === 0 || !newEvent.startTime || !newEvent.endTime) {
+      if (!newEvent.coach || newEvent.days.length === 0 || !newEvent.startTime || !newEvent.endTime) {
         setError('Please fill in all required fields');
         setLoading(false);
         return;
@@ -108,7 +108,7 @@ const Schedule = () => {
       setEvents([response.data, ...events]);
       setShowAddModal(false);
       setNewEvent({
-        babysitter: '',
+        coach: '',
         children: [],
         days: [],
         startTime: '09:00',
@@ -143,18 +143,18 @@ const Schedule = () => {
     setNewEvent({ ...newEvent, days });
   };
 
-  const handleChildrenChange = (e) => {
+  const handlePlayersChange = (e) => {
     const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
     setNewEvent({ ...newEvent, children: selectedOptions });
   };
 
   const handleEditClick = (event) => {
-    fetchBabysittersAndChildren();
+    fetchCoachsAndPlayers();
     
     // Convert the event data format to the format expected by the form
     const eventData = {
       id: event.id,
-      babysitter: event.babysitterId || '',
+      coach: event.coachId || '',
       children: event.childrenIds || [],
       days: event.days || [],
       startTime: event.startTime || '09:00',
@@ -180,14 +180,14 @@ const Schedule = () => {
       setLoading(true);
       setError('');
       
-      if (!editingEvent.babysitter || editingEvent.days.length === 0 || !editingEvent.startTime || !editingEvent.endTime) {
+      if (!editingEvent.coach || editingEvent.days.length === 0 || !editingEvent.startTime || !editingEvent.endTime) {
         setError('Please fill in all required fields');
         setLoading(false);
         return;
       }
       
       const response = await adminAPI.updateScheduleEvent(editingEvent.id, {
-        babysitter: editingEvent.babysitter,
+        coach: editingEvent.coach,
         children: editingEvent.children,
         days: editingEvent.days,
         startTime: editingEvent.startTime,
@@ -228,7 +228,7 @@ const Schedule = () => {
     setEditingEvent({ ...editingEvent, days });
   };
 
-  const handleEditChildrenChange = (e) => {
+  const handleEditPlayersChange = (e) => {
     const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
     setEditingEvent({ ...editingEvent, children: selectedOptions });
   };
@@ -296,7 +296,7 @@ const Schedule = () => {
                 : 'text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600'
             }`}>Schedule Management</h1>
             <p className={`mt-1 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              Manage and organize daycare schedules
+              Manage and organize academy schedules
             </p>
           </div>
           <button
@@ -429,36 +429,36 @@ const Schedule = () => {
               </div>
               
               <form onSubmit={handleSubmitEvent} className="space-y-6">
-                {/* Babysitter Selection */}
+                {/* Coach Selection */}
                 <div>
-                  <label className="block text-sm font-medium mb-1">Babysitter</label>
+                  <label className="block text-sm font-medium mb-1">Coach</label>
                   <select
-                    value={newEvent.babysitter}
-                    onChange={(e) => setNewEvent({ ...newEvent, babysitter: e.target.value })}
+                    value={newEvent.coach}
+                    onChange={(e) => setNewEvent({ ...newEvent, coach: e.target.value })}
                     className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
                     required
                   >
-                    <option value="">Select Babysitter</option>
-                    {babysitters.map((babysitter) => (
-                      <option key={babysitter._id || babysitter.id} value={babysitter._id || babysitter.id}>
-                        {babysitter.firstName} {babysitter.lastName}
+                    <option value="">Select Coach</option>
+                    {coachs.map((coach) => (
+                      <option key={coach._id || coach.id} value={coach._id || coach.id}>
+                        {coach.firstName} {coach.lastName}
                       </option>
                     ))}
                   </select>
                 </div>
                 
-                {/* Children Selection */}
+                {/* Players Selection */}
                 <div>
-                  <label className="block text-sm font-medium mb-1">Children (hold Ctrl/Cmd to select multiple)</label>
+                  <label className="block text-sm font-medium mb-1">Players (hold Ctrl/Cmd to select multiple)</label>
                   <select
                     multiple
                     value={newEvent.children}
-                    onChange={handleChildrenChange}
+                    onChange={handlePlayersChange}
                     className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 h-32"
                   >
-                    {children.map((child) => (
-                      <option key={child._id || child.id} value={child._id || child.id}>
-                        {child.firstName} {child.lastName}
+                    {children.map((player) => (
+                      <option key={player._id || player.id} value={player._id || player.id}>
+                        {player.firstName} {player.lastName}
                       </option>
                     ))}
                   </select>
@@ -649,36 +649,36 @@ const Schedule = () => {
               </div>
               
               <form onSubmit={handleUpdateEvent} className="space-y-6">
-                {/* Babysitter Selection */}
+                {/* Coach Selection */}
                 <div>
-                  <label className="block text-sm font-medium mb-1">Babysitter</label>
+                  <label className="block text-sm font-medium mb-1">Coach</label>
                   <select
-                    value={editingEvent.babysitter}
-                    onChange={(e) => setEditingEvent({ ...editingEvent, babysitter: e.target.value })}
+                    value={editingEvent.coach}
+                    onChange={(e) => setEditingEvent({ ...editingEvent, coach: e.target.value })}
                     className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
                     required
                   >
-                    <option value="">Select Babysitter</option>
-                    {babysitters.map((babysitter) => (
-                      <option key={babysitter._id || babysitter.id} value={babysitter._id || babysitter.id}>
-                        {babysitter.firstName} {babysitter.lastName}
+                    <option value="">Select Coach</option>
+                    {coachs.map((coach) => (
+                      <option key={coach._id || coach.id} value={coach._id || coach.id}>
+                        {coach.firstName} {coach.lastName}
                       </option>
                     ))}
                   </select>
                 </div>
                 
-                {/* Children Selection */}
+                {/* Players Selection */}
                 <div>
-                  <label className="block text-sm font-medium mb-1">Children (hold Ctrl/Cmd to select multiple)</label>
+                  <label className="block text-sm font-medium mb-1">Players (hold Ctrl/Cmd to select multiple)</label>
                   <select
                     multiple
                     value={editingEvent.children}
-                    onChange={handleEditChildrenChange}
+                    onChange={handleEditPlayersChange}
                     className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 h-32"
                   >
-                    {children.map((child) => (
-                      <option key={child._id || child.id} value={child._id || child.id}>
-                        {child.firstName} {child.lastName}
+                    {children.map((player) => (
+                      <option key={player._id || player.id} value={player._id || player.id}>
+                        {player.firstName} {player.lastName}
                       </option>
                     ))}
                   </select>

@@ -16,8 +16,8 @@ import {
   Home
 } from 'lucide-react';
 
-const BabysitterHome = () => {
-  const [children, setChildren] = useState([]);
+const CoachHome = () => {
+  const [children, setPlayers] = useState([]);
   const [activities, setActivities] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,12 +37,12 @@ const BabysitterHome = () => {
 
       // Fetch all data in parallel
       const [childrenResponse, activitiesResponse, notificationsResponse] = await Promise.all([
-        api.get('/babysitter/children').catch(err => ({ data: [] })),
-        api.get('/babysitter/activities').catch(err => ({ data: [] })),
-        api.get('/babysitter/notifications').catch(err => ({ data: [] }))
+        api.get('/coach/children').catch(err => ({ data: [] })),
+        api.get('/coach/activities').catch(err => ({ data: [] })),
+        api.get('/coach/notifications').catch(err => ({ data: [] }))
       ]);
 
-      setChildren(childrenResponse.data || []);
+      setPlayers(childrenResponse.data || []);
       setActivities(activitiesResponse.data || []);
       setNotifications(notificationsResponse.data || []);
 
@@ -58,7 +58,7 @@ const BabysitterHome = () => {
       }
 
       // Set empty arrays on error
-      setChildren([]);
+      setPlayers([]);
       setActivities([]);
       setNotifications([]);
     } finally {
@@ -74,7 +74,7 @@ const BabysitterHome = () => {
 
   const markAsRead = async (notificationId) => {
     try {
-      await api.put(`/babysitter/notifications/${notificationId}/read`);
+      await api.put(`/coach/notifications/${notificationId}/read`);
 
       // Update local states
       setNotifications(prev => prev.map(notif =>
@@ -198,7 +198,7 @@ const BabysitterHome = () => {
                 {notifications.length > 3 && (
                   <div className="text-center mt-4">
                     <Link
-                      to="/babysitter/notifications"
+                      to="/coach/notifications"
                       className={`inline-flex items-center px-4 py-2 rounded-md ${isDarkMode
                         ? 'bg-indigo-900 hover:bg-indigo-800 text-indigo-100'
                         : 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700'
@@ -215,7 +215,7 @@ const BabysitterHome = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Assigned Children */}
+          {/* Assigned Players */}
           <div className={`rounded-xl shadow-lg overflow-hidden`}>
             <div className={`
               px-6 py-4 text-xl font-semibold
@@ -237,26 +237,26 @@ const BabysitterHome = () => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {children.map(child => (
+                  {children.map(player => (
                     <Link
-                      key={child._id}
-                      to={`/babysitter/children/${child._id}`}
+                      key={player._id}
+                      to={`/coach/children/${player._id}`}
                       className={`block p-4 rounded-lg transition-all duration-200 ${isDarkMode ? 'bg-gray-700 hover:bg-gray-650' : 'bg-gray-50 hover:bg-gray-100'
                         }`}
                     >
                       <div className="flex items-center">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${child.gender === 'male'
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${player.gender === 'male'
                           ? isDarkMode ? 'bg-blue-900 text-blue-200' : 'bg-blue-100 text-blue-800'
                           : isDarkMode ? 'bg-pink-900 text-pink-200' : 'bg-pink-100 text-pink-800'
                           }`}>
                           <span className="font-bold">
-                            {child.firstName.charAt(0)}
+                            {player.firstName.charAt(0)}
                           </span>
                         </div>
                         <div className="ml-3">
-                          <h3 className="font-medium">{child.firstName} {child.lastName}</h3>
+                          <h3 className="font-medium">{player.firstName} {player.lastName}</h3>
                           <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                            {calculateAge(child.dateOfBirth)} years old
+                            {calculateAge(player.dateOfBirth)} years old
                           </p>
                         </div>
                         <ChevronRight className={`ml-auto ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
@@ -301,7 +301,7 @@ const BabysitterHome = () => {
               ) : (
                 <div className="space-y-3">
                   {activities.map(activity => {
-                    const child = activity.childId;
+                    const player = activity.playerId;
                     return (
                       <div
                         key={activity._id}
@@ -316,7 +316,7 @@ const BabysitterHome = () => {
                           <div className="ml-3">
                             <h3 className="font-medium">{activity.title}</h3>
                             <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                              {child ? `${child.firstName} ${child.lastName}` : 'Unknown Child'}
+                              {player ? `${player.firstName} ${player.lastName}` : 'Unknown Player'}
                             </p>
                             <div className="flex items-center text-xs mt-1">
                               <Calendar className="h-3 w-3 mr-1" />
@@ -423,4 +423,4 @@ const getActivityColor = (type, isDarkMode) => {
   }
 };
 
-export default BabysitterHome; 
+export default CoachHome; 

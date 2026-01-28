@@ -23,8 +23,8 @@ import api from '../../utils/axiosConfig';
 const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
-    totalChildren: 0,
-    activeChildren: 0,
+    totalPlayers: 0,
+    activePlayers: 0,
     totalRevenue: 0,
     pendingPayments: 0,
     attendanceRate: 0,
@@ -88,7 +88,7 @@ const AdminDashboard = () => {
   const navigateToBudget = () => navigate('/admin/budgets');
   const navigateToUsers = () => navigate('/admin/users');
   const navigateToExport = () => navigate('/admin/export');
-  const navigateToAddChild = () => navigate('/admin/children/new');
+  const navigateToAddPlayer = () => navigate('/admin/children/new');
   const navigateToAttendance = () => navigate('/admin/attendance');
 
   if (loading) {
@@ -184,11 +184,11 @@ const AdminDashboard = () => {
               <Button 
                 variant="outline" 
                 className="h-20"
-                onClick={navigateToAddChild}
+                onClick={navigateToAddPlayer}
               >
                 <div className="flex flex-col items-center">
                   <Users className="h-5 w-5 mb-1" />
-                  <span className="text-sm font-medium">Add Child</span>
+                  <span className="text-sm font-medium">Add Player</span>
                 </div>
               </Button>
               <Button 

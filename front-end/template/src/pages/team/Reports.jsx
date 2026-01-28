@@ -21,7 +21,7 @@ import {
   PieChart,
   Save
 } from 'lucide-react';
-import BabysitterPaymentReport from '../../components/reports/BabysitterPaymentReport';
+import CoachPaymentReport from '../../components/reports/CoachPaymentReport';
 import { toast } from 'react-hot-toast';
 import DailyTransactionSummary from '../../components/reports/DailyTransactionSummary';
 import FinancialTrendsChart from '../../components/reports/FinancialTrendsChart';
@@ -34,8 +34,8 @@ const Reports = () => {
   });
   const [reportFormat, setReportFormat] = useState('pdf');
   const [reportFilters, setReportFilters] = useState({
-    babysitterIds: [],
-    childIds: [],
+    coachIds: [],
+    playerIds: [],
     statusFilter: 'all',
     fiscalYear: new Date().getFullYear(),
     departmentFilter: 'all',
@@ -49,8 +49,8 @@ const Reports = () => {
   const [error, setError] = useState('');
   const [recentReports, setRecentReports] = useState([]);
   const [reportPreview, setReportPreview] = useState(null);
-  const [availableBabysitters, setAvailableBabysitters] = useState([]);
-  const [availableChildren, setAvailableChildren] = useState([]);
+  const [availableCoachs, setAvailableCoachs] = useState([]);
+  const [availablePlayers, setAvailablePlayers] = useState([]);
   const { isDarkMode } = useTheme();
   const [reportType, setReportType] = useState('daily-summaries');
 
@@ -71,7 +71,7 @@ const Reports = () => {
     },
     {
       id: 'children',
-      title: 'Children Report',
+      title: 'Players Report',
       description: 'Enrollment and demographic data',
       icon: Users,
       color: 'text-pink-500'
@@ -79,7 +79,7 @@ const Reports = () => {
     {
       id: 'staff',
       title: 'Staff Performance',
-      description: 'Babysitter performance metrics',
+      description: 'Coach performance metrics',
       icon: TrendingUp,
       color: 'text-purple-500'
     },
@@ -91,9 +91,9 @@ const Reports = () => {
       color: 'text-emerald-500'
     },
     {
-      id: 'babysitter-payments',
-      title: 'Babysitter Payments',
-      description: 'Track and manage all babysitter payments',
+      id: 'coach-payments',
+      title: 'Coach Payments',
+      description: 'Track and manage all coach payments',
       icon: CheckCircle,
       color: 'text-indigo-500'
     },
@@ -124,15 +124,15 @@ const Reports = () => {
       }
     };
 
-    const fetchBabysittersAndChildren = async () => {
+    const fetchCoachsAndPlayers = async () => {
       try {
-        // Fetch babysitters
-        const babysittersResponse = await api.get('/admin/babysitters');
-        setAvailableBabysitters(babysittersResponse.data || []);
+        // Fetch coachs
+        const coachsResponse = await api.get('/admin/coachs');
+        setAvailableCoachs(coachsResponse.data || []);
 
         // Fetch children
         const childrenResponse = await api.get('/admin/children');
-        setAvailableChildren(childrenResponse.data || []);
+        setAvailablePlayers(childrenResponse.data || []);
       } catch (error) {
         console.error('Error fetching data:', error);
         toast.error('Failed to load filter data.');
@@ -140,12 +140,12 @@ const Reports = () => {
     };
 
     fetchRecentReports();
-    fetchBabysittersAndChildren();
+    fetchCoachsAndPlayers();
   }, []);
 
   const handleGenerateReport = async () => {
-    if (selectedReport === 'babysitter-payments') {
-      return; // No need to generate report for babysitter payments as it has its own component
+    if (selectedReport === 'coach-payments') {
+      return; // No need to generate report for coach payments as it has its own component
     }
     
     if (!selectedReport || !dateRange.startDate || !dateRange.endDate) {
@@ -216,7 +216,7 @@ const Reports = () => {
       link.href = url;
       const fileExtension = reportFormat === 'csv' ? 'csv' : 'pdf';
       link.setAttribute('download', `${selectedReport}-report.${fileExtension}`);
-      document.body.appendChild(link);
+      document.body.appendPlayer(link);
       link.click();
       link.remove();
       
@@ -300,7 +300,7 @@ const Reports = () => {
       link.href = url;
       const fileExtension = format === 'csv' ? 'csv' : 'pdf';
       link.setAttribute('download', `${selectedReport}-${type}-report.${fileExtension}`);
-      document.body.appendChild(link);
+      document.body.appendPlayer(link);
       link.click();
       link.remove();
       
@@ -328,8 +328,8 @@ const Reports = () => {
 
   // Render the appropriate content based on selected report
   const renderReportContent = () => {
-    if (selectedReport === 'babysitter-payments') {
-      return <BabysitterPaymentReport />;
+    if (selectedReport === 'coach-payments') {
+      return <CoachPaymentReport />;
     }
     
     return (
@@ -486,7 +486,7 @@ const Reports = () => {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Babysitters</label>
+                  <label className="block text-sm font-medium mb-2">Coachs</label>
                   <select
                     multiple
                     size="3"
@@ -497,12 +497,12 @@ const Reports = () => {
                     } border`}
                     onChange={(e) => {
                       const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
-                      setReportFilters({...reportFilters, babysitterIds: selectedOptions});
+                      setReportFilters({...reportFilters, coachIds: selectedOptions});
                     }}
                   >
-                    {availableBabysitters.map(babysitter => (
-                      <option key={babysitter._id} value={babysitter._id}>
-                        {babysitter.firstName} {babysitter.lastName}
+                    {availableCoachs.map(coach => (
+                      <option key={coach._id} value={coach._id}>
+                        {coach.firstName} {coach.lastName}
                       </option>
                     ))}
                   </select>
@@ -533,7 +533,7 @@ const Reports = () => {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Child Filter (Optional)</label>
+                  <label className="block text-sm font-medium mb-2">Player Filter (Optional)</label>
                   <select
                     multiple
                     size="3"
@@ -544,12 +544,12 @@ const Reports = () => {
                     } border`}
                     onChange={(e) => {
                       const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
-                      setReportFilters({...reportFilters, childIds: selectedOptions});
+                      setReportFilters({...reportFilters, playerIds: selectedOptions});
                     }}
                   >
-                    {availableChildren.map(child => (
-                      <option key={child._id} value={child._id}>
-                        {child.firstName} {child.lastName}
+                    {availablePlayers.map(player => (
+                      <option key={player._id} value={player._id}>
+                        {player.firstName} {player.lastName}
                       </option>
                     ))}
                   </select>
@@ -600,7 +600,7 @@ const Reports = () => {
                 </div>
                 
                 <div className="mt-4">
-                  <label className="block text-sm font-medium mb-2">Child Filter (Optional)</label>
+                  <label className="block text-sm font-medium mb-2">Player Filter (Optional)</label>
                   <select
                     multiple
                     size="3"
@@ -611,12 +611,12 @@ const Reports = () => {
                     } border`}
                     onChange={(e) => {
                       const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
-                      setReportFilters({...reportFilters, childIds: selectedOptions});
+                      setReportFilters({...reportFilters, playerIds: selectedOptions});
                     }}
                   >
-                    {availableChildren.map(child => (
-                      <option key={child._id} value={child._id}>
-                        {child.firstName} {child.lastName}
+                    {availablePlayers.map(player => (
+                      <option key={player._id} value={player._id}>
+                        {player.firstName} {player.lastName}
                       </option>
                     ))}
                   </select>
@@ -726,7 +726,7 @@ const Reports = () => {
                       isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
                     }`}>
                       <th className="p-2 text-left">Date</th>
-                      <th className="p-2 text-left">Child</th>
+                      <th className="p-2 text-left">Player</th>
                       <th className="p-2 text-left">Type</th>
                       <th className="p-2 text-left">Severity</th>
                       <th className="p-2 text-left">Status</th>
@@ -738,7 +738,7 @@ const Reports = () => {
                         isDarkMode ? 'border-gray-700' : 'border-gray-200'
                       } border-b`}>
                         <td className="p-2">{new Date(incident.date).toLocaleDateString()}</td>
-                        <td className="p-2">{incident.childName || 'Unknown'}</td>
+                        <td className="p-2">{incident.playerName || 'Unknown'}</td>
                         <td className="p-2">{incident.type}</td>
                         <td className="p-2">
                           <span className={`px-2 py-1 rounded-full text-xs ${
@@ -1096,7 +1096,7 @@ const Reports = () => {
                 <p className={`mt-1 ${
                   isDarkMode ? 'text-gray-300' : 'text-blue-50'
                 }`}>
-                  Generate comprehensive reports for your daycare center
+                  Generate comprehensive reports for your academy center
                 </p>
               </div>
             </div>
@@ -1153,14 +1153,14 @@ const Reports = () => {
           ))}
         </div>
 
-        {/* Report Configuration or Babysitter Payment Management */}
+        {/* Report Configuration or Coach Payment Management */}
         {selectedReport && renderReportContent()}
         
         {/* Report Preview (if available) */}
-        {reportPreview && selectedReport !== 'babysitter-payments' && renderReportPreview()}
+        {reportPreview && selectedReport !== 'coach-payments' && renderReportPreview()}
 
-        {/* Recent Reports - Only show if not on babysitter payments */}
-        {selectedReport !== 'babysitter-payments' && (
+        {/* Recent Reports - Only show if not on coach payments */}
+        {selectedReport !== 'coach-payments' && (
           <div className={`p-6 rounded-lg shadow-md ${
             isDarkMode ? 'bg-gray-800' : 'bg-white'
           }`}>
@@ -1196,7 +1196,7 @@ const Reports = () => {
                         const link = document.createElement('a');
                         link.href = url;
                         link.setAttribute('download', report.filename);
-                        document.body.appendChild(link);
+                        document.body.appendPlayer(link);
                         link.click();
                         link.remove();
                       }}

@@ -78,3 +78,12 @@ pytestdebuglog.txt
 ._*
 Thumbe.db
 desktop.ini
+
+# Node.js
+node_modules/
+dist/
+*.log
+.eslintcache
+.stylelintcache
+.npm
+.cache

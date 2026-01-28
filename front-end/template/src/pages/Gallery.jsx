@@ -16,7 +16,7 @@ const galleryItems = [
   {
     id: 1,
     src: 'https://plus.unsplash.com/premium_photo-1682750331018-d3b24be9b027?q=80&w=3271&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    alt: 'Children playing with building blocks',
+    alt: 'Players playing with building blocks',
     category: 'activities',
     title: 'Creative Building'
   },
@@ -30,7 +30,7 @@ const galleryItems = [
   {
     id: 3,
     src: 'https://images.unsplash.com/photo-1540479859555-17af45c78602?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80',
-    alt: 'Children during art class',
+    alt: 'Players during art class',
     category: 'activities',
     title: 'Art Class Fun'
   },
@@ -44,7 +44,7 @@ const galleryItems = [
   {
     id: 5,
     src: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80',
-    alt: 'Children having lunch together',
+    alt: 'Players having lunch together',
     category: 'daily-life',
     title: 'Lunch Time'
   },
@@ -58,7 +58,7 @@ const galleryItems = [
   {
     id: 7,
     src: 'https://images.unsplash.com/photo-1685358287448-2c8ad243fb24?q=80&w=3387&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    alt: 'Children learning to count',
+    alt: 'Players learning to count',
     category: 'learning',
     title: 'Math Skills'
   },
@@ -72,7 +72,7 @@ const galleryItems = [
   {
     id: 9,
     src: 'https://images.unsplash.com/photo-1537655780520-1e392ead81f2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80',
-    alt: 'Children playing outdoors',
+    alt: 'Players playing outdoors',
     category: 'outdoor',
     title: 'Outdoor Play'
   },
@@ -86,14 +86,14 @@ const galleryItems = [
   {
     id: 11,
     src: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80',
-    alt: 'Children celebrating birthday',
+    alt: 'Players celebrating birthday',
     category: 'events',
     title: 'Birthday Celebration'
   },
   {
     id: 12,
     src: 'https://images.unsplash.com/photo-1526634332515-d56c5fd16991?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80',
-    alt: 'Graduation day at daycare',
+    alt: 'Graduation day at academy',
     category: 'events',
     title: 'Graduation Day'
   }

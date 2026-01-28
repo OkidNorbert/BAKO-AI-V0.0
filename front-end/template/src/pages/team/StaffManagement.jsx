@@ -22,8 +22,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
-const BabysitterManagement = () => {
-  const [babysitters, setBabysitters] = useState([]);
+const CoachManagement = () => {
+  const [coachs, setCoachs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -33,50 +33,50 @@ const BabysitterManagement = () => {
   const { isDarkMode } = useTheme();
 
   useEffect(() => {
-    fetchBabysitters();
+    fetchCoachs();
   }, []);
 
-  const fetchBabysitters = async () => {
+  const fetchCoachs = async () => {
     try {
       setLoading(true);
       setError('');
-      const response = await api.get('/admin/babysitters');
-      setBabysitters(response.data || []);
-      // toast.success('Babysitters loaded successfully');
+      const response = await api.get('/admin/coachs');
+      setCoachs(response.data || []);
+      // toast.success('Coachs loaded successfully');
     } catch (error) {
-      console.error('Error fetching babysitters:', error);
-      setError('Failed to fetch babysitters. Please try again later.');
-      toast.error('Failed to load babysitters');
-      setBabysitters([]);
+      console.error('Error fetching coachs:', error);
+      setError('Failed to fetch coachs. Please try again later.');
+      toast.error('Failed to load coachs');
+      setCoachs([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleToggleStatus = async (babysitter) => {
+  const handleToggleStatus = async (coach) => {
     try {
-      const newStatus = babysitter.status === 'active' ? 'inactive' : 'active';
-      await api.patch(`/admin/babysitters/${babysitter._id}/status`, { status: newStatus });
+      const newStatus = coach.status === 'active' ? 'inactive' : 'active';
+      await api.patch(`/admin/coachs/${coach._id}/status`, { status: newStatus });
       
-      setBabysitters(babysitters.map(b => 
-        b._id === babysitter._id ? { ...b, status: newStatus } : b
+      setCoachs(coachs.map(b => 
+        b._id === coach._id ? { ...b, status: newStatus } : b
       ));
       
-      toast.success(`Babysitter ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
+      toast.success(`Coach ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
     } catch (error) {
-      console.error('Error updating babysitter status:', error);
-      toast.error('Failed to update babysitter status');
+      console.error('Error updating coach status:', error);
+      toast.error('Failed to update coach status');
     }
   };
 
-  const handleViewSchedule = (babysitterId) => {
+  const handleViewSchedule = (coachId) => {
     // Navigate to schedule view
-    window.location.href = `/admin/babysitters/${babysitterId}/schedule`;
+    window.location.href = `/admin/coachs/${coachId}/schedule`;
   };
 
-  const handleViewPayments = (babysitterId) => {
+  const handleViewPayments = (coachId) => {
     // Navigate to payments view
-    window.location.href = `/admin/babysitters/${babysitterId}/payments`;
+    window.location.href = `/admin/coachs/${coachId}/payments`;
   };
 
   const sortData = (data) => {
@@ -110,13 +110,13 @@ const BabysitterManagement = () => {
     }
   };
 
-  const filteredBabysitters = sortData(babysitters.filter(babysitter => {
+  const filteredCoachs = sortData(coachs.filter(coach => {
     const matchesSearch = 
-      (babysitter.firstName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (babysitter.lastName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (babysitter.email?.toLowerCase() || '').includes(searchTerm.toLowerCase());
+      (coach.firstName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (coach.lastName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (coach.email?.toLowerCase() || '').includes(searchTerm.toLowerCase());
     
-    const matchesStatusFilter = statusFilter === 'all' || babysitter.status === statusFilter;
+    const matchesStatusFilter = statusFilter === 'all' || coach.status === statusFilter;
     
     return matchesSearch && matchesStatusFilter;
   }));
@@ -138,14 +138,14 @@ const BabysitterManagement = () => {
           {/* Header with title and actions */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
             <div>
-              <h1 className="text-2xl font-bold">Babysitter Management</h1>
+              <h1 className="text-2xl font-bold">Coach Management</h1>
               <p className={`mt-1 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                Manage daycare babysitters, their schedules, and payments
+                Manage academy coachs, their schedules, and payments
               </p>
             </div>
             <div className="flex gap-3">
               <button 
-                onClick={fetchBabysitters}
+                onClick={fetchCoachs}
                 className={`flex items-center px-3 py-2 rounded-lg transition ${
                   isDarkMode 
                     ? 'bg-gray-800 hover:bg-gray-700 text-white' 
@@ -156,7 +156,7 @@ const BabysitterManagement = () => {
                 Refresh
               </button>
               <Link
-                to="/admin/babysitters/add"
+                to="/admin/coachs/add"
                 className={`flex items-center px-3 py-2 rounded-lg transition ${
                   isDarkMode 
                     ? 'bg-indigo-600 hover:bg-indigo-700 text-white' 
@@ -164,7 +164,7 @@ const BabysitterManagement = () => {
                 }`}
               >
                 <Plus size={16} className="mr-2" />
-                Add Babysitter
+                Add Coach
               </Link>
               <Link
                 to="/admin/payments"
@@ -196,9 +196,9 @@ const BabysitterManagement = () => {
               <div className="flex justify-between items-center">
                 <div>
                   <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                    Total Babysitters
+                    Total Coachs
                   </p>
-                  <p className="text-2xl font-bold">{babysitters.length}</p>
+                  <p className="text-2xl font-bold">{coachs.length}</p>
                 </div>
                 <div className={`p-3 rounded-full ${
                   isDarkMode ? 'bg-indigo-900/50 text-indigo-400' : 'bg-indigo-100 text-indigo-600'
@@ -214,10 +214,10 @@ const BabysitterManagement = () => {
               <div className="flex justify-between items-center">
                 <div>
                   <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                    Active Babysitters
+                    Active Coachs
                   </p>
                   <p className="text-2xl font-bold">
-                    {babysitters.filter(b => b.status === 'active').length}
+                    {coachs.filter(b => b.status === 'active').length}
                   </p>
                 </div>
                 <div className={`p-3 rounded-full ${
@@ -234,10 +234,10 @@ const BabysitterManagement = () => {
               <div className="flex justify-between items-center">
                 <div>
                   <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                    Inactive Babysitters
+                    Inactive Coachs
                   </p>
                   <p className="text-2xl font-bold">
-                    {babysitters.filter(b => b.status === 'inactive').length}
+                    {coachs.filter(b => b.status === 'inactive').length}
                   </p>
                 </div>
                 <div className={`p-3 rounded-full ${
@@ -257,8 +257,8 @@ const BabysitterManagement = () => {
                     Avg. Hourly Rate
                   </p>
                   <p className="text-2xl font-bold">
-                    ${babysitters.length > 0 
-                      ? (babysitters.reduce((acc, b) => acc + Number(b.hourlyRate || 0), 0) / babysitters.length).toFixed(2)
+                    ${coachs.length > 0 
+                      ? (coachs.reduce((acc, b) => acc + Number(b.hourlyRate || 0), 0) / coachs.length).toFixed(2)
                       : '0.00'
                     }
                   </p>
@@ -283,7 +283,7 @@ const BabysitterManagement = () => {
                 }`} size={20} />
                 <input
                   type="text"
-                  placeholder="Search babysitters..."
+                  placeholder="Search coachs..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className={`w-full pl-10 pr-4 py-2 rounded-lg focus:ring-2 ${
@@ -314,7 +314,7 @@ const BabysitterManagement = () => {
             </div>
           </div>
 
-          {/* Babysitters Table */}
+          {/* Coachs Table */}
           <div className={`rounded-lg overflow-hidden ${
             isDarkMode ? 'bg-gray-800' : 'bg-white shadow-sm'
           }`}>
@@ -382,9 +382,9 @@ const BabysitterManagement = () => {
                 <tbody className={`${
                   isDarkMode ? 'bg-gray-800 divide-y divide-gray-700' : 'bg-white divide-y divide-gray-200'
                 }`}>
-                  {filteredBabysitters.length > 0 ? (
-                    filteredBabysitters.map((babysitter) => (
-                      <tr key={babysitter._id} className={`${
+                  {filteredCoachs.length > 0 ? (
+                    filteredCoachs.map((coach) => (
+                      <tr key={coach._id} className={`${
                         isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'
                       } transition duration-150`}>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -402,33 +402,33 @@ const BabysitterManagement = () => {
                               <div className={`text-sm font-medium ${
                                 isDarkMode ? 'text-white' : 'text-gray-900'
                               }`}>
-                                {babysitter.firstName} {babysitter.lastName}
+                                {coach.firstName} {coach.lastName}
                               </div>
                               <div className={`text-sm ${
                                 isDarkMode ? 'text-gray-400' : 'text-gray-500'
                               }`}>
-                                ID: {babysitter._id}
+                                ID: {coach._id}
                               </div>
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className={`text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                            {babysitter.email}
+                            {coach.email}
                           </div>
                           <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                            {babysitter.phoneNumber}
+                            {coach.phoneNumber}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <button
-                            onClick={() => handleToggleStatus(babysitter)}
+                            onClick={() => handleToggleStatus(coach)}
                             className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              babysitter.status === 'active' 
+                              coach.status === 'active' 
                                 ? isDarkMode 
                                   ? 'bg-green-900/50 text-green-400 hover:bg-green-800/70' 
                                   : 'bg-green-100 text-green-800 hover:bg-green-200'
-                                : babysitter.status === 'inactive'
+                                : coach.status === 'inactive'
                                   ? isDarkMode
                                     ? 'bg-red-900/50 text-red-400 hover:bg-red-800/70'
                                     : 'bg-red-100 text-red-800 hover:bg-red-200'
@@ -437,41 +437,41 @@ const BabysitterManagement = () => {
                                     : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
                             }`}
                           >
-                            {babysitter.status === 'active' ? (
+                            {coach.status === 'active' ? (
                               <UserCheck size={14} className="mr-1 inline" />
                             ) : (
                               <UserX size={14} className="mr-1 inline" />
                             )}
-                            {babysitter.status}
+                            {coach.status}
                           </button>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className={`text-sm font-medium ${
                             isDarkMode ? 'text-white' : 'text-gray-900'
                           }`}>
-                            ${babysitter.hourlyRate || '0.00'}/hr
+                            ${coach.hourlyRate || '0.00'}/hr
                           </div>
                           <div className={`text-xs ${
                             isDarkMode ? 'text-gray-400' : 'text-gray-500'
                           }`}>
-                            Max: {babysitter.maxChildren || 5} children
+                            Max: {coach.maxPlayers || 5} children
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex space-x-1">
                             <Link
-                              to={`/admin/babysitters/${babysitter._id}/edit`}
+                              to={`/admin/coachs/${coach._id}/edit`}
                               className={`p-1 rounded-md ${
                                 isDarkMode
                                   ? 'text-blue-400 hover:bg-gray-700'
                                   : 'text-blue-600 hover:bg-blue-100'
                               }`}
-                              title="Edit Babysitter"
+                              title="Edit Coach"
                             >
                               <Edit size={18} />
                             </Link>
                             <button
-                              onClick={() => handleViewSchedule(babysitter._id)}
+                              onClick={() => handleViewSchedule(coach._id)}
                               className={`p-1 rounded-md ${
                                 isDarkMode
                                   ? 'text-green-400 hover:bg-gray-700'
@@ -482,7 +482,7 @@ const BabysitterManagement = () => {
                               <Calendar size={18} />
                             </button>
                             <button
-                              onClick={() => handleViewPayments(babysitter._id)}
+                              onClick={() => handleViewPayments(coach._id)}
                               className={`p-1 rounded-md ${
                                 isDarkMode
                                   ? 'text-purple-400 hover:bg-gray-700'
@@ -493,7 +493,7 @@ const BabysitterManagement = () => {
                               <DollarSign size={18} />
                             </button>
                             <Link
-                              to={`/admin/babysitters/${babysitter._id}`}
+                              to={`/admin/coachs/${coach._id}`}
                               className={`p-1 rounded-md ${
                                 isDarkMode
                                   ? 'text-gray-400 hover:bg-gray-700'
@@ -517,7 +517,7 @@ const BabysitterManagement = () => {
                           <p className={`mt-2 ${
                             isDarkMode ? 'text-gray-400' : 'text-gray-500'
                           }`}>
-                            No babysitters found matching your filters
+                            No coachs found matching your filters
                           </p>
                         </div>
                       </td>
@@ -533,4 +533,4 @@ const BabysitterManagement = () => {
   );
 };
 
-export default BabysitterManagement; 
+export default CoachManagement; 

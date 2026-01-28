@@ -16,21 +16,21 @@ import {
   Trash2,
   AlertTriangle
 } from 'lucide-react';
-import ChildRegistration from '../admin/ChildRegistration';
+import PlayerRegistration from './PlayerRegistration';
 
 const TeamManagement = () => {
   const navigate = useNavigate();
-  const [children, setChildren] = useState([]);
+  const [children, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterAge, setFilterAge] = useState('all');
   const { isDarkMode } = useTheme();
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editingChild, setEditingChild] = useState(null);
-  const [parents, setParents] = useState([]);
+  const [editingPlayer, setEditingPlayer] = useState(null);
+  const [contacts, setContacts] = useState([]);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
-  const [childStats, setChildStats] = useState({
+  const [playerStats, setPlayerStats] = useState({
     total: 0,
     byAge: {
       infant: 0,
@@ -45,7 +45,7 @@ const TeamManagement = () => {
     }
   });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deletingChild, setDeletingChild] = useState(null);
+  const [deletingPlayer, setDeletingPlayer] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState('');
   const [isEditMode, setIsEditMode] = useState(false);
@@ -76,11 +76,11 @@ const TeamManagement = () => {
         }
       };
 
-      children.forEach(child => {
+      children.forEach(player => {
         // Calculate age stats
         let age = 0;
-        if (child.dateOfBirth) {
-          const birthDate = new Date(child.dateOfBirth);
+        if (player.dateOfBirth) {
+          const birthDate = new Date(player.dateOfBirth);
           const today = new Date();
           age = today.getFullYear() - birthDate.getFullYear();
           const m = today.getMonth() - birthDate.getMonth();
@@ -95,11 +95,11 @@ const TeamManagement = () => {
         else stats.byAge.preschool++;
 
         // Calculate gender stats
-        const gender = child.gender || 'other';
+        const gender = player.gender || 'other';
         stats.byGender[gender]++;
       });
 
-      setChildStats(stats);
+      setPlayerStats(stats);
     }
   }, [children]);
 
@@ -108,14 +108,14 @@ const TeamManagement = () => {
       setLoading(true);
       setError('');
 
-      // Fetch parents first
+      // Fetch contacts first
       try {
-        const parentsResponse = await api.get('/admin/users?role=parent');
-        setParents(parentsResponse.data || []);
+        const contactsResponse = await api.get('/admin/users?role=contact');
+        setContacts(contactsResponse.data || []);
       } catch (error) {
-        console.error('Error fetching parents:', error);
-        // Mock parent data
-        setParents([
+        console.error('Error fetching contacts:', error);
+        // Mock contact data
+        setContacts([
           { id: '101', firstName: 'John', lastName: 'Johnson', email: 'john@example.com' },
           { id: '102', firstName: 'Sarah', lastName: 'Williams', email: 'sarah@example.com' }
         ]);
@@ -125,32 +125,32 @@ const TeamManagement = () => {
       try {
         const childrenResponse = await api.get('/admin/children');
 
-        // Process children data to ensure parent info is available
-        const processedChildren = (childrenResponse.data || []).map(child => {
-          // If parent info is missing, try to find the parent from the parents list
-          if (!child.parent && child.parentId) {
-            const matchedParent = parents.find(p => p.id === child.parentId);
-            if (matchedParent) {
+        // Process children data to ensure contact info is available
+        const processedPlayers = (childrenResponse.data || []).map(player => {
+          // If contact info is missing, try to find the contact from the contacts list
+          if (!player.contact && player.contactId) {
+            const matchedContact = contacts.find(p => p.id === player.contactId);
+            if (matchedContact) {
               return {
-                ...child,
-                parent: {
-                  firstName: matchedParent.firstName,
-                  lastName: matchedParent.lastName,
-                  email: matchedParent.email
+                ...player,
+                contact: {
+                  firstName: matchedContact.firstName,
+                  lastName: matchedContact.lastName,
+                  email: matchedContact.email
                 }
               };
             }
           }
-          return child;
+          return player;
         });
 
-        setChildren(processedChildren);
+        setPlayers(processedPlayers);
       } catch (error) {
         console.error('Error fetching children:', error);
         setError('Failed to fetch children data. Please try again later.');
 
         // Mock data for development
-        setChildren([
+        setPlayers([
           {
             id: '1',
             firstName: 'Emma',
@@ -159,8 +159,8 @@ const TeamManagement = () => {
             gender: 'female',
             allergies: 'Peanuts',
             status: 'active',
-            parentId: '101',
-            parent: {
+            contactId: '101',
+            contact: {
               firstName: 'John',
               lastName: 'Johnson',
               email: 'john@example.com'
@@ -175,8 +175,8 @@ const TeamManagement = () => {
             gender: 'male',
             allergies: 'None',
             status: 'active',
-            parentId: '102',
-            parent: {
+            contactId: '102',
+            contact: {
               firstName: 'Sarah',
               lastName: 'Williams',
               email: 'sarah@example.com'
@@ -193,16 +193,16 @@ const TeamManagement = () => {
     }
   };
 
-  const filteredChildren = children.filter(child => {
-    if (!child) return false;
+  const filteredPlayers = children.filter(player => {
+    if (!player) return false;
 
-    const fullName = `${child.firstName || ''} ${child.lastName || ''}`.toLowerCase();
+    const fullName = `${player.firstName || ''} ${player.lastName || ''}`.toLowerCase();
     const searchTermLower = searchTerm.toLowerCase();
 
     // Calculate age for age filtering
     let age = 0;
-    if (child.dateOfBirth) {
-      const birthDate = new Date(child.dateOfBirth);
+    if (player.dateOfBirth) {
+      const birthDate = new Date(player.dateOfBirth);
       const today = new Date();
       age = today.getFullYear() - birthDate.getFullYear();
       const m = today.getMonth() - birthDate.getMonth();
@@ -250,46 +250,46 @@ const TeamManagement = () => {
     }
   };
 
-  const getParentName = (child) => {
-    if (child.parent) {
-      return `${child.parent.firstName || ''} ${child.parent.lastName || ''}`;
+  const getContactName = (player) => {
+    if (player.contact) {
+      return `${player.contact.firstName || ''} ${player.contact.lastName || ''}`;
     }
 
-    if (child.parentId) {
-      const matchedParent = parents.find(p => p.id === child.parentId);
-      if (matchedParent) {
-        return `${matchedParent.firstName || ''} ${matchedParent.lastName || ''}`;
+    if (player.contactId) {
+      const matchedContact = contacts.find(p => p.id === player.contactId);
+      if (matchedContact) {
+        return `${matchedContact.firstName || ''} ${matchedContact.lastName || ''}`;
       }
     }
 
     return 'N/A';
   };
 
-  const handleViewChild = (child) => {
-    setEditingChild(child);
+  const handleViewPlayer = (player) => {
+    setEditingPlayer(player);
     setIsEditMode(false);
     setShowEditModal(true);
     setUpdateError('');
     setUpdateSuccess('');
   };
 
-  const handleEditChild = (child, e) => {
+  const handleEditPlayer = (player, e) => {
     e.stopPropagation();
-    setEditingChild(child);
-    // Initialize form data with child data
+    setEditingPlayer(player);
+    // Initialize form data with player data
     setFormData({
-      firstName: child.firstName || '',
-      lastName: child.lastName || '',
-      dateOfBirth: child.dateOfBirth ? new Date(child.dateOfBirth).toISOString().split('T')[0] : '',
-      gender: child.gender || '',
-      allergies: child.allergies || '',
-      specialNeeds: child.specialNeeds || '',
-      medications: child.medications || '',
-      specialInstructions: child.specialInstructions || '',
-      emergencyContact: child.emergencyContact || '',
-      emergencyPhone: child.emergencyPhone || '',
-      duration: child.duration || 'full-day',
-      status: child.status || 'active'
+      firstName: player.firstName || '',
+      lastName: player.lastName || '',
+      dateOfBirth: player.dateOfBirth ? new Date(player.dateOfBirth).toISOString().split('T')[0] : '',
+      gender: player.gender || '',
+      allergies: player.allergies || '',
+      specialNeeds: player.specialNeeds || '',
+      medications: player.medications || '',
+      specialInstructions: player.specialInstructions || '',
+      emergencyContact: player.emergencyContact || '',
+      emergencyPhone: player.emergencyPhone || '',
+      duration: player.duration || 'full-day',
+      status: player.status || 'active'
     });
     setIsEditMode(true);
     setShowEditModal(true);
@@ -305,42 +305,42 @@ const TeamManagement = () => {
     }));
   };
 
-  const handleUpdateChild = async (e) => {
+  const handleUpdatePlayer = async (e) => {
     e.preventDefault();
-    if (!editingChild) return;
+    if (!editingPlayer) return;
 
     try {
       setUpdateLoading(true);
       setUpdateError('');
       setUpdateSuccess('');
 
-      // Call API to update child
-      const response = await api.put(`/admin/children/${editingChild.id}`, formData);
+      // Call API to update player
+      const response = await api.put(`/admin/children/${editingPlayer.id}`, formData);
 
-      // Update children array with updated child
-      setChildren(prevChildren =>
-        prevChildren.map(child =>
-          child.id === editingChild.id ? { ...child, ...response.data } : child
+      // Update children array with updated player
+      setPlayers(prevPlayers =>
+        prevPlayers.map(player =>
+          player.id === editingPlayer.id ? { ...player, ...response.data } : player
         )
       );
 
-      setUpdateSuccess('Child information updated successfully!');
+      setUpdateSuccess('Player information updated successfully!');
       setUpdateLoading(false);
 
       // Wait a moment before switching back to view mode
       setTimeout(() => {
         setIsEditMode(false);
-        setEditingChild(response.data);
+        setEditingPlayer(response.data);
       }, 1500);
 
     } catch (error) {
-      console.error('Error updating child:', error);
-      setUpdateError(error.response?.data?.message || 'Failed to update child. Please try again.');
+      console.error('Error updating player:', error);
+      setUpdateError(error.response?.data?.message || 'Failed to update player. Please try again.');
       setUpdateLoading(false);
     }
   };
 
-  const handleAddChildClick = () => {
+  const handleAddPlayerClick = () => {
     setShowRegisterModal(true);
   };
 
@@ -350,32 +350,32 @@ const TeamManagement = () => {
     fetchData();
   };
 
-  const handleDeleteChild = (child, e) => {
+  const handleDeletePlayer = (player, e) => {
     e.stopPropagation();
-    setDeletingChild(child);
+    setDeletingPlayer(player);
     setShowDeleteModal(true);
     setDeleteError('');
   };
 
-  const confirmDeleteChild = async () => {
-    if (!deletingChild) return;
+  const confirmDeletePlayer = async () => {
+    if (!deletingPlayer) return;
 
     try {
       setDeleteLoading(true);
       setDeleteError('');
 
-      await api.delete(`/admin/children/${deletingChild.id}`);
+      await api.delete(`/admin/children/${deletingPlayer.id}`);
 
-      // Update local state to remove the deleted child
-      setChildren(prevChildren => prevChildren.filter(child => child.id !== deletingChild.id));
+      // Update local state to remove the deleted player
+      setPlayers(prevPlayers => prevPlayers.filter(player => player.id !== deletingPlayer.id));
 
       // Close the modal
       setShowDeleteModal(false);
-      setDeletingChild(null);
+      setDeletingPlayer(null);
       setDeleteLoading(false);
     } catch (error) {
-      console.error('Error deleting child:', error);
-      setDeleteError(error.response?.data?.message || 'Failed to delete child. Please try again.');
+      console.error('Error deleting player:', error);
+      setDeleteError(error.response?.data?.message || 'Failed to delete player. Please try again.');
       setDeleteLoading(false);
     }
   };
@@ -432,7 +432,7 @@ const TeamManagement = () => {
           </div>
           <div className="mt-4 md:mt-0 flex space-x-2">
             <button
-              onClick={handleAddChildClick}
+              onClick={handleAddPlayerClick}
               className={`flex items-center px-4 py-2 rounded-lg ${isDarkMode
                 ? 'bg-blue-600 hover:bg-blue-700'
                 : 'bg-blue-500 hover:bg-blue-600'
@@ -454,7 +454,7 @@ const TeamManagement = () => {
               <div>
                 <p className={`text-sm ${isDarkMode ? 'text-blue-300' : 'text-blue-700'}`}>Total Players</p>
                 <p className={`text-3xl font-bold mt-1 ${isDarkMode ? 'text-white' : 'text-blue-900'}`}>
-                  {childStats.total}
+                  {playerStats.total}
                 </p>
               </div>
               <div className={`h-12 w-12 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-blue-800' : 'bg-blue-200'
@@ -471,10 +471,10 @@ const TeamManagement = () => {
               <div>
                 <p className={`text-sm ${isDarkMode ? 'text-pink-300' : 'text-pink-700'}`}>Gender Distribution</p>
                 <div className={`text-3xl font-bold mt-1 ${isDarkMode ? 'text-white' : 'text-pink-900'}`}>
-                  <span>{childStats.byGender.male}</span>
+                  <span>{playerStats.byGender.male}</span>
                   <span className="text-sm"> boys</span>
                   <span className="mx-2">/</span>
-                  <span>{childStats.byGender.female}</span>
+                  <span>{playerStats.byGender.female}</span>
                   <span className="text-sm"> girls</span>
                 </div>
               </div>
@@ -492,7 +492,7 @@ const TeamManagement = () => {
               <div>
                 <p className={`text-sm ${isDarkMode ? 'text-green-300' : 'text-green-700'}`}>Infants & Toddlers</p>
                 <p className={`text-3xl font-bold mt-1 ${isDarkMode ? 'text-white' : 'text-green-900'}`}>
-                  {childStats.byAge.infant + childStats.byAge.toddler}
+                  {playerStats.byAge.infant + playerStats.byAge.toddler}
                 </p>
               </div>
               <div className={`h-12 w-12 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-green-800' : 'bg-green-200'
@@ -509,7 +509,7 @@ const TeamManagement = () => {
               <div>
                 <p className={`text-sm ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>Preschool & Kinder</p>
                 <p className={`text-3xl font-bold mt-1 ${isDarkMode ? 'text-white' : 'text-purple-900'}`}>
-                  {childStats.byAge.preschool + childStats.byAge.kindergarten}
+                  {playerStats.byAge.preschool + playerStats.byAge.kindergarten}
                 </p>
               </div>
               <div className={`h-12 w-12 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-purple-800' : 'bg-purple-200'
@@ -561,7 +561,7 @@ const TeamManagement = () => {
           </div>
         </div>
 
-        {/* Children List */}
+        {/* Players List */}
         <div className={`rounded-xl shadow-md overflow-hidden backdrop-blur-sm ${isDarkMode ? 'bg-gray-800 bg-opacity-70' : 'bg-white bg-opacity-80'
           }`}>
           <div className="overflow-x-auto">
@@ -590,46 +590,46 @@ const TeamManagement = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {filteredChildren.length > 0 ? (
-                  filteredChildren.map((child) => (
-                    <tr key={child.id} className={`${isDarkMode
+                {filteredPlayers.length > 0 ? (
+                  filteredPlayers.map((player) => (
+                    <tr key={player.id} className={`${isDarkMode
                       ? 'hover:bg-gray-700 transition-colors'
                       : 'hover:bg-gray-50 transition-colors'
                       }`}>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <div className={`h-10 w-10 rounded-full flex items-center justify-center ${child.gender === 'female'
+                          <div className={`h-10 w-10 rounded-full flex items-center justify-center ${player.gender === 'female'
                             ? isDarkMode ? 'bg-gradient-to-r from-pink-600 to-purple-600' : 'bg-gradient-to-r from-pink-500 to-purple-500'
                             : isDarkMode ? 'bg-gradient-to-r from-blue-600 to-indigo-600' : 'bg-gradient-to-r from-blue-500 to-indigo-500'
                             }`}>
                             <span className="text-white font-medium">
-                              {(child.firstName || '').charAt(0).toUpperCase()}
+                              {(player.firstName || '').charAt(0).toUpperCase()}
                             </span>
                           </div>
                           <div className="ml-4">
-                            <div className="font-medium">{`${child.firstName} ${child.lastName}`}</div>
+                            <div className="font-medium">{`${player.firstName} ${player.lastName}`}</div>
                             <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                              {child.gender || 'N/A'}
+                              {player.gender || 'N/A'}
                             </div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {calculateAge(child.dateOfBirth)}
+                        {calculateAge(player.dateOfBirth)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {getParentName(child)}
+                        {getContactName(player)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {child.allergies || 'None'}
+                        {player.allergies || 'None'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {formatDuration(child.duration)}
+                        {formatDuration(player.duration)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                         <div className="flex justify-end space-x-2">
                           <button
-                            onClick={() => handleViewChild(child)}
+                            onClick={() => handleViewPlayer(player)}
                             className={`p-1.5 rounded-full transition-colors ${isDarkMode
                               ? 'bg-gray-700 text-indigo-400 hover:bg-gray-600'
                               : 'bg-gray-100 text-indigo-600 hover:bg-gray-200'
@@ -639,22 +639,22 @@ const TeamManagement = () => {
                             <Info className="h-4 w-4" />
                           </button>
                           <button
-                            onClick={(e) => handleEditChild(child, e)}
+                            onClick={(e) => handleEditPlayer(player, e)}
                             className={`p-1.5 rounded-full transition-colors ${isDarkMode
                               ? 'bg-gray-700 text-green-400 hover:bg-gray-600'
                               : 'bg-gray-100 text-green-600 hover:bg-gray-200'
                               }`}
-                            title="Edit child"
+                            title="Edit player"
                           >
                             <Edit className="h-4 w-4" />
                           </button>
                           <button
-                            onClick={(e) => handleDeleteChild(child, e)}
+                            onClick={(e) => handleDeletePlayer(player, e)}
                             className={`p-1.5 rounded-full transition-colors ${isDarkMode
                               ? 'bg-gray-700 text-red-400 hover:bg-gray-600'
                               : 'bg-gray-100 text-red-600 hover:bg-gray-200'
                               }`}
-                            title="Delete child"
+                            title="Delete player"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
@@ -688,8 +688,8 @@ const TeamManagement = () => {
         </div>
       </div>
 
-      {/* View/Edit Child Modal */}
-      {showEditModal && editingChild && (
+      {/* View/Edit Player Modal */}
+      {showEditModal && editingPlayer && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className={`rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto ${isDarkMode ? 'bg-gray-800' : 'bg-white'
             }`}>
@@ -723,7 +723,7 @@ const TeamManagement = () => {
             )}
 
             {isEditMode ? (
-              <form onSubmit={handleUpdateChild}>
+              <form onSubmit={handleUpdatePlayer}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <h3 className="text-lg font-semibold mb-2">Basic Information</h3>
@@ -952,46 +952,46 @@ const TeamManagement = () => {
                     <div className="space-y-3">
                       <div>
                         <p className="text-sm font-medium">Full Name</p>
-                        <p className="text-base">{editingChild.firstName} {editingChild.lastName}</p>
+                        <p className="text-base">{editingPlayer.firstName} {editingPlayer.lastName}</p>
                       </div>
                       <div>
                         <p className="text-sm font-medium">Date of Birth</p>
                         <p className="text-base">
-                          {editingChild.dateOfBirth ? new Date(editingChild.dateOfBirth).toLocaleDateString() : 'N/A'}
+                          {editingPlayer.dateOfBirth ? new Date(editingPlayer.dateOfBirth).toLocaleDateString() : 'N/A'}
                         </p>
                       </div>
                       <div>
                         <p className="text-sm font-medium">Age</p>
-                        <p className="text-base">{calculateAge(editingChild.dateOfBirth)}</p>
+                        <p className="text-base">{calculateAge(editingPlayer.dateOfBirth)}</p>
                       </div>
                       <div>
                         <p className="text-sm font-medium">Gender</p>
-                        <p className="text-base capitalize">{editingChild.gender || 'N/A'}</p>
+                        <p className="text-base capitalize">{editingPlayer.gender || 'N/A'}</p>
                       </div>
                       <div>
                         <p className="text-sm font-medium">Duration of Stay</p>
                         <p className="text-base capitalize">
-                          {formatDuration(editingChild.duration)}
+                          {formatDuration(editingPlayer.duration)}
                         </p>
                       </div>
                       <div>
                         <p className="text-sm font-medium">Status</p>
-                        <p className="text-base capitalize">{editingChild.status || 'Active'}</p>
+                        <p className="text-base capitalize">{editingPlayer.status || 'Active'}</p>
                       </div>
                     </div>
                   </div>
 
                   <div>
-                    <h3 className="text-lg font-semibold mb-2">Parent Information</h3>
+                    <h3 className="text-lg font-semibold mb-2">Contact Information</h3>
                     <div className="space-y-3">
                       <div>
-                        <p className="text-sm font-medium">Parent Name</p>
-                        <p className="text-base">{getParentName(editingChild)}</p>
+                        <p className="text-sm font-medium">Contact Name</p>
+                        <p className="text-base">{getContactName(editingPlayer)}</p>
                       </div>
                       <div>
-                        <p className="text-sm font-medium">Parent Email</p>
+                        <p className="text-sm font-medium">Contact Email</p>
                         <p className="text-base">
-                          {editingChild.parent?.email || 'N/A'}
+                          {editingPlayer.contact?.email || 'N/A'}
                         </p>
                       </div>
                     </div>
@@ -1002,23 +1002,23 @@ const TeamManagement = () => {
                     <div className="space-y-3">
                       <div>
                         <p className="text-sm font-medium">Allergies</p>
-                        <p className="text-base">{editingChild.allergies || 'None'}</p>
+                        <p className="text-base">{editingPlayer.allergies || 'None'}</p>
                       </div>
                       <div>
                         <p className="text-sm font-medium">Special Needs</p>
-                        <p className="text-base">{editingChild.specialNeeds || 'None'}</p>
+                        <p className="text-base">{editingPlayer.specialNeeds || 'None'}</p>
                       </div>
                       <div>
                         <p className="text-sm font-medium">Medications</p>
-                        <p className="text-base">{editingChild.medications || 'None'}</p>
+                        <p className="text-base">{editingPlayer.medications || 'None'}</p>
                       </div>
                     </div>
                   </div>
 
-                  {editingChild.specialInstructions && (
+                  {editingPlayer.specialInstructions && (
                     <div className="md:col-span-2">
                       <h3 className="text-lg font-semibold mb-2">Special Instructions</h3>
-                      <p className="text-base">{editingChild.specialInstructions}</p>
+                      <p className="text-base">{editingPlayer.specialInstructions}</p>
                     </div>
                   )}
 
@@ -1027,11 +1027,11 @@ const TeamManagement = () => {
                     <div className="space-y-3">
                       <div>
                         <p className="text-sm font-medium">Name</p>
-                        <p className="text-base">{editingChild.emergencyContact || 'Not provided'}</p>
+                        <p className="text-base">{editingPlayer.emergencyContact || 'Not provided'}</p>
                       </div>
                       <div>
                         <p className="text-sm font-medium">Phone</p>
-                        <p className="text-base">{editingChild.emergencyPhone || 'Not provided'}</p>
+                        <p className="text-base">{editingPlayer.emergencyPhone || 'Not provided'}</p>
                       </div>
                     </div>
                   </div>
@@ -1049,7 +1049,7 @@ const TeamManagement = () => {
                   </button>
                   <button
                     onClick={() => {
-                      handleEditChild(editingChild, { stopPropagation: () => { } });
+                      handleEditPlayer(editingPlayer, { stopPropagation: () => { } });
                     }}
                     className={`px-4 py-2 rounded-md ${isDarkMode
                       ? 'bg-blue-600 text-white hover:bg-blue-700'
@@ -1065,7 +1065,7 @@ const TeamManagement = () => {
         </div>
       )}
 
-      {/* Register Child & Guardian Modal */}
+      {/* Register Player & Guardian Modal */}
       {showRegisterModal && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
           <div className="fixed inset-0 bg-black opacity-50" onClick={handleRegisterModalClose}></div>
@@ -1079,17 +1079,17 @@ const TeamManagement = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            <h2 className="text-2xl font-bold mb-6">Register Child with Guardian</h2>
+            <h2 className="text-2xl font-bold mb-6">Register Player with Guardian</h2>
 
             <div className="w-full max-h-[80vh] overflow-y-auto pr-2">
-              <ChildRegistration embedded={true} onComplete={handleRegisterModalClose} />
+              <PlayerRegistration embedded={true} onComplete={handleRegisterModalClose} />
             </div>
           </div>
         </div>
       )}
 
       {/* Delete Confirmation Modal */}
-      {showDeleteModal && deletingChild && (
+      {showDeleteModal && deletingPlayer && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className={`rounded-lg p-6 max-w-md w-full ${isDarkMode ? 'bg-gray-800' : 'bg-white'
             }`}>
@@ -1099,7 +1099,7 @@ const TeamManagement = () => {
             </div>
 
             <p className="mb-6">
-              Are you sure you want to delete {deletingChild.firstName} {deletingChild.lastName}?
+              Are you sure you want to delete {deletingPlayer.firstName} {deletingPlayer.lastName}?
               This action cannot be undone.
             </p>
 
@@ -1121,7 +1121,7 @@ const TeamManagement = () => {
                 Cancel
               </button>
               <button
-                onClick={confirmDeleteChild}
+                onClick={confirmDeletePlayer}
                 disabled={deleteLoading}
                 className={`px-4 py-2 rounded-md ${isDarkMode
                   ? 'bg-red-600 text-white hover:bg-red-700'
@@ -1138,4 +1138,4 @@ const TeamManagement = () => {
   );
 };
 
-export default ChildManagement; 
+export default PlayerManagement; 

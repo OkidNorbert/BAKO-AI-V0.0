@@ -9,10 +9,10 @@ const Dashboard = () => {
   switch (user?.role) {
     case 'admin':
       return <Navigate to="/admin/dashboard" replace />;
-    case 'babysitter':
-      return <Navigate to="/babysitter/dashboard" replace />;
-    case 'parent':
-      return <Navigate to="/parent/dashboard" replace />;
+    case 'coach':
+      return <Navigate to="/coach/dashboard" replace />;
+    case 'contact':
+      return <Navigate to="/contact/dashboard" replace />;
     case 'finance':
       return <Navigate to="/finance/dashboard" replace />;
     default:

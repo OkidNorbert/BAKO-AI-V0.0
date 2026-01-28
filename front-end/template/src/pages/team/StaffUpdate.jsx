@@ -5,7 +5,7 @@ import { toast } from 'react-hot-toast';
 import { useTheme } from '../../context/ThemeContext';
 import { User, Mail, Phone, Calendar, Save } from 'lucide-react';
 
-const BabysitterUpdate = () => {
+const CoachUpdate = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { isDarkMode } = useTheme();
@@ -24,13 +24,13 @@ const BabysitterUpdate = () => {
   });
 
   useEffect(() => {
-    fetchBabysitterDetails();
+    fetchCoachDetails();
   }, [id]);
 
-  const fetchBabysitterDetails = async () => {
+  const fetchCoachDetails = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/api/admin/babysitters/${id}`);
+      const response = await api.get(`/api/admin/coachs/${id}`);
       const { firstName, lastName, email, phoneNumber, nextOfKin } = response.data;
       setFormData({
         firstName,
@@ -44,9 +44,9 @@ const BabysitterUpdate = () => {
         }
       });
     } catch (error) {
-      console.error('Error fetching babysitter details:', error);
-      toast.error('Failed to fetch babysitter details');
-      navigate('/admin/babysitters');
+      console.error('Error fetching coach details:', error);
+      toast.error('Failed to fetch coach details');
+      navigate('/admin/coachs');
     } finally {
       setLoading(false);
     }
@@ -76,12 +76,12 @@ const BabysitterUpdate = () => {
     setSaving(true);
 
     try {
-      await api.put(`/api/admin/babysitters/${id}`, formData);
-      toast.success('Babysitter updated successfully');
-      navigate('/admin/babysitters');
+      await api.put(`/api/admin/coachs/${id}`, formData);
+      toast.success('Coach updated successfully');
+      navigate('/admin/coachs');
     } catch (error) {
-      console.error('Error updating babysitter:', error);
-      toast.error(error.response?.data?.message || 'Failed to update babysitter');
+      console.error('Error updating coach:', error);
+      toast.error(error.response?.data?.message || 'Failed to update coach');
     } finally {
       setSaving(false);
     }
@@ -112,7 +112,7 @@ const BabysitterUpdate = () => {
         <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 ${
           isDarkMode ? 'text-white' : 'text-gray-900'
         }`}>
-          <h1 className="text-2xl font-bold mb-6">Update Babysitter Information</h1>
+          <h1 className="text-2xl font-bold mb-6">Update Coach Information</h1>
           
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -262,7 +262,7 @@ const BabysitterUpdate = () => {
             <div className="flex justify-end space-x-4">
               <button
                 type="button"
-                onClick={() => navigate('/admin/babysitters')}
+                onClick={() => navigate('/admin/coachs')}
                 className={`px-6 py-2 rounded-md ${
                   isDarkMode
                     ? 'bg-gray-700 text-white hover:bg-gray-600'
@@ -293,4 +293,4 @@ const BabysitterUpdate = () => {
   );
 };
 
-export default BabysitterUpdate; 
+export default CoachUpdate; 

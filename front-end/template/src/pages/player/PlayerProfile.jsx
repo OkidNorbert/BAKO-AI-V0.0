@@ -49,7 +49,7 @@ const PlayerProfile = () => {
     try {
       setLoading(true);
       setError('');
-      const response = await api.get('/babysitter/profile');
+      const response = await api.get('/coach/profile');
       setProfile(response.data);
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -105,7 +105,7 @@ const PlayerProfile = () => {
       console.log('Attempting to upload image...');
 
       // Make API call with correct headers and configuration
-      const response = await api.post('/babysitter/profile/image', formData, {
+      const response = await api.post('/coach/profile/image', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           // Don't set any other headers that might interfere with the multipart form data
@@ -173,7 +173,7 @@ const PlayerProfile = () => {
       setSaving(true);
       setError('');
       setSuccess('');
-      await api.put('/babysitter/profile', profile);
+      await api.put('/coach/profile', profile);
       setSuccess('Profile updated successfully');
       setIsEditing(false);
     } catch (error) {
@@ -676,4 +676,4 @@ const PlayerProfile = () => {
   );
 };
 
-export default BabysitterProfile; 
+export default CoachProfile; 

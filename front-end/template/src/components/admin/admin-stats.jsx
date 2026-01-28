@@ -17,8 +17,8 @@ const StatCard = ({ title, value, icon: Icon, description, className }) => (
 
 const AdminStats = ({ stats }) => {
   const {
-    totalChildren,
-    activeChildren,
+    totalPlayers,
+    activePlayers,
     totalRevenue,
     pendingPayments,
     attendanceRate,
@@ -28,10 +28,10 @@ const AdminStats = ({ stats }) => {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <StatCard
-        title="Total Children"
-        value={totalChildren}
+        title="Total Players"
+        value={totalPlayers}
         icon={Users}
-        description={`${activeChildren} currently active`}
+        description={`${activePlayers} currently active`}
         className="text-blue-600"
       />
       <StatCard

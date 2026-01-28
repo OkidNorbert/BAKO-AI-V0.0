@@ -4,7 +4,7 @@ import { MultiLineChart } from '../ui/chart';
 
 const AdminDashboardChart = ({ data }) => {
   const lines = [
-    { key: 'children', name: 'Children' },
+    { key: 'children', name: 'Players' },
     { key: 'attendance', name: 'Attendance' },
     { key: 'payments', name: 'Payments' },
   ];
@@ -23,7 +23,7 @@ const AdminDashboardChart = ({ data }) => {
         />
         <div className="grid grid-cols-3 gap-4 mt-4">
           <div className="text-center">
-            <p className="text-sm text-muted-foreground">Total Children</p>
+            <p className="text-sm text-muted-foreground">Total Players</p>
             <p className="text-2xl font-bold text-blue-600">
               {data[data.length - 1]?.children || 0}
             </p>

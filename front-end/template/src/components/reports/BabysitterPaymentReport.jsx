@@ -15,15 +15,15 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
-const BabysitterPaymentReport = () => {
+const CoachPaymentReport = () => {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [babysitters, setBabysitters] = useState([]);
+  const [coachs, setCoachs] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [sessionType, setSessionType] = useState('full-day');
-  const [childrenCount, setChildrenCount] = useState(1);
-  const [selectedBabysitter, setSelectedBabysitter] = useState('');
+  const [childrenCount, setPlayersCount] = useState(1);
+  const [selectedCoach, setSelectedCoach] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isAutoGenerating, setIsAutoGenerating] = useState(false);
   const [expandedPayment, setExpandedPayment] = useState(null);
@@ -34,8 +34,8 @@ const BabysitterPaymentReport = () => {
       setLoading(true);
       setError('');
       
-      // Initially fetch all babysitter payment records
-      const response = await api.get('/payments/babysitter/history');
+      // Initially fetch all coach payment records
+      const response = await api.get('/payments/coach/history');
       
       // Handle the case where no payments have been generated yet
       if (!response.data || !response.data.payments) {
@@ -44,36 +44,36 @@ const BabysitterPaymentReport = () => {
         setPayments(response.data.payments || []);
       }
     } catch (error) {
-      console.error('Error fetching babysitter payments:', error);
+      console.error('Error fetching coach payments:', error);
       if (error.response && error.response.status === 404) {
         // No payments found yet, set empty array
         setPayments([]);
       } else {
-        setError('Failed to load babysitter payment data. Please try again later.');
+        setError('Failed to load coach payment data. Please try again later.');
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchBabysitters = async () => {
+  const fetchCoachs = async () => {
     try {
-      const response = await api.get('/admin/babysitters');
-      setBabysitters(response.data || []);
+      const response = await api.get('/admin/coachs');
+      setCoachs(response.data || []);
     } catch (error) {
-      console.error('Error fetching babysitters:', error);
-      toast.error('Failed to load babysitters');
+      console.error('Error fetching coachs:', error);
+      toast.error('Failed to load coachs');
     }
   };
 
   useEffect(() => {
     fetchPayments();
-    fetchBabysitters();
+    fetchCoachs();
   }, []);
 
   const handleGeneratePayment = async () => {
-    if (!selectedBabysitter) {
-      toast.error('Please select a babysitter');
+    if (!selectedCoach) {
+      toast.error('Please select a coach');
       return;
     }
     
@@ -82,18 +82,18 @@ const BabysitterPaymentReport = () => {
       return;
     }
 
-    // Validate that the babysitterId is a valid MongoDB ObjectId (24 hex characters)
-    const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(selectedBabysitter);
+    // Validate that the coachId is a valid MongoDB ObjectId (24 hex characters)
+    const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(selectedCoach);
     if (!isValidObjectId) {
-      toast.error('Invalid babysitter selection. Please select a babysitter from the dropdown.');
+      toast.error('Invalid coach selection. Please select a coach from the dropdown.');
       return;
     }
 
     try {
       setIsGenerating(true);
       
-      const response = await api.post('/admin/payments/babysitter/generate', {
-        babysitterId: selectedBabysitter,
+      const response = await api.post('/admin/payments/coach/generate', {
+        coachId: selectedCoach,
         date: selectedDate,
         sessionType,
         childrenCount: parseInt(childrenCount)
@@ -113,7 +113,7 @@ const BabysitterPaymentReport = () => {
     try {
       setIsAutoGenerating(true);
       
-      const response = await api.post('/admin/payments/babysitter/auto-generate', {
+      const response = await api.post('/admin/payments/coach/auto-generate', {
         date: selectedDate
       });
       
@@ -129,7 +129,7 @@ const BabysitterPaymentReport = () => {
 
   const handleVerifyPayment = async (paymentId) => {
     try {
-      await api.put(`/admin/payments/babysitter/${paymentId}/verify`);
+      await api.put(`/admin/payments/coach/${paymentId}/verify`);
       toast.success('Payment verified successfully');
       
       // Update the payment in the state
@@ -159,7 +159,7 @@ const BabysitterPaymentReport = () => {
               Manual Payment System
             </h3>
             <p className={`text-sm mt-1 ${isDarkMode ? 'text-blue-200' : 'text-blue-600'}`}>
-              This system only records payment information. Actual payments to babysitters must be processed 
+              This system only records payment information. Actual payments to coachs must be processed 
               manually outside the system via cash, check, or bank transfer. The generate payment function 
               creates payment records for tracking purposes only.
             </p>
@@ -177,20 +177,20 @@ const BabysitterPaymentReport = () => {
             <h3 className="text-md font-medium mb-3">Manual Payment Record</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm mb-1">Babysitter</label>
+                <label className="block text-sm mb-1">Coach</label>
                 <select
-                  value={selectedBabysitter}
-                  onChange={(e) => setSelectedBabysitter(e.target.value)}
+                  value={selectedCoach}
+                  onChange={(e) => setSelectedCoach(e.target.value)}
                   className={`w-full px-3 py-2 rounded-lg ${
                     isDarkMode
                       ? 'bg-gray-700 text-white border-gray-600'
                       : 'bg-white text-gray-900 border-gray-300'
                   }`}
                 >
-                  <option value="">Select Babysitter</option>
-                  {babysitters.map(babysitter => (
-                    <option key={babysitter._id} value={babysitter._id}>
-                      {babysitter.firstName} {babysitter.lastName}
+                  <option value="">Select Coach</option>
+                  {coachs.map(coach => (
+                    <option key={coach._id} value={coach._id}>
+                      {coach.firstName} {coach.lastName}
                     </option>
                   ))}
                 </select>
@@ -221,18 +221,18 @@ const BabysitterPaymentReport = () => {
                       : 'bg-white text-gray-900 border-gray-300'
                   }`}
                 >
-                  <option value="half-day">Half Day (2,000K per child)</option>
-                  <option value="full-day">Full Day (5,000K per child)</option>
+                  <option value="half-day">Half Day (2,000K per player)</option>
+                  <option value="full-day">Full Day (5,000K per player)</option>
                 </select>
               </div>
               
               <div>
-                <label className="block text-sm mb-1">Number of Children</label>
+                <label className="block text-sm mb-1">Number of Players</label>
                 <input
                   type="number"
                   min="1"
                   value={childrenCount}
-                  onChange={(e) => setChildrenCount(e.target.value)}
+                  onChange={(e) => setPlayersCount(e.target.value)}
                   className={`w-full px-3 py-2 rounded-lg ${
                     isDarkMode
                       ? 'bg-gray-700 text-white border-gray-600'
@@ -245,9 +245,9 @@ const BabysitterPaymentReport = () => {
             <div className="mt-4">
               <button
                 onClick={handleGeneratePayment}
-                disabled={isGenerating || !selectedBabysitter}
+                disabled={isGenerating || !selectedCoach}
                 className={`w-full py-2 rounded-lg flex items-center justify-center ${
-                  isGenerating || !selectedBabysitter
+                  isGenerating || !selectedCoach
                     ? isDarkMode ? 'bg-gray-700 text-gray-500' : 'bg-gray-200 text-gray-400'
                     : isDarkMode ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-blue-500 hover:bg-blue-600 text-white'
                 }`}
@@ -271,7 +271,7 @@ const BabysitterPaymentReport = () => {
           <div className={`p-4 rounded-lg border ${isDarkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-gray-50'}`}>
             <h3 className="text-md font-medium mb-3">Bulk Payment Records</h3>
             <p className="text-sm mb-3 text-gray-500">
-              Automatically generate payment records for all active babysitters based on their scheduled sessions for the selected date.
+              Automatically generate payment records for all active coachs based on their scheduled sessions for the selected date.
             </p>
             <div className="space-y-4">
               <div>
@@ -344,7 +344,7 @@ const BabysitterPaymentReport = () => {
           <DollarSign className={`w-16 h-16 mx-auto mb-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-300'}`} />
           <h2 className="text-xl font-semibold mb-2">No Payment Records Found</h2>
           <p className={`mb-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            There are no babysitter payment records yet. Generate payments using the controls above.
+            There are no coach payment records yet. Generate payments using the controls above.
           </p>
         </div>
       ) : (
@@ -354,7 +354,7 @@ const BabysitterPaymentReport = () => {
               <thead className={isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'}>
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                    Babysitter
+                    Coach
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
                     Date
@@ -363,7 +363,7 @@ const BabysitterPaymentReport = () => {
                     Session
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                    Children
+                    Players
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
                     Amount
@@ -393,12 +393,12 @@ const BabysitterPaymentReport = () => {
                             <span className={`text-lg font-medium ${
                               isDarkMode ? 'text-indigo-300' : 'text-indigo-600'
                             }`}>
-                              {payment.babysitterId?.firstName?.charAt(0) || 'B'}
+                              {payment.coachId?.firstName?.charAt(0) || 'B'}
                             </span>
                           </div>
                           <div className="ml-4">
                             <div className="font-medium">
-                              {payment.babysitterId?.firstName} {payment.babysitterId?.lastName}
+                              {payment.coachId?.firstName} {payment.coachId?.lastName}
                             </div>
                           </div>
                         </div>
@@ -418,7 +418,7 @@ const BabysitterPaymentReport = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <Users className="h-4 w-4 mr-1" />
-                          <span>{payment.numberOfChildren}</span>
+                          <span>{payment.numberOfPlayers}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap font-medium">
@@ -480,12 +480,12 @@ const BabysitterPaymentReport = () => {
                               <h3 className="font-medium mb-2">Payment Details</h3>
                               <div className="space-y-1 text-sm">
                                 <div className="flex justify-between">
-                                  <span className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>Amount per child:</span>
-                                  <span>{payment.amountPerChild}K</span>
+                                  <span className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>Amount per player:</span>
+                                  <span>{payment.amountPerPlayer}K</span>
                                 </div>
                                 <div className="flex justify-between">
                                   <span className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>Number of children:</span>
-                                  <span>{payment.numberOfChildren}</span>
+                                  <span>{payment.numberOfPlayers}</span>
                                 </div>
                                 <div className="flex justify-between">
                                   <span className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>Total amount:</span>
@@ -538,4 +538,4 @@ const BabysitterPaymentReport = () => {
   );
 };
 
-export default BabysitterPaymentReport; 
+export default CoachPaymentReport; 

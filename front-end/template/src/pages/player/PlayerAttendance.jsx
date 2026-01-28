@@ -16,8 +16,8 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 
-const ChildAttendance = () => {
-  const [children, setChildren] = useState([]);
+const PlayerAttendance = () => {
+  const [children, setPlayers] = useState([]);
   const [attendanceRecords, setAttendanceRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -27,15 +27,15 @@ const ChildAttendance = () => {
   const { isDarkMode } = useTheme();
 
   useEffect(() => {
-    fetchChildren();
+    fetchPlayers();
     fetchAttendanceRecords();
   }, [selectedDate]);
 
-  const fetchChildren = async () => {
+  const fetchPlayers = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/babysitter/children');
-      setChildren(response.data || []);
+      const response = await api.get('/coach/children');
+      setPlayers(response.data || []);
     } catch (error) {
       console.error('Error fetching children:', error);
       setError('Failed to fetch children. Please try again.');
@@ -47,7 +47,7 @@ const ChildAttendance = () => {
   const fetchAttendanceRecords = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/babysitter/attendance/daily?date=${selectedDate}`);
+      const response = await api.get(`/coach/attendance/daily?date=${selectedDate}`);
       setAttendanceRecords(response.data || []);
     } catch (error) {
       console.error('Error fetching attendance records:', error);
@@ -57,11 +57,11 @@ const ChildAttendance = () => {
     }
   };
 
-  const handleMarkAttendance = async (childId, status, sessionType = 'full-day') => {
+  const handleMarkAttendance = async (playerId, status, sessionType = 'full-day') => {
     try {
       setLoading(true);
-      await api.post('/babysitter/attendance/mark', {
-        childId,
+      await api.post('/coach/attendance/mark', {
+        playerId,
         status,
         sessionType,
         date: selectedDate
@@ -77,11 +77,11 @@ const ChildAttendance = () => {
     }
   };
 
-  const handleCheckIn = async (childId) => {
+  const handleCheckIn = async (playerId) => {
     try {
       setLoading(true);
-      const response = await api.post('/babysitter/attendance/check-in', {
-        childId,
+      const response = await api.post('/coach/attendance/check-in', {
+        playerId,
         date: selectedDate
       });
       
@@ -90,18 +90,18 @@ const ChildAttendance = () => {
         fetchAttendanceRecords();
       }
     } catch (error) {
-      console.error('Error checking in child:', error);
-      setError('Failed to check in child. Please try again.');
+      console.error('Error checking in player:', error);
+      setError('Failed to check in player. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCheckOut = async (childId) => {
+  const handleCheckOut = async (playerId) => {
     try {
       setLoading(true);
-      const response = await api.post('/babysitter/attendance/check-out', {
-        childId,
+      const response = await api.post('/coach/attendance/check-out', {
+        playerId,
         date: selectedDate
       });
       
@@ -110,8 +110,8 @@ const ChildAttendance = () => {
         fetchAttendanceRecords();
       }
     } catch (error) {
-      console.error('Error checking out child:', error);
-      setError('Failed to check out child. Please try again.');
+      console.error('Error checking out player:', error);
+      setError('Failed to check out player. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -136,15 +136,15 @@ const ChildAttendance = () => {
   };
 
   // Define a function to filter and combine data
-  const getFilteredChildren = () => {
+  const getFilteredPlayers = () => {
     if (!children.length) return [];
     
-    return children.filter(child => {
-      const name = `${child.firstName} ${child.lastName}`.toLowerCase();
+    return children.filter(player => {
+      const name = `${player.firstName} ${player.lastName}`.toLowerCase();
       const matchesSearch = name.includes(searchTerm.toLowerCase());
       
-      // Find attendance record for this child
-      const attendance = attendanceRecords.find(a => a.childId && (a.childId._id === child._id || a.childId === child._id));
+      // Find attendance record for this player
+      const attendance = attendanceRecords.find(a => a.playerId && (a.playerId._id === player._id || a.playerId === player._id));
       
       // If filtering by status and not 'all', check if attendance status matches
       const matchesStatus = filterStatus === 'all' || 
@@ -155,7 +155,7 @@ const ChildAttendance = () => {
     });
   };
 
-  const filteredChildren = getFilteredChildren();
+  const filteredPlayers = getFilteredPlayers();
 
   if (loading) {
     return (
@@ -189,7 +189,7 @@ const ChildAttendance = () => {
               }`}>
                 <Baby className={`h-8 w-8 ${isDarkMode ? 'text-yellow-400' : 'text-white'}`} />
               </div>
-              <h1 className="text-3xl font-bold text-white">Child Attendance</h1>
+              <h1 className="text-3xl font-bold text-white">Player Attendance</h1>
             </div>
             <div className="flex items-center space-x-2 bg-white bg-opacity-20 backdrop-blur-sm p-3 rounded-lg">
               <Calendar className="h-5 w-5 text-white" />
@@ -229,7 +229,7 @@ const ChildAttendance = () => {
               }`} />
               <input
                 type="text"
-                placeholder="Search by child name..."
+                placeholder="Search by player name..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className={`w-full pl-10 pr-4 py-2 rounded-md border-none focus:ring-2 ${
@@ -272,7 +272,7 @@ const ChildAttendance = () => {
                 isDarkMode ? 'bg-gray-700' : 'bg-indigo-50'
               }`}>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                  Child Name
+                  Player Name
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
                   Session Type
@@ -292,37 +292,37 @@ const ChildAttendance = () => {
               </tr>
             </thead>
             <tbody className={`divide-y ${isDarkMode ? 'divide-gray-700' : 'divide-gray-200'}`}>
-              {filteredChildren.length > 0 ? (
-                filteredChildren.map((child) => {
+              {filteredPlayers.length > 0 ? (
+                filteredPlayers.map((player) => {
                   const attendance = attendanceRecords.find(a => 
-                    a.childId && (a.childId._id === child._id || a.childId === child._id)
+                    a.playerId && (a.playerId._id === player._id || a.playerId === player._id)
                   );
                   const hasAttendance = !!attendance;
                   
                   return (
-                    <tr key={child._id} className={`${
+                    <tr key={player._id} className={`${
                       isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-indigo-50'
                     }`}>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
-                            child.gender === 'male' 
+                            player.gender === 'male' 
                             ? isDarkMode ? 'bg-blue-900 text-blue-200' : 'bg-blue-100 text-blue-800'
                             : isDarkMode ? 'bg-pink-900 text-pink-200' : 'bg-pink-100 text-pink-800'
                           }`}>
                             <span className="font-bold">
-                              {child.firstName.charAt(0)}
+                              {player.firstName.charAt(0)}
                             </span>
                           </div>
                           <span className="font-medium">
-                            {child.firstName} {child.lastName}
+                            {player.firstName} {player.lastName}
                           </span>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <select
                           value={attendance?.sessionType || 'full-day'}
-                          onChange={(e) => handleMarkAttendance(child._id, attendance?.status || 'present', e.target.value)}
+                          onChange={(e) => handleMarkAttendance(player._id, attendance?.status || 'present', e.target.value)}
                           className={`rounded-md border-none focus:ring-2 ${
                             isDarkMode
                               ? 'bg-gray-700 text-white focus:ring-indigo-500'
@@ -358,7 +358,7 @@ const ChildAttendance = () => {
                           </span>
                         ) : (
                           <button
-                            onClick={() => handleCheckIn(child._id)}
+                            onClick={() => handleCheckIn(player._id)}
                             className={`px-3 py-1 rounded transition-colors ${
                               isDarkMode
                                 ? 'bg-indigo-700 hover:bg-indigo-600 text-white'
@@ -377,7 +377,7 @@ const ChildAttendance = () => {
                           </span>
                         ) : attendance?.checkInTime ? (
                           <button
-                            onClick={() => handleCheckOut(child._id)}
+                            onClick={() => handleCheckOut(player._id)}
                             className={`px-3 py-1 rounded transition-colors ${
                               isDarkMode
                                 ? 'bg-green-700 hover:bg-green-600 text-white'
@@ -394,7 +394,7 @@ const ChildAttendance = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex space-x-2">
                           <button
-                            onClick={() => handleMarkAttendance(child._id, 'present')}
+                            onClick={() => handleMarkAttendance(player._id, 'present')}
                             className={`px-3 py-1 rounded-md text-sm transition-colors ${
                               hasAttendance && attendance.status === 'present'
                                 ? isDarkMode ? 'bg-green-900 text-green-300 cursor-not-allowed' : 'bg-green-100 text-green-800 cursor-not-allowed'
@@ -405,7 +405,7 @@ const ChildAttendance = () => {
                             Present
                           </button>
                           <button
-                            onClick={() => handleMarkAttendance(child._id, 'absent')}
+                            onClick={() => handleMarkAttendance(player._id, 'absent')}
                             className={`px-3 py-1 rounded-md text-sm transition-colors ${
                               hasAttendance && attendance.status === 'absent'
                                 ? isDarkMode ? 'bg-red-900 text-red-300 cursor-not-allowed' : 'bg-red-100 text-red-800 cursor-not-allowed'
@@ -416,7 +416,7 @@ const ChildAttendance = () => {
                             Absent
                           </button>
                           <button
-                            onClick={() => handleMarkAttendance(child._id, 'late')}
+                            onClick={() => handleMarkAttendance(player._id, 'late')}
                             className={`px-3 py-1 rounded-md text-sm transition-colors ${
                               hasAttendance && attendance.status === 'late'
                                 ? isDarkMode ? 'bg-yellow-900 text-yellow-300 cursor-not-allowed' : 'bg-yellow-100 text-yellow-800 cursor-not-allowed'
@@ -454,4 +454,4 @@ const ChildAttendance = () => {
   );
 };
 
-export default ChildAttendance; 
+export default PlayerAttendance; 

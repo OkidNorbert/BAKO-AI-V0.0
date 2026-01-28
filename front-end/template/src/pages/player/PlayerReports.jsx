@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 
-const BabysitterReports = () => {
+const CoachReports = () => {
   const [reports, setReports] = useState([]);
   const [summary, setSummary] = useState({});
   const [loading, setLoading] = useState(true);
@@ -50,7 +50,7 @@ const BabysitterReports = () => {
     try {
       setLoading(true);
       setError('');
-      const response = await api.get('/babysitter/reports', {
+      const response = await api.get('/coach/reports', {
         params: {
           startDate: dateRange.start,
           endDate: dateRange.end,
@@ -183,7 +183,7 @@ const BabysitterReports = () => {
           reportData = { 
             activities: Math.floor(Math.random() * 20) + 5,
             highlights: Math.floor(Math.random() * 5) + 1,
-            uniqueChildren: Math.floor(Math.random() * 8) + 3
+            uniquePlayers: Math.floor(Math.random() * 8) + 3
           };
           break;
         default:
@@ -208,7 +208,7 @@ const BabysitterReports = () => {
       
       try {
         // Then try to call the API
-        const response = await api.post('/babysitter/reports/generate', {
+        const response = await api.post('/coach/reports/generate', {
           type: reportType,
           startDate: dateRange.start,
           endDate: dateRange.end
@@ -257,7 +257,7 @@ const BabysitterReports = () => {
   const handleDownload = async (reportId) => {
     try {
       // Try to call the actual API endpoint
-      const response = await api.get(`/babysitter/reports/${reportId}/download`, {
+      const response = await api.get(`/coach/reports/${reportId}/download`, {
         responseType: 'blob'
       });
 
@@ -265,7 +265,7 @@ const BabysitterReports = () => {
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', `report-${reportId}.pdf`);
-      document.body.appendChild(link);
+      document.body.appendPlayer(link);
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
@@ -280,7 +280,7 @@ const BabysitterReports = () => {
       
       // Create a text blob with report info
       const reportText = `
-=== Daystar Daycare Center ===
+=== BAKO Basketball Academy ===
 ${report.title}
 Date: ${formatDate(report.date)}
 Type: ${report.type}
@@ -298,7 +298,7 @@ Generated on: ${new Date().toLocaleString()}
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', `report-${reportId}.txt`);
-      document.body.appendChild(link);
+      document.body.appendPlayer(link);
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
@@ -425,4 +425,4 @@ Generated on: ${new Date().toLocaleString()}
   );
 };
 
-export default BabysitterReports;
+export default CoachReports;

@@ -13,9 +13,9 @@ const ActivityItem = ({ activity }) => {
         return '⚠️';
       case 'budget':
         return '💼';
-      case 'child':
+      case 'player':
         return '👶';
-      case 'babysitter':
+      case 'coach':
         return '👩‍⚕️';
       default:
         return '📝';
@@ -32,9 +32,9 @@ const ActivityItem = ({ activity }) => {
         return 'text-amber-600';
       case 'budget':
         return 'text-purple-600';
-      case 'child':
+      case 'player':
         return 'text-pink-600';
-      case 'babysitter':
+      case 'coach':
         return 'text-indigo-600';
       default:
         return 'text-gray-600';

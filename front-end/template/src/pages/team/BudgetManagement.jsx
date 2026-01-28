@@ -183,7 +183,7 @@ const BudgetManagement = () => {
           <div>
             <h1 className="text-2xl font-bold">Budget Management</h1>
             <p className={`mt-1 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              Plan, track, and manage daycare financial resources
+              Plan, track, and manage academy financial resources
             </p>
           </div>
           <button

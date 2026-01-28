@@ -23,7 +23,7 @@ const About = () => {
               isDarkMode ? 'text-yellow-300' : 'text-indigo-700'
             }`}>About Daystar Daycare</h1>
             <p className="text-xl max-w-3xl mx-auto">
-              Where every child shines bright and diverse cultures thrive together
+              Where every player shines bright and diverse cultures thrive together
             </p>
           </div>
         </div>
@@ -40,8 +40,8 @@ const About = () => {
               <div className={`space-y-4 ${
                 isDarkMode ? 'text-gray-300' : 'text-gray-600'
               }`}>
-                <p>Founded in 2015, Daystar Daycare Center began with a simple vision: to create a nurturing environment where children from all backgrounds could learn, play, and grow together.</p>
-                <p>Our center was established by a team of experienced educators and parents who recognized the need for quality childcare that celebrates diversity and embraces cultural differences as strengths.</p>
+                <p>Founded in 2015, BAKO Basketball Academy began with a simple vision: to create a nurturing environment where children from all backgrounds could learn, play, and grow together.</p>
+                <p>Our center was established by a team of experienced educators and contacts who recognized the need for quality playercare that celebrates diversity and embraces cultural differences as strengths.</p>
                 <p>Over the years, we have grown from a small facility caring for just 15 children to a vibrant community center serving over 100 families from diverse backgrounds. Throughout our growth, we have maintained our commitment to providing individualized care and cultural awareness in all our programs.</p>
               </div>
             </div>
@@ -51,13 +51,13 @@ const About = () => {
               }`}>
                 <img 
                   src="https://images.unsplash.com/photo-1540479859555-17af45c78602?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
-                  alt="Children playing together" 
+                  alt="Players playing together" 
                   className="w-full h-72 object-cover"
                 />
                 <div className="p-6">
                   <h3 className={`text-xl font-bold mb-2 ${
                     isDarkMode ? 'text-yellow-300' : 'text-indigo-600'
-                  }`}>A Place Where Children Thrive</h3>
+                  }`}>A Place Where Players Thrive</h3>
                   <p className={`${
                     isDarkMode ? 'text-gray-300' : 'text-gray-600'
                   }`}>Our center is designed to be a safe, engaging space where children can explore their world and discover their potential.</p>
@@ -87,7 +87,7 @@ const About = () => {
               {
                 icon: <Heart className={`h-8 w-8 ${isDarkMode ? 'text-pink-400' : 'text-pink-500'}`} />,
                 title: 'Care & Compassion',
-                description: 'We provide nurturing care that helps each child feel valued and secure.'
+                description: 'We provide nurturing care that helps each player feel valued and secure.'
               },
               {
                 icon: <Shield className={`h-8 w-8 ${isDarkMode ? 'text-green-400' : 'text-green-500'}`} />,
@@ -141,7 +141,7 @@ const About = () => {
                 name: 'Sarah Johnson',
                 title: 'Center Director',
                 image: 'https://images.unsplash.com/photo-1580894732444-8ecded7900cd?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80',
-                bio: 'With over 15 years in early childhood education, Sarah ensures our center provides the highest quality care.'
+                bio: 'With over 15 years in early playerhood education, Sarah ensures our center provides the highest quality care.'
               },
               {
                 name: 'David Okafor',
@@ -182,7 +182,7 @@ const About = () => {
           <div className="text-center mt-12">
             <p className={`text-lg font-medium ${
               isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>All our staff are certified in First Aid and CPR, background checked, and receive ongoing training in early childhood development.</p>
+            }`}>All our staff are certified in First Aid and CPR, background checked, and receive ongoing training in early playerhood development.</p>
           </div>
         </div>
       </section>
@@ -198,7 +198,7 @@ const About = () => {
             }`}>Visit Us Today</h2>
             <p className={`mt-4 max-w-3xl mx-auto ${
               isDarkMode ? 'text-gray-300' : 'text-gray-600'
-            }`}>We'd love to meet you and your child! Schedule a tour or get in touch with any questions.</p>
+            }`}>We'd love to meet you and your player! Schedule a tour or get in touch with any questions.</p>
           </div>
 
           <div className={`grid md:grid-cols-2 gap-8 ${
@@ -238,7 +238,7 @@ const About = () => {
                   }`} />
                   <div>
                     <p className="font-medium">Email:</p>
-                    <p>hello@daystardaycare.com</p>
+                    <p>hello@daystaracademy.com</p>
                   </div>
                 </div>
                 

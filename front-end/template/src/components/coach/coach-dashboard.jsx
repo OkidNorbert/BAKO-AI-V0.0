@@ -18,9 +18,9 @@ import { format } from 'date-fns';
 import { useToast } from '../ui/use-toast';
 import { useTheme } from '../../context/ThemeContext';
 
-const BabysitterDashboard = () => {
+const CoachDashboard = () => {
   const [loading, setLoading] = useState(true);
-  const [children, setChildren] = useState([]);
+  const [children, setPlayers] = useState([]);
   const [schedule, setSchedule] = useState([]);
   const [attendance, setAttendance] = useState({
     present: 0,
@@ -40,18 +40,18 @@ const BabysitterDashboard = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Fetch babysitter data
-  const fetchBabysitterData = async () => {
+  // Fetch coach data
+  const fetchCoachData = async () => {
     setLoading(true);
     try {
       // TODO: Replace with actual API calls
       // For demo, we'll create some mock data
       setTimeout(() => {
-        const mockChildren = [
-          { id: 1, name: 'Emma Johnson', age: 4, parentName: 'Sarah Johnson', status: 'present' },
-          { id: 2, name: 'Noah Smith', age: 3, parentName: 'Michael Smith', status: 'present' },
-          { id: 3, name: 'Olivia Williams', age: 5, parentName: 'Jennifer Williams', status: 'absent' },
-          { id: 4, name: 'Liam Brown', age: 4, parentName: 'David Brown', status: 'late' }
+        const mockPlayers = [
+          { id: 1, name: 'Emma Johnson', age: 4, contactName: 'Sarah Johnson', status: 'present' },
+          { id: 2, name: 'Noah Smith', age: 3, contactName: 'Michael Smith', status: 'present' },
+          { id: 3, name: 'Olivia Williams', age: 5, contactName: 'Jennifer Williams', status: 'absent' },
+          { id: 4, name: 'Liam Brown', age: 4, contactName: 'David Brown', status: 'late' }
         ];
         
         const mockSchedule = [
@@ -68,13 +68,13 @@ const BabysitterDashboard = () => {
           late: 1
         };
         
-        setChildren(mockChildren);
+        setPlayers(mockPlayers);
         setSchedule(mockSchedule);
         setAttendance(mockAttendance);
         setLoading(false);
       }, 1000);
     } catch (error) {
-      console.error('Error fetching Babysitter data:', error);
+      console.error('Error fetching Coach data:', error);
       toast({
         title: 'Error',
         description: 'Failing to load dashboard data. Please try again.',
@@ -85,7 +85,7 @@ const BabysitterDashboard = () => {
   };
 
   useEffect(() => {
-    fetchBabysitterData();
+    fetchCoachData();
   }, []);
 
   const handleTakeAttendance = async () => {
@@ -97,7 +97,7 @@ const BabysitterDashboard = () => {
       });
       
       // In a real app, this would navigate to the attendance page
-      // window.location.href = '/babysitter/attendance';
+      // window.location.href = '/coach/attendance';
     } catch (error) {
       console.error('Error loading attendance page:', error);
       toast({
@@ -117,7 +117,7 @@ const BabysitterDashboard = () => {
       });
       
       // In a real app, this would navigate to the schedule page
-      // window.location.href = '/babysitter/schedule';
+      // window.location.href = '/coach/schedule';
     } catch (error) {
       console.error('Error occuring while loading schedule page:', error);
       toast({
@@ -129,7 +129,7 @@ const BabysitterDashboard = () => {
   };
 
   const refreshDashboard = () => {
-    fetchBabysitterData();
+    fetchCoachData();
     toast({
       title: 'Refreshing',
       description: 'Dashboard data is being updated....',
@@ -207,7 +207,7 @@ const BabysitterDashboard = () => {
                 ? 'text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-400' 
                 : 'text-transparent bg-clip-text bg-gradient-to-r from-pink-600 via-purple-500 to-indigo-600'
             } animate-gradient`}>
-              Babysitter Dashboard
+              Coach Dashboard
             </h1>
             <p className={`${isDarkMode ? 'text-gray-300' : 'text-indigo-800'} text-lg`}>
               Welcome to your daily overview
@@ -283,7 +283,7 @@ const BabysitterDashboard = () => {
             <h3 className={`text-lg font-medium ${
               isDarkMode ? 'text-gray-300' : 'text-gray-600'
             }`}>
-              Children Today
+              Players Today
             </h3>
             <p className={`text-sm mt-1 ${
               isDarkMode ? 'text-gray-400' : 'text-gray-500'
@@ -361,7 +361,7 @@ const BabysitterDashboard = () => {
 
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Children Section */}
+          {/* Players Section */}
           <div 
             className={`rounded-2xl shadow-lg overflow-hidden ${
               isDarkMode ? 'bg-gray-800' : 'bg-white'
@@ -372,7 +372,7 @@ const BabysitterDashboard = () => {
                 <h2 className={`text-xl font-bold ${
                   isDarkMode ? 'text-yellow-400' : 'text-indigo-600'
                 }`}>
-                  My Children
+                  My Players
                 </h2>
                 <Baby className={`h-5 w-5 ${
                   isDarkMode ? 'text-yellow-400' : 'text-indigo-600'
@@ -383,9 +383,9 @@ const BabysitterDashboard = () => {
             <div className="p-6">
               <div className="space-y-4">
                 {children.length > 0 ? (
-                  children.map((child) => (
+                  children.map((player) => (
                     <div 
-                      key={child.id} 
+                      key={player.id} 
                       className={`flex items-center justify-between p-4 rounded-xl transition-all duration-200 ${
                         isDarkMode ? 'bg-gray-750 hover:bg-gray-700' : 'bg-gray-50 hover:bg-gray-100'
                       }`}
@@ -395,28 +395,28 @@ const BabysitterDashboard = () => {
                           isDarkMode ? 'bg-gray-700' : 'bg-white'
                         }`}>
                           <Baby className={`h-6 w-6 ${
-                            child.status === 'present' 
+                            player.status === 'present' 
                               ? 'text-green-500' 
-                              : child.status === 'absent' 
+                              : player.status === 'absent' 
                                 ? 'text-red-500' 
                                 : 'text-amber-500'
                           }`} />
                         </div>
                         <div>
                           <h3 className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                            {child.name}
+                            {player.name}
                           </h3>
                           <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                            Age: {child.age} | Parent: {child.parentName}
+                            Age: {player.age} | Contact: {player.contactName}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center">
                         <span className={`px-2.5 py-1 rounded-full text-xs font-medium flex items-center ${
-                          getStatusColor(child.status)
+                          getStatusColor(player.status)
                         }`}>
-                          {getStatusIcon(child.status)}
-                          <span className="ml-1 capitalize">{child.status}</span>
+                          {getStatusIcon(player.status)}
+                          <span className="ml-1 capitalize">{player.status}</span>
                         </span>
                       </div>
                     </div>
@@ -512,4 +512,4 @@ const BabysitterDashboard = () => {
   );
 };
 
-export default BabysitterDashboard; 
+export default CoachDashboard; 

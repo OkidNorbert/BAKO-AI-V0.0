@@ -15,7 +15,7 @@ const AccountTypeSelection = () => {
         // Or we just navigate and let the app handle it based on some state
         const roleMapping = {
             team: 'admin',
-            personal: 'babysitter'
+            personal: 'coach'
         };
 
         // Update local storage for mock persistence
@@ -58,7 +58,7 @@ const AccountTypeSelection = () => {
                         </h3>
                         <p className={`mt-4 text-center ${isDarkMode ? 'text-gray-400' : 'text-gray-600'
                             }`}>
-                            Analyze full matches, track multiple players, and coordinate team performance metrics.
+                            Analyze full matches, track multiple children, and coordinate team performance metrics.
                         </p>
                         <div className="mt-8 px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold group-hover:bg-blue-700 transition-colors">
                             Continue as Team

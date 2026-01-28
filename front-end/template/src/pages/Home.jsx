@@ -13,8 +13,8 @@ const Home = () => {
     if (user) {
       if (user.role === 'admin') {
         navigate('/admin');
-      } else if (user.role === 'babysitter') {
-        navigate('/babysitter');
+      } else if (user.role === 'coach') {
+        navigate('/coach');
       }
     }
   }, [user, navigate]);
@@ -51,12 +51,12 @@ const Home = () => {
                 ? 'text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-300 to-orange-400' 
                 : 'text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500'
             } animate-gradient`}>
-              Daystar Daycare Center
+              BAKO Basketball Academy
             </h1>
             <p className={`text-xl sm:text-2xl ${
               isDarkMode ? 'text-gray-300' : 'text-indigo-800'
             } mb-8 max-w-3xl mx-auto font-medium`}>
-              Where Learning Meets Play! A Vibrant and Safe Environment for Children to Grow, Learn and Celebrate Diversity.
+              Where Learning Meets Play! A Vibrant and Safe Environment for Players to Grow, Learn and Celebrate Diversity.
             </p>
             
             <div className="flex flex-col sm:flex-row justify-center gap-6 mt-10">
@@ -119,7 +119,7 @@ const Home = () => {
             {[
               {
                 title: "Nurturing Care",
-                description: "Our trained babysitters provide attentive and loving care to each child.",
+                description: "Our trained coachs provide attentive and loving care to each player.",
                 color: isDarkMode ? "bg-pink-700" : "bg-pink-500",
                 icon: (
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -178,12 +178,12 @@ const Home = () => {
             <h2 className={`text-3xl sm:text-4xl font-bold mb-4 ${
               isDarkMode ? 'text-yellow-400' : 'text-indigo-600'
             }`}>
-              Celebrating Children of All Cultures
+              Celebrating Players of All Cultures
             </h2>
             <p className={`text-lg max-w-3xl mx-auto ${
               isDarkMode ? 'text-gray-300' : 'text-gray-600'
             }`}>
-              We create an inclusive environment where every child's heritage is honored and celebrated
+              We create an inclusive environment where every player's heritage is honored and celebrated
             </p>
           </div>
           
@@ -198,14 +198,14 @@ const Home = () => {
             <div className="aspect-w-1 aspect-h-1 rounded-2xl overflow-hidden shadow-lg transform transition duration-300 hover:scale-102 mt-10 md:mt-20">
               <img 
                 src="https://images.unsplash.com/photo-1557734864-c78b6dfef1b1?q=80&w=3268&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
-                alt="Children learning together" 
+                alt="Players learning together" 
                 className="w-full h-full object-cover"
               />
             </div>
             <div className="aspect-w-1 aspect-h-1 rounded-2xl overflow-hidden shadow-lg transform transition duration-300 hover:scale-102">
               <img 
                 src="https://images.unsplash.com/photo-1594659217736-fe44a3ae36e0?q=80&w=3387&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
-                alt="Child smiling" 
+                alt="Player smiling" 
                 className="w-full h-full object-cover"
               />
             </div>
@@ -224,7 +224,7 @@ const Home = () => {
         </div>
       </div>
 
-      {/* About Us Section with child-friendly elements */}
+      {/* About Us Section with player-friendly elements */}
       <div className={`py-20 relative ${
         isDarkMode 
           ? 'bg-gradient-to-r from-gray-900 to-purple-950' 
@@ -255,7 +255,7 @@ const Home = () => {
                 <p className={`mb-6 ${
                   isDarkMode ? 'text-gray-300' : 'text-gray-600'
                 }`}>
-                  At Daystar Daycare, we're committed to providing a nurturing, educational environment where children can thrive. Our dedicated team of caregivers ensures each child receives personalized attention and care.
+                  At Daystar Daycare, we're committed to providing a nurturing, educational environment where children can thrive. Our dedicated team of caregivers ensures each player receives personalized attention and care.
                 </p>
                 <h3 className={`text-2xl font-bold mb-4 ${
                   isDarkMode ? 'text-white' : 'text-gray-800'
@@ -277,7 +277,7 @@ const Home = () => {
                     }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                     </svg>
-                    Trained and caring babysitters from diverse backgrounds
+                    Trained and caring coachs from diverse backgrounds
                   </li>
                   <li className="flex items-start">
                     <svg className={`h-6 w-6 mr-2 ${
@@ -346,7 +346,7 @@ const Home = () => {
                   <p className="text-sm italic">
                     "My daughter loves coming here! The staff celebrates her heritage and she's learning so much!"
                   </p>
-                  <p className="text-sm font-semibold mt-2">- Amara J., Parent</p>
+                  <p className="text-sm font-semibold mt-2">- Amara J., Contact</p>
                 </div>
               </div>
             </div>

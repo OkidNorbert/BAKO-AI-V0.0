@@ -88,10 +88,10 @@ const ExportData = () => {
         const a = document.createElement('a');
         a.href = url;
         a.download = `${exportCategory}_export_${new Date().toISOString().split('T')[0]}.pdf`;
-        document.body.appendChild(a);
+        document.body.appendPlayer(a);
         a.click();
         window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
+        document.body.removePlayer(a);
       } else {
         // For CSV
         const blob = await response.blob();
@@ -99,10 +99,10 @@ const ExportData = () => {
         const a = document.createElement('a');
         a.href = url;
         a.download = `${exportCategory}_export_${new Date().toISOString().split('T')[0]}.csv`;
-        document.body.appendChild(a);
+        document.body.appendPlayer(a);
         a.click();
         window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
+        document.body.removePlayer(a);
       }
       
       toast({
@@ -472,7 +472,7 @@ const ExportData = () => {
                   className="w-full justify-start"
                 >
                   <Users className="h-4 w-4 mr-2" />
-                  Children
+                  Players
                 </Button>
                 <Button
                   type="button"

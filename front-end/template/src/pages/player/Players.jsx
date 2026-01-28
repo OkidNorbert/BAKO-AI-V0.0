@@ -5,11 +5,11 @@ import { useTheme } from '@/context/ThemeContext';
 import { Baby, Activity, AlertCircle, Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
-const Children = () => {
-  const [children, setChildren] = useState([]);
+const Players = () => {
+  const [children, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [selectedChild, setSelectedChild] = useState(null);
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [activity, setActivity] = useState({
     type: '',
     description: '',
@@ -19,14 +19,14 @@ const Children = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchChildren();
+    fetchPlayers();
   }, []);
 
-  const fetchChildren = async () => {
+  const fetchPlayers = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/babysitter/children');
-      setChildren(response.data);
+      const response = await api.get('/coach/children');
+      setPlayers(response.data);
       setError('');
     } catch (err) {
       console.error('Error fetching children:', err);
@@ -39,17 +39,17 @@ const Children = () => {
 
   const handleActivitySubmit = async (e) => {
     e.preventDefault();
-    if (!selectedChild) return;
+    if (!selectedPlayer) return;
 
     try {
-      await api.post(`/babysitter/children/${selectedChild._id}/activities`, activity);
+      await api.post(`/coach/children/${selectedPlayer._id}/activities`, activity);
       toast.success('Activity added successfully');
       setActivity({
         type: '',
         description: '',
         date: new Date().toISOString().split('T')[0]
       });
-      setSelectedChild(null);
+      setSelectedPlayer(null);
     } catch (err) {
       console.error('Error adding activity:', err);
       toast.error(err.response?.data?.message || 'Failed to add activity');
@@ -95,9 +95,9 @@ const Children = () => {
       isDarkMode ? 'text-white' : 'text-gray-900'
     }`}>
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold">Children Under Care</h1>
+        <h1 className="text-3xl font-bold">Players Under Care</h1>
         <button
-          onClick={fetchChildren}
+          onClick={fetchPlayers}
           className={`px-4 py-2 rounded-lg flex items-center ${
             isDarkMode 
               ? 'bg-gray-700 hover:bg-gray-600' 
@@ -118,7 +118,7 @@ const Children = () => {
           }`}>
             <h2 className="text-2xl font-bold flex items-center">
               <Baby className="h-6 w-6 mr-2" />
-              Children List
+              Players List
             </h2>
           </div>
           <div className="p-6">
@@ -133,32 +133,32 @@ const Children = () => {
                   </p>
                 </div>
               ) : (
-                children.map((child) => (
+                children.map((player) => (
                   <div
-                    key={child._id}
+                    key={player._id}
                     className={`p-4 rounded-lg cursor-pointer transition-colors ${
                       isDarkMode 
                         ? 'bg-gray-700 hover:bg-gray-600' 
                         : 'bg-gray-50 hover:bg-gray-100'
                     }`}
-                    onClick={() => setSelectedChild(child)}
+                    onClick={() => setSelectedPlayer(player)}
                   >
                     <div className="flex items-center">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                        child.gender === 'male' 
+                        player.gender === 'male' 
                           ? isDarkMode ? 'bg-blue-900 text-blue-200' : 'bg-blue-100 text-blue-800'
                           : isDarkMode ? 'bg-pink-900 text-pink-200' : 'bg-pink-100 text-pink-800'
                       }`}>
                         <span className="font-bold">
-                          {child.firstName.charAt(0)}
+                          {player.firstName.charAt(0)}
                         </span>
                       </div>
                       <div className="ml-3">
-                        <h3 className="font-semibold">{child.firstName} {child.lastName}</h3>
+                        <h3 className="font-semibold">{player.firstName} {player.lastName}</h3>
                         <p className={`text-sm ${
                           isDarkMode ? 'text-gray-400' : 'text-gray-500'
                         }`}>
-                          {calculateAge(child.dateOfBirth)} years old
+                          {calculateAge(player.dateOfBirth)} years old
                         </p>
                       </div>
                     </div>
@@ -169,7 +169,7 @@ const Children = () => {
           </div>
         </div>
 
-        {selectedChild && (
+        {selectedPlayer && (
           <div className={`rounded-lg shadow-lg overflow-hidden ${
             isDarkMode ? 'bg-gray-800' : 'bg-white'
           }`}>
@@ -248,7 +248,7 @@ const Children = () => {
                 <div className="flex justify-end space-x-3">
                   <button
                     type="button"
-                    onClick={() => setSelectedChild(null)}
+                    onClick={() => setSelectedPlayer(null)}
                     className={`px-4 py-2 rounded-lg ${
                       isDarkMode 
                         ? 'bg-gray-700 hover:bg-gray-600' 
@@ -277,4 +277,4 @@ const Children = () => {
   );
 };
 
-export default Children; 
+export default Players; 

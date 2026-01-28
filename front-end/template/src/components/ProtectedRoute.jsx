@@ -23,13 +23,13 @@ const ProtectedRoute = ({ allowedRoles = [] }) => {
       userRole: user.role,
       requiredRoles: allowedRoles
     });
-    
+
     // Redirect to the appropriate dashboard based on user role
     switch (user.role) {
       case 'admin':
-        return <Navigate to="/admin" replace />;
-      case 'babysitter':
-        return <Navigate to="/babysitter" replace />;
+        return <Navigate to="/team" replace />;
+      case 'coach':
+        return <Navigate to="/player" replace />;
       default:
         return <Navigate to="/" replace />;
     }

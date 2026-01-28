@@ -3,11 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { showToast } from '../../components/shared/Toast';
 
-const BabysitterSchedule = () => {
+const CoachSchedule = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [babysitter, setBabysitter] = useState(null);
+  const [coach, setCoach] = useState(null);
   const [schedules, setSchedules] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -20,26 +20,26 @@ const BabysitterSchedule = () => {
   });
 
   useEffect(() => {
-    fetchBabysitterDetails();
+    fetchCoachDetails();
     fetchSchedules();
   }, [id]);
 
-  const fetchBabysitterDetails = async () => {
+  const fetchCoachDetails = async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `http://localhost:5000/api/admin/babysitters/${id}`,
+        `http://localhost:5000/api/admin/coachs/${id}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         }
       );
-      setBabysitter(response.data);
+      setCoach(response.data);
     } catch (error) {
-      console.error('Error fetching babysitter details:', error);
+      console.error('Error fetching coach details:', error);
       showToast(
-        error.response?.data?.error || 'Failed to fetch babysitter details',
+        error.response?.data?.error || 'Failed to fetch coach details',
         'error'
       );
     }
@@ -49,7 +49,7 @@ const BabysitterSchedule = () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `http://localhost:5000/api/admin/babysitters/${id}/schedules`,
+        `http://localhost:5000/api/admin/coachs/${id}/schedules`,
         {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -81,7 +81,7 @@ const BabysitterSchedule = () => {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `http://localhost:5000/api/admin/babysitters/${id}/schedules`,
+        `http://localhost:5000/api/admin/coachs/${id}/schedules`,
         formData,
         {
           headers: {
@@ -113,7 +113,7 @@ const BabysitterSchedule = () => {
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        `http://localhost:5000/api/admin/babysitters/schedules/${scheduleId}/attendance`,
+        `http://localhost:5000/api/admin/coachs/schedules/${scheduleId}/attendance`,
         { status },
         {
           headers: {
@@ -144,10 +144,10 @@ const BabysitterSchedule = () => {
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-2xl font-bold">Babysitter Schedule</h1>
-          {babysitter && (
+          <h1 className="text-2xl font-bold">Coach Schedule</h1>
+          {coach && (
             <p className="text-gray-600 mt-2">
-              {`${babysitter.user.firstName} ${babysitter.user.lastName}`}
+              {`${coach.user.firstName} ${coach.user.lastName}`}
             </p>
           )}
         </div>
@@ -290,7 +290,7 @@ const BabysitterSchedule = () => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900">
-                    {`${schedule.assignedChildren?.length || 0}/${schedule.maxCapacity}`}
+                    {`${schedule.assignedPlayers?.length || 0}/${schedule.maxCapacity}`}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -331,4 +331,4 @@ const BabysitterSchedule = () => {
   );
 };
 
-export default BabysitterSchedule; 
+export default CoachSchedule; 

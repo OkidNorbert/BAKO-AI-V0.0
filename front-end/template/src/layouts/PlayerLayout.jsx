@@ -19,4 +19,4 @@ const PlayerLayout = () => {
   );
 };
 
-export default BabysitterLayout; 
+export default CoachLayout; 

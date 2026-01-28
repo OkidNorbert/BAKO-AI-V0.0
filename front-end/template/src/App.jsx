@@ -25,25 +25,25 @@ import PlayerManagement from '@/pages/team/PlayerManagement';
 import ContactManagement from '@/pages/team/ContactManagement';
 import Schedule from '@/pages/team/Schedule';
 import Payments from '@/pages/team/Payments';
-import ChildPayment from '@/pages/team/ChildPayment';
-import BabysitterPaymentManagement from '@/pages/team/BabysitterPaymentManagement';
+import PlayerPayment from '@/pages/team/PlayerPayment';
+import StaffPaymentManagement from '@/pages/team/StaffPaymentManagement';
 import Reports from '@/pages/team/Reports';
 import SystemSettings from '@/pages/team/SystemSettings';
 import Notifications from '@/pages/team/Notifications';
 import Analytics from '@/pages/team/Analytics';
-import BabysitterRegistration from '@/pages/team/BabysitterRegistration';
-import ChildRegistration from '@/pages/team/ChildRegistration';
+import StaffRegistration from '@/pages/team/StaffRegistration';
+import PlayerRegistration from '@/pages/team/PlayerRegistration';
 import Attendance from '@/pages/team/Attendance';
 import Communications from '@/pages/team/Communications';
 import Security from '@/pages/team/Security';
 import TeamProfile from '@/pages/team/TeamProfile';
 import DataManagement from '@/pages/team/DataManagement';
-import BabysitterManagement from '@/pages/team/BabysitterManagement';
-import BabysitterSchedule from '@/pages/team/BabysitterSchedule';
-import BabysitterPayments from '@/pages/team/BabysitterPayments';
-import ParentManagement from '@/pages/team/ContactManagement';
+import StaffManagement from '@/pages/team/StaffManagement';
+import StaffSchedule from '@/pages/team/StaffSchedule';
+import StaffPayments from '@/pages/team/StaffPayments';
+import ContactManagement from '@/pages/team/ContactManagement';
 import Settings from '@/pages/team/SystemSettings';
-import BabysitterUpdate from '@/pages/team/BabysitterUpdate';
+import StaffUpdate from '@/pages/team/StaffUpdate';
 import IncidentManagement from '@/pages/team/IncidentManagement';
 import MatchAnalysis from '@/pages/team/MatchAnalysis';
 
@@ -51,12 +51,12 @@ import MatchAnalysis from '@/pages/team/MatchAnalysis';
 import PlayerHome from '@/pages/player/PlayerHome';
 import PlayerProfile from '@/pages/player/PlayerProfile';
 import MySchedule from '@/pages/player/MySchedule';
-import ChildDetail from '@/pages/player/ChildDetail';
+import PlayerDetail from '@/pages/player/PlayerDetail';
 import PlayerReports from '@/pages/player/PlayerReports';
 import PlayerNotifications from '@/pages/player/PlayerNotifications';
-import ChildAttendance from '@/pages/player/ChildAttendance';
+import PlayerAttendance from '@/pages/player/PlayerAttendance';
 import IncidentReport from '@/pages/player/IncidentReport';
-import Children from '@/pages/player/Children';
+import Players from '@/pages/player/Players';
 import TrainingAnalysis from '@/pages/player/TrainingAnalysis';
 
 function App() {
@@ -101,12 +101,12 @@ function App() {
               </Route>
             </Route>
 
-            {/* Player Routes (formerly Babysitter) */}
-            <Route path="/player" element={<ProtectedRoute allowedRoles={['babysitter']} />}>
+            {/* Player Routes (formerly Coach) */}
+            <Route path="/player" element={<ProtectedRoute allowedRoles={['coach']} />}>
               <Route element={<PlayerLayout />}>
                 <Route index element={<PlayerHome />} />
                 <Route path="training" element={<TrainingAnalysis />} />
-                <Route path="skills" element={<ChildAttendance />} />
+                <Route path="skills" element={<PlayerAttendance />} />
                 <Route path="profile" element={<PlayerProfile />} />
                 <Route path="notifications" element={<PlayerNotifications />} />
               </Route>

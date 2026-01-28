@@ -16,7 +16,7 @@ const Contact = () => {
     name: '',
     email: '',
     phone: '',
-    childAge: '',
+    playerAge: '',
     preferredDate: '',
     preferredTime: '',
     message: '',
@@ -45,7 +45,7 @@ const Contact = () => {
         name: '',
         email: '',
         phone: '',
-        childAge: '',
+        playerAge: '',
         preferredDate: '',
         preferredTime: '',
         message: '',
@@ -127,7 +127,7 @@ const Contact = () => {
                     <p className={`mt-1 ${
                       isDarkMode ? 'text-gray-300' : 'text-gray-600'
                     }`}>
-                      <a href="mailto:hello@daystardaycare.com" className="hover:underline">hello@daystardaycare.com</a>
+                      <a href="mailto:hello@daystaracademy.com" className="hover:underline">hello@daystaracademy.com</a>
                     </p>
                   </div>
                 </div>
@@ -263,17 +263,17 @@ const Contact = () => {
                     
                     <div>
                       <label 
-                        htmlFor="childAge" 
+                        htmlFor="playerAge" 
                         className={`block mb-2 text-sm font-medium ${
                           isDarkMode ? 'text-gray-200' : 'text-gray-700'
                         }`}
                       >
-                        Child's Age
+                        Player's Age
                       </label>
                       <select
-                        id="childAge"
-                        name="childAge"
-                        value={formState.childAge}
+                        id="playerAge"
+                        name="playerAge"
+                        value={formState.playerAge}
                         onChange={handleChange}
                         className={`w-full px-4 py-2 rounded-lg focus:ring-2 focus:outline-none transition-colors ${
                           isDarkMode 
@@ -477,18 +477,18 @@ const Contact = () => {
               <p className={`mt-2 ${
                 isDarkMode ? 'text-gray-300' : 'text-gray-600'
               }`}>
-                We accommodate various dietary needs and allergies. Please discuss your child's specific requirements during enrollment, and we'll work together to ensure their nutritional needs are met.
+                We accommodate various dietary needs and allergies. Please discuss your player's specific requirements during enrollment, and we'll work together to ensure their nutritional needs are met.
               </p>
             </div>
             
             <div className={`p-6 rounded-lg ${
               isDarkMode ? 'bg-gray-700' : 'bg-white'
             }`}>
-              <h3 className="font-bold text-lg">What is your staff-to-child ratio?</h3>
+              <h3 className="font-bold text-lg">What is your staff-to-player ratio?</h3>
               <p className={`mt-2 ${
                 isDarkMode ? 'text-gray-300' : 'text-gray-600'
               }`}>
-                We maintain excellent staff-to-child ratios that exceed national standards: 1:3 for infants, 1:4 for toddlers, 1:6 for preschoolers, and 1:8 for Pre-K children.
+                We maintain excellent staff-to-player ratios that exceed national standards: 1:3 for infants, 1:4 for toddlers, 1:6 for preschoolers, and 1:8 for Pre-K children.
               </p>
             </div>
             

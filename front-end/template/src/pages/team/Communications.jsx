@@ -262,9 +262,9 @@ const Communications = () => {
                   required
                 >
                   <option value="all">All Users</option>
-                  <option value="parents">All Parents</option>
+                  <option value="contacts">All Contacts</option>
                   <option value="staff">All Staff</option>
-                  <option value="babysitters">All Babysitters</option>
+                  <option value="coachs">All Coachs</option>
                 </select>
               </div>
               <div className="flex justify-end">

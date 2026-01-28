@@ -26,7 +26,7 @@ const Register = () => {
           case 'admin':
             navigate('/team');
             break;
-          case 'babysitter':
+          case 'coach':
             navigate('/player');
             break;
           default:
@@ -88,7 +88,7 @@ const Register = () => {
           </h2>
           <p className={`mt-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'
             }`}>
-            Join our daycare management system
+            Join our academy management system
           </p>
         </div>
 

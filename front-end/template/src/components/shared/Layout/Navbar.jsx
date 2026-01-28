@@ -22,11 +22,11 @@ const Navbar = ({ role }) => {
     switch (role) {
       case 'admin':
         return [
-          { to: '/admin', icon: <Home className="h-5 w-5" />, label: 'Dashboard' },
-          { to: '/admin/profile', icon: <User className="h-5 w-5" />, label: 'Profile' },
-          { to: '/admin/notifications', icon: <Bell className="h-5 w-5" />, label: 'Notifications' }
+          { to: '/team', icon: <Home className="h-5 w-5" />, label: 'Dashboard' },
+          { to: '/team/profile', icon: <User className="h-5 w-5" />, label: 'Profile' },
+          { to: '/team/notifications', icon: <Bell className="h-5 w-5" />, label: 'Notifications' }
         ];
-      case 'babysitter':
+      case 'coach':
         return [
           { to: '/player', icon: <Home className="h-5 w-5" />, label: 'Dashboard' },
           { to: '/player/training', icon: <Activity className="h-5 w-5" />, label: 'Training' },

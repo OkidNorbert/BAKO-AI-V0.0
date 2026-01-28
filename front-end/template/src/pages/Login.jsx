@@ -20,7 +20,7 @@ const Login = () => {
         case 'admin':
           navigate('/team');
           break;
-        case 'babysitter':
+        case 'coach':
           navigate('/player');
           break;
         default:
@@ -45,7 +45,7 @@ const Login = () => {
           case 'admin':
             navigate('/team');
             break;
-          case 'babysitter':
+          case 'coach':
             navigate('/player');
             break;
           default:

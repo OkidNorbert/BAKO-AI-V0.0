@@ -32,7 +32,7 @@ const Payments = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [showMarkPaidModal, setShowMarkPaidModal] = useState(false);
-  const [selectedBabysitter, setSelectedBabysitter] = useState(null);
+  const [selectedCoach, setSelectedCoach] = useState(null);
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
   const [paymentMethod, setPaymentMethod] = useState('cash');
@@ -90,10 +90,10 @@ const Payments = () => {
   const filteredPayments = payments.filter(payment => {
     if (!payment) return false;
     
-    const babysitterName = (payment.babysitterName || '').toLowerCase();
+    const coachName = (payment.coachName || '').toLowerCase();
     const searchTermLower = searchTerm.toLowerCase();
     
-    const matchesSearch = babysitterName.includes(searchTermLower);
+    const matchesSearch = coachName.includes(searchTermLower);
     const matchesStatus = filterStatus === 'all' || payment.status === filterStatus;
     
     return matchesSearch && matchesStatus;
@@ -107,7 +107,7 @@ const Payments = () => {
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', `receipt-${paymentId}.pdf`);
-      document.body.appendChild(link);
+      document.body.appendPlayer(link);
       link.click();
       link.remove();
     } catch (error) {
@@ -116,8 +116,8 @@ const Payments = () => {
     }
   };
 
-  const handleShowMarkPaidModal = (babysitter) => {
-    setSelectedBabysitter(babysitter);
+  const handleShowMarkPaidModal = (coach) => {
+    setSelectedCoach(coach);
     setShowMarkPaidModal(true);
   };
 
@@ -159,11 +159,11 @@ const Payments = () => {
     }
   };
 
-  const handleSendReminder = async (parentId) => {
+  const handleSendReminder = async (contactId) => {
     try {
       setLoading(true);
       
-      await adminAPI.sendPaymentReminder(parentId);
+      await adminAPI.sendPaymentReminder(contactId);
       
       setSuccess('Payment reminder sent successfully');
       
@@ -257,7 +257,7 @@ const Payments = () => {
   useEffect(() => {
     const loadAdminUsers = async () => {
       try {
-        // This will get admin users that can be used for babysitterId
+        // This will get admin users that can be used for coachId
         const response = await api.get('/admin/users?role=admin');
         if (response.data && response.data.length > 0) {
           setAdminUsers(response.data);
@@ -349,7 +349,7 @@ const Payments = () => {
                 Payment System Note
               </h3>
               <p className={`text-sm mt-1 ${isDarkMode ? 'text-blue-200' : 'text-blue-600'}`}>
-                This system only records payment information. Actual payments to babysitters must be processed 
+                This system only records payment information. Actual payments to coachs must be processed 
                 manually outside the system via cash, check, or bank transfer. The generate payment function 
                 creates payment records for tracking purposes only.
               </p>
@@ -393,7 +393,7 @@ const Payments = () => {
                 }`} />
                 <input
                   type="text"
-              placeholder="Search babysitter name..."
+              placeholder="Search coach name..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
               className={`w-full py-2 pl-10 pr-4 rounded-lg text-sm ${
@@ -405,7 +405,7 @@ const Payments = () => {
           </div>
         </div>
 
-        {/* Babysitter Payments Section */}
+        {/* Coach Payments Section */}
         <div className={`overflow-hidden rounded-xl shadow-lg ${
           isDarkMode ? 'bg-gray-800' : 'bg-white'
         }`}>
@@ -414,7 +414,7 @@ const Payments = () => {
               <thead className={isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}>
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                    Babysitter
+                    Coach
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
                     Date
@@ -462,18 +462,18 @@ const Payments = () => {
                             isDarkMode ? 'bg-gray-700' : 'bg-blue-100'
                           }`}>
                             <span className={isDarkMode ? 'text-blue-400' : 'text-blue-600'}>
-                              {payment.babysitterName ? payment.babysitterName.charAt(0) : 'U'}
+                              {payment.coachName ? payment.coachName.charAt(0) : 'U'}
                             </span>
                           </div>
                           <div className="ml-4">
                             <div className="text-sm font-medium">
-                              {payment.babysitterName || 'Unknown Babysitter'}
+                              {payment.coachName || 'Unknown Coach'}
                             </div>
-                            {payment.childName && (
+                            {payment.playerName && (
                               <div className={`text-xs ${
                                 isDarkMode ? 'text-gray-400' : 'text-gray-500'
                               }`}>
-                                For: {payment.childName}
+                                For: {payment.playerName}
                               </div>
                             )}
                           </div>
@@ -655,14 +655,14 @@ const Payments = () => {
               <div className={`text-sm font-medium mb-1 ${
                 isDarkMode ? 'text-gray-300' : 'text-gray-600'
               }`}>
-                Babysitters Paid
+                Coachs Paid
                 </div>
               <div className={`text-2xl font-bold ${
                 isDarkMode ? 'text-indigo-400' : 'text-indigo-600'
               }`}>
                 {new Set(filteredPayments
                   .filter(payment => payment.status === 'completed')
-                  .map(payment => payment.babysitterId)
+                  .map(payment => payment.coachId)
                 ).size}
                 </div>
             </div>
@@ -687,8 +687,8 @@ const Payments = () => {
                 <p><strong>Note:</strong> This will only record the payment in the system. The actual payment must be collected separately through cash, check, or bank transfer.</p>
               </div>
               
-              <p><strong>Babysitter:</strong> {selectedPayment?.babysitterName}</p>
-              {selectedPayment?.childName && <p><strong>For Child:</strong> {selectedPayment.childName}</p>}
+              <p><strong>Coach:</strong> {selectedPayment?.coachName}</p>
+              {selectedPayment?.playerName && <p><strong>For Player:</strong> {selectedPayment.playerName}</p>}
             </div>
             
             <div className="space-y-4">

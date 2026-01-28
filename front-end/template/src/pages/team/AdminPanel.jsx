@@ -95,8 +95,8 @@ const AdminPanel = () => {
                           isDarkMode ? 'bg-gray-700 text-white border-gray-600' : 'bg-white text-gray-900 border-gray-300'
                         }`}
                       >
-                        <option value="parent">Parent</option>
-                        <option value="babysitter">Babysitter</option>
+                        <option value="contact">Contact</option>
+                        <option value="coach">Coach</option>
                         <option value="admin">Admin</option>
                       </select>
                     </td>

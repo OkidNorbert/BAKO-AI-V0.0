@@ -5,7 +5,7 @@ import { toast } from 'react-hot-toast';
 import { useTheme } from '../../context/ThemeContext';
 import { Copy, RefreshCw } from 'lucide-react';
 
-const BabysitterRegistration = () => {
+const CoachRegistration = () => {
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
   const [loading, setLoading] = useState(false);
@@ -83,7 +83,7 @@ const BabysitterRegistration = () => {
       }
       
       if (age < 21 || age > 35) {
-        newErrors.dateOfBirth = 'Babysitter must be between 21-35 years old';
+        newErrors.dateOfBirth = 'Coach must be between 21-35 years old';
       }
     }
     
@@ -191,11 +191,11 @@ const BabysitterRegistration = () => {
       };
 
       const response = await api.post(
-        '/admin/babysitters/register',
+        '/admin/coachs/register',
         payload
       );
 
-      toast.success('Babysitter registered successfully');
+      toast.success('Coach registered successfully');
       
       // Store the registered user info for display
       setRegisteredUserInfo({
@@ -203,18 +203,18 @@ const BabysitterRegistration = () => {
         email: formData.email || 'Not provided',
         nin: formData.nin,
         password: formData.password,
-        username: response.data.tempCredentials?.username || `babysitter-${formData.nin.slice(-6)}` // Include username for login
+        username: response.data.tempCredentials?.username || `coach-${formData.nin.slice(-6)}` // Include username for login
       });
       
       // Show the password modal
       setShowPasswordModal(true);
       
       // Don't navigate away immediately - let user see the password
-      // navigate('/admin/babysitters');
+      // navigate('/admin/coachs');
     } catch (error) {
       console.error('Registration error:', error);
       
-      const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Failed to register babysitter';
+      const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Failed to register coach';
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -263,9 +263,9 @@ const BabysitterRegistration = () => {
           isDarkMode 
             ? 'text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-300 to-orange-400' 
             : 'text-transparent bg-clip-text bg-gradient-to-r from-green-600 via-teal-500 to-blue-600'
-        } animate-gradient mb-2`}>Register New Babysitter</h1>
+        } animate-gradient mb-2`}>Register New Coach</h1>
         <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'} max-w-3xl`}>
-          Create an account for a new babysitter with their personal and professional details.
+          Create an account for a new coach with their personal and professional details.
         </p>
       </div>
 
@@ -612,7 +612,7 @@ const BabysitterRegistration = () => {
             }`}
             disabled={loading}
           >
-            {loading ? 'Registering...' : 'Register Babysitter'}
+            {loading ? 'Registering...' : 'Register Coach'}
           </button>
         </div>
       </form>
@@ -624,7 +624,7 @@ const BabysitterRegistration = () => {
             isDarkMode ? 'bg-gray-800' : 'bg-white'
           }`}>
             <div className="mb-4">
-              <h2 className="text-xl font-bold mb-2">Babysitter Registered Successfully</h2>
+              <h2 className="text-xl font-bold mb-2">Coach Registered Successfully</h2>
               <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                 Please save these credentials in a secure place. The password will only be shown once.
               </p>
@@ -689,7 +689,7 @@ const BabysitterRegistration = () => {
               <button
                 onClick={() => {
                   setShowPasswordModal(false);
-                  navigate('/admin/babysitters');
+                  navigate('/admin/coachs');
                 }}
                 className={`px-4 py-2 rounded-md ${
                   isDarkMode
@@ -697,7 +697,7 @@ const BabysitterRegistration = () => {
                     : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
                 }`}
               >
-                Go to Babysitter List
+                Go to Coach List
               </button>
               <button
                 onClick={() => setShowPasswordModal(false)}
@@ -717,4 +717,4 @@ const BabysitterRegistration = () => {
   );
 };
 
-export default BabysitterRegistration; 
+export default CoachRegistration; 

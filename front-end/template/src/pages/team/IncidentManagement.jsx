@@ -71,14 +71,14 @@ const IncidentManagement = () => {
     }
   };
 
-  const notifyParent = async (id) => {
+  const notifyContact = async (id) => {
     try {
       setIsUpdating(true);
       await api.post(`/admin/incidents/${id}/notify`);
-      alert('Parent notification sent successfully');
+      alert('Contact notification sent successfully');
     } catch (error) {
-      console.error('Error notifying parent:', error);
-      setError('Failed to send notification to parent. Please try again.');
+      console.error('Error notifying contact:', error);
+      setError('Failed to send notification to contact. Please try again.');
     } finally {
       setIsUpdating(false);
     }
@@ -141,13 +141,13 @@ const IncidentManagement = () => {
 
   // Filter incidents based on search and filters
   const filteredIncidents = incidents.filter(incident => {
-    const childName = incident.childId?.firstName && incident.childId?.lastName ? 
-      `${incident.childId.firstName} ${incident.childId.lastName}`.toLowerCase() : '';
+    const playerName = incident.playerId?.firstName && incident.playerId?.lastName ? 
+      `${incident.playerId.firstName} ${incident.playerId.lastName}`.toLowerCase() : '';
     const reporterName = incident.reportedBy?.firstName && incident.reportedBy?.lastName ? 
       `${incident.reportedBy.firstName} ${incident.reportedBy.lastName}`.toLowerCase() : '';
     
     const matchesSearch = 
-      childName.includes(searchTerm.toLowerCase()) ||
+      playerName.includes(searchTerm.toLowerCase()) ||
       reporterName.includes(searchTerm.toLowerCase()) ||
       (incident.description && incident.description.toLowerCase().includes(searchTerm.toLowerCase()));
     
@@ -224,7 +224,7 @@ const IncidentManagement = () => {
               }`} />
               <input
                 type="text"
-                placeholder="Search by child name, reporter or description..."
+                placeholder="Search by player name, reporter or description..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className={`w-full pl-10 pr-4 py-2 rounded-md border-none focus:ring-2 ${
@@ -287,13 +287,13 @@ const IncidentManagement = () => {
                     <div className="mb-4 md:mb-0">
                       <div className="flex items-center mb-2">
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${
-                          incident.childId?.gender === 'male' 
+                          incident.playerId?.gender === 'male' 
                           ? isDarkMode ? 'bg-blue-900 text-blue-200' : 'bg-blue-100 text-blue-800'
                           : isDarkMode ? 'bg-pink-900 text-pink-200' : 'bg-pink-100 text-pink-800'
                         }`}>
-                          {incident.childId ? (
+                          {incident.playerId ? (
                             <span className="font-bold">
-                              {incident.childId.firstName?.charAt(0)}
+                              {incident.playerId.firstName?.charAt(0)}
                             </span>
                           ) : (
                             <User className="h-6 w-6" />
@@ -301,7 +301,7 @@ const IncidentManagement = () => {
                         </div>
                         <div>
                           <h3 className="font-semibold">
-                            {incident.childId ? `${incident.childId.firstName} ${incident.childId.lastName}` : 'Unknown Child'}
+                            {incident.playerId ? `${incident.playerId.firstName} ${incident.playerId.lastName}` : 'Unknown Player'}
                           </h3>
                           <div className="flex items-center text-sm">
                             <Calendar className={`h-4 w-4 mr-1 ${
@@ -376,7 +376,7 @@ const IncidentManagement = () => {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          notifyParent(incident._id);
+                          notifyContact(incident._id);
                         }}
                         className={`px-3 py-1 rounded-md text-sm ${
                           isDarkMode
@@ -386,7 +386,7 @@ const IncidentManagement = () => {
                         disabled={isUpdating}
                       >
                         <AlertTriangle className="h-4 w-4 inline mr-1" />
-                        Notify Parent
+                        Notify Contact
                       </button>
                     </div>
                   </div>

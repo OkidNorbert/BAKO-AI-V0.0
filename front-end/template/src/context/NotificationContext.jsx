@@ -15,12 +15,12 @@ export const NotificationProvider = ({ children }) => {
   useEffect(() => {
     if (isAuthenticated) {
       fetchNotifications();
-      
+
       // Set up polling for new notifications every minute
       const intervalId = setInterval(() => {
         fetchNotifications();
       }, 60000);
-      
+
       return () => clearInterval(intervalId);
     }
   }, [isAuthenticated]);
@@ -35,21 +35,21 @@ export const NotificationProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-      
+
       // Get role from auth context or localStorage
       const role = user?.role || localStorage.getItem('userRole');
-      
+
       if (!role) {
         console.warn('No user role found, cannot fetch notifications');
         setError('Authentication required');
         return;
       }
-      
+
       console.log(`Fetching notifications for role: ${role}`);
-      
+
       try {
         const response = await api.get(`/${role}/notifications`);
-        
+
         if (response.data && Array.isArray(response.data)) {
           setNotifications(response.data);
           setLoading(false);
@@ -57,21 +57,21 @@ export const NotificationProvider = ({ children }) => {
         }
       } catch (apiError) {
         console.warn('Error fetching notifications from API:', apiError);
-        
+
         // If server is not running, use fallback data immediately
         if (apiError.code === 'ERR_NETWORK') {
           throw new Error('Server connection refused');
         }
-        
+
         // For authentication errors, handle specifically
         if (apiError.response?.status === 401) {
           console.warn('Authentication error fetching notifications');
           throw new Error('Authentication required');
         }
-        
+
         // For other errors, try to continue with fallback data
       }
-      
+
       // Use the test real-time notification placeholder
       console.log('Using a test real-time notification placeholder');
       const testNotifications = [
@@ -86,28 +86,28 @@ export const NotificationProvider = ({ children }) => {
         },
         {
           id: '2',
-          title: 'Child Check-in Confirmed',
-          message: 'Your child was checked in today at 8:30 AM.',
-          type: 'child',
+          title: 'Player Performance Update',
+          message: 'Your latest performance stats have been analyzed and are ready to view.',
+          type: 'player',
           read: true,
           createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
-          source: 'https://via.placeholder.com/40x40?text=DS:2'
+          source: 'https://via.placeholder.com/40x40?text=STATS'
         },
         {
           id: '3',
-          title: 'Important System Alert',
-          message: 'The daycare center will be closed this Friday for maintenance.',
+          title: 'Upcoming Match Alert',
+          message: 'A new match has been scheduled for this weekend. Check your schedule.',
           type: 'alert',
           read: false,
           createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-          source: 'https://via.placeholder.com/40x40?text=DS:3'
+          source: 'https://via.placeholder.com/40x40?text=GAME'
         }
       ];
-      
+
       setNotifications(testNotifications);
     } catch (err) {
       console.error('Error in fetchNotifications:', err);
-      
+
       if (err.message === 'Server connection refused') {
         setError('Server is not running. Using test notifications.');
       } else if (err.message === 'Authentication required') {
@@ -115,7 +115,7 @@ export const NotificationProvider = ({ children }) => {
       } else {
         setError('Failed to load notifications');
       }
-      
+
       // In case of complete failure, show a single error notification
       setNotifications([{
         id: 'error-1',
@@ -140,24 +140,24 @@ export const NotificationProvider = ({ children }) => {
   const markAsRead = async (notificationId) => {
     try {
       setLoading(true);
-      
+
       // Update local state first for immediate UI feedback
-      setNotifications(prevNotifications => 
-        prevNotifications.map(notification => 
-          notification.id === notificationId 
-            ? { ...notification, read: true } 
+      setNotifications(prevNotifications =>
+        prevNotifications.map(notification =>
+          notification.id === notificationId
+            ? { ...notification, read: true }
             : notification
         )
       );
-      
+
       // Get role from auth context or localStorage
       const role = user?.role || localStorage.getItem('userRole');
-      
+
       if (!role) {
         console.warn('No user role found, cannot mark notification as read');
         return;
       }
-      
+
       // Attempt to update on the server
       try {
         await api.put(`/${role}/notifications/${notificationId}/read`);
@@ -175,20 +175,20 @@ export const NotificationProvider = ({ children }) => {
   const markAllAsRead = async () => {
     try {
       setLoading(true);
-      
+
       // Update local state first for immediate UI feedback
-      setNotifications(prevNotifications => 
+      setNotifications(prevNotifications =>
         prevNotifications.map(notification => ({ ...notification, read: true }))
       );
-      
+
       // Get role from auth context or localStorage
       const role = user?.role || localStorage.getItem('userRole');
-      
+
       if (!role) {
         console.warn('No user role found, cannot mark all notifications as read');
         return;
       }
-      
+
       // Attempt to update on the server
       try {
         await api.put(`/${role}/notifications/read-all`);
@@ -206,20 +206,20 @@ export const NotificationProvider = ({ children }) => {
   const deleteNotification = async (notificationId) => {
     try {
       setLoading(true);
-      
+
       // Update local state first for immediate UI feedback
-      setNotifications(prevNotifications => 
+      setNotifications(prevNotifications =>
         prevNotifications.filter(notification => notification.id !== notificationId)
       );
-      
+
       // Get role from auth context or localStorage
       const role = user?.role || localStorage.getItem('userRole');
-      
+
       if (!role) {
         console.warn('No user role found, cannot delete notification');
         return;
       }
-      
+
       // Attempt to update on the server
       try {
         await api.delete(`/${role}/notifications/${notificationId}`);
@@ -244,7 +244,7 @@ export const NotificationProvider = ({ children }) => {
     switch (type) {
       case 'payment':
         return 'bg-purple-50 border-purple-200';
-      case 'child':
+      case 'player':
         return 'bg-blue-50 border-blue-200';
       case 'alert':
         return 'bg-red-50 border-red-200';
@@ -258,11 +258,11 @@ export const NotificationProvider = ({ children }) => {
   };
 
   return (
-    <NotificationContext.Provider 
-      value={{ 
-        notifications, 
-        unreadCount, 
-        loading, 
+    <NotificationContext.Provider
+      value={{
+        notifications,
+        unreadCount,
+        loading,
         error,
         isRetrying,
         fetchNotifications,

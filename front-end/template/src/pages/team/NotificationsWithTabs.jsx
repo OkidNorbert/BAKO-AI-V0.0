@@ -637,7 +637,7 @@ const NotificationsWithTabs = () => {
                   >
                     <option value="all">All Users</option>
                     <option value="staff">Staff Only</option>
-                    <option value="parents">Parents Only</option>
+                    <option value="contacts">Contacts Only</option>
                   </select>
                 </div>
                 
