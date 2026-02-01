@@ -163,7 +163,7 @@ const Programs = () => {
               <div className={`space-y-6 ${
                 isDarkMode ? 'text-gray-300' : 'text-gray-600'
               }`}>
-                <p>At Daystar Daycare, we implement a holistic curriculum that combines elements from proven educational approaches with culturally responsive teaching practices:</p>
+                <p>At BAKO Basketball Academy, we implement a holistic curriculum that combines elements from proven educational approaches with culturally responsive teaching practices:</p>
                 
                 <div className="space-y-4">
                   <div className="flex items-start">
@@ -423,7 +423,7 @@ const Programs = () => {
                 role: "Contact of Toddler"
               },
               {
-                quote: "As working contacts, we needed a place that provided more than just basic care. Daystar has exceeded our expectations with their enrichment programs and loving environment.",
+                quote: "As working contacts, we needed a place that provided more than just basic care. BAKO has exceeded our expectations with their enrichment programs and loving environment.",
                 author: "Fatima & James R.",
                 role: "Contacts of Infant"
               }

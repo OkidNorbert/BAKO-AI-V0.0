@@ -52,7 +52,7 @@ const PlayerNotifications = () => {
       setLoading(true);
       setError('');
 
-      const response = await api.get('/coach/notifications');
+      const response = await api.get('/player/notifications');
 
       setNotifications(response.data || []);
       setLoading(false);
@@ -158,7 +158,7 @@ const PlayerNotifications = () => {
 
       // Then call API
       try {
-        await api.put(`/coach/notifications/${notificationId}/read`);
+        await api.put(`/player/notifications/${notificationId}/read`);
         setSuccess('Notification marked as read');
       } catch (apiError) {
         console.error('API error marking notification as read:', apiError);
@@ -181,7 +181,7 @@ const PlayerNotifications = () => {
 
       // Then call API
       try {
-        await api.put('/coach/notifications/read-all');
+        await api.put('/player/notifications/read-all');
         setSuccess('All notifications marked as read');
       } catch (apiError) {
         console.error('API error marking all notifications as read:', apiError);
@@ -204,7 +204,7 @@ const PlayerNotifications = () => {
 
       // Then call API
       try {
-        await api.delete(`/coach/notifications/${notificationId}`);
+        await api.delete(`/player/notifications/${notificationId}`);
         setSuccess('Notification deleted');
       } catch (apiError) {
         console.error('API error deleting notification:', apiError);
@@ -278,7 +278,7 @@ const PlayerNotifications = () => {
       <div className="max-w-4xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
           <div className="flex items-center">
-            <Link to="/coach" className={`mr-4 p-2 rounded-full transition-colors ${isDarkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-200'
+            <Link to="/player" className={`mr-4 p-2 rounded-full transition-colors ${isDarkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-200'
               }`}>
               <ChevronLeft className="h-6 w-6" />
             </Link>

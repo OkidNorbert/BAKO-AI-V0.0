@@ -21,7 +21,7 @@ const About = () => {
           <div className="text-center">
             <h1 className={`text-4xl sm:text-5xl font-bold mb-6 ${
               isDarkMode ? 'text-yellow-300' : 'text-indigo-700'
-            }`}>About Daystar Daycare</h1>
+            }`}>About BAKO Basketball Academy</h1>
             <p className="text-xl max-w-3xl mx-auto">
               Where every player shines bright and diverse cultures thrive together
             </p>
@@ -40,9 +40,9 @@ const About = () => {
               <div className={`space-y-4 ${
                 isDarkMode ? 'text-gray-300' : 'text-gray-600'
               }`}>
-                <p>Founded in 2015, BAKO Basketball Academy began with a simple vision: to create a nurturing environment where children from all backgrounds could learn, play, and grow together.</p>
+                <p>Founded in 2015, BAKO Basketball Academy began with a simple vision: to create a nurturing environment where players from all backgrounds could learn, play, and grow together.</p>
                 <p>Our center was established by a team of experienced educators and contacts who recognized the need for quality playercare that celebrates diversity and embraces cultural differences as strengths.</p>
-                <p>Over the years, we have grown from a small facility caring for just 15 children to a vibrant community center serving over 100 families from diverse backgrounds. Throughout our growth, we have maintained our commitment to providing individualized care and cultural awareness in all our programs.</p>
+                <p>Over the years, we have grown from a small facility training just 15 players to a vibrant community center serving over 100 families from diverse backgrounds. Throughout our growth, we have maintained our commitment to providing individualized care and cultural awareness in all our programs.</p>
               </div>
             </div>
             <div className="relative">
@@ -60,7 +60,7 @@ const About = () => {
                   }`}>A Place Where Players Thrive</h3>
                   <p className={`${
                     isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                  }`}>Our center is designed to be a safe, engaging space where children can explore their world and discover their potential.</p>
+                  }`}>Our center is designed to be a safe, engaging space where players can explore their world and discover their potential.</p>
                 </div>
               </div>
             </div>
@@ -79,7 +79,7 @@ const About = () => {
             }`}>Our Core Values</h2>
             <p className={`mt-4 max-w-3xl mx-auto ${
               isDarkMode ? 'text-gray-300' : 'text-gray-600'
-            }`}>These principles guide everything we do at Daystar Daycare</p>
+            }`}>These principles guide everything we do at BAKO Basketball Academy</p>
           </div>
 
           <div className="grid md:grid-cols-4 gap-8">
@@ -92,7 +92,7 @@ const About = () => {
               {
                 icon: <Shield className={`h-8 w-8 ${isDarkMode ? 'text-green-400' : 'text-green-500'}`} />,
                 title: 'Safety & Security',
-                description: 'We maintain a safe environment where children can explore without worry.'
+                description: 'We maintain a safe environment where players can explore without worry.'
               },
               {
                 icon: <Book className={`h-8 w-8 ${isDarkMode ? 'text-blue-400' : 'text-blue-500'}`} />,
@@ -266,7 +266,7 @@ const About = () => {
                   style={{ border: 0, minHeight: '300px' }} 
                   allowFullScreen="" 
                   loading="lazy"
-                  title="Daystar Daycare Location"
+                  title="BAKO Basketball Academy Location"
                 ></iframe>
               </div>
             </div>

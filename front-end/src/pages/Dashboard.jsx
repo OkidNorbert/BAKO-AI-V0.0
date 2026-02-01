@@ -8,9 +8,9 @@ const Dashboard = () => {
   // Redirect to the appropriate dashboard based on user role
   switch (user?.role) {
     case 'admin':
-      return <Navigate to="/admin/dashboard" replace />;
+      return <Navigate to="/team/dashboard" replace />;
     case 'coach':
-      return <Navigate to="/coach/dashboard" replace />;
+      return <Navigate to="/player/dashboard" replace />;
     case 'contact':
       return <Navigate to="/contact/dashboard" replace />;
     case 'finance':

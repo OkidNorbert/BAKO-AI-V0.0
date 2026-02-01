@@ -15,9 +15,9 @@ const Navbar = () => {
     if (!user) return '/';
     switch (user.role) {
       case 'admin':
-        return '/admin';
+        return '/team';
       case 'coach':
-        return '/coach';
+        return '/player';
       default:
         return '/';
     }
@@ -44,7 +44,7 @@ const Navbar = () => {
                 <>
                   {user.role === 'admin' && (
                     <Link
-                      to="/admin/panel"
+                      to="/team/panel"
                       className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
                     >
                       Admin Panel
@@ -52,7 +52,7 @@ const Navbar = () => {
                   )}
                   {user.role === 'coach' && (
                     <Link
-                      to="/children"
+                      to="/player"
                       className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
                     >
                       Players

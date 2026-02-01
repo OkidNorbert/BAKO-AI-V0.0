@@ -163,9 +163,9 @@ const AdminNavbar = ({ onSidebarToggle }) => {
   const handleItemClick = (item) => {
     if (item.source === 'notification') {
       markNotificationAsRead(item.id);
-      navigate('/admin/notifications');
+      navigate('/team/notifications');
     } else {
-      navigate('/admin/communications');
+      navigate('/team/communications');
     }
     setIsNotificationsOpen(false);
   };
@@ -240,7 +240,7 @@ const AdminNavbar = ({ onSidebarToggle }) => {
                     <div className="flex justify-between items-center">
                       <h3 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Notifications</h3>
                       <button
-                        onClick={() => navigate('/admin/notifications')}
+                        onClick={() => navigate('/team/notifications')}
                         className={`text-sm ${
                           isDarkMode 
                             ? 'text-indigo-400 hover:text-indigo-300' 
@@ -333,7 +333,7 @@ const AdminNavbar = ({ onSidebarToggle }) => {
                     
                     <button
                       onClick={() => {
-                        navigate('/admin/profile');
+                        navigate('/team/profile');
                         setIsUserMenuOpen(false);
                       }}
                       className={`flex w-full items-center px-4 py-2 text-sm ${
@@ -346,7 +346,7 @@ const AdminNavbar = ({ onSidebarToggle }) => {
                     
                     <button
                       onClick={() => {
-                        navigate('/admin/settings');
+                        navigate('/team/settings');
                         setIsUserMenuOpen(false);
                       }}
                       className={`flex w-full items-center px-4 py-2 text-sm ${

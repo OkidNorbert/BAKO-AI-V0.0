@@ -36,26 +36,26 @@ api.interceptors.response.use(
       try {
         // Get the refresh token from localStorage
         const refreshToken = localStorage.getItem('refreshToken');
-        
+
         if (!refreshToken) {
           // No refresh token available, redirect to login
           handleLogout('Your session has expired. Please log in again.');
           return Promise.reject(error);
         }
-        
+
         // Try to refresh the token directly
         const response = await axios.post(
-          `${import.meta.env.VITE_API_URL || '/api'}/auth/refresh-token`, 
+          `${import.meta.env.VITE_API_URL || '/api'}/auth/refresh-token`,
           { refreshToken }
         );
-        
+
         if (response.data && response.data.accessToken) {
           const newToken = response.data.accessToken;
           // Save the new token
           localStorage.setItem('accessToken', newToken);
           // Update the authorization header
           originalRequest.headers.Authorization = `Bearer ${newToken}`;
-          
+
           // Retry the original request
           return api(originalRequest);
         } else {
@@ -75,7 +75,7 @@ api.interceptors.response.use(
       // The request was made and the server responded with a status code
       // that falls out of the range of 2xx
       const { status, data } = error.response;
-      
+
       // Handle specific error cases
       switch (status) {
         case 401:
@@ -103,7 +103,7 @@ api.interceptors.response.use(
       // Something happened in setting up the request that triggered an Error
       showToast('An unexpected error occurred.', 'error');
     }
-    
+
     return Promise.reject(error);
   }
 );
@@ -142,17 +142,17 @@ export const adminAPI = {
   getUsers: () => api.get('/admin/users'),
   updateUserRole: (userId, role) => api.put(`/admin/users/${userId}/role`, { role }),
   getStats: () => api.get('/admin/stats'),
-  
+
   // Schedule endpoints
   getSchedule: () => api.get('/admin/schedule'),
-  getBabysitters: () => api.get('/admin/users?role=babysitter'),
-  getChildren: async () => {
-    return api.get('/admin/children');
+  getCoaches: () => api.get('/admin/users?role=coach'),
+  getPlayers: async () => {
+    return api.get('/admin/players');
   },
   createScheduleEvent: (eventData) => api.post('/admin/schedule', eventData),
   updateScheduleEvent: (eventId, eventData) => api.put(`/admin/schedule/${eventId}`, eventData),
   deleteScheduleEvent: (eventId) => api.delete(`/admin/schedule/${eventId}`),
-  
+
   // Attendance endpoints
   getAttendance: (date) => {
     const formattedDate = encodeURIComponent(date);
@@ -167,25 +167,6 @@ export const adminAPI = {
     console.log(`Making request to /admin/attendance/report with date=${formattedDate}`);
     return api.get(`/admin/attendance/report?date=${formattedDate}`, { responseType: 'blob' });
   },
-  
-  // Payment endpoints
-  getPayments: async () => {
-    return api.get('/admin/payments');
-  },
-  processPayment: (paymentData) => api.post('/admin/payments', paymentData),
-  updatePaymentStatus: (paymentId, status) => api.patch(`/admin/payments/${paymentId}/status`, { status }),
-  getPaymentReceipt: (paymentId) => api.get(`/admin/payments/${paymentId}/receipt`, { responseType: 'blob' }),
-  markBabysitterAsPaid: (babysitterId, paymentData) => api.post(`/admin/payments/babysitter/${babysitterId}/paid`, paymentData),
-  // Child payment endpoints
-  getChildPayments: (childId) => api.get(`/payments/child/${childId}/history`),
-  recordChildPayment: (paymentData) => api.post(`/payments/child`, paymentData),
-  getPaymentStats: () => api.get('/payments/stats'),
-  sendPaymentReminder: (parentId) => api.post(`/payments/parent/${parentId}/reminder`),
-  getOverduePayments: async () => {
-    return api.get('/admin/payments/overdue');
-  },
-  deletePayment: (paymentId) => api.delete(`/admin/payments/${paymentId}`),
-  updatePayment: (paymentId, paymentData) => api.put(`/admin/payments/${paymentId}`, paymentData),
 
   // Security endpoints
   getSecuritySettings: () => api.get('/admin/security/settings'),
@@ -211,43 +192,36 @@ export const adminAPI = {
   // Reports
   getReports: () => api.get('/admin/reports'),
   generateReport: (reportType, params) => api.post('/admin/reports', { type: reportType, ...params }),
-
-  // Budget Management
-  getBudgets: () => api.get('/admin/budgets'),
-  getBudgetById: (id) => api.get(`/admin/budgets/${id}`),
-  createBudget: (budgetData) => api.post('/admin/budgets', budgetData),
-  updateBudget: (id, budgetData) => api.put(`/admin/budgets/${id}`, budgetData),
-  deleteBudget: (id) => api.delete(`/admin/budgets/${id}`),
 };
 
-// Babysitter API
-export const babysitterAPI = {
-  // Children endpoints
-  getChildren: () => api.get('/babysitter/children'),
-  getChildById: (childId) => api.get(`/babysitter/children/${childId}`),
-  addActivity: (childId, activityData) => api.post(`/babysitter/children/${childId}/activities`, activityData),
-  getChildActivities: (childId) => api.get(`/babysitter/children/${childId}/activities`),
-  
+// Coach API
+export const coachAPI = {
+  // Players endpoints
+  getPlayers: () => api.get('/coach/players'),
+  getPlayerById: (playerId) => api.get(`/coach/players/${playerId}`),
+  addActivity: (playerId, activityData) => api.post(`/coach/players/${playerId}/activities`, activityData),
+  getPlayerActivities: (playerId) => api.get(`/coach/players/${playerId}/activities`),
+
   // Schedule endpoints
-  getSchedule: () => api.get('/babysitter/schedule'),
-  
+  getSchedule: () => api.get('/coach/schedule'),
+
   // Attendance endpoints
-  recordAttendance: (attendanceData) => api.post('/babysitter/attendance', attendanceData),
+  recordAttendance: (attendanceData) => api.post('/coach/attendance', attendanceData),
   getAttendance: (date) => {
     const formattedDate = encodeURIComponent(date);
-    console.log(`Making request to /babysitter/attendance with date=${formattedDate}`);
-    return api.get(`/babysitter/attendance?date=${formattedDate}`);
+    console.log(`Making request to /coach/attendance with date=${formattedDate}`);
+    return api.get(`/coach/attendance?date=${formattedDate}`);
   },
-  
+
   // Profile endpoints
-  getProfile: () => api.get('/babysitter/profile'),
-  updateProfile: (profileData) => api.put('/babysitter/profile', profileData),
-  
+  getProfile: () => api.get('/coach/profile'),
+  updateProfile: (profileData) => api.put('/coach/profile', profileData),
+
   // Notification endpoints
-  getNotifications: () => api.get('/babysitter/notifications'),
-  markNotificationAsRead: (notificationId) => api.put(`/babysitter/notifications/${notificationId}/read`),
-  markAllNotificationsAsRead: () => api.put('/babysitter/notifications/read-all'),
-  deleteNotification: (notificationId) => api.delete(`/babysitter/notifications/${notificationId}`),
+  getNotifications: () => api.get('/coach/notifications'),
+  markNotificationAsRead: (notificationId) => api.put(`/coach/notifications/${notificationId}/read`),
+  markAllNotificationsAsRead: () => api.put('/coach/notifications/read-all'),
+  deleteNotification: (notificationId) => api.delete(`/coach/notifications/${notificationId}`),
 };
 
 export default api; 

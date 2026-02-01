@@ -158,7 +158,7 @@ const Contact = () => {
                   style={{ border: 0 }} 
                   allowFullScreen="" 
                   loading="lazy" 
-                  title="Daystar Daycare Location"
+                  title="BAKO Basketball Academy Location"
                 ></iframe>
               </div>
             </div>

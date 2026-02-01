@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { adminAPI } from '../../services/api';
 import {
   Users,
-  Baby,
+  User,
   Calendar,
   DollarSign,
   FileText,
@@ -22,10 +22,11 @@ import {
   PlusCircle,
   Clock,
   CheckCircle,
-  MessageSquare
+  MessageSquare,
+  Trophy
 } from 'lucide-react';
 
-const AdminHome = () => {
+const TeamHome = () => {
   const [stats, setStats] = useState({
     totalPlayers: 0,
     matchesAnalyzed: 0,
@@ -34,7 +35,7 @@ const AdminHome = () => {
     weeklyActivity: [75, 82, 89, 91, 85],
     performanceTrends: [12000, 15000, 13500, 17000, 18000, 16500],
     winRate: 65,
-    childrenPerCoach: '12:1',
+    playersPerCoach: '12:1',
     analysisWaitlist: 3,
     pendingVideos: 7
   });
@@ -54,7 +55,7 @@ const AdminHome = () => {
           weeklyAttendance: response.data.weeklyAttendance || [75, 82, 89, 91, 85],
           monthlyRevenue: response.data.monthlyRevenue || [12000, 15000, 13500, 17000, 18000, 16500],
           occupancyRate: response.data.occupancyRate || 85,
-          staffToPlayerRatio: response.data.staffToPlayerRatio || '1:5',
+          coachToPlayerRatio: response.data.coachToPlayerRatio || '1:5',
           incidentReports: response.data.incidentReports || 3,
           pendingRequests: response.data.pendingRequests || 7
         });
@@ -70,42 +71,42 @@ const AdminHome = () => {
   }, []);
 
   const menuItems = [
-    { title: 'User Management', icon: Users, link: '/admin/users', color: 'from-blue-500 to-indigo-600' },
-    { title: 'Player Management', icon: Baby, link: '/admin/children', color: 'from-green-500 to-teal-600' },
-    { title: 'Schedule', icon: Calendar, link: '/admin/schedule', color: 'from-orange-400 to-pink-500' },
-    { title: 'Payments', icon: DollarSign, link: '/admin/payments', color: 'from-yellow-400 to-amber-600' },
-    { title: 'Reports & Analytics', icon: FileText, link: '/admin/reports', color: 'from-cyan-500 to-blue-600' },
-    { title: 'System Settings', icon: Settings, link: '/admin/settings', color: 'from-gray-500 to-gray-600' },
-    { title: 'Contact Alerts', icon: Bell, link: '/admin/notifications', color: 'from-rose-500 to-red-600' },
-    { title: 'Coach Registration', icon: UserPlus, link: '/admin/coach-registration', color: 'from-pink-500 to-rose-600' },
-    { title: 'Attendance', icon: ClipboardList, link: '/admin/attendance', color: 'from-emerald-500 to-green-600' },
-    { title: 'Security', icon: Shield, link: '/admin/security', color: 'from-indigo-500 to-purple-600' }
+    { title: 'User Management', icon: Users, link: '/team/users', color: 'from-blue-500 to-indigo-600' },
+    { title: 'Player Management', icon: User, link: '/team/players', color: 'from-green-500 to-teal-600' },
+    { title: 'Match Schedule', icon: Calendar, link: '/team/schedule', color: 'from-orange-400 to-pink-500' },
+    { title: 'Match Analysis', icon: Activity, link: '/team/analysis', color: 'from-purple-500 to-violet-600' },
+    { title: 'Reports & Analytics', icon: FileText, link: '/team/reports', color: 'from-cyan-500 to-blue-600' },
+    { title: 'System Settings', icon: Settings, link: '/team/settings', color: 'from-gray-500 to-gray-600' },
+    { title: 'Contact Alerts', icon: Bell, link: '/team/notifications', color: 'from-rose-500 to-red-600' },
+    { title: 'Coach Registration', icon: UserPlus, link: '/team/coach-registration', color: 'from-pink-500 to-rose-600' },
+    { title: 'Attendance', icon: ClipboardList, link: '/team/attendance', color: 'from-emerald-500 to-green-600' },
+    { title: 'Security', icon: Shield, link: '/team/security', color: 'from-indigo-500 to-purple-600' }
   ];
 
   const quickActions = [
-    { name: 'Register Coach', icon: <UserPlus size={20} />, link: '/admin/coach-registration' },
-    { name: 'Manage Schedule', icon: <Calendar size={20} />, link: '/admin/schedule' },
-    { name: 'View Payments', icon: <DollarSign size={20} />, link: '/admin/payments' },
-    { name: 'System Settings', icon: <Settings size={20} />, link: '/admin/system-settings' },
+    { name: 'Register Coach', icon: <UserPlus size={20} />, link: '/team/coach-registration' },
+    { name: 'Match Analysis', icon: <Activity size={20} />, link: '/team/analysis' },
+    { name: 'Manage Schedule', icon: <Calendar size={20} />, link: '/team/schedule' },
+    { name: 'System Settings', icon: <Settings size={20} />, link: '/team/system-settings' },
   ];
 
   const recentActivities = [
     { id: 1, type: 'New Coach', name: 'Sarah Johnson', time: '2 hours ago', icon: <UserPlus className={`${isDarkMode ? 'text-green-400' : 'text-green-600'}`} /> },
-    { id: 2, type: 'Payment Received', name: 'James Family - $250', time: '3 hours ago', icon: <DollarSign className={`${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} /> },
-    { id: 3, type: 'Appointment Confirmed', name: 'David Williams', time: '5 hours ago', icon: <CheckCircle className={`${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} /> },
-    { id: 4, type: 'Report Generated', name: 'Monthly Attendance', time: '1 day ago', icon: <ClipboardList className={`${isDarkMode ? 'text-yellow-400' : 'text-yellow-600'}`} /> },
-    { id: 5, type: 'New Message', name: 'From Lisa Parker', time: '1 day ago', icon: <MessageSquare className={`${isDarkMode ? 'text-pink-400' : 'text-pink-600'}`} /> },
+    { id: 2, type: 'Match Analyzed', name: 'LAL vs GSW - Full Game', time: '3 hours ago', icon: <Activity className={`${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} /> },
+    { id: 3, type: 'Goal Reached', name: 'Team Shooting: 48%', time: '5 hours ago', icon: <CheckCircle className={`${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} /> },
+    { id: 4, type: 'Report Generated', name: 'Player Performance Weekly', time: '1 day ago', icon: <ClipboardList className={`${isDarkMode ? 'text-yellow-400' : 'text-yellow-600'}`} /> },
+    { id: 5, type: 'New Message', name: 'From Coach Mike', time: '1 day ago', icon: <MessageSquare className={`${isDarkMode ? 'text-pink-400' : 'text-pink-600'}`} /> },
   ];
 
-  // Add financial chart data
-  const financialChartData = {
+  // Add performance chart data
+  const performanceChartData = {
     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
     datasets: [
       {
-        label: 'Revenue',
-        data: stats.monthlyRevenue || [12000, 15000, 13500, 17000, 18000, 16500],
-        backgroundColor: isDarkMode ? 'rgba(16, 185, 129, 0.2)' : 'rgba(16, 185, 129, 0.2)',
-        borderColor: isDarkMode ? 'rgba(16, 185, 129, 1)' : 'rgba(16, 185, 129, 1)',
+        label: 'Team Efficiency',
+        data: stats.performanceTrends || [75, 82, 78, 85, 88, 92],
+        backgroundColor: isDarkMode ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.2)',
+        borderColor: isDarkMode ? 'rgba(59, 130, 246, 1)' : 'rgba(59, 130, 246, 1)',
         borderWidth: 2,
         fill: true,
       }
@@ -115,8 +116,8 @@ const AdminHome = () => {
   if (loading) {
     return (
       <div className={`flex items-center justify-center min-h-screen ${isDarkMode
-          ? 'bg-gradient-to-b from-gray-900 to-indigo-950'
-          : 'bg-gradient-to-b from-blue-50 to-indigo-100'
+        ? 'bg-gradient-to-b from-gray-900 to-indigo-950'
+        : 'bg-gradient-to-b from-blue-50 to-indigo-100'
         }`}>
         <div className="flex flex-col items-center justify-center">
           <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-primary-500"></div>
@@ -129,15 +130,15 @@ const AdminHome = () => {
   if (error) {
     return (
       <div className={`flex flex-col items-center justify-center min-h-screen ${isDarkMode
-          ? 'bg-gradient-to-b from-gray-900 to-indigo-950 text-white'
-          : 'bg-gradient-to-b from-blue-50 to-indigo-100 text-gray-900'
+        ? 'bg-gradient-to-b from-gray-900 to-indigo-950 text-white'
+        : 'bg-gradient-to-b from-blue-50 to-indigo-100 text-gray-900'
         }`}>
         <div className="text-red-500 text-xl mb-4">{error}</div>
         <button
           onClick={() => window.location.reload()}
           className={`px-6 py-3 rounded-full shadow-lg transform transition-all duration-200 hover:scale-105 ${isDarkMode
-              ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700'
-              : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700'
+            ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700'
+            : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700'
             }`}
         >
           Try Again
@@ -148,8 +149,8 @@ const AdminHome = () => {
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDarkMode
-        ? 'bg-gradient-to-b from-gray-900 to-purple-950'
-        : 'bg-gradient-to-b from-blue-100 to-purple-100'
+      ? 'bg-gradient-to-b from-gray-900 to-purple-950'
+      : 'bg-gradient-to-b from-blue-100 to-purple-100'
       }`}>
       {/* Decorative elements */}
       <div className="absolute top-0 left-0 right-0 h-full pointer-events-none">
@@ -163,8 +164,8 @@ const AdminHome = () => {
         <div className={`flex flex-col md:flex-row justify-between items-start md:items-center mb-8`}>
           <div>
             <h1 className={`text-3xl sm:text-4xl font-bold mb-2 ${isDarkMode
-                ? 'text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-300 to-orange-400'
-                : 'text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500'
+              ? 'text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-300 to-orange-400'
+              : 'text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500'
               } animate-gradient`}>
               Team Dashboard
             </h1>
@@ -174,19 +175,19 @@ const AdminHome = () => {
           </div>
           <div className="mt-4 md:mt-0 flex space-x-2">
             <Link
-              to="/admin/profile"
+              to="/team/profile"
               className={`px-4 py-2 rounded-full text-sm font-medium ${isDarkMode
-                  ? 'bg-gray-800 text-white hover:bg-gray-700'
-                  : 'bg-white text-indigo-600 hover:bg-gray-50 shadow-sm'
+                ? 'bg-gray-800 text-white hover:bg-gray-700'
+                : 'bg-white text-indigo-600 hover:bg-gray-50 shadow-sm'
                 } transition duration-150 ease-in-out`}
             >
               View Profile
             </Link>
             <Link
-              to="/admin/notifications"
+              to="/team/notifications"
               className={`px-4 py-2 rounded-full text-sm font-medium ${isDarkMode
-                  ? 'bg-gray-800 text-white hover:bg-gray-700'
-                  : 'bg-white text-indigo-600 hover:bg-gray-50 shadow-sm'
+                ? 'bg-gray-800 text-white hover:bg-gray-700'
+                : 'bg-white text-indigo-600 hover:bg-gray-50 shadow-sm'
                 } transition duration-150 ease-in-out flex items-center`}
             >
               <Bell size={16} className="mr-1" />
@@ -273,8 +274,8 @@ const AdminHome = () => {
               color: isDarkMode ? 'text-teal-400' : 'text-teal-600'
             },
             {
-              title: 'Staff-to-Player Ratio',
-              value: stats.staffToPlayerRatio,
+              title: 'Coach-to-Player Ratio',
+              value: stats.coachToPlayerRatio,
               icon: <Users size={20} />,
               color: isDarkMode ? 'text-blue-400' : 'text-blue-600'
             },
@@ -312,24 +313,24 @@ const AdminHome = () => {
         </div>
       </div>
 
-      {/* Financial Overview */}
+      {/* Performance Overview */}
       <div className="relative px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto mb-10">
         <h2 className={`text-2xl font-bold mb-6 ${isDarkMode ? 'text-yellow-400' : 'text-indigo-600'
           }`}>
-          Financial Overview
+          Performance Overview
         </h2>
         <div className={`p-6 rounded-xl shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'
           }`}>
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
             <h3 className={`text-lg font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'
               }`}>
-              Monthly Revenue
+              Team Efficiency Trend
             </h3>
             <div className="mt-2 md:mt-0">
               <select
                 className={`rounded-md px-3 py-1 text-sm ${isDarkMode
-                    ? 'bg-gray-700 text-white border-gray-600'
-                    : 'bg-gray-50 text-gray-900 border-gray-300'
+                  ? 'bg-gray-700 text-white border-gray-600'
+                  : 'bg-gray-50 text-gray-900 border-gray-300'
                   }`}
                 defaultValue="6months"
               >
@@ -340,17 +341,16 @@ const AdminHome = () => {
             </div>
           </div>
           <div className="relative h-60">
-            {/* This is a placeholder for where you would use a charting library like Chart.js or Recharts */}
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-full h-full flex items-end justify-around px-4">
-                {financialChartData.datasets[0].data.map((value, index) => (
+                {performanceChartData.datasets[0].data.map((value, index) => (
                   <div key={index} className="flex flex-col items-center">
                     <div
-                      className={`w-12 ${isDarkMode ? 'bg-emerald-600' : 'bg-emerald-500'} rounded-t-md`}
-                      style={{ height: `${(value / 20000) * 100}%` }}
+                      className={`w-12 ${isDarkMode ? 'bg-blue-600' : 'bg-blue-500'} rounded-t-md`}
+                      style={{ height: `${(value / 100) * 100}%` }}
                     ></div>
                     <span className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                      {financialChartData.labels[index]}
+                      {performanceChartData.labels[index]}
                     </span>
                   </div>
                 ))}
@@ -359,7 +359,7 @@ const AdminHome = () => {
           </div>
           <div className="flex justify-end mt-4">
             <Link
-              to="/admin/reports"
+              to="/team/reports"
               className={`text-sm font-medium flex items-center ${isDarkMode ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-600 hover:text-emerald-700'
                 }`}
             >
@@ -382,13 +382,13 @@ const AdminHome = () => {
               key={index}
               to={action.link}
               className={`transform transition duration-300 hover:scale-105 p-4 rounded-xl flex flex-col items-center justify-center text-center ${isDarkMode
-                  ? 'bg-gray-800 hover:bg-gray-750 text-white'
-                  : 'bg-white hover:bg-gray-50 text-gray-800 shadow-md'
+                ? 'bg-gray-800 hover:bg-gray-750 text-white'
+                : 'bg-white hover:bg-gray-50 text-gray-800 shadow-md'
                 }`}
             >
               <div className={`p-3 rounded-full mb-3 ${isDarkMode
-                  ? 'bg-gradient-to-r from-indigo-700 to-purple-800'
-                  : 'bg-gradient-to-r from-indigo-400 to-purple-500'
+                ? 'bg-gradient-to-r from-indigo-700 to-purple-800'
+                : 'bg-gradient-to-r from-indigo-400 to-purple-500'
                 } text-white`}>
                 {action.icon}
               </div>
@@ -445,10 +445,10 @@ const AdminHome = () => {
 
         <div className="mt-6 text-center">
           <Link
-            to="/admin/reports"
+            to="/team/reports"
             className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${isDarkMode
-                ? 'bg-gradient-to-r from-yellow-500 to-amber-600 text-gray-900 hover:from-yellow-600 hover:to-amber-700'
-                : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700'
+              ? 'bg-gradient-to-r from-yellow-500 to-amber-600 text-gray-900 hover:from-yellow-600 hover:to-amber-700'
+              : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700'
               } transition duration-150 ease-in-out`}
           >
             <BarChart size={16} className="mr-2" />
@@ -460,4 +460,4 @@ const AdminHome = () => {
   );
 };
 
-export default AdminHome;
+export default TeamHome;

@@ -19,4 +19,4 @@ const PlayerLayout = () => {
   );
 };
 
-export default CoachLayout; 
+export default PlayerLayout; 

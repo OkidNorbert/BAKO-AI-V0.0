@@ -12,12 +12,17 @@ import {
   ChevronRight,
   Bell,
   RefreshCw,
-  Baby,
+  User,
   Home
 } from 'lucide-react';
 
-const CoachHome = () => {
-  const [children, setPlayers] = useState([]);
+const PlayerHome = () => {
+  const [stats, setStats] = useState({
+    shooting: 0,
+    dribbling: 0,
+    movement: 0,
+    sessions: 0
+  });
   const [activities, setActivities] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,14 +40,14 @@ const CoachHome = () => {
       setLoading(true);
       setError('');
 
-      // Fetch all data in parallel
-      const [childrenResponse, activitiesResponse, notificationsResponse] = await Promise.all([
-        api.get('/coach/children').catch(err => ({ data: [] })),
-        api.get('/coach/activities').catch(err => ({ data: [] })),
-        api.get('/coach/notifications').catch(err => ({ data: [] }))
+      // Fetch personal data
+      const [statsResponse, activitiesResponse, notificationsResponse] = await Promise.all([
+        api.get('/player/stats').catch(err => ({ data: { shooting: 75, dribbling: 64, movement: 82, sessions: 12 } })),
+        api.get('/player/activities').catch(err => ({ data: [] })),
+        api.get('/player/notifications').catch(err => ({ data: [] }))
       ]);
 
-      setPlayers(childrenResponse.data || []);
+      setStats(statsResponse.data);
       setActivities(activitiesResponse.data || []);
       setNotifications(notificationsResponse.data || []);
 
@@ -58,7 +63,7 @@ const CoachHome = () => {
       }
 
       // Set empty arrays on error
-      setPlayers([]);
+      setStats({ shooting: 0, dribbling: 0, movement: 0, sessions: 0 });
       setActivities([]);
       setNotifications([]);
     } finally {
@@ -74,7 +79,7 @@ const CoachHome = () => {
 
   const markAsRead = async (notificationId) => {
     try {
-      await api.put(`/coach/notifications/${notificationId}/read`);
+      await api.put(`/player/notifications/${notificationId}/read`);
 
       // Update local states
       setNotifications(prev => prev.map(notif =>
@@ -198,7 +203,7 @@ const CoachHome = () => {
                 {notifications.length > 3 && (
                   <div className="text-center mt-4">
                     <Link
-                      to="/coach/notifications"
+                      to="/player/notifications"
                       className={`inline-flex items-center px-4 py-2 rounded-md ${isDarkMode
                         ? 'bg-indigo-900 hover:bg-indigo-800 text-indigo-100'
                         : 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700'
@@ -215,7 +220,7 @@ const CoachHome = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Assigned Players */}
+          {/* Skill Progress */}
           <div className={`rounded-xl shadow-lg overflow-hidden`}>
             <div className={`
               px-6 py-4 text-xl font-semibold
@@ -228,53 +233,55 @@ const CoachHome = () => {
             </div>
 
             <div className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-              {children.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-8">
-                  <Baby className={`h-12 w-12 mb-3 ${isDarkMode ? 'text-gray-600' : 'text-gray-300'}`} />
-                  <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                    No skill data available yet. Start your first training session!
-                  </p>
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Shooting Accuracy</span>
+                    <span className="font-bold">{stats.shooting}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
+                    <div className="bg-orange-500 h-full rounded-full transition-all duration-500" style={{ width: `${stats.shooting}%` }}></div>
+                  </div>
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  {children.map(player => (
-                    <Link
-                      key={player._id}
-                      to={`/coach/children/${player._id}`}
-                      className={`block p-4 rounded-lg transition-all duration-200 ${isDarkMode ? 'bg-gray-700 hover:bg-gray-650' : 'bg-gray-50 hover:bg-gray-100'
-                        }`}
-                    >
-                      <div className="flex items-center">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${player.gender === 'male'
-                          ? isDarkMode ? 'bg-blue-900 text-blue-200' : 'bg-blue-100 text-blue-800'
-                          : isDarkMode ? 'bg-pink-900 text-pink-200' : 'bg-pink-100 text-pink-800'
-                          }`}>
-                          <span className="font-bold">
-                            {player.firstName.charAt(0)}
-                          </span>
-                        </div>
-                        <div className="ml-3">
-                          <h3 className="font-medium">{player.firstName} {player.lastName}</h3>
-                          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                            {calculateAge(player.dateOfBirth)} years old
-                          </p>
-                        </div>
-                        <ChevronRight className={`ml-auto ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-                      </div>
-                    </Link>
-                  ))}
-                  <Link
-                    to="/player/skills"
-                    className={`inline-flex items-center px-4 py-2 rounded-md ${isDarkMode
-                      ? 'bg-indigo-900 hover:bg-indigo-800 text-indigo-100'
-                      : 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700'
-                      }`}
-                  >
-                    <span>View Detailed Analytics</span>
-                    <ChevronRight className="h-4 w-4 ml-1" />
-                  </Link>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Dribbling Intensity</span>
+                    <span className="font-bold">{stats.dribbling}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
+                    <div className="bg-blue-500 h-full rounded-full transition-all duration-500" style={{ width: `${stats.dribbling}%` }}></div>
+                  </div>
                 </div>
-              )}
+
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Movement Speed</span>
+                    <span className="font-bold">{stats.movement}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
+                    <div className="bg-green-500 h-full rounded-full transition-all duration-500" style={{ width: `${stats.movement}%` }}></div>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
+                  <div className="flex items-center justify-between">
+                    <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Sessions This Month</span>
+                    <span className="text-xl font-bold">{stats.sessions}</span>
+                  </div>
+                </div>
+
+                <Link
+                  to="/player/training"
+                  className={`flex items-center justify-center w-full px-4 py-3 rounded-lg font-medium transition-all ${isDarkMode
+                    ? 'bg-orange-600 hover:bg-orange-700 text-white'
+                    : 'bg-orange-500 hover:bg-orange-600 text-white'
+                    }`}
+                >
+                  New Training Session
+                  <ChevronRight className="h-4 w-4 ml-2" />
+                </Link>
+              </div>
             </div>
           </div>
 
@@ -295,13 +302,12 @@ const CoachHome = () => {
                 <div className="flex flex-col items-center justify-center py-8">
                   <ActivityIcon className={`h-12 w-12 mb-3 ${isDarkMode ? 'text-gray-600' : 'text-gray-300'}`} />
                   <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                    No activities recorded yet.
+                    No sessions recorded yet.
                   </p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {activities.map(activity => {
-                    const player = activity.playerId;
                     return (
                       <div
                         key={activity._id}
@@ -315,9 +321,6 @@ const CoachHome = () => {
                           </div>
                           <div className="ml-3">
                             <h3 className="font-medium">{activity.title}</h3>
-                            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                              {player ? `${player.firstName} ${player.lastName}` : 'Unknown Player'}
-                            </p>
                             <div className="flex items-center text-xs mt-1">
                               <Calendar className="h-3 w-3 mr-1" />
                               <span className="mr-2">{formatDate(activity.date)}</span>
@@ -423,4 +426,4 @@ const getActivityColor = (type, isDarkMode) => {
   }
 };
 
-export default CoachHome; 
+export default PlayerHome; 

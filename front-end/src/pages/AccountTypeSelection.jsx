@@ -45,8 +45,8 @@ const AccountTypeSelection = () => {
                     <button
                         onClick={() => handleSelection('team')}
                         className={`flex flex-col items-center p-8 rounded-2xl border-2 transition-all duration-300 group ${isDarkMode
-                                ? 'border-gray-700 hover:border-blue-500 bg-gray-700/50'
-                                : 'border-gray-100 hover:border-blue-500 bg-gray-50'
+                            ? 'border-gray-700 hover:border-blue-500 bg-gray-700/50'
+                            : 'border-gray-100 hover:border-blue-500 bg-gray-50'
                             } hover:shadow-2xl hover:-translate-y-2`}
                     >
                         <div className="p-6 rounded-full bg-blue-100 text-blue-600 transition-transform duration-300 group-hover:scale-110">
@@ -58,7 +58,7 @@ const AccountTypeSelection = () => {
                         </h3>
                         <p className={`mt-4 text-center ${isDarkMode ? 'text-gray-400' : 'text-gray-600'
                             }`}>
-                            Analyze full matches, track multiple children, and coordinate team performance metrics.
+                            Analyze full matches, manage your rosters, and coordinate team performance metrics.
                         </p>
                         <div className="mt-8 px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold group-hover:bg-blue-700 transition-colors">
                             Continue as Team
@@ -69,8 +69,8 @@ const AccountTypeSelection = () => {
                     <button
                         onClick={() => handleSelection('personal')}
                         className={`flex flex-col items-center p-8 rounded-2xl border-2 transition-all duration-300 group ${isDarkMode
-                                ? 'border-gray-700 hover:border-orange-500 bg-gray-700/50'
-                                : 'border-gray-100 hover:border-orange-500 bg-gray-50'
+                            ? 'border-gray-700 hover:border-orange-500 bg-gray-700/50'
+                            : 'border-gray-100 hover:border-orange-500 bg-gray-50'
                             } hover:shadow-2xl hover:-translate-y-2`}
                     >
                         <div className="p-6 rounded-full bg-orange-100 text-orange-600 transition-transform duration-300 group-hover:scale-110">

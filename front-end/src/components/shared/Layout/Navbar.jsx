@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { useTheme } from '../../../context/ThemeContext';
-import { Bell, Calendar, User, Home, FileText, Baby, Sun, Moon, ChevronDown, LogOut, ClipboardCheck, AlertCircle, Activity } from 'lucide-react';
+import { Bell, Calendar, User, Users, UserPlus, Home, FileText, Sun, Moon, ChevronDown, LogOut, ClipboardCheck, AlertCircle, Activity, BarChart2 } from 'lucide-react';
 
 const Navbar = ({ role }) => {
   const { user, logout } = useAuth();
@@ -23,16 +23,18 @@ const Navbar = ({ role }) => {
       case 'admin':
         return [
           { to: '/team', icon: <Home className="h-5 w-5" />, label: 'Dashboard' },
-          { to: '/team/profile', icon: <User className="h-5 w-5" />, label: 'Profile' },
-          { to: '/team/notifications', icon: <Bell className="h-5 w-5" />, label: 'Notifications' }
+          { to: '/team/players', icon: <Users className="h-5 w-5" />, label: 'Players' },
+          { to: '/team/coaches', icon: <UserPlus className="h-5 w-5" />, label: 'Coaches' },
+          { to: '/team/analysis', icon: <Activity className="h-5 w-5" />, label: 'Analysis' },
+          { to: '/team/profile', icon: <User className="h-5 w-5" />, label: 'Profile' }
         ];
       case 'coach':
         return [
           { to: '/player', icon: <Home className="h-5 w-5" />, label: 'Dashboard' },
-          { to: '/player/training', icon: <Activity className="h-5 w-5" />, label: 'Training' },
+          { to: '/player/schedule', icon: <Calendar className="h-5 w-5" />, label: 'My Schedule' },
           { to: '/player/skills', icon: <BarChart2 className="h-5 w-5" />, label: 'Skill Analytics' },
-          { to: '/player/profile', icon: <User className="h-5 w-5" />, label: 'My Progress' },
-          { to: '/player/notifications', icon: <Bell className="h-5 w-5" />, label: 'Notifications' }
+          { to: '/player/training', icon: <Activity className="h-5 w-5" />, label: 'Training' },
+          { to: '/player/profile', icon: <User className="h-5 w-5" />, label: 'My Progress' }
         ];
       default:
         return [];

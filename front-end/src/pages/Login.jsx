@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { Baby, ArrowRight } from 'lucide-react';
+import { Trophy, ArrowRight } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -66,8 +66,8 @@ const Login = () => {
 
   return (
     <div className={`min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 ${isDarkMode
-        ? 'bg-gradient-to-b from-gray-900 to-indigo-950 text-white'
-        : 'bg-gradient-to-b from-blue-100 to-purple-100 text-gray-900'
+      ? 'bg-gradient-to-b from-gray-900 to-indigo-950 text-white'
+      : 'bg-gradient-to-b from-blue-100 to-purple-100 text-gray-900'
       }`}>
       <div className="max-w-md w-full space-y-8">
         <div className={`relative p-8 rounded-3xl shadow-xl overflow-hidden ${isDarkMode ? 'bg-gray-800' : 'bg-white'
@@ -77,8 +77,8 @@ const Login = () => {
           <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-24 h-24 bg-pink-400 rounded-full opacity-30"></div>
 
           <div className="text-center relative z-10">
-            <div className="mx-auto h-24 w-24 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-xl mb-5 flex items-center justify-center shadow-lg">
-              <Baby className="h-14 w-14 text-white" />
+            <div className="mx-auto h-24 w-24 bg-gradient-to-r from-orange-500 to-red-600 rounded-xl mb-5 flex items-center justify-center shadow-lg">
+              <Trophy className="h-14 w-14 text-white" />
             </div>
 
             <h2 className={`text-3xl font-extrabold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'
@@ -87,7 +87,7 @@ const Login = () => {
             </h2>
             <p className={`mb-6 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'
               }`}>
-              Sign in to nurture bright futures together
+              Sign in to elevate your basketball performance
             </p>
           </div>
 
@@ -120,8 +120,8 @@ const Login = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className={`block w-full pl-10 pr-3 py-3 rounded-xl shadow-sm focus:outline-none ${isDarkMode
-                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-indigo-500 focus:border-indigo-500'
-                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-indigo-500 focus:border-indigo-500'
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-indigo-500 focus:border-indigo-500'
+                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-indigo-500 focus:border-indigo-500'
                       }`}
                     placeholder="Enter your email"
                   />
@@ -148,8 +148,8 @@ const Login = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className={`block w-full pl-10 pr-3 py-3 rounded-xl shadow-sm focus:outline-none ${isDarkMode
-                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-indigo-500 focus:border-indigo-500'
-                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-indigo-500 focus:border-indigo-500'
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-indigo-500 focus:border-indigo-500'
+                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-indigo-500 focus:border-indigo-500'
                       }`}
                     placeholder="Enter your password"
                   />

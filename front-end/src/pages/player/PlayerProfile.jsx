@@ -17,7 +17,7 @@ import {
   Star,
   Briefcase,
   Edit,
-  Baby
+  Zap
 } from 'lucide-react';
 
 const PlayerProfile = () => {
@@ -49,7 +49,7 @@ const PlayerProfile = () => {
     try {
       setLoading(true);
       setError('');
-      const response = await api.get('/coach/profile');
+      const response = await api.get('/player/profile');
       setProfile(response.data);
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -105,7 +105,7 @@ const PlayerProfile = () => {
       console.log('Attempting to upload image...');
 
       // Make API call with correct headers and configuration
-      const response = await api.post('/coach/profile/image', formData, {
+      const response = await api.post('/player/profile/image', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           // Don't set any other headers that might interfere with the multipart form data
@@ -173,7 +173,7 @@ const PlayerProfile = () => {
       setSaving(true);
       setError('');
       setSuccess('');
-      await api.put('/coach/profile', profile);
+      await api.put('/player/profile', profile);
       setSuccess('Profile updated successfully');
       setIsEditing(false);
     } catch (error) {
@@ -634,7 +634,7 @@ const PlayerProfile = () => {
                   w-12 h-12 rounded-full flex items-center justify-center
                   ${isDarkMode ? 'bg-pink-900 text-pink-300' : 'bg-pink-100 text-pink-600'}
                 `}>
-                  <Baby className="h-6 w-6" />
+                  <User className="h-6 w-6" />
                 </div>
                 <div className="ml-4">
                   <h3 className={`font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>Drill Mastery</h3>
@@ -676,4 +676,4 @@ const PlayerProfile = () => {
   );
 };
 
-export default CoachProfile; 
+export default PlayerProfile; 

@@ -78,7 +78,7 @@ export const NotificationProvider = ({ children }) => {
         {
           id: '1',
           title: 'Real-time Test Notification',
-          message: 'This is a test notification from the Daystar notification system.',
+          message: 'This is a test notification from the BAKO notification system.',
           type: 'alert',
           read: false,
           createdAt: new Date(),

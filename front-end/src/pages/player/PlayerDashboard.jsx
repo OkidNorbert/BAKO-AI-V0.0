@@ -1,5 +1,5 @@
 import React from 'react';
-import CoachDashboard from '../../components/coach/coach-dashboard';
+import CoachDashboard from '../../components/player/coach-dashboard';
 
 const CoachDashboardPage = () => {
   return <CoachDashboard />;

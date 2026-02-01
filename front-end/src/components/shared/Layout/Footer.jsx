@@ -38,7 +38,7 @@ const Footer = () => {
               <h2 className="text-2xl font-bold tracking-tight">BAKO</h2>
             </div>
             <p className={`mb-6 text-sm leading-relaxed ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              Elevating basketball performance through advanced data analytics and personalized training insights. Providing teams and children with the tools to dominate the court.
+              Elevating basketball performance through advanced data analytics and personalized training insights. Providing teams and players with the tools to dominate the court.
             </p>
             <div className="flex space-x-4">
               <a href="#" className={`${isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-indigo-600'} transition-colors`}>

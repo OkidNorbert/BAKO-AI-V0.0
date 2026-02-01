@@ -4,7 +4,7 @@ import { useTheme } from '../../../context/ThemeContext';
 import {
   Home,
   Users,
-  Baby,
+  User,
   Calendar,
   CreditCard,
   FileText,
@@ -25,11 +25,14 @@ const TeamSidebar = ({ isOpen }) => {
 
   const menuItems = [
     { path: '/team', icon: Home, label: 'Dashboard', color: 'from-blue-500 to-indigo-600' },
-    { path: '/team/management', icon: Users, label: 'Team Management', color: 'from-green-500 to-teal-600' },
+    { path: '/team/players', icon: Users, label: 'Player Management', color: 'from-green-500 to-teal-600' },
+    { path: '/team/coaches', icon: UserPlus, label: 'Coach Management', color: 'from-amber-500 to-orange-600' },
     { path: '/team/analysis', icon: Activity, label: 'Match Analysis', color: 'from-purple-500 to-violet-600' },
     { path: '/team/stats', icon: BarChart2, label: 'Team Statistics', color: 'from-orange-400 to-pink-500' },
-    { path: '/team/settings', icon: Settings, label: 'Settings', color: 'from-purple-500 to-indigo-700' },
-    { path: '/team/notifications', icon: Bell, label: 'Notifications', color: 'from-rose-500 to-red-600' }
+    { path: '/team/schedule', icon: Calendar, label: 'Match Schedule', color: 'from-indigo-500 to-blue-600' },
+    { path: '/team/reports', icon: FileText, label: 'Analytics Reports', color: 'from-blue-600 to-cyan-600' },
+    { path: '/team/notifications', icon: Bell, label: 'Notifications', color: 'from-rose-500 to-red-600' },
+    { path: '/team/settings', icon: Settings, label: 'Settings', color: 'from-gray-500 to-gray-700' }
   ];
 
   // Count unread messages in communications
@@ -84,7 +87,7 @@ const TeamSidebar = ({ isOpen }) => {
                   <>
                     <item.icon className={`w-5 h-5 ${!isActive && 'transition-transform group-hover:scale-110'}`} />
                     <span className="ml-3 font-medium">{item.label}</span>
-                    {item.path === '/admin/communications' && hasCommunicationsIndicator && (
+                    {item.path === '/team/communications' && hasCommunicationsIndicator && (
                       <span className="inline-flex items-center justify-center w-5 h-5 ml-auto text-xs font-semibold text-white bg-red-500 rounded-full">
                         !
                       </span>

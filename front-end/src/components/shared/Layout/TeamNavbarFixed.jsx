@@ -272,7 +272,7 @@ const TeamNavbarFixed = ({ onSidebarToggle }) => {
                     <div className="flex justify-between items-center">
                       <h3 className="font-semibold">Notifications</h3>
                       <button
-                        onClick={() => navigate('/admin/notifications')}
+                        onClick={() => navigate('/team/notifications')}
                         className={`text-sm ${isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-500'
                           }`}
                       >
@@ -439,4 +439,4 @@ const TeamNavbarFixed = ({ onSidebarToggle }) => {
   );
 };
 
-export default AdminNavbarFixed; 
+export default TeamNavbarFixed; 
