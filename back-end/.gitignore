@@ -43,6 +43,8 @@ celerybeat-schedule
 .mypy_cache/
 
 # Project specific
+models/*.pt
+*.pt
 input_videos/
 output_videos/
 uploads/
