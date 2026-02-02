@@ -35,22 +35,38 @@ def read_video(video_path):
 
     return frames
 
-def save_video(ouput_video_frames,output_video_path):
+def save_video(output_video_frames, output_video_path):
     """
     Save a sequence of frames as a video file.
 
-    Creates necessary directories if they don't exist and writes frames using XVID codec.
+    Creates necessary directories if they don't exist and selects appropriate codec
+    based on the output file extension (.mp4, .avi, etc.).
 
     Args:
-        ouput_video_frames (list): List of frames to save.
+        output_video_frames (list): List of frames to save.
         output_video_path (str): Path where the video should be saved.
     """
-    # If folder doesn't exist, create it
-    if not os.path.exists(os.path.dirname(output_video_path)):
-        os.makedirs(os.path.dirname(output_video_path))
+    if not output_video_frames:
+        return
 
-    fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    out = cv2.VideoWriter(output_video_path, fourcc, 24, (ouput_video_frames[0].shape[1], ouput_video_frames[0].shape[0]))
-    for frame in ouput_video_frames:
+    # If folder doesn't exist, create it
+    output_dir = os.path.dirname(output_video_path)
+    if output_dir and not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    # Determine codec based on file extension
+    extension = os.path.splitext(output_video_path)[1].lower()
+    
+    if extension == '.mp4':
+        # Use mp4v for standard MP4 compatibility
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    else:
+        # Default to XVID for AVI or other formats
+        fourcc = cv2.VideoWriter_fourcc(*'XVID')
+
+    height, width = output_video_frames[0].shape[:2]
+    out = cv2.VideoWriter(output_video_path, fourcc, 24, (width, height))
+    
+    for frame in output_video_frames:
         out.write(frame)
     out.release()
