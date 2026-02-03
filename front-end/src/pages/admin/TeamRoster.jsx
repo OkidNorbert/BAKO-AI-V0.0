@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
-const BabysitterManagement = () => {
+const TeamRoster = () => {
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -498,4 +498,4 @@ const BabysitterManagement = () => {
   );
 };
 
-export default BabysitterManagement; 
+export default TeamRoster; 

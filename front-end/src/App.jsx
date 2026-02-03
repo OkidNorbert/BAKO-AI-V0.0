@@ -9,27 +9,27 @@ import 'react-toastify/dist/ReactToastify.css';
 
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Layout from '@/components/shared/Layout/Layout';
-import AdminLayout from '@/components/shared/Layout/AdminLayout'; // Will be renamed to TeamLayout eventually
-import BabysitterLayout from '@/layouts/BabysitterLayout'; // Will be renamed to PlayerLayout eventually
+import AdminLayout from '@/components/shared/Layout/AdminLayout';
+import PlayerLayout from '@/layouts/PlayerLayout';
 
 // Public Pages
 import Home from '@/pages/Home';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 
-// Team / Organization Pages (formerly Admin)
-import AdminHome from '@/pages/admin/AdminHome'; // TeamDashboard
-import BabysitterManagement from '@/pages/admin/BabysitterManagement'; // TeamRoster
-import ChildManagement from '@/pages/admin/ChildManagement'; // MatchAnalysis
-import Analytics from '@/pages/admin/Analytics'; // TeamAnalytics
-import SystemSettings from '@/pages/admin/SystemSettings'; // TeamSettings
-import Schedule from '@/pages/admin/Schedule'; // TeamSchedule
+// Team / Organization Pages
+import TeamDashboard from '@/pages/admin/TeamDashboard';
+import TeamRoster from '@/pages/admin/TeamRoster';
+import MatchAnalysis from '@/pages/admin/MatchAnalysis';
+import TeamAnalytics from '@/pages/admin/TeamAnalytics';
+import TeamSettings from '@/pages/admin/TeamSettings';
+import TeamSchedule from '@/pages/admin/TeamSchedule';
 
-// Personal Player Pages (formerly Babysitter)
-import BabysitterHome from '@/pages/babysitter/BabysitterHome'; // PlayerDashboard
-import BabysitterProfile from '@/pages/babysitter/BabysitterProfile'; // PlayerProfile
-// import TrainingVideos from '@/pages/player/TrainingVideos'; // To be created
-import BabysitterReports from '@/pages/babysitter/BabysitterReports'; // SkillAnalytics
+// Personal Player Pages
+import PlayerDashboard from '@/pages/player/PlayerDashboard';
+import PlayerProfile from '@/pages/player/PlayerProfile';
+import SkillAnalytics from '@/pages/player/SkillAnalytics';
+import TrainingVideos from '@/pages/player/TrainingVideos';
 
 function App() {
   return (
@@ -60,24 +60,24 @@ function App() {
             {/* Team / Organization Routes */}
             <Route path="/team" element={<ProtectedRoute allowedRoles={['team']} />}>
               <Route element={<AdminLayout />}>
-                <Route index element={<AdminHome />} />
-                <Route path="dashboard" element={<AdminHome />} />
-                <Route path="roster" element={<BabysitterManagement />} />
-                <Route path="matches" element={<ChildManagement />} />
-                <Route path="schedule" element={<Schedule />} />
-                <Route path="analytics" element={<Analytics />} />
-                <Route path="settings" element={<SystemSettings />} />
+                <Route index element={<TeamDashboard />} />
+                <Route path="dashboard" element={<TeamDashboard />} />
+                <Route path="roster" element={<TeamRoster />} />
+                <Route path="matches" element={<MatchAnalysis />} />
+                <Route path="schedule" element={<TeamSchedule />} />
+                <Route path="analytics" element={<TeamAnalytics />} />
+                <Route path="settings" element={<TeamSettings />} />
               </Route>
             </Route>
 
             {/* Personal Player Routes */}
             <Route path="/player" element={<ProtectedRoute allowedRoles={['player']} />}>
-              <Route element={<BabysitterLayout />}>
-                <Route index element={<BabysitterHome />} />
-                <Route path="dashboard" element={<BabysitterHome />} />
-                <Route path="profile" element={<BabysitterProfile />} />
-                <Route path="skills" element={<BabysitterReports />} />
-                {/* <Route path="training" element={<TrainingVideos />} /> */}
+              <Route element={<PlayerLayout />}>
+                <Route index element={<PlayerDashboard />} />
+                <Route path="dashboard" element={<PlayerDashboard />} />
+                <Route path="profile" element={<PlayerProfile />} />
+                <Route path="skills" element={<SkillAnalytics />} />
+                <Route path="training" element={<TrainingVideos />} />
               </Route>
             </Route>
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { Baby, ArrowRight } from 'lucide-react';
+import { Trophy, ArrowRight } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -181,16 +181,16 @@ const Login = () => {
           <div className="mt-8 text-center relative z-10">
             <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'
               }`}>
-              For admin account access, please contact the system administrator
+              For team or player account access, please contact support
             </p>
           </div>
 
           {/* Decorative shapes */}
           <div className="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1/2">
-            <div className="w-8 h-8 bg-green-300 rounded-full opacity-30"></div>
+            <div className="w-8 h-8 bg-orange-300 rounded-full opacity-30"></div>
           </div>
           <div className="absolute top-1/4 right-0 transform -translate-x-1/2">
-            <div className="w-6 h-6 bg-blue-300 rounded-full opacity-30"></div>
+            <div className="w-6 h-6 bg-red-300 rounded-full opacity-30"></div>
           </div>
           <div className="absolute bottom-1/4 right-0 transform translate-x-1/2">
             <div className="w-10 h-10 bg-purple-300 rounded-full opacity-30"></div>

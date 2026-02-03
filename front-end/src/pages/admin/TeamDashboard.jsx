@@ -26,7 +26,7 @@ import {
   Target
 } from 'lucide-react';
 
-const AdminHome = () => {
+const TeamDashboard = () => {
   const [stats, setStats] = useState({
     totalPlayers: 12,
     totalMatches: 8,
@@ -398,4 +398,4 @@ const AdminHome = () => {
   );
 };
 
-export default AdminHome;
+export default TeamDashboard;

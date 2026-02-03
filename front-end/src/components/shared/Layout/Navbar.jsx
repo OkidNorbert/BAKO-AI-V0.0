@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { useTheme } from '../../../context/ThemeContext';
-import { Bell, Calendar, User, Home, FileText, Baby, Sun, Moon, ChevronDown, LogOut, ClipboardCheck, AlertCircle } from 'lucide-react';
+import { Bell, Calendar, User, Home, FileText, Trophy, Sun, Moon, ChevronDown, LogOut, Video, TrendingUp } from 'lucide-react';
 
 const Navbar = ({ role }) => {
   const { user, logout } = useAuth();
@@ -21,20 +21,20 @@ const Navbar = ({ role }) => {
   const getNavLinks = () => {
     switch (role) {
       case 'admin':
+      case 'team':
         return [
-          { to: '/admin', icon: <Home className="h-5 w-5" />, label: 'Dashboard' },
-          { to: '/admin/profile', icon: <User className="h-5 w-5" />, label: 'Profile' },
-          { to: '/admin/notifications', icon: <Bell className="h-5 w-5" />, label: 'Notifications' }
+          { to: '/team', icon: <Home className="h-5 w-5" />, label: 'Dashboard' },
+          { to: '/team/profile', icon: <User className="h-5 w-5" />, label: 'Profile' },
+          { to: '/team/notifications', icon: <Bell className="h-5 w-5" />, label: 'Notifications' }
         ];
       case 'babysitter':
+      case 'player':
         return [
-          { to: '/babysitter', icon: <Home className="h-5 w-5" />, label: 'Home' },
-          { to: '/babysitter/profile', icon: <User className="h-5 w-5" />, label: 'Profile' },
-          { to: '/babysitter/schedule', icon: <Calendar className="h-5 w-5" />, label: 'Schedule' },
-          { to: '/babysitter/attendance', icon: <ClipboardCheck className="h-5 w-5" />, label: 'Attendance' },
-          { to: '/babysitter/incidents', icon: <AlertCircle className="h-5 w-5" />, label: 'Incidents' },
-          { to: '/babysitter/reports', icon: <FileText className="h-5 w-5" />, label: 'Reports' },
-          { to: '/babysitter/notifications', icon: <Bell className="h-5 w-5" />, label: 'Notifications' }
+          { to: '/player', icon: <Home className="h-5 w-5" />, label: 'Dashboard' },
+          { to: '/player/profile', icon: <User className="h-5 w-5" />, label: 'Profile' },
+          { to: '/player/training', icon: <Video className="h-5 w-5" />, label: 'Training Videos' },
+          { to: '/player/skills', icon: <TrendingUp className="h-5 w-5" />, label: 'Skill Analytics' },
+          { to: '/player/notifications', icon: <Bell className="h-5 w-5" />, label: 'Notifications' }
         ];
       default:
         return [];
@@ -49,8 +49,8 @@ const Navbar = ({ role }) => {
         ? 'bg-gradient-to-r from-gray-900 via-indigo-950 to-purple-900 shadow-xl' 
         : 'bg-gradient-to-r from-blue-500 to-indigo-600 shadow-lg'
     }`}>
-      {/* African pattern decoration - top border */}
-      <div className="h-1 w-full bg-gradient-to-r from-yellow-400 via-red-500 to-pink-500"></div>
+      {/* Decorative border */}
+      <div className="h-1 w-full bg-gradient-to-r from-orange-400 via-red-500 to-pink-500"></div>
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="flex justify-between h-20">
@@ -59,11 +59,11 @@ const Navbar = ({ role }) => {
               <div className={`p-2 rounded-full transition-all duration-300 transform group-hover:scale-110 ${
                 isDarkMode ? 'bg-gray-800' : 'bg-white'
               }`}>
-                <Baby className={`h-8 w-8 ${isDarkMode ? 'text-yellow-400' : 'text-indigo-600'}`} />
+                <Trophy className={`h-8 w-8 ${isDarkMode ? 'text-orange-400' : 'text-indigo-600'}`} />
               </div>
               <div className="flex flex-col">
-                <span className="text-2xl font-bold text-white">Daystar</span>
-                <span className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-blue-100'}`}>Daycare Center</span>
+                <span className="text-2xl font-bold text-white">BAKO</span>
+                <span className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-blue-100'}`}>Basketball Analytics</span>
               </div>
             </Link>
           </div>
@@ -97,7 +97,7 @@ const Navbar = ({ role }) => {
                 onClick={toggleTheme}
                 className={`p-2 rounded-full transition-all duration-200 ${
                   isDarkMode 
-                    ? 'bg-gray-800 text-yellow-400 hover:bg-gray-700' 
+                    ? 'bg-gray-800 text-orange-400 hover:bg-gray-700' 
                     : 'bg-white bg-opacity-20 text-white hover:bg-opacity-30'
                 }`}
                 aria-label="Toggle theme"
@@ -114,7 +114,7 @@ const Navbar = ({ role }) => {
                     }`}
                   >
                     <div className={`w-8 h-8 rounded-full overflow-hidden border-2 ${
-                      isDarkMode ? 'border-yellow-400' : 'border-white'
+                      isDarkMode ? 'border-orange-400' : 'border-white'
                     }`}>
                       {user.profileImage ? (
                         <img 
@@ -124,7 +124,7 @@ const Navbar = ({ role }) => {
                         />
                       ) : (
                         <div className={`w-full h-full flex items-center justify-center ${
-                          isDarkMode ? 'bg-gray-800 text-yellow-400' : 'bg-indigo-700 text-white'
+                          isDarkMode ? 'bg-gray-800 text-orange-400' : 'bg-indigo-700 text-white'
                         }`}>
                           <span className="text-lg font-bold">
                             {user.firstName ? user.firstName.charAt(0) : (user.name ? user.name.charAt(0) : 'U')}
@@ -156,7 +156,7 @@ const Navbar = ({ role }) => {
                         <span>Your Profile</span>
                       </Link>
                       <Link
-                        to={`/${role}/notifications`}
+                        to={`/${role === 'babysitter' ? 'player' : role}/notifications`}
                         className={`flex items-center px-4 py-2 text-sm hover:text-indigo-600 ${
                           isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-indigo-50'
                         }`}
@@ -191,7 +191,7 @@ const Navbar = ({ role }) => {
                   }`}
                 >
                   <User className="h-4 w-4 mr-2" />
-                  Staff Login
+                  Sign In
                 </Link>
               )}
             </div>
@@ -203,7 +203,7 @@ const Navbar = ({ role }) => {
               onClick={toggleTheme}
               className={`mr-3 p-2 rounded-full ${
                 isDarkMode 
-                  ? 'bg-gray-800 text-yellow-400' 
+                  ? 'bg-gray-800 text-orange-400' 
                   : 'bg-white bg-opacity-20 text-white'
               }`}
               aria-label="Toggle theme"
@@ -242,7 +242,7 @@ const Navbar = ({ role }) => {
               isDarkMode ? 'bg-gray-800' : 'bg-indigo-800'
             }`}>
               <div className={`w-10 h-10 rounded-full overflow-hidden border-2 ${
-                isDarkMode ? 'border-yellow-400' : 'border-white'
+                isDarkMode ? 'border-orange-400' : 'border-white'
               }`}>
                 {user.profileImage ? (
                   <img 
@@ -252,7 +252,7 @@ const Navbar = ({ role }) => {
                   />
                 ) : (
                   <div className={`w-full h-full flex items-center justify-center ${
-                    isDarkMode ? 'bg-gray-700 text-yellow-400' : 'bg-indigo-600 text-white'
+                    isDarkMode ? 'bg-gray-700 text-orange-400' : 'bg-indigo-600 text-white'
                   }`}>
                     <span className="text-lg font-bold">
                       {user.firstName ? user.firstName.charAt(0) : (user.name ? user.name.charAt(0) : 'U')}
@@ -282,7 +282,7 @@ const Navbar = ({ role }) => {
                 className={`flex items-center px-3 py-2 rounded-lg transition-all duration-200 ${
                   isActive 
                     ? isDarkMode 
-                      ? 'bg-gray-800 text-yellow-400' 
+                      ? 'bg-gray-800 text-orange-400' 
                       : 'bg-white bg-opacity-20 text-white font-semibold' 
                     : 'text-white hover:bg-white hover:bg-opacity-10'
                 }`}
@@ -299,7 +299,7 @@ const Navbar = ({ role }) => {
               to="/login"
               className={`flex items-center justify-center px-3 py-3 rounded-lg font-medium ${
                 isDarkMode 
-                  ? 'bg-yellow-500 text-gray-900 hover:bg-yellow-400' 
+                  ? 'bg-orange-500 text-gray-900 hover:bg-orange-400' 
                   : 'bg-white text-indigo-700 hover:bg-blue-50'
               }`}
               onClick={() => setIsMenuOpen(false)}

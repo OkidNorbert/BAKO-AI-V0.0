@@ -4,7 +4,7 @@ import { useTheme } from '@/context/ThemeContext';
 import Navbar from '@/components/shared/Layout/Navbar';
 import { NotificationProvider } from '@/context/NotificationContext';
 
-const BabysitterLayout = () => {
+const PlayerLayout = () => {
   const { isDarkMode } = useTheme();
 
   return (
@@ -19,4 +19,4 @@ const BabysitterLayout = () => {
   );
 };
 
-export default BabysitterLayout; 
+export default PlayerLayout;

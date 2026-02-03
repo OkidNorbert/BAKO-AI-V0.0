@@ -17,7 +17,7 @@ import {
   Trophy
 } from 'lucide-react';
 
-const Schedule = () => {
+const TeamSchedule = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -622,4 +622,4 @@ const Schedule = () => {
   );
 };
 
-export default Schedule; 
+export default TeamSchedule; 

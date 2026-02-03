@@ -41,7 +41,7 @@ ChartJS.register(
   Legend
 );
 
-const Analytics = () => {
+const TeamAnalytics = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [dateRange, setDateRange] = useState('month');
@@ -417,4 +417,4 @@ const Analytics = () => {
   );
 };
 
-export default Analytics; 
+export default TeamAnalytics; 

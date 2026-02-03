@@ -13,7 +13,7 @@ import {
   Shuffle
 } from 'lucide-react';
 
-const SystemSettings = () => {
+const TeamSettings = () => {
   const [settings, setSettings] = useState({
     teamName: '',
     homeCourt: '',
@@ -329,4 +329,4 @@ const SystemSettings = () => {
   );
 };
 
-export default SystemSettings; 
+export default TeamSettings; 

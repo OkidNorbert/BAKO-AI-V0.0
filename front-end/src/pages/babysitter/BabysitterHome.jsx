@@ -3,22 +3,23 @@ import { Link, useNavigate } from 'react-router-dom';
 import api from '@/utils/axiosConfig';
 import { useTheme } from '@/context/ThemeContext';
 import { 
-  User, 
+  Video, 
   Calendar, 
-  Check, 
   Clock, 
   Activity as ActivityIcon, 
   AlertCircle,
   ChevronRight,
   Bell,
   RefreshCw,
-  Baby,
-  Home
+  Home,
+  Target,
+  PlayCircle,
+  TrendingUp
 } from 'lucide-react';
 
 const BabysitterHome = () => {
-  const [children, setChildren] = useState([]);
-  const [activities, setActivities] = useState([]);
+  const [trainingVideos, setTrainingVideos] = useState([]);
+  const [trainingHistory, setTrainingHistory] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -35,15 +36,15 @@ const BabysitterHome = () => {
       setLoading(true);
       setError('');
       
-      // Fetch all data in parallel
-      const [childrenResponse, activitiesResponse, notificationsResponse] = await Promise.all([
-        api.get('/babysitter/children').catch(err => ({ data: [] })),
-        api.get('/babysitter/activities').catch(err => ({ data: [] })),
-        api.get('/babysitter/notifications').catch(err => ({ data: [] }))
+      // Fetch all data in parallel - placeholder endpoints for player
+      const [videosResponse, historyResponse, notificationsResponse] = await Promise.all([
+        api.get('/player/training-videos').catch(err => ({ data: [] })),
+        api.get('/player/training-history').catch(err => ({ data: [] })),
+        api.get('/player/notifications').catch(err => ({ data: [] }))
       ]);
       
-      setChildren(childrenResponse.data || []);
-      setActivities(activitiesResponse.data || []);
+      setTrainingVideos(videosResponse.data || []);
+      setTrainingHistory(historyResponse.data || []);
       setNotifications(notificationsResponse.data || []);
       
     } catch (error) {
@@ -58,8 +59,8 @@ const BabysitterHome = () => {
       }
       
       // Set empty arrays on error
-      setChildren([]);
-      setActivities([]);
+      setTrainingVideos([]);
+      setTrainingHistory([]);
       setNotifications([]);
     } finally {
       setLoading(false);
@@ -74,7 +75,7 @@ const BabysitterHome = () => {
 
   const markAsRead = async (notificationId) => {
     try {
-      await api.put(`/babysitter/notifications/${notificationId}/read`);
+      await api.put(`/player/notifications/${notificationId}/read`);
       
       // Update local states
       setNotifications(prev => prev.map(notif => 
@@ -91,7 +92,7 @@ const BabysitterHome = () => {
   if (loading) {
     return (
       <div className={`flex items-center justify-center min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-blue-50'}`}>
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
       </div>
     );
   }
@@ -104,8 +105,8 @@ const BabysitterHome = () => {
         ? 'bg-gray-900 text-white' 
         : 'bg-blue-50 text-gray-800'
     }`}>
-      {/* African pattern decoration - top */}
-      <div className="h-2 w-full bg-gradient-to-r from-yellow-400 via-red-500 to-pink-500"></div>
+      {/* Decorative border */}
+      <div className="h-2 w-full bg-gradient-to-r from-orange-400 via-red-500 to-pink-500"></div>
 
       <div className="max-w-7xl mx-auto p-6">
         <div className={`
@@ -119,9 +120,9 @@ const BabysitterHome = () => {
             <div className={`p-3 rounded-full mr-4 ${
               isDarkMode ? 'bg-gray-800' : 'bg-white bg-opacity-20'
             }`}>
-              <Home className={`h-8 w-8 ${isDarkMode ? 'text-yellow-400' : 'text-white'}`} />
+              <Home className={`h-8 w-8 ${isDarkMode ? 'text-orange-400' : 'text-white'}`} />
             </div>
-            <h1 className="text-3xl font-bold text-white">Babysitter Dashboard</h1>
+            <h1 className="text-3xl font-bold text-white">Player Dashboard</h1>
           </div>
         </div>
         
@@ -153,7 +154,7 @@ const BabysitterHome = () => {
             ${isDarkMode ? 'bg-gray-700' : 'bg-indigo-50'}
           `}>
             <h2 className="flex items-center">
-              <Bell className={`h-6 w-6 mr-2 ${isDarkMode ? 'text-yellow-400' : 'text-indigo-600'}`} />
+              <Bell className={`h-6 w-6 mr-2 ${isDarkMode ? 'text-orange-400' : 'text-indigo-600'}`} />
               Recent Notifications
               {unreadCount > 0 && (
                 <span className={`ml-2 px-2 py-0.5 text-xs rounded-full ${
@@ -203,7 +204,7 @@ const BabysitterHome = () => {
               {notifications.length > 3 && (
                   <div className="text-center mt-4">
           <Link 
-                    to="/babysitter/notifications" 
+                    to="/player/notifications" 
                       className={`inline-flex items-center px-4 py-2 rounded-md ${
                         isDarkMode 
                           ? 'bg-indigo-900 hover:bg-indigo-800 text-indigo-100' 
@@ -221,50 +222,61 @@ const BabysitterHome = () => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Assigned Children */}
+          {/* Training Videos */}
           <div className={`rounded-xl shadow-lg overflow-hidden`}>
             <div className={`
               px-6 py-4 text-xl font-semibold
               ${isDarkMode ? 'bg-gray-700' : 'bg-indigo-50'}
             `}>
               <h2 className="flex items-center">
-                <Baby className={`h-6 w-6 mr-2 ${isDarkMode ? 'text-yellow-400' : 'text-indigo-600'}`} />
-                Assigned Children
+                <Video className={`h-6 w-6 mr-2 ${isDarkMode ? 'text-orange-400' : 'text-indigo-600'}`} />
+                Training Videos
               </h2>
             </div>
             
             <div className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-            {children.length === 0 ? (
+            {trainingVideos.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8">
-                  <Baby className={`h-12 w-12 mb-3 ${isDarkMode ? 'text-gray-600' : 'text-gray-300'}`} />
-                  <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                    No children assigned to you yet.
+                  <Video className={`h-12 w-12 mb-3 ${isDarkMode ? 'text-gray-600' : 'text-gray-300'}`} />
+                  <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-500'} mb-4`}>
+                    No training videos uploaded yet.
                   </p>
+                  <Link 
+                    to="/player/training"
+                    className={`inline-flex items-center px-4 py-2 rounded-md ${
+                      isDarkMode 
+                        ? 'bg-indigo-900 hover:bg-indigo-800 text-indigo-100' 
+                        : 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700'
+                    }`}
+                  >
+                    <PlayCircle className="h-4 w-4 mr-2" />
+                    Upload Your First Video
+                  </Link>
               </div>
             ) : (
                 <div className="space-y-3">
-                {children.map(child => (
+                {trainingVideos.map(video => (
                     <Link 
-                    key={child._id} 
-                      to={`/babysitter/children/${child._id}`}
+                    key={video._id || video.id} 
+                      to={`/player/training/${video._id || video.id}`}
                       className={`block p-4 rounded-lg transition-all duration-200 ${
                         isDarkMode ? 'bg-gray-700 hover:bg-gray-650' : 'bg-gray-50 hover:bg-gray-100'
                     }`}
                   >
                     <div className="flex items-center">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                          child.gender === 'male' 
-                            ? isDarkMode ? 'bg-blue-900 text-blue-200' : 'bg-blue-100 text-blue-800'
-                            : isDarkMode ? 'bg-pink-900 text-pink-200' : 'bg-pink-100 text-pink-800'
+                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                          video.status === 'analyzed'
+                            ? isDarkMode ? 'bg-green-900 text-green-200' : 'bg-green-100 text-green-800'
+                            : video.status === 'processing'
+                            ? isDarkMode ? 'bg-yellow-900 text-yellow-200' : 'bg-yellow-100 text-yellow-800'
+                            : isDarkMode ? 'bg-blue-900 text-blue-200' : 'bg-blue-100 text-blue-800'
                         }`}>
-                          <span className="font-bold">
-                            {child.firstName.charAt(0)}
-                          </span>
+                          <Video className="h-6 w-6" />
                         </div>
-                        <div className="ml-3">
-                        <h3 className="font-medium">{child.firstName} {child.lastName}</h3>
+                        <div className="ml-3 flex-1">
+                        <h3 className="font-medium">{video.title || video.filename || 'Training Session'}</h3>
                         <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                            {calculateAge(child.dateOfBirth)} years old
+                            {video.status === 'analyzed' ? 'Analysis Complete' : video.status === 'processing' ? 'Processing...' : 'Pending Analysis'}
                         </p>
                         </div>
                         <ChevronRight className={`ml-auto ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
@@ -273,14 +285,14 @@ const BabysitterHome = () => {
                   ))}
                   <div className="text-center mt-4">
                     <Link 
-                      to="/babysitter/children"
+                      to="/player/training"
                       className={`inline-flex items-center px-4 py-2 rounded-md ${
                         isDarkMode 
                           ? 'bg-indigo-900 hover:bg-indigo-800 text-indigo-100' 
                           : 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700'
                       }`}
                     >
-                      <span>View All Children</span>
+                      <span>View All Videos</span>
                       <ChevronRight className="h-4 w-4 ml-1" />
                     </Link>
                     </div>
@@ -289,69 +301,66 @@ const BabysitterHome = () => {
           </div>
       </div>
       
-      {/* Recent Activities */}
+      {/* Training History */}
           <div className={`rounded-xl shadow-lg overflow-hidden`}>
             <div className={`
               px-6 py-4 text-xl font-semibold
               ${isDarkMode ? 'bg-gray-700' : 'bg-indigo-50'}
             `}>
               <h2 className="flex items-center">
-                <ActivityIcon className={`h-6 w-6 mr-2 ${isDarkMode ? 'text-yellow-400' : 'text-indigo-600'}`} />
-                Recent Activities
+                <ActivityIcon className={`h-6 w-6 mr-2 ${isDarkMode ? 'text-orange-400' : 'text-indigo-600'}`} />
+                Training History
               </h2>
             </div>
             
             <div className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-            {activities.length === 0 ? (
+            {trainingHistory.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8">
                   <ActivityIcon className={`h-12 w-12 mb-3 ${isDarkMode ? 'text-gray-600' : 'text-gray-300'}`} />
                   <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                    No activities recorded yet.
+                    No training sessions recorded yet.
                   </p>
               </div>
             ) : (
                 <div className="space-y-3">
-                  {activities.map(activity => {
-                    const child = activity.childId;
-                    return (
+                  {trainingHistory.map(session => (
                   <div 
-                    key={activity._id} 
+                    key={session._id || session.id} 
                         className={`p-4 rounded-lg ${
                           isDarkMode ? 'bg-gray-700' : 'bg-gray-50'
                         }`}
                       >
                         <div className="flex items-start">
                           <div className={`p-2 rounded-full ${
-                            getActivityColor(activity.type, isDarkMode)
+                            getSessionTypeColor(session.type, isDarkMode)
                           }`}>
-                            {getActivityIcon(activity.type)}
+                            {getSessionTypeIcon(session.type)}
                           </div>
-                          <div className="ml-3">
-                        <h3 className="font-medium">{activity.title}</h3>
+                          <div className="ml-3 flex-1">
+                        <h3 className="font-medium">{session.title || session.type || 'Training Session'}</h3>
                         <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                              {child ? `${child.firstName} ${child.lastName}` : 'Unknown Child'}
+                              {session.description || 'Basketball training session'}
                             </p>
                             <div className="flex items-center text-xs mt-1">
                               <Calendar className="h-3 w-3 mr-1" />
-                              <span className="mr-2">{formatDate(activity.date)}</span>
+                              <span className="mr-2">{formatDate(session.date || session.createdAt)}</span>
                               <Clock className="h-3 w-3 mr-1" />
-                              <span>{formatTime(activity.date)}</span>
+                              <span>{formatTime(session.date || session.createdAt)}</span>
                             </div>
                           </div>
                         </div>
         </div>
-                    );
-                  })}
+                  ))}
                   <div className="text-center mt-4">
                     <Link 
-                      to="/babysitter/activities"
+                      to="/player/skills"
                       className={`inline-flex items-center px-4 py-2 rounded-md ${
                         isDarkMode 
                           ? 'bg-indigo-900 hover:bg-indigo-800 text-indigo-100' 
                           : 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700'
                       }`}
                     >
-                      <span>View All Activities</span>
+                      <span>View Skill Analytics</span>
                       <ChevronRight className="h-4 w-4 ml-1" />
                     </Link>
                   </div>
@@ -362,8 +371,8 @@ const BabysitterHome = () => {
       </div>
       </div>
       
-      {/* African pattern decoration - bottom */}
-      <div className="h-2 w-full bg-gradient-to-r from-pink-500 via-red-500 to-yellow-400 mt-8"></div>
+      {/* Decorative border */}
+      <div className="h-2 w-full bg-gradient-to-r from-pink-500 via-red-500 to-orange-400 mt-8"></div>
     </div>
   );
 };
@@ -394,44 +403,27 @@ const formatTime = (dateString) => {
   });
 };
 
-const calculateAge = (dateOfBirth) => {
-  if (!dateOfBirth) return 'Unknown';
-  
-  const birthDate = new Date(dateOfBirth);
-  if (isNaN(birthDate.getTime())) return 'Unknown';
-  
-  const today = new Date();
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const m = today.getMonth() - birthDate.getMonth();
-  
-  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-    age--;
-  }
-  
-  return age;
-};
-
-const getActivityIcon = (type) => {
+const getSessionTypeIcon = (type) => {
   switch (type) {
-    case 'meal':
-      return <User className="h-4 w-4" />;
-    case 'nap':
-      return <Clock className="h-4 w-4" />;
-    case 'learning':
+    case 'shooting':
+      return <Target className="h-4 w-4" />;
+    case 'dribbling':
       return <ActivityIcon className="h-4 w-4" />;
+    case 'defense':
+      return <TrendingUp className="h-4 w-4" />;
     default:
-      return <Check className="h-4 w-4" />;
+      return <Video className="h-4 w-4" />;
   }
 };
 
-const getActivityColor = (type, isDarkMode) => {
+const getSessionTypeColor = (type, isDarkMode) => {
   switch (type) {
-    case 'meal':
-      return isDarkMode ? 'bg-green-900 text-green-300' : 'bg-green-100 text-green-800';
-    case 'nap':
-      return isDarkMode ? 'bg-purple-900 text-purple-300' : 'bg-purple-100 text-purple-800';
-    case 'learning':
+    case 'shooting':
+      return isDarkMode ? 'bg-orange-900 text-orange-300' : 'bg-orange-100 text-orange-800';
+    case 'dribbling':
       return isDarkMode ? 'bg-blue-900 text-blue-300' : 'bg-blue-100 text-blue-800';
+    case 'defense':
+      return isDarkMode ? 'bg-green-900 text-green-300' : 'bg-green-100 text-green-800';
     default:
       return isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-800';
   }
