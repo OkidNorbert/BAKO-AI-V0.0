@@ -2,11 +2,11 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { MultiLineChart } from '../ui/chart';
 
-const AdminDashboardChart = ({ data }) => {
+const TeamDashboardChart = ({ data }) => {
   const lines = [
-    { key: 'children', name: 'Children' },
-    { key: 'attendance', name: 'Attendance' },
-    { key: 'payments', name: 'Payments' },
+    { key: 'players', name: 'Players' },
+    { key: 'performance', name: 'Performance' },
+    { key: 'games', name: 'Games' },
   ];
 
   return (
@@ -19,25 +19,25 @@ const AdminDashboardChart = ({ data }) => {
           data={data}
           lines={lines}
           xKey="date"
-          title="Monthly Statistics"
+          title="Team Performance Trends"
         />
         <div className="grid grid-cols-3 gap-4 mt-4">
           <div className="text-center">
-            <p className="text-sm text-muted-foreground">Total Children</p>
+            <p className="text-sm text-muted-foreground">Active Players</p>
             <p className="text-2xl font-bold text-blue-600">
-              {data[data.length - 1]?.children || 0}
+              {data[data.length - 1]?.players || 0}
             </p>
           </div>
           <div className="text-center">
-            <p className="text-sm text-muted-foreground">Average Attendance</p>
+            <p className="text-sm text-muted-foreground">Win Rate</p>
             <p className="text-2xl font-bold text-green-600">
-              {Math.round(data[data.length - 1]?.attendance || 0)}%
+              {Math.round(data[data.length - 1]?.performance || 0)}%
             </p>
           </div>
           <div className="text-center">
-            <p className="text-sm text-muted-foreground">Monthly Revenue</p>
+            <p className="text-sm text-muted-foreground">Games Played</p>
             <p className="text-2xl font-bold text-purple-600">
-              ${data[data.length - 1]?.payments?.toFixed(2) || '0.00'}
+              {data[data.length - 1]?.games || 0}
             </p>
           </div>
         </div>
@@ -46,4 +46,4 @@ const AdminDashboardChart = ({ data }) => {
   );
 };
 
-export default AdminDashboardChart; 
+export default TeamDashboardChart; 

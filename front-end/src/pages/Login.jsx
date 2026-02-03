@@ -77,17 +77,17 @@ const Login = () => {
           <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-24 h-24 bg-pink-400 rounded-full opacity-30"></div>
 
           <div className="text-center relative z-10">
-            <div className="mx-auto h-24 w-24 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-xl mb-5 flex items-center justify-center shadow-lg">
-              <Baby className="h-14 w-14 text-white" />
+            <div className="mx-auto h-24 w-24 bg-gradient-to-r from-orange-400 to-red-500 rounded-xl mb-5 flex items-center justify-center shadow-lg">
+              <Trophy className="h-14 w-14 text-white" />
             </div>
 
             <h2 className={`text-3xl font-extrabold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'
               }`}>
-              Welcome to Daystar!
+              Welcome to BAKO!
             </h2>
             <p className={`mb-6 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'
               }`}>
-              Sign in to nurture bright futures together
+              Sign in to elevate your basketball performance
             </p>
           </div>
 
@@ -181,7 +181,13 @@ const Login = () => {
           <div className="mt-8 text-center relative z-10">
             <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'
               }`}>
-              For team or player account access, please contact support
+              New to BAKO?{' '}
+              <a
+                href="/register"
+                className="font-medium text-orange-500 hover:text-orange-600 transition-colors duration-200"
+              >
+                Create an account
+              </a>
             </p>
           </div>
 

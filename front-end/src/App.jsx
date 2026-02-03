@@ -9,7 +9,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Layout from '@/components/shared/Layout/Layout';
-import AdminLayout from '@/components/shared/Layout/AdminLayout';
+import TeamLayout from '@/components/shared/Layout/TeamLayout';
 import PlayerLayout from '@/layouts/PlayerLayout';
 
 // Public Pages
@@ -18,12 +18,12 @@ import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 
 // Team / Organization Pages
-import TeamDashboard from '@/pages/admin/TeamDashboard';
-import TeamRoster from '@/pages/admin/TeamRoster';
-import MatchAnalysis from '@/pages/admin/MatchAnalysis';
-import TeamAnalytics from '@/pages/admin/TeamAnalytics';
-import TeamSettings from '@/pages/admin/TeamSettings';
-import TeamSchedule from '@/pages/admin/TeamSchedule';
+import TeamDashboard from '@/pages/team/TeamDashboard';
+import TeamRoster from '@/pages/team/TeamRoster';
+import MatchAnalysis from '@/pages/team/MatchAnalysis';
+import TeamAnalytics from '@/pages/team/TeamAnalytics';
+import TeamSettings from '@/pages/team/TeamSettings';
+import TeamSchedule from '@/pages/team/TeamSchedule';
 
 // Personal Player Pages
 import PlayerDashboard from '@/pages/player/PlayerDashboard';
@@ -59,7 +59,7 @@ function App() {
 
             {/* Team / Organization Routes */}
             <Route path="/team" element={<ProtectedRoute allowedRoles={['team']} />}>
-              <Route element={<AdminLayout />}>
+              <Route element={<TeamLayout />}>
                 <Route index element={<TeamDashboard />} />
                 <Route path="dashboard" element={<TeamDashboard />} />
                 <Route path="roster" element={<TeamRoster />} />

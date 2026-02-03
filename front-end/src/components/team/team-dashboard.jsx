@@ -1,40 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AdminStats from './admin-stats';
-import AdminDashboardChart from './admin-dashboard-chart';
-import RecentActivities from './recent-activities';
-import BudgetAlerts from './budget-alerts';
-import IncidentReports from './incident-reports';
+import TeamStats from './team-stats';
+import TeamDashboardChart from './team-dashboard-chart';
+import RecentGames from './recent-games';
+import PlayerManagement from './player-management';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { 
   Download, 
   RefreshCw, 
   AlertTriangle, 
-  DollarSign, 
-  UserCog, 
-  FileText,
-  Users,
-  CalendarClock
+  Trophy, 
+  Users, 
+  Video,
+  TrendingUp,
+  Calendar
 } from 'lucide-react';
 import { useToast } from '../ui/use-toast';
 import api from '../../utils/axiosConfig';
 
-const AdminDashboard = () => {
+const TeamDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
-    totalChildren: 0,
-    activeChildren: 0,
-    totalRevenue: 0,
-    pendingPayments: 0,
-    attendanceRate: 0,
-    incidentReports: 0,
-    budgetAlerts: 0,
+    totalPlayers: 0,
+    activePlayers: 0,
+    gamesAnalyzed: 0,
+    totalVideos: 0,
+    winRate: 0,
+    gamesPlayed: 0,
+    trainingVideos: 0,
   });
   const [chartData, setChartData] = useState([]);
   const [activities, setActivities] = useState([]);
-  const [budgetAlerts, setBudgetAlerts] = useState([]);
-  const [incidents, setIncidents] = useState([]);
+  const [recentGames, setRecentGames] = useState([]);
+  const [performanceAlerts, setPerformanceAlerts] = useState([]);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -42,28 +41,22 @@ const AdminDashboard = () => {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      // Fetch dashboard stats and general data
-      const response = await api.get('/admin/dashboard');
+      // Fetch team dashboard stats and general data
+      const response = await api.get('/team/dashboard');
       const data = response.data;
       
       setStats(data.stats);
       setChartData(data.chartData);
-      setActivities(data.activities);
+      setRecentGames(data.recentGames);
       
-      // Fetch budget alerts
-      const budgetAlertsResponse = await api.get('/admin/budgets/alerts');
-      setBudgetAlerts(budgetAlertsResponse.data.alerts || []);
-      
-      // Fetch recent incidents
-      const incidentsResponse = await api.get('/admin/incidents', {
-        params: { status: 'open', limit: 5 }
-      });
-      setIncidents(incidentsResponse.data || []);
+      // Fetch performance alerts
+      const alertsResponse = await api.get('/team/alerts');
+      setPerformanceAlerts(alertsResponse.data.alerts || []);
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
+      console.error('Error fetching team dashboard data:', error);
       toast({
         title: 'Error',
-        description: 'Failed to load dashboard data. Please try again.',
+        description: 'Failed to load team dashboard data. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -84,12 +77,12 @@ const AdminDashboard = () => {
   };
 
   // Navigation handlers
-  const navigateToIncidents = () => navigate('/admin/incidents');
-  const navigateToBudget = () => navigate('/admin/budgets');
-  const navigateToUsers = () => navigate('/admin/users');
-  const navigateToExport = () => navigate('/admin/export');
-  const navigateToAddChild = () => navigate('/admin/children/new');
-  const navigateToAttendance = () => navigate('/admin/attendance');
+  const navigateToMatches = () => navigate('/team/matches');
+  const navigateToRoster = () => navigate('/team/roster');
+  const navigateToPlayers = () => navigate('/team/roster');
+  const navigateToAnalytics = () => navigate('/team/analytics');
+  const navigateToVideoUpload = () => navigate('/team/videos/upload');
+  const navigateToSchedule = () => navigate('/team/schedule');
 
   if (loading) {
     return (
@@ -102,7 +95,7 @@ const AdminDashboard = () => {
   return (
     <div className="space-y-6 p-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+        <h1 className="text-3xl font-bold">Team Dashboard</h1>
         <div className="flex space-x-2">
           <Button variant="outline" onClick={handleRefresh}>
             <RefreshCw className="h-4 w-4 mr-2" />
@@ -115,58 +108,58 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      <AdminStats stats={stats} />
+      <TeamStats stats={stats} />
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <AdminDashboardChart data={chartData} />
+        <TeamDashboardChart data={chartData} />
         <Card>
           <CardHeader>
-            <CardTitle>Admin Features</CardTitle>
+            <CardTitle>Team Features</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
               <Button 
                 variant="outline" 
                 className="h-24 bg-amber-50 hover:bg-amber-100 border-amber-200"
-                onClick={navigateToIncidents}
+                onClick={navigateToMatches}
               >
                 <div className="flex flex-col items-center">
-                  <AlertTriangle className="h-6 w-6 text-amber-500 mb-2" />
-                  <span className="text-lg font-medium">Incident Management</span>
-                  <span className="text-xs text-muted-foreground">Manage health & safety issues</span>
+                  <Video className="h-6 w-6 text-amber-500 mb-2" />
+                  <span className="text-lg font-medium">Match Analysis</span>
+                  <span className="text-xs text-muted-foreground">Analyze game videos</span>
                 </div>
               </Button>
               <Button 
                 variant="outline" 
                 className="h-24 bg-green-50 hover:bg-green-100 border-green-200"
-                onClick={navigateToBudget}
+                onClick={navigateToRoster}
               >
                 <div className="flex flex-col items-center">
-                  <DollarSign className="h-6 w-6 text-green-500 mb-2" />
-                  <span className="text-lg font-medium">Budget Management</span>
-                  <span className="text-xs text-muted-foreground">Track and manage expenses</span>
+                  <Users className="h-6 w-6 text-green-500 mb-2" />
+                  <span className="text-lg font-medium">Team Roster</span>
+                  <span className="text-xs text-muted-foreground">Manage player information</span>
                 </div>
               </Button>
               <Button 
                 variant="outline" 
                 className="h-24 bg-blue-50 hover:bg-blue-100 border-blue-200"
-                onClick={navigateToUsers}
+                onClick={navigateToPlayers}
               >
                 <div className="flex flex-col items-center">
-                  <UserCog className="h-6 w-6 text-blue-500 mb-2" />
-                  <span className="text-lg font-medium">User Roles</span>
-                  <span className="text-xs text-muted-foreground">Manage staff accounts</span>
+                  <Trophy className="h-6 w-6 text-blue-500 mb-2" />
+                  <span className="text-lg font-medium">Player Stats</span>
+                  <span className="text-xs text-muted-foreground">View player performance</span>
                 </div>
               </Button>
               <Button 
                 variant="outline" 
                 className="h-24 bg-purple-50 hover:bg-purple-100 border-purple-200"
-                onClick={navigateToExport}
+                onClick={navigateToAnalytics}
               >
                 <div className="flex flex-col items-center">
-                  <FileText className="h-6 w-6 text-purple-500 mb-2" />
-                  <span className="text-lg font-medium">Export Data</span>
-                  <span className="text-xs text-muted-foreground">Generate PDF/CSV reports</span>
+                  <TrendingUp className="h-6 w-6 text-purple-500 mb-2" />
+                  <span className="text-lg font-medium">Analytics</span>
+                  <span className="text-xs text-muted-foreground">View team statistics</span>
                 </div>
               </Button>
             </div>
@@ -184,35 +177,35 @@ const AdminDashboard = () => {
               <Button 
                 variant="outline" 
                 className="h-20"
-                onClick={navigateToAddChild}
+                onClick={navigateToVideoUpload}
               >
                 <div className="flex flex-col items-center">
-                  <Users className="h-5 w-5 mb-1" />
-                  <span className="text-sm font-medium">Add Child</span>
+                  <Video className="h-5 w-5 mb-1" />
+                  <span className="text-sm font-medium">Upload Video</span>
                 </div>
               </Button>
               <Button 
                 variant="outline" 
                 className="h-20"
-                onClick={navigateToAttendance}
+                onClick={navigateToSchedule}
               >
                 <div className="flex flex-col items-center">
-                  <CalendarClock className="h-5 w-5 mb-1" />
-                  <span className="text-sm font-medium">Attendance</span>
+                  <Calendar className="h-5 w-5 mb-1" />
+                  <span className="text-sm font-medium">Schedule</span>
                 </div>
               </Button>
             </div>
           </CardContent>
         </Card>
-        <RecentActivities activities={activities} />
+        <RecentGames games={recentGames} />
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <BudgetAlerts alerts={budgetAlerts} />
-        <IncidentReports incidents={incidents} />
+        <PlayerManagement alerts={performanceAlerts} />
+        {/* Additional team analytics component can be added here */}
       </div>
     </div>
   );
 };
 
-export default AdminDashboard; 
+export default TeamDashboard; 

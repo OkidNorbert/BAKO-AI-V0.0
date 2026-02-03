@@ -19,7 +19,7 @@ import {
 import { adminAPI } from '../../../services/api';
 import { Menu, Transition } from '@headlessui/react';
 
-const AdminNavbarFixed = ({ onSidebarToggle }) => {
+const TeamNavbar = ({ onSidebarToggle }) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
@@ -460,4 +460,4 @@ const AdminNavbarFixed = ({ onSidebarToggle }) => {
   );
 };
 
-export default AdminNavbarFixed; 
+export default TeamNavbar; 

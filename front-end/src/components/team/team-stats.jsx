@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Users, UserCheck, DollarSign, Calendar } from 'lucide-react';
+import { Users, Trophy, Video, TrendingUp } from 'lucide-react';
 
 const StatCard = ({ title, value, icon: Icon, description, className }) => (
   <Card>
@@ -15,48 +15,49 @@ const StatCard = ({ title, value, icon: Icon, description, className }) => (
   </Card>
 );
 
-const AdminStats = ({ stats }) => {
+const TeamStats = ({ stats }) => {
   const {
-    totalChildren,
-    activeChildren,
-    totalRevenue,
-    pendingPayments,
-    attendanceRate,
-    upcomingEvents,
+    totalPlayers,
+    activePlayers,
+    gamesAnalyzed,
+    totalVideos,
+    winRate,
+    gamesPlayed,
+    trainingVideos,
   } = stats;
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <StatCard
-        title="Total Children"
-        value={totalChildren}
+        title="Total Players"
+        value={totalPlayers}
         icon={Users}
-        description={`${activeChildren} currently active`}
+        description={`${activePlayers} currently active`}
         className="text-blue-600"
       />
       <StatCard
-        title="Attendance Rate"
-        value={`${attendanceRate}%`}
-        icon={UserCheck}
-        description="Average daily attendance"
+        title="Win Rate"
+        value={`${winRate}%`}
+        icon={Trophy}
+        description="Season performance"
         className="text-green-600"
       />
       <StatCard
-        title="Total Revenue"
-        value={`$${totalRevenue.toFixed(2)}`}
-        icon={DollarSign}
-        description={`$${pendingPayments.toFixed(2)} pending`}
+        title="Games Analyzed"
+        value={gamesAnalyzed}
+        icon={Video}
+        description={`${totalVideos} total videos`}
         className="text-purple-600"
       />
       <StatCard
-        title="Upcoming Events"
-        value={upcomingEvents}
-        icon={Calendar}
-        description="Events this month"
+        title="Games Played"
+        value={gamesPlayed}
+        icon={TrendingUp}
+        description="This season"
         className="text-orange-600"
       />
     </div>
   );
 };
 
-export default AdminStats; 
+export default TeamStats; 
