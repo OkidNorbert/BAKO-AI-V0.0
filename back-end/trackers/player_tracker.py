@@ -78,7 +78,8 @@ class PlayerTracker:
                 track_id = frame_detection[4]
                 confidence = frame_detection[2] if len(frame_detection) > 2 else 1.0
 
-                if cls_id == cls_names_inv['Player']:
+                # New Index: 3 for Player
+                if cls_id == 3: 
                     tracks[frame_num][track_id] = {"bbox": bbox, "confidence": float(confidence)}
         
         save_stub(stub_path,tracks)

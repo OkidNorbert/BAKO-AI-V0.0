@@ -71,7 +71,8 @@ class BallTracker:
                 cls_id = frame_detection[3]
                 confidence = frame_detection[2]
                 
-                if cls_id == cls_names_inv['Ball']:
+                # New Index: 0 for Ball
+                if cls_id == 0:
                     if max_confidence<confidence:
                         chosen_bbox = bbox
                         max_confidence = confidence

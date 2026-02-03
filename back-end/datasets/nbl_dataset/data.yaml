@@ -1,0 +1,17 @@
+names:
+- basketball
+- court
+- hoop
+- player
+- referee
+- shot-clock
+nc: 6
+path: /home/okidi6/Documents/Personalised-AI-Basketball-Skill-Analysis-System./back-end/datasets/nbl_dataset
+roboflow:
+  license: CC BY 4.0
+  project: nbl
+  url: https://universe.roboflow.com/tomatoes-iicln/nbl/dataset/1
+  version: 1
+  workspace: tomatoes-iicln
+train: train/images
+val: train/images
