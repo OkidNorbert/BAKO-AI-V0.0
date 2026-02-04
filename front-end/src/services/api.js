@@ -145,9 +145,9 @@ export const adminAPI = {
   
   // Schedule endpoints
   getSchedule: () => api.get('/admin/schedule'),
-  getBabysitters: () => api.get('/admin/users?role=babysitter'),
-  getChildren: async () => {
-    return api.get('/admin/children');
+  getPlayers: () => api.get('/admin/users?role=player'),
+  getRoster: async () => {
+    return api.get('/admin/players');
   },
   createScheduleEvent: (eventData) => api.post('/admin/schedule', eventData),
   updateScheduleEvent: (eventId, eventData) => api.put(`/admin/schedule/${eventId}`, eventData),
@@ -175,10 +175,10 @@ export const adminAPI = {
   processPayment: (paymentData) => api.post('/admin/payments', paymentData),
   updatePaymentStatus: (paymentId, status) => api.patch(`/admin/payments/${paymentId}/status`, { status }),
   getPaymentReceipt: (paymentId) => api.get(`/admin/payments/${paymentId}/receipt`, { responseType: 'blob' }),
-  markBabysitterAsPaid: (babysitterId, paymentData) => api.post(`/admin/payments/babysitter/${babysitterId}/paid`, paymentData),
-  // Child payment endpoints
-  getChildPayments: (childId) => api.get(`/payments/child/${childId}/history`),
-  recordChildPayment: (paymentData) => api.post(`/payments/child`, paymentData),
+  markPlayerAsPaid: (playerId, paymentData) => api.post(`/admin/payments/player/${playerId}/paid`, paymentData),
+  // Player payment endpoints
+  getPlayerPayments: (playerId) => api.get(`/payments/player/${playerId}/history`),
+  recordPlayerPayment: (paymentData) => api.post(`/payments/player`, paymentData),
   getPaymentStats: () => api.get('/payments/stats'),
   sendPaymentReminder: (parentId) => api.post(`/payments/parent/${parentId}/reminder`),
   getOverduePayments: async () => {
@@ -220,34 +220,34 @@ export const adminAPI = {
   deleteBudget: (id) => api.delete(`/admin/budgets/${id}`),
 };
 
-// Babysitter API
-export const babysitterAPI = {
-  // Children endpoints
-  getChildren: () => api.get('/babysitter/children'),
-  getChildById: (childId) => api.get(`/babysitter/children/${childId}`),
-  addActivity: (childId, activityData) => api.post(`/babysitter/children/${childId}/activities`, activityData),
-  getChildActivities: (childId) => api.get(`/babysitter/children/${childId}/activities`),
+// Player API
+export const playerAPI = {
+  // Player endpoints
+  getPlayers: () => api.get('/player/players'),
+  getPlayerById: (playerId) => api.get(`/player/players/${playerId}`),
+  addActivity: (playerId, activityData) => api.post(`/player/players/${playerId}/activities`, activityData),
+  getPlayerActivities: (playerId) => api.get(`/player/players/${playerId}/activities`),
   
   // Schedule endpoints
-  getSchedule: () => api.get('/babysitter/schedule'),
+  getSchedule: () => api.get('/player/schedule'),
   
-  // Attendance endpoints
-  recordAttendance: (attendanceData) => api.post('/babysitter/attendance', attendanceData),
-  getAttendance: (date) => {
+  // Training endpoints
+  recordTraining: (trainingData) => api.post('/player/training', trainingData),
+  getTraining: (date) => {
     const formattedDate = encodeURIComponent(date);
-    console.log(`Making request to /babysitter/attendance with date=${formattedDate}`);
-    return api.get(`/babysitter/attendance?date=${formattedDate}`);
+    console.log(`Making request to /player/training with date=${formattedDate}`);
+    return api.get(`/player/training?date=${formattedDate}`);
   },
   
   // Profile endpoints
-  getProfile: () => api.get('/babysitter/profile'),
-  updateProfile: (profileData) => api.put('/babysitter/profile', profileData),
+  getProfile: () => api.get('/player/profile'),
+  updateProfile: (profileData) => api.put('/player/profile', profileData),
   
   // Notification endpoints
-  getNotifications: () => api.get('/babysitter/notifications'),
-  markNotificationAsRead: (notificationId) => api.put(`/babysitter/notifications/${notificationId}/read`),
-  markAllNotificationsAsRead: () => api.put('/babysitter/notifications/read-all'),
-  deleteNotification: (notificationId) => api.delete(`/babysitter/notifications/${notificationId}`),
+  getNotifications: () => api.get('/player/notifications'),
+  markNotificationAsRead: (notificationId) => api.put(`/player/notifications/${notificationId}/read`),
+  markAllNotificationsAsRead: () => api.put(`/player/notifications/read-all`),
+  deleteNotification: (notificationId) => api.delete(`/player/notifications/${notificationId}`),
 };
 
-export default api; 
+export default api;

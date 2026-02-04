@@ -18,7 +18,6 @@ import {
   CheckCircle,
   Clock
 } from 'lucide-react';
-import ChildRegistration from '../admin/ChildRegistration';
 
 const MatchAnalysis = () => {
   const navigate = useNavigate();

@@ -13,7 +13,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import { DownloadCloud, RefreshCw, Calendar } from 'lucide-react';
+import { Trophy, TrendingUp, RefreshCw, Calendar } from 'lucide-react';
 
 // Register ChartJS components
 ChartJS.register(
@@ -28,7 +28,7 @@ ChartJS.register(
   Legend
 );
 
-const FinancialTrendsChart = ({ data, period = 'monthly', onRefresh }) => {
+const BasketballTrendsChart = ({ data, period = 'monthly', onRefresh, chartTitle = 'Performance Trends' }) => {
   const { isDarkMode } = useTheme();
   const [chartType, setChartType] = useState('line');
   
@@ -48,7 +48,7 @@ const FinancialTrendsChart = ({ data, period = 'monthly', onRefresh }) => {
       },
       title: {
         display: true,
-        text: `${period.charAt(0).toUpperCase() + period.slice(1)} Financial Trends`,
+        text: `${period.charAt(0).toUpperCase() + period.slice(1)} ${chartTitle}`,
         color: isDarkMode ? '#e5e7eb' : '#1f2937',
         font: {
           size: 16
@@ -83,19 +83,19 @@ const FinancialTrendsChart = ({ data, period = 'monthly', onRefresh }) => {
     }
   };
   
-  // Prepare expense category data for pie chart
-  const expenseCategoryData = {
-    labels: data?.expenseCategories?.map(cat => cat.category) || [],
+  // Prepare player position data for pie chart
+  const playerPositionData = {
+    labels: data?.playerPositions?.map(pos => pos.position) || [],
     datasets: [
       {
-        label: 'Expenses by Category',
-        data: data?.expenseCategories?.map(cat => cat.amount) || [],
+        label: 'Players by Position',
+        data: data?.playerPositions?.map(pos => pos.count) || [],
         backgroundColor: [
-          'rgba(255, 99, 132, 0.7)',
-          'rgba(54, 162, 235, 0.7)',
-          'rgba(255, 206, 86, 0.7)',
-          'rgba(75, 192, 192, 0.7)',
-          'rgba(153, 102, 255, 0.7)',
+          'rgba(255, 99, 132, 0.7)',  // Point Guard - Red
+          'rgba(54, 162, 235, 0.7)',  // Shooting Guard - Blue
+          'rgba(255, 206, 86, 0.7)',  // Small Forward - Yellow
+          'rgba(75, 192, 192, 0.7)',  // Power Forward - Teal
+          'rgba(153, 102, 255, 0.7)', // Center - Purple
         ],
         borderColor: [
           'rgba(255, 99, 132, 1)',
@@ -139,10 +139,10 @@ const FinancialTrendsChart = ({ data, period = 'monthly', onRefresh }) => {
               <h3 className={`text-sm font-medium mb-2 ${
                 isDarkMode ? 'text-gray-300' : 'text-gray-700'
               }`}>
-                Expenses by Category
+                Players by Position
               </h3>
               <Pie 
-                data={expenseCategoryData} 
+                data={playerPositionData} 
                 options={{
                   ...chartOptions,
                   maintainAspectRatio: false,
@@ -154,11 +154,11 @@ const FinancialTrendsChart = ({ data, period = 'monthly', onRefresh }) => {
               <h3 className={`text-sm font-medium mb-2 ${
                 isDarkMode ? 'text-gray-300' : 'text-gray-700'
               }`}>
-                Income vs Expenses
+                Performance Summary
               </h3>
               <Bar 
                 data={{
-                  labels: ['Revenue', 'Expenses', 'Net Profit'],
+                  labels: ['Wins', 'Losses', 'Games Played'],
                   datasets: [
                     {
                       data: [
@@ -167,9 +167,9 @@ const FinancialTrendsChart = ({ data, period = 'monthly', onRefresh }) => {
                         data.monthly.datasets[2].data.reduce((sum, val) => sum + val, 0)
                       ],
                       backgroundColor: [
-                        'rgba(16, 185, 129, 0.7)',
-                        'rgba(239, 68, 68, 0.7)',
-                        'rgba(59, 130, 246, 0.7)'
+                        'rgba(16, 185, 129, 0.7)',  // Wins - Green
+                        'rgba(239, 68, 68, 0.7)',   // Losses - Red
+                        'rgba(59, 130, 246, 0.7)'   // Games - Blue
                       ]
                     }
                   ]
@@ -180,7 +180,7 @@ const FinancialTrendsChart = ({ data, period = 'monthly', onRefresh }) => {
                     ...chartOptions.plugins,
                     title: {
                       ...chartOptions.plugins.title,
-                      text: 'Financial Summary'
+                      text: 'Team Performance Summary'
                     }
                   },
                   indexAxis: 'y'
@@ -210,7 +210,7 @@ const FinancialTrendsChart = ({ data, period = 'monthly', onRefresh }) => {
         <h2 className={`text-lg font-medium ${
           isDarkMode ? 'text-white' : 'text-gray-900'
         }`}>
-          Financial Trends
+          Basketball Performance Trends
         </h2>
         <div className="flex items-center space-x-2">
           <button
@@ -276,7 +276,7 @@ const FinancialTrendsChart = ({ data, period = 'monthly', onRefresh }) => {
             }`}
             title="Download chart"
           >
-            <DownloadCloud size={18} />
+            <TrendingUp size={18} />
           </button>
         </div>
       </div>
@@ -288,4 +288,4 @@ const FinancialTrendsChart = ({ data, period = 'monthly', onRefresh }) => {
   );
 };
 
-export default FinancialTrendsChart; 
+export default BasketballTrendsChart; 

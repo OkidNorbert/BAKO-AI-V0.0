@@ -78,7 +78,7 @@ export const NotificationProvider = ({ children }) => {
         {
           id: '1',
           title: 'Real-time Test Notification',
-          message: 'This is a test notification from the Daystar notification system.',
+          message: 'This is a test notification from the BAKO notification system.',
           type: 'alert',
           read: false,
           createdAt: new Date(),
@@ -86,9 +86,9 @@ export const NotificationProvider = ({ children }) => {
         },
         {
           id: '2',
-          title: 'Child Check-in Confirmed',
-          message: 'Your child was checked in today at 8:30 AM.',
-          type: 'child',
+          title: 'Training Session Completed',
+          message: 'Your training session was analyzed and is ready for review.',
+          type: 'training',
           read: true,
           createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
           source: 'https://via.placeholder.com/40x40?text=DS:2'
@@ -96,7 +96,7 @@ export const NotificationProvider = ({ children }) => {
         {
           id: '3',
           title: 'Important System Alert',
-          message: 'The daycare center will be closed this Friday for maintenance.',
+          message: 'The basketball analytics system will be under maintenance this Friday for updates.',
           type: 'alert',
           read: false,
           createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
@@ -244,8 +244,8 @@ export const NotificationProvider = ({ children }) => {
     switch (type) {
       case 'payment':
         return 'bg-purple-50 border-purple-200';
-      case 'child':
-        return 'bg-blue-50 border-blue-200';
+      case 'training':
+        return 'bg-green-50 border-green-200';
       case 'alert':
         return 'bg-red-50 border-red-200';
       case 'budget':

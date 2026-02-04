@@ -27,7 +27,6 @@ const Navbar = ({ role }) => {
           { to: '/team/profile', icon: <User className="h-5 w-5" />, label: 'Profile' },
           { to: '/team/notifications', icon: <Bell className="h-5 w-5" />, label: 'Notifications' }
         ];
-      case 'babysitter':
       case 'player':
         return [
           { to: '/player', icon: <Home className="h-5 w-5" />, label: 'Dashboard' },
@@ -156,7 +155,7 @@ const Navbar = ({ role }) => {
                         <span>Your Profile</span>
                       </Link>
                       <Link
-                        to={`/${role === 'babysitter' ? 'player' : role}/notifications`}
+                        to={`/${role}/notifications`}
                         className={`flex items-center px-4 py-2 text-sm hover:text-indigo-600 ${
                           isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-indigo-50'
                         }`}

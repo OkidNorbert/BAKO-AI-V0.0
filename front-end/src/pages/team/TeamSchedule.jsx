@@ -97,8 +97,8 @@ const TeamSchedule = () => {
       ]);
       /*
       const [coachesRes, playersRes] = await Promise.all([
-        adminAPI.getBabysitters(), // mapped to coaches
-        adminAPI.getChildren() // mapped to players
+        adminAPI.getPlayers(), // mapped to coaches
+        adminAPI.getRoster() // mapped to players
       ]);
       setCoaches(coachesRes.data || []);
       setPlayers(playersRes.data || []);

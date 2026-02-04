@@ -13,13 +13,13 @@ const incidentService = {
     }
   },
 
-  // Get incidents for a babysitter
-  getBabysitterIncidents: async () => {
+  // Get incidents for a player
+  getPlayerIncidents: async () => {
     try {
-      const response = await api.get('/babysitter/incidents');
+      const response = await api.get('/player/incidents');
       return response.data;
     } catch (error) {
-      console.error('Error fetching babysitter incidents:', error);
+      console.error('Error fetching player incidents:', error);
       throw error;
     }
   },
@@ -38,7 +38,7 @@ const incidentService = {
   // Create a new incident
   createIncident: async (incidentData) => {
     try {
-      const response = await api.post('/babysitter/incidents', incidentData);
+      const response = await api.post('/player/incidents', incidentData);
       return response.data;
     } catch (error) {
       console.error('Error creating incident:', error);
@@ -49,7 +49,7 @@ const incidentService = {
   // Update an incident
   updateIncident: async (id, incidentData) => {
     try {
-      const response = await api.put(`/babysitter/incidents/${id}`, incidentData);
+      const response = await api.put(`/player/incidents/${id}`, incidentData);
       return response.data;
     } catch (error) {
       console.error(`Error updating incident ${id}:`, error);
