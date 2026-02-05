@@ -3,15 +3,15 @@ import { Link } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { adminAPI } from '../../services/api';
-import { 
-  Users, 
-  Video, 
-  Calendar, 
-  Activity, 
-  Settings, 
-  Bell, 
-  BarChart, 
-  UserPlus, 
+import {
+  Users,
+  Video,
+  Calendar,
+  Activity,
+  Settings,
+  Bell,
+  BarChart,
+  UserPlus,
   ChevronRight,
   PlusCircle,
   Clock,
@@ -43,7 +43,7 @@ const TeamDashboard = () => {
       try {
         setLoading(true);
         setError('');
-        
+
         // In real app, this would call actual API endpoints
         // For now, using mock data that matches our component structure
         const mockStats = {
@@ -84,7 +84,7 @@ const TeamDashboard = () => {
             ]
           }
         };
-        
+
         setStats(prev => ({ ...prev, ...mockStats, loading: false }));
       } catch (error) {
         console.error('Error fetching team stats:', error);
@@ -97,39 +97,39 @@ const TeamDashboard = () => {
   }, []);
 
   const quickActions = [
-    { 
-      name: 'Add Player', 
-      icon: <UserPlus size={20} />, 
+    {
+      name: 'Add Player',
+      icon: <UserPlus size={20} />,
       link: '/team/roster/add',
       description: 'Add new player to roster'
     },
-    { 
-      name: 'Create Team', 
-      icon: <PlusCircle size={20} />, 
+    {
+      name: 'Create Team',
+      icon: <PlusCircle size={20} />,
       link: '/team/roster/new',
       description: 'Create new team profile'
     },
-    { 
-      name: 'Upload Match', 
-      icon: <Video size={20} />, 
+    {
+      name: 'Upload Match',
+      icon: <Video size={20} />,
       link: '/team/matches',
       description: 'Analyze match video'
     },
-    { 
-      name: 'Team Schedule', 
-      icon: <Calendar size={20} />, 
+    {
+      name: 'Team Schedule',
+      icon: <Calendar size={20} />,
       link: '/team/schedule',
       description: 'View team schedule'
     },
-    { 
-      name: 'Analytics', 
-      icon: <BarChart size={20} />, 
+    {
+      name: 'Analytics',
+      icon: <BarChart size={20} />,
       link: '/team/analytics',
       description: 'View detailed analytics'
     },
-    { 
-      name: 'Settings', 
-      icon: <Settings size={20} />, 
+    {
+      name: 'Settings',
+      icon: <Settings size={20} />,
       link: '/team/settings',
       description: 'Team configuration'
     }
@@ -138,8 +138,8 @@ const TeamDashboard = () => {
   if (stats.loading) {
     return (
       <div className={`flex items-center justify-center min-h-screen ${isDarkMode
-          ? 'bg-gradient-to-b from-gray-900 to-indigo-950'
-          : 'bg-gradient-to-b from-blue-50 to-indigo-100'
+        ? 'bg-gradient-to-b from-gray-900 to-indigo-950'
+        : 'bg-gradient-to-b from-blue-50 to-indigo-100'
         }`}>
         <div className="flex flex-col items-center justify-center">
           <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-orange-500"></div>
@@ -152,12 +152,12 @@ const TeamDashboard = () => {
   if (stats.error) {
     return (
       <div className={`flex items-center justify-center min-h-screen ${isDarkMode
-          ? 'bg-gradient-to-b from-gray-900 to-indigo-950'
-          : 'bg-gradient-to-b from-blue-50 to-indigo-100'
+        ? 'bg-gradient-to-b from-gray-900 to-indigo-950'
+        : 'bg-gradient-to-b from-blue-50 to-indigo-100'
         }`}>
         <div className="text-center">
           <p className={`text-lg ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>{stats.error}</p>
-          <button 
+          <button
             onClick={() => window.location.reload()}
             className={`mt-4 px-4 py-2 rounded ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}
           >
@@ -170,17 +170,17 @@ const TeamDashboard = () => {
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDarkMode
-        ? 'bg-gradient-to-b from-gray-900 to-purple-950'
-        : 'bg-gradient-to-b from-blue-50 to-purple-100'
+      ? 'bg-gradient-to-b from-gray-900 to-purple-950'
+      : 'bg-gradient-to-b from-blue-50 to-purple-100'
       }`}>
-      
+
       {/* Header Section */}
       <div className="relative pt-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className={`flex flex-col md:flex-row justify-between items-start md:items-center mb-8`}>
           <div>
             <h1 className={`text-3xl sm:text-4xl font-bold mb-2 ${isDarkMode
-                ? 'text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-red-500 to-purple-600'
-                : 'text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-orange-500'
+              ? 'text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-red-500 to-purple-600'
+              : 'text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-orange-500'
               } animate-gradient`}>
               Team Dashboard
             </h1>
@@ -192,8 +192,8 @@ const TeamDashboard = () => {
             <Link
               to="/team/profile"
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${isDarkMode
-                  ? 'bg-gray-800 text-white hover:bg-gray-700'
-                  : 'bg-white text-indigo-600 hover:bg-gray-50 shadow-sm'
+                ? 'bg-gray-800 text-white hover:bg-gray-700'
+                : 'bg-white text-indigo-600 hover:bg-gray-50 shadow-sm'
                 }`}
             >
               Team Profile
@@ -201,8 +201,8 @@ const TeamDashboard = () => {
             <Link
               to="/team/notifications"
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${isDarkMode
-                  ? 'bg-gray-800 text-white hover:bg-gray-700'
-                  : 'bg-white text-indigo-600 hover:bg-gray-50 shadow-sm'
+                ? 'bg-gray-800 text-white hover:bg-gray-700'
+                : 'bg-white text-indigo-600 hover:bg-gray-50 shadow-sm'
                 }`}
             >
               <Bell className="inline h-4 w-4 mr-1" />
@@ -213,108 +213,107 @@ const TeamDashboard = () => {
       </div>
 
       {/* Quick Actions */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {quickActions.map((action, index) => (
-            <Link
-              key={index}
-              to={action.link}
-              className={`p-4 rounded-lg transition-all duration-200 transform hover:scale-105 ${isDarkMode
-                  ? 'bg-gray-800 hover:bg-gray-700 text-white'
-                  : 'bg-white hover:bg-gray-50 text-gray-900 shadow-md'
-                }`}
-            >
-              <div className="flex items-center space-x-3">
-                <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-indigo-100 text-indigo-600'}`}>
-                  {action.icon}
-                </div>
-                <div>
-                  <p className="font-medium">{action.name}</p>
-                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    {action.description}
-                  </p>
-                </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {quickActions.map((action, index) => (
+          <Link
+            key={index}
+            to={action.link}
+            className={`p-4 rounded-lg transition-all duration-200 transform hover:scale-105 ${isDarkMode
+              ? 'bg-gray-800 hover:bg-gray-700 text-white'
+              : 'bg-white hover:bg-gray-50 text-gray-900 shadow-md'
+              }`}
+          >
+            <div className="flex items-center space-x-3">
+              <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-indigo-100 text-indigo-600'}`}>
+                {action.icon}
               </div>
-            </Link>
-          ))}
-        </div>
-
-        {/* Main Dashboard Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
-          {/* Left Column - Stats and Recent Activity */}
-          <div className="lg:col-span-2 space-y-6">
-            
-            {/* Team Stats Component */}
-            <TeamStats />
-            
-            {/* Recent Games Component */}
-            <RecentGames />
-            
-          </div>
-
-          {/* Right Column - Charts and Player Management */}
-          <div className="space-y-6">
-            
-            {/* Performance Chart */}
-            <TeamDashboardChart 
-              data={stats.performanceData} 
-              period="monthly"
-            />
-            
-            {/* Player Management Overview */}
-            <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white shadow-md'}`}>
-              <div className="flex justify-between items-center mb-4">
-                <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  Player Management
-                </h3>
-                <Link
-                  to="/team/roster"
-                  className={`text-sm ${isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'}`}
-                >
-                  View All
-                </Link>
-              </div>
-              
-              <div className="space-y-3">
-                <div className={`flex justify-between items-center p-3 rounded ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                  <div>
-                    <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                      Total Players
-                    </p>
-                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      Active roster
-                    </p>
-                  </div>
-                  <div className={`text-2xl font-bold ${isDarkMode ? 'text-orange-400' : 'text-orange-600'}`}>
-                    {stats.totalPlayers}
-                  </div>
-                </div>
-                
-                <div className={`flex justify-between items-center p-3 rounded ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                  <div>
-                    <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                      Matches Analyzed
-                    </p>
-                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      This season
-                    </p>
-                  </div>
-                  <div className={`text-2xl font-bold ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>
-                    {stats.matchesAnalyzed}
-                  </div>
-                </div>
-                
-                <Link
-                  to="/team/roster/add"
-                  className={`block w-full text-center p-3 rounded-lg transition-colors ${isDarkMode ? 'bg-orange-600 hover:bg-orange-700 text-white' : 'bg-orange-500 hover:bg-orange-600 text-white'}`}
-                >
-                  <UserPlus className="inline h-4 w-4 mr-2" />
-                  Add New Player
-                </Link>
+              <div>
+                <p className="font-medium">{action.name}</p>
+                <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  {action.description}
+                </p>
               </div>
             </div>
-            
+          </Link>
+        ))}
+      </div>
+
+      {/* Main Dashboard Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        {/* Left Column - Stats and Recent Activity */}
+        <div className="lg:col-span-2 space-y-6">
+
+          {/* Team Stats Component */}
+          <TeamStats />
+
+          {/* Recent Games Component */}
+          <RecentGames />
+
+        </div>
+
+        {/* Right Column - Charts and Player Management */}
+        <div className="space-y-6">
+
+          {/* Performance Chart */}
+          <TeamDashboardChart
+            data={stats.performanceData}
+            period="monthly"
+          />
+
+          {/* Player Management Overview */}
+          <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white shadow-md'}`}>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                Player Management
+              </h3>
+              <Link
+                to="/team/roster"
+                className={`text-sm ${isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'}`}
+              >
+                View All
+              </Link>
+            </div>
+
+            <div className="space-y-3">
+              <div className={`flex justify-between items-center p-3 rounded ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                <div>
+                  <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    Total Players
+                  </p>
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Active roster
+                  </p>
+                </div>
+                <div className={`text-2xl font-bold ${isDarkMode ? 'text-orange-400' : 'text-orange-600'}`}>
+                  {stats.totalPlayers}
+                </div>
+              </div>
+
+              <div className={`flex justify-between items-center p-3 rounded ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                <div>
+                  <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    Matches Analyzed
+                  </p>
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    This season
+                  </p>
+                </div>
+                <div className={`text-2xl font-bold ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>
+                  {stats.matchesAnalyzed}
+                </div>
+              </div>
+
+              <Link
+                to="/team/roster/add"
+                className={`block w-full text-center p-3 rounded-lg transition-colors ${isDarkMode ? 'bg-orange-600 hover:bg-orange-700 text-white' : 'bg-orange-500 hover:bg-orange-600 text-white'}`}
+              >
+                <UserPlus className="inline h-4 w-4 mr-2" />
+                Add New Player
+              </Link>
+            </div>
           </div>
+
         </div>
       </div>
     </div>

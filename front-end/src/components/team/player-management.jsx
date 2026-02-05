@@ -57,19 +57,19 @@ const PlayerListItem = ({ player }) => {
 const PlayerManagement = ({ players = [] }) => {
   const navigate = useNavigate();
   const [filter, setFilter] = useState('all');
-  
-  const filteredPlayers = filter === 'all' 
-    ? players 
+
+  const filteredPlayers = filter === 'all'
+    ? players
     : players.filter(player => player.position?.toLowerCase() === filter.toLowerCase());
-  
+
   const handleAddPlayer = () => {
     navigate('/team/roster/new');
   };
-  
+
   const handleViewAllPlayers = () => {
     navigate('/team/roster');
   };
-  
+
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -80,31 +80,31 @@ const PlayerManagement = ({ players = [] }) => {
       </CardHeader>
       <CardContent>
         <div className="flex space-x-2 mb-4">
-          <Button 
-            size="sm" 
-            variant={filter === 'all' ? 'default' : 'outline'} 
+          <Button
+            size="sm"
+            variant={filter === 'all' ? 'default' : 'outline'}
             onClick={() => setFilter('all')}
           >
             <Users className="h-4 w-4 mr-1" />
             All
           </Button>
-          <Button 
-            size="sm" 
-            variant={filter === 'point guard' ? 'default' : 'outline'} 
+          <Button
+            size="sm"
+            variant={filter === 'point guard' ? 'default' : 'outline'}
             onClick={() => setFilter('point guard')}
           >
             <Shield className="h-4 w-4 mr-1" />
             Guards
           </Button>
-          <Button 
-            size="sm" 
-            variant={filter === 'forward' ? 'default' : 'outline'} 
+          <Button
+            size="sm"
+            variant={filter === 'forward' ? 'default' : 'outline'}
             onClick={() => setFilter('forward')}
           >
             Forwards
           </Button>
         </div>
-        
+
         {filteredPlayers.length === 0 ? (
           <div className="p-4 text-center text-muted-foreground">
             No players found with the selected position
@@ -118,14 +118,14 @@ const PlayerManagement = ({ players = [] }) => {
         )}
       </CardContent>
       <CardFooter className="flex justify-between">
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           size="sm"
-          onClick={handleViewAllUsers}
+          onClick={handleViewAllPlayers}
         >
           View All Players
         </Button>
-        <Button 
+        <Button
           size="sm"
           onClick={handleAddPlayer}
         >

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
-import { AuthContext } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import {
   User,
   Mail,
@@ -22,10 +22,10 @@ import {
 } from 'lucide-react';
 
 const Profile = () => {
-  const { user, updateUser } = useContext(AuthContext);
+  const { user, updateUser } = useAuth();
   const { isDarkMode } = useTheme();
   const navigate = useNavigate();
-  
+
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('personal');
@@ -85,13 +85,13 @@ const Profile = () => {
   const handleSave = async () => {
     try {
       setLoading(true);
-      
+
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       // Update user context
       await updateUser(formData);
-      
+
       setIsEditing(false);
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -177,10 +177,10 @@ const Profile = () => {
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDarkMode
-        ? 'bg-gradient-to-b from-gray-900 to-purple-950'
-        : 'bg-gradient-to-b from-blue-50 to-purple-100'
+      ? 'bg-gradient-to-b from-gray-900 to-purple-950'
+      : 'bg-gradient-to-b from-blue-50 to-purple-100'
       }`}>
-      
+
       <div className="max-w-4xl mx-auto p-6">
         {/* Header */}
         <div className="mb-8">
@@ -197,9 +197,8 @@ const Profile = () => {
           <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6">
             {/* Avatar */}
             <div className="relative">
-              <div className={`w-24 h-24 rounded-full flex items-center justify-center ${
-                isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
-              }`}>
+              <div className={`w-24 h-24 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+                }`}>
                 {user?.avatar ? (
                   <img src={user.avatar} alt="Profile" className="w-full h-full rounded-full object-cover" />
                 ) : (
@@ -226,15 +225,13 @@ const Profile = () => {
                   {formData.firstName} {formData.lastName}
                 </h2>
                 {user?.role === 'team' ? (
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    isDarkMode ? 'bg-blue-900 text-blue-300' : 'bg-blue-100 text-blue-700'
-                  }`}>
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${isDarkMode ? 'bg-blue-900 text-blue-300' : 'bg-blue-100 text-blue-700'
+                    }`}>
                     Team Account
                   </span>
                 ) : (
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    isDarkMode ? 'bg-green-900 text-green-300' : 'bg-green-100 text-green-700'
-                  }`}>
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${isDarkMode ? 'bg-green-900 text-green-300' : 'bg-green-100 text-green-700'
+                    }`}>
                     Player Account
                   </span>
                 )}
@@ -249,11 +246,10 @@ const Profile = () => {
               {!isEditing ? (
                 <button
                   onClick={() => setIsEditing(true)}
-                  className={`flex items-center px-4 py-2 rounded-lg ${
-                    isDarkMode
+                  className={`flex items-center px-4 py-2 rounded-lg ${isDarkMode
                       ? 'bg-orange-600 hover:bg-orange-700 text-white'
                       : 'bg-orange-500 hover:bg-orange-600 text-white'
-                  } transition-colors`}
+                    } transition-colors`}
                 >
                   <Edit className="w-4 h-4 mr-2" />
                   Edit Profile
@@ -263,24 +259,22 @@ const Profile = () => {
                   <button
                     onClick={handleSave}
                     disabled={loading}
-                    className={`flex items-center px-4 py-2 rounded-lg ${
-                      loading
+                    className={`flex items-center px-4 py-2 rounded-lg ${loading
                         ? 'bg-gray-400 cursor-not-allowed'
                         : isDarkMode
                           ? 'bg-green-600 hover:bg-green-700 text-white'
                           : 'bg-green-500 hover:bg-green-600 text-white'
-                    } transition-colors`}
+                      } transition-colors`}
                   >
                     <Save className="w-4 h-4 mr-2" />
                     {loading ? 'Saving...' : 'Save'}
                   </button>
                   <button
                     onClick={handleCancel}
-                    className={`flex items-center px-4 py-2 rounded-lg ${
-                      isDarkMode
+                    className={`flex items-center px-4 py-2 rounded-lg ${isDarkMode
                         ? 'bg-gray-600 hover:bg-gray-700 text-white'
                         : 'bg-gray-500 hover:bg-gray-600 text-white'
-                    } transition-colors`}
+                      } transition-colors`}
                   >
                     <X className="w-4 h-4 mr-2" />
                     Cancel
@@ -298,15 +292,14 @@ const Profile = () => {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 font-medium transition-colors ${
-                  activeTab === tab
+                className={`px-4 py-2 font-medium transition-colors ${activeTab === tab
                     ? isDarkMode
                       ? 'text-orange-400 border-b-2 border-orange-400'
                       : 'text-orange-600 border-b-2 border-orange-600'
                     : isDarkMode
                       ? 'text-gray-400 hover:text-gray-300'
                       : 'text-gray-600 hover:text-gray-800'
-                }`}
+                  }`}
               >
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
               </button>
@@ -327,11 +320,10 @@ const Profile = () => {
                   value={formData.firstName}
                   onChange={(e) => handleInputChange('firstName', e.target.value)}
                   disabled={!isEditing}
-                  className={`w-full px-3 py-2 rounded-lg border ${
-                    isDarkMode
+                  className={`w-full px-3 py-2 rounded-lg border ${isDarkMode
                       ? 'bg-gray-700 border-gray-600 text-white'
                       : 'bg-white border-gray-300 text-gray-900'
-                  } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
                 />
               </div>
 
@@ -344,11 +336,10 @@ const Profile = () => {
                   value={formData.lastName}
                   onChange={(e) => handleInputChange('lastName', e.target.value)}
                   disabled={!isEditing}
-                  className={`w-full px-3 py-2 rounded-lg border ${
-                    isDarkMode
+                  className={`w-full px-3 py-2 rounded-lg border ${isDarkMode
                       ? 'bg-gray-700 border-gray-600 text-white'
                       : 'bg-white border-gray-300 text-gray-900'
-                  } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
                 />
               </div>
 
@@ -363,11 +354,10 @@ const Profile = () => {
                     value={formData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
                     disabled={!isEditing}
-                    className={`w-full pl-10 pr-3 py-2 rounded-lg border ${
-                      isDarkMode
+                    className={`w-full pl-10 pr-3 py-2 rounded-lg border ${isDarkMode
                         ? 'bg-gray-700 border-gray-600 text-white'
                         : 'bg-white border-gray-300 text-gray-900'
-                    } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
                   />
                 </div>
               </div>
@@ -383,11 +373,10 @@ const Profile = () => {
                     value={formData.phone}
                     onChange={(e) => handleInputChange('phone', e.target.value)}
                     disabled={!isEditing}
-                    className={`w-full pl-10 pr-3 py-2 rounded-lg border ${
-                      isDarkMode
+                    className={`w-full pl-10 pr-3 py-2 rounded-lg border ${isDarkMode
                         ? 'bg-gray-700 border-gray-600 text-white'
                         : 'bg-white border-gray-300 text-gray-900'
-                    } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
                   />
                 </div>
               </div>
@@ -403,11 +392,10 @@ const Profile = () => {
                     value={formData.dateOfBirth}
                     onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
                     disabled={!isEditing}
-                    className={`w-full pl-10 pr-3 py-2 rounded-lg border ${
-                      isDarkMode
+                    className={`w-full pl-10 pr-3 py-2 rounded-lg border ${isDarkMode
                         ? 'bg-gray-700 border-gray-600 text-white'
                         : 'bg-white border-gray-300 text-gray-900'
-                    } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
                   />
                 </div>
               </div>
@@ -424,11 +412,10 @@ const Profile = () => {
                     onChange={(e) => handleInputChange('location', e.target.value)}
                     disabled={!isEditing}
                     placeholder="City, Country"
-                    className={`w-full pl-10 pr-3 py-2 rounded-lg border ${
-                      isDarkMode
+                    className={`w-full pl-10 pr-3 py-2 rounded-lg border ${isDarkMode
                         ? 'bg-gray-700 border-gray-600 text-white'
                         : 'bg-white border-gray-300 text-gray-900'
-                    } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
                   />
                 </div>
               </div>
@@ -443,11 +430,10 @@ const Profile = () => {
                   disabled={!isEditing}
                   rows={3}
                   placeholder="Tell us about yourself..."
-                  className={`w-full px-3 py-2 rounded-lg border ${
-                    isDarkMode
+                  className={`w-full px-3 py-2 rounded-lg border ${isDarkMode
                       ? 'bg-gray-700 border-gray-600 text-white'
                       : 'bg-white border-gray-300 text-gray-900'
-                  } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
                 />
               </div>
             </div>
@@ -462,16 +448,14 @@ const Profile = () => {
                 </div>
                 <button
                   onClick={() => handlePreferenceChange('notifications', !formData.preferences.notifications)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    formData.preferences.notifications
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.preferences.notifications
                       ? 'bg-orange-500'
                       : 'bg-gray-300'
-                  }`}
+                    }`}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      formData.preferences.notifications ? 'translate-x-6' : 'translate-x-1'
-                    }`}
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.preferences.notifications ? 'translate-x-6' : 'translate-x-1'
+                      }`}
                   />
                 </button>
               </div>
@@ -483,11 +467,10 @@ const Profile = () => {
                 <select
                   value={formData.preferences.language}
                   onChange={(e) => handlePreferenceChange('language', e.target.value)}
-                  className={`w-full px-3 py-2 rounded-lg border ${
-                    isDarkMode
+                  className={`w-full px-3 py-2 rounded-lg border ${isDarkMode
                       ? 'bg-gray-700 border-gray-600 text-white'
                       : 'bg-white border-gray-300 text-gray-900'
-                  }`}
+                    }`}
                 >
                   <option value="en">English</option>
                   <option value="es">Spanish</option>
@@ -503,11 +486,10 @@ const Profile = () => {
                 <select
                   value={formData.preferences.timezone}
                   onChange={(e) => handlePreferenceChange('timezone', e.target.value)}
-                  className={`w-full px-3 py-2 rounded-lg border ${
-                    isDarkMode
+                  className={`w-full px-3 py-2 rounded-lg border ${isDarkMode
                       ? 'bg-gray-700 border-gray-600 text-white'
                       : 'bg-white border-gray-300 text-gray-900'
-                  }`}
+                    }`}
                 >
                   <option value="UTC">UTC</option>
                   <option value="EST">Eastern Time</option>
@@ -523,11 +505,10 @@ const Profile = () => {
                 <select
                   value={formData.preferences.privacy}
                   onChange={(e) => handlePreferenceChange('privacy', e.target.value)}
-                  className={`w-full px-3 py-2 rounded-lg border ${
-                    isDarkMode
+                  className={`w-full px-3 py-2 rounded-lg border ${isDarkMode
                       ? 'bg-gray-700 border-gray-600 text-white'
                       : 'bg-white border-gray-300 text-gray-900'
-                  }`}
+                    }`}
                 >
                   <option value="public">Public</option>
                   <option value="private">Private</option>
@@ -548,11 +529,10 @@ const Profile = () => {
                   <input
                     type="password"
                     placeholder="Enter current password"
-                    className={`w-full pl-10 pr-3 py-2 rounded-lg border ${
-                      isDarkMode
+                    className={`w-full pl-10 pr-3 py-2 rounded-lg border ${isDarkMode
                         ? 'bg-gray-700 border-gray-600 text-white'
                         : 'bg-white border-gray-300 text-gray-900'
-                    }`}
+                      }`}
                   />
                 </div>
               </div>
@@ -566,11 +546,10 @@ const Profile = () => {
                   <input
                     type="password"
                     placeholder="Enter new password"
-                    className={`w-full pl-10 pr-3 py-2 rounded-lg border ${
-                      isDarkMode
+                    className={`w-full pl-10 pr-3 py-2 rounded-lg border ${isDarkMode
                         ? 'bg-gray-700 border-gray-600 text-white'
                         : 'bg-white border-gray-300 text-gray-900'
-                    }`}
+                      }`}
                   />
                 </div>
               </div>
@@ -584,20 +563,18 @@ const Profile = () => {
                   <input
                     type="password"
                     placeholder="Confirm new password"
-                    className={`w-full pl-10 pr-3 py-2 rounded-lg border ${
-                      isDarkMode
+                    className={`w-full pl-10 pr-3 py-2 rounded-lg border ${isDarkMode
                         ? 'bg-gray-700 border-gray-600 text-white'
                         : 'bg-white border-gray-300 text-gray-900'
-                    }`}
+                      }`}
                   />
                 </div>
               </div>
 
-              <button className={`flex items-center px-4 py-2 rounded-lg ${
-                isDarkMode
+              <button className={`flex items-center px-4 py-2 rounded-lg ${isDarkMode
                   ? 'bg-orange-600 hover:bg-orange-700 text-white'
                   : 'bg-orange-500 hover:bg-orange-600 text-white'
-              } transition-colors`}>
+                } transition-colors`}>
                 <Shield className="w-4 h-4 mr-2" />
                 Update Password
               </button>

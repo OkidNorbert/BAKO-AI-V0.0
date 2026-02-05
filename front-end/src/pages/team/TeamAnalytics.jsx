@@ -18,7 +18,7 @@ import {
   Clock,
   Zap,
   Award,
-  Basketball,
+
   Timer,
   Eye
 } from 'lucide-react';
@@ -101,7 +101,7 @@ const TeamAnalytics = () => {
     try {
       setLoading(true);
       setError('');
-      
+
       // Mock basketball analytics data
       const mockData = {
         teamPerformance: {
@@ -180,7 +180,7 @@ const TeamAnalytics = () => {
           attendanceRate: 87.5
         }
       };
-      
+
       setAnalyticsData(mockData);
     } catch (error) {
       console.error('Error fetching analytics:', error);
@@ -194,10 +194,10 @@ const TeamAnalytics = () => {
     try {
       setLoading(true);
       setError('');
-      
+
       // Mock download functionality
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       // Create a mock CSV report
       const csvContent = [
         ['Metric', 'Value'],
@@ -209,7 +209,7 @@ const TeamAnalytics = () => {
         ['3-Point %', `${analyticsData.shootingAnalytics.threePointPercentage}%`],
         ['Free Throw %', `${analyticsData.shootingAnalytics.freeThrowPercentage}%`]
       ].map(row => row.join(',')).join('\n');
-      
+
       const blob = new Blob([csvContent], { type: 'text/csv' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -219,7 +219,7 @@ const TeamAnalytics = () => {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
-      
+
     } catch (error) {
       console.error('Error downloading report:', error);
       setError('Failed to download report. Please try again.');
@@ -382,7 +382,7 @@ const TeamAnalytics = () => {
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-3xl font-bold flex items-center">
-              <Basketball className="mr-3 h-8 w-8 text-orange-500" />
+              <Activity className="mr-3 h-8 w-8 text-orange-500" />
               Basketball Analytics
             </h1>
             <p className={`mt-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -393,11 +393,10 @@ const TeamAnalytics = () => {
             <select
               value={dateRange}
               onChange={(e) => setDateRange(e.target.value)}
-              className={`rounded-md px-4 py-2 ${
-                isDarkMode
+              className={`rounded-md px-4 py-2 ${isDarkMode
                   ? 'bg-gray-700 text-white border-gray-600'
                   : 'bg-white text-gray-900 border-gray-300'
-              } border`}
+                } border`}
             >
               <option value="week">Last Week</option>
               <option value="month">Last Month</option>
@@ -406,24 +405,22 @@ const TeamAnalytics = () => {
             </select>
             <button
               onClick={fetchAnalytics}
-              className={`p-2 rounded-md ${
-                isDarkMode
+              className={`p-2 rounded-md ${isDarkMode
                   ? 'bg-gray-700 hover:bg-gray-600 text-white'
                   : 'bg-white hover:bg-gray-100 text-gray-900'
-              } border`}
+                } border`}
             >
               <RefreshCw className="h-5 w-5" />
             </button>
             <button
               onClick={handleDownloadReport}
               disabled={loading}
-              className={`flex items-center px-4 py-2 rounded-md ${
-                loading
+              className={`flex items-center px-4 py-2 rounded-md ${loading
                   ? 'bg-gray-400 cursor-not-allowed'
                   : isDarkMode
                     ? 'bg-orange-600 hover:bg-orange-700 text-white'
                     : 'bg-orange-500 hover:bg-orange-600 text-white'
-              }`}
+                }`}
             >
               <Download className="h-4 w-4 mr-2" />
               {loading ? 'Downloading...' : 'Download Report'}
@@ -475,7 +472,7 @@ const TeamAnalytics = () => {
                   3PT: {analyticsData.shootingAnalytics.threePointPercentage}%
                 </p>
               </div>
-              <Basketball className="h-8 w-8 text-orange-500" />
+              <Activity className="h-8 w-8 text-orange-500" />
             </div>
           </div>
 
@@ -532,7 +529,7 @@ const TeamAnalytics = () => {
           {/* Shot Distribution */}
           <div className={`p-6 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white shadow-md'}`}>
             <h2 className="text-lg font-semibold mb-4 flex items-center">
-              <Basketball className="mr-2 h-5 w-5 text-orange-500" />
+              <Activity className="mr-2 h-5 w-5 text-orange-500" />
               Shot Distribution
             </h2>
             <div className="h-64">
@@ -686,7 +683,7 @@ const TeamAnalytics = () => {
               <div className="flex items-center justify-center h-full">
                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500"></div>
               </div>
-                  ) : (
+            ) : (
               <Line data={skillImprovementChartData} options={chartOptions} />
             )}
           </div>

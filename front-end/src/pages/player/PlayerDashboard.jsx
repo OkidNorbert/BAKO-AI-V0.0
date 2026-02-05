@@ -66,7 +66,7 @@ const PlayerDashboard = () => {
     try {
       setLoading(true);
       setError('');
-      
+
       // Fetch all player data
       const [videosResponse, historyResponse, notificationsResponse, metricsResponse, trendsResponse] = await Promise.all([
         api.get('/player/training-videos').catch(() => ({ data: [] })),
@@ -75,11 +75,11 @@ const PlayerDashboard = () => {
         api.get('/player/performance-metrics').catch(() => ({ data: {} })),
         api.get('/player/skill-trends').catch(() => ({ data: { shooting: [], dribbling: [], defense: [], fitness: [] } }))
       ]);
-      
+
       setTrainingVideos(videosResponse.data || []);
       setTrainingHistory(historyResponse.data || []);
       setNotifications(notificationsResponse.data || []);
-      
+
       // Set performance metrics with defaults if API fails
       const metrics = metricsResponse.data || {
         shootingAccuracy: 68.5,
@@ -96,7 +96,7 @@ const PlayerDashboard = () => {
         }
       };
       setPerformanceMetrics(metrics);
-      
+
       // Set skill trends with mock data if API fails
       const trends = trendsResponse.data || {
         shooting: [
@@ -125,7 +125,7 @@ const PlayerDashboard = () => {
         ]
       };
       setSkillTrends(trends);
-      
+
     } catch (err) {
       console.error('fetchData:', err);
       if (err.response?.status === 401) navigate('/login');
@@ -238,7 +238,7 @@ const PlayerDashboard = () => {
                 </div>
                 <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{performanceMetrics.overallRating}</p>
               </div>
-              
+
               <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
                 <div className="flex items-center justify-between mb-2">
                   <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Shooting Accuracy</span>
@@ -246,7 +246,7 @@ const PlayerDashboard = () => {
                 </div>
                 <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{performanceMetrics.shootingAccuracy}%</p>
               </div>
-              
+
               <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
                 <div className="flex items-center justify-between mb-2">
                   <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Improvement Rate</span>
@@ -254,7 +254,7 @@ const PlayerDashboard = () => {
                 </div>
                 <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>+{performanceMetrics.improvementRate}%</p>
               </div>
-              
+
               <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
                 <div className="flex items-center justify-between mb-2">
                   <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Weekly Sessions</span>
@@ -263,7 +263,7 @@ const PlayerDashboard = () => {
                 <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{performanceMetrics.weeklyStats.sessionsCompleted}</p>
               </div>
             </div>
-            
+
             <div className="mt-6">
               <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Weekly Stats</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -459,13 +459,13 @@ const PlayerDashboard = () => {
             <h3 className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Upload Training Video</h3>
             <p className={`text-sm mt-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Analyze your performance</p>
           </Link>
-          
+
           <Link to="/player/skills" className={`p-6 rounded-lg text-center ${isDarkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-white hover:bg-gray-50 shadow-md'}`}>
             <BarChart3 className={`h-8 w-8 mx-auto mb-3 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
             <h3 className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Skill Analytics</h3>
             <p className={`text-sm mt-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>View detailed metrics</p>
           </Link>
-          
+
           <Link to="/player/profile" className={`p-6 rounded-lg text-center ${isDarkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-white hover:bg-gray-50 shadow-md'}`}>
             <Users className={`h-8 w-8 mx-auto mb-3 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`} />
             <h3 className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Player Profile</h3>
@@ -474,6 +474,7 @@ const PlayerDashboard = () => {
         </div>
 
         <div className="h-2 w-full bg-gradient-to-r from-pink-500 via-red-500 to-orange-400 mt-8" />
+      </div>
     </div>
   );
 };
@@ -483,11 +484,13 @@ const formatDate = (dateString) => {
   const d = new Date(dateString);
   return isNaN(d.getTime()) ? 'Invalid Date' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
+
 const formatTime = (dateString) => {
   if (!dateString) return '';
   const d = new Date(dateString);
   return isNaN(d.getTime()) ? '' : d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 };
+
 const getSessionTypeIcon = (type) => {
   switch (type) {
     case 'shooting': return <Target className="h-4 w-4" />;
@@ -496,6 +499,7 @@ const getSessionTypeIcon = (type) => {
     default: return <Video className="h-4 w-4" />;
   }
 };
+
 const getSessionTypeColor = (type, isDarkMode) => {
   switch (type) {
     case 'shooting': return isDarkMode ? 'bg-orange-900 text-orange-300' : 'bg-orange-100 text-orange-800';
@@ -503,7 +507,6 @@ const getSessionTypeColor = (type, isDarkMode) => {
     case 'defense': return isDarkMode ? 'bg-green-900 text-green-300' : 'bg-green-100 text-green-800';
     default: return isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-800';
   }
-};
 };
 
 export default PlayerDashboard;

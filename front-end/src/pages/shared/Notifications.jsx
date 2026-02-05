@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useTheme } from '../../context/ThemeContext';
-import { AuthContext } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import {
   Bell,
   Calendar,
@@ -20,9 +20,9 @@ import {
 } from 'lucide-react';
 
 const Notifications = () => {
-  const { user } = useContext(AuthContext);
+  const { user } = useAuth();
   const { isDarkMode } = useTheme();
-  
+
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
@@ -35,7 +35,7 @@ const Notifications = () => {
   const fetchNotifications = async () => {
     try {
       setLoading(true);
-      
+
       // Mock notifications data
       const mockNotifications = [
         {
@@ -118,7 +118,7 @@ const Notifications = () => {
 
       // Filter based on user role
       if (user?.role === 'player') {
-        filteredNotifications = filteredNotifications.filter(n => 
+        filteredNotifications = filteredNotifications.filter(n =>
           !['team_invite', 'match_scheduled'].includes(n.type)
         );
       }
@@ -133,7 +133,7 @@ const Notifications = () => {
 
   const markAsRead = async (notificationId) => {
     try {
-      setNotifications(prev => 
+      setNotifications(prev =>
         prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
       );
     } catch (error) {
@@ -151,7 +151,7 @@ const Notifications = () => {
 
   const markAllAsRead = async () => {
     try {
-      setNotifications(prev => 
+      setNotifications(prev =>
         prev.map(n => ({ ...n, read: true }))
       );
     } catch (error) {
@@ -205,20 +205,20 @@ const Notifications = () => {
     const date = new Date(timestamp);
     const now = new Date();
     const diffInHours = (now - date) / (1000 * 60 * 60);
-    
+
     if (diffInHours < 24) {
-      return date.toLocaleTimeString('en-US', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
+      return date.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit'
       });
     } else if (diffInHours < 24 * 7) {
-      return date.toLocaleDateString('en-US', { 
-        weekday: 'short' 
+      return date.toLocaleDateString('en-US', {
+        weekday: 'short'
       });
     } else {
-      return date.toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric' 
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric'
       });
     }
   };
@@ -236,7 +236,7 @@ const Notifications = () => {
 
   // Add team-specific filters for team accounts
   if (user?.role === 'team') {
-    filters.splice(2, 0, 
+    filters.splice(2, 0,
       { value: 'team_invite', label: 'Team Invites' },
       { value: 'match_scheduled', label: 'Matches' }
     );
@@ -244,10 +244,10 @@ const Notifications = () => {
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDarkMode
-        ? 'bg-gradient-to-b from-gray-900 to-purple-950'
-        : 'bg-gradient-to-b from-blue-50 to-purple-100'
+      ? 'bg-gradient-to-b from-gray-900 to-purple-950'
+      : 'bg-gradient-to-b from-blue-50 to-purple-100'
       }`}>
-      
+
       <div className="max-w-4xl mx-auto p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -256,25 +256,23 @@ const Notifications = () => {
               Notifications
             </h1>
             {unreadCount > 0 && (
-              <span className={`ml-3 px-2 py-1 rounded-full text-sm font-medium ${
-                isDarkMode ? 'bg-orange-600 text-white' : 'bg-orange-500 text-white'
-              }`}>
+              <span className={`ml-3 px-2 py-1 rounded-full text-sm font-medium ${isDarkMode ? 'bg-orange-600 text-white' : 'bg-orange-500 text-white'
+                }`}>
                 {unreadCount} unread
               </span>
             )}
           </div>
-          
+
           <div className="flex items-center space-x-3">
             {/* Filter Dropdown */}
             <div className="relative">
               <select
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
-                className={`appearance-none pl-10 pr-8 py-2 rounded-lg border ${
-                  isDarkMode
+                className={`appearance-none pl-10 pr-8 py-2 rounded-lg border ${isDarkMode
                     ? 'bg-gray-700 border-gray-600 text-white'
                     : 'bg-white border-gray-300 text-gray-900'
-                }`}
+                  }`}
               >
                 {filters.map(f => (
                   <option key={f.value} value={f.value}>
@@ -288,23 +286,21 @@ const Notifications = () => {
             {/* Actions */}
             <button
               onClick={markAllAsRead}
-              className={`flex items-center px-3 py-2 rounded-lg ${
-                isDarkMode
+              className={`flex items-center px-3 py-2 rounded-lg ${isDarkMode
                   ? 'bg-gray-700 hover:bg-gray-600 text-white'
                   : 'bg-gray-200 hover:bg-gray-300 text-gray-900'
-              } transition-colors`}
+                } transition-colors`}
             >
               <CheckCircle className="w-4 h-4 mr-2" />
               Mark All Read
             </button>
-            
+
             <button
               onClick={clearAllNotifications}
-              className={`flex items-center px-3 py-2 rounded-lg ${
-                isDarkMode
+              className={`flex items-center px-3 py-2 rounded-lg ${isDarkMode
                   ? 'bg-red-600 hover:bg-red-700 text-white'
                   : 'bg-red-500 hover:bg-red-600 text-white'
-              } transition-colors`}
+                } transition-colors`}
             >
               <Trash2 className="w-4 h-4 mr-2" />
               Clear All
@@ -312,11 +308,10 @@ const Notifications = () => {
 
             <button
               onClick={fetchNotifications}
-              className={`flex items-center px-3 py-2 rounded-lg ${
-                isDarkMode
+              className={`flex items-center px-3 py-2 rounded-lg ${isDarkMode
                   ? 'bg-gray-700 hover:bg-gray-600 text-white'
                   : 'bg-gray-200 hover:bg-gray-300 text-gray-900'
-              } transition-colors`}
+                } transition-colors`}
             >
               <RefreshCw className="w-4 h-4" />
             </button>
@@ -336,7 +331,7 @@ const Notifications = () => {
                 No notifications found
               </p>
               <p className={`text-sm mt-2 ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
-                {filter === 'all' 
+                {filter === 'all'
                   ? 'You\'re all caught up! Check back later for new notifications.'
                   : `No ${filters.find(f => f.value === filter)?.label.toLowerCase() || 'notifications'} found.`
                 }
@@ -347,11 +342,10 @@ const Notifications = () => {
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer ${
-                    !notification.read 
-                      ? isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50' 
+                  className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer ${!notification.read
+                      ? isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
                       : ''
-                  }`}
+                    }`}
                   onClick={() => setSelectedNotification(notification)}
                 >
                   <div className="flex items-start space-x-3">
@@ -371,7 +365,7 @@ const Notifications = () => {
                             {notification.message}
                           </p>
                         </div>
-                        
+
                         {/* Actions */}
                         <div className="flex items-center space-x-2 ml-4">
                           {!notification.read && (
@@ -380,30 +374,28 @@ const Notifications = () => {
                                 e.stopPropagation();
                                 markAsRead(notification.id);
                               }}
-                              className={`p-1 rounded hover:bg-gray-200 transition-colors ${
-                                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                              }`}
+                              className={`p-1 rounded hover:bg-gray-200 transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                                }`}
                               title="Mark as read"
                             >
                               <Eye className="w-4 h-4" />
                             </button>
                           )}
-                          
+
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               deleteNotification(notification.id);
                             }}
-                            className={`p-1 rounded hover:bg-gray-200 transition-colors ${
-                              isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                            }`}
+                            className={`p-1 rounded hover:bg-gray-200 transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                              }`}
                             title="Delete notification"
                           >
                             <X className="w-4 h-4" />
                           </button>
                         </div>
                       </div>
-                      
+
                       {/* Timestamp */}
                       <div className="flex items-center mt-2">
                         <Clock className={`w-3 h-3 mr-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
@@ -421,9 +413,8 @@ const Notifications = () => {
                               e.stopPropagation();
                               markAsRead(notification.id);
                             }}
-                            className={`inline-flex items-center text-sm font-medium ${
-                              isDarkMode ? 'text-orange-400 hover:text-orange-300' : 'text-orange-600 hover:text-orange-700'
-                            } transition-colors`}
+                            className={`inline-flex items-center text-sm font-medium ${isDarkMode ? 'text-orange-400 hover:text-orange-300' : 'text-orange-600 hover:text-orange-700'
+                              } transition-colors`}
                           >
                             View Details
                             <ChevronRight className="w-4 h-4 ml-1" />
@@ -441,23 +432,21 @@ const Notifications = () => {
         {/* Notification Detail Modal */}
         {selectedNotification && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className={`rounded-xl p-6 max-w-lg w-full mx-4 ${
-              isDarkMode ? 'bg-gray-800' : 'bg-white'
-            }`}>
+            <div className={`rounded-xl p-6 max-w-lg w-full mx-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'
+              }`}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                   {selectedNotification.title}
                 </h3>
                 <button
                   onClick={() => setSelectedNotification(null)}
-                  className={`p-1 rounded hover:bg-gray-200 transition-colors ${
-                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                  }`}
+                  className={`p-1 rounded hover:bg-gray-200 transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                    }`}
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              
+
               <div className="flex items-start space-x-3 mb-4">
                 <div className={`p-3 rounded-full ${getPriorityColor(selectedNotification.priority)}`}>
                   {getNotificationIcon(selectedNotification.type)}
@@ -483,11 +472,10 @@ const Notifications = () => {
                       markAsRead(selectedNotification.id);
                       setSelectedNotification(null);
                     }}
-                    className={`inline-flex items-center px-4 py-2 rounded-lg font-medium ${
-                      isDarkMode
+                    className={`inline-flex items-center px-4 py-2 rounded-lg font-medium ${isDarkMode
                         ? 'bg-orange-600 hover:bg-orange-700 text-white'
                         : 'bg-orange-500 hover:bg-orange-600 text-white'
-                    } transition-colors`}
+                      } transition-colors`}
                   >
                     View Details
                     <ChevronRight className="w-4 h-4 ml-2" />
