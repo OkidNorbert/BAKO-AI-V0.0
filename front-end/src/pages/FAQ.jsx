@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
-import { ChevronDown, ChevronUp, HelpCircle } from 'lucide-react';
+import { ChevronDown, HelpCircle, AlertCircle } from 'lucide-react';
 
 const FAQ = () => {
     const { isDarkMode } = useTheme();
@@ -31,53 +31,74 @@ const FAQ = () => {
 
     return (
         <div className={`min-h-screen py-10 transition-colors duration-300 ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center mb-16">
-                    <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-yellow-500 to-orange-600">
-                        Frequently Asked Questions
+                    <div className="inline-flex items-center justify-center p-3 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 mb-4">
+                        <HelpCircle className="w-8 h-8" />
+                    </div>
+                    <h1 className="text-4xl md:text-5xl font-black mb-4 uppercase tracking-tighter">
+                        Playbook <span className="text-bako-orange">Breakdown</span>
                     </h1>
-                    <p className={`text-xl max-w-3xl mx-auto ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                        Got questions? We have answers. If you don't see yours here, reach out to us!
+                    <p className={`text-xl ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                        Common questions about the BAKO system.
                     </p>
                 </div>
 
-                <div className="max-w-3xl mx-auto space-y-4">
+                <div className="space-y-4">
                     {faqs.map((faq, idx) => (
                         <div
                             key={idx}
-                            className={`rounded-xl overflow-hidden shadow-sm border transition-all duration-300 ${isDarkMode
-                                    ? 'bg-gray-800 border-gray-700 hover:border-yellow-500'
-                                    : 'bg-white border-gray-200 hover:border-yellow-400'
-                                }`}
+                            className={`group rounded-2xl border-2 transition-all duration-300 ${isDarkMode
+                                    ? 'bg-gray-800 border-gray-700 hover:border-orange-500/50'
+                                    : 'bg-white border-gray-200 hover:border-orange-300'
+                                } ${openIndex === idx ? 'ring-2 ring-orange-500/20 border-orange-500' : ''}`}
                         >
                             <button
-                                className="w-full px-6 py-4 text-left flex justify-between items-center focus:outline-none"
+                                className="w-full px-8 py-6 text-left flex justify-between items-center focus:outline-none"
                                 onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
                             >
-                                <div className="flex items-center">
-                                    <HelpCircle className={`w-5 h-5 mr-3 ${isDarkMode ? 'text-yellow-500' : 'text-yellow-600'}`} />
-                                    <span className={`font-semibold text-lg ${isDarkMode ? 'text-gray-100' : 'text-gray-800'}`}>
+                                <div className="flex items-center space-x-4">
+                                    <span className={`flex items-center justify-center w-8 h-8 rounded-lg font-bold text-sm ${openIndex === idx
+                                            ? 'bg-orange-500 text-white'
+                                            : isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-500'
+                                        }`}>
+                                        {idx < 9 ? `0${idx + 1}` : idx + 1}
+                                    </span>
+                                    <span className={`font-bold text-lg md:text-xl ${isDarkMode ? 'text-gray-100' : 'text-gray-800'}`}>
                                         {faq.question}
                                     </span>
                                 </div>
-                                {openIndex === idx ? (
-                                    <ChevronUp className={`w-5 h-5 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-                                ) : (
-                                    <ChevronDown className={`w-5 h-5 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-                                )}
+                                <div className={`transform transition-transform duration-300 ${openIndex === idx ? 'rotate-180' : ''}`}>
+                                    <ChevronDown className={`w-6 h-6 ${openIndex === idx ? 'text-orange-500' : isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                                        }`} />
+                                </div>
                             </button>
 
                             <div
-                                className={`px-6 overflow-hidden transition-all duration-300 ease-in-out ${openIndex === idx ? 'max-h-40 py-4 opacity-100' : 'max-h-0 py-0 opacity-0'
-                                    } ${isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}
+                                className={`overflow-hidden transition-all duration-300 ease-in-out ${openIndex === idx ? 'max-h-48' : 'max-h-0'
+                                    }`}
                             >
-                                <p className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
+                                <div className={`px-8 pb-8 pl-[4.5rem] ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                                     {faq.answer}
-                                </p>
+                                </div>
                             </div>
                         </div>
                     ))}
                 </div>
+
+                {/* Support CTA */}
+                <div className={`mt-16 text-center p-8 rounded-3xl ${isDarkMode ? 'bg-gray-800' : 'bg-blue-50'}`}>
+                    <AlertCircle className={`w-12 h-12 mx-auto mb-4 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+                    <h3 className="text-xl font-bold mb-2">Still stuck on the bench?</h3>
+                    <p className={`mb-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Our support team is ready to help you get back in the game.</p>
+                    <button className={`px-8 py-3 rounded-full font-bold transition-transform hover:-translate-y-1 ${isDarkMode
+                            ? 'bg-blue-600 hover:bg-blue-500 text-white'
+                            : 'bg-blue-600 hover:bg-blue-700 text-white'
+                        }`}>
+                        <a href="/contact">Contact Support</a>
+                    </button>
+                </div>
+
             </div>
         </div>
     );
