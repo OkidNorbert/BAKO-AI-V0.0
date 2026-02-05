@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/context/ThemeContext';
 import axios from 'axios';
 import api from '../../utils/axiosConfig';
+import VideoPlayer from '../../components/team/video-player';
 import {
   Search,
   Filter,
@@ -16,7 +17,15 @@ import {
   Trash2,
   AlertTriangle,
   CheckCircle,
-  Clock
+  Clock,
+  Eye,
+  Download,
+  Share,
+  Target,
+  Users,
+  Activity,
+  TrendingUp,
+  ArrowLeft
 } from 'lucide-react';
 
 const MatchAnalysis = () => {
@@ -29,6 +38,9 @@ const MatchAnalysis = () => {
   const { isDarkMode } = useTheme();
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingMatch, setEditingMatch] = useState(null);
+  const [selectedMatch, setSelectedMatch] = useState(null);
+  const [showVideoPlayer, setShowVideoPlayer] = useState(false);
+  const [analysisView, setAnalysisView] = useState('list'); // list, player, detailed
 
   const [matchStats, setMatchStats] = useState({
     total: 0,
@@ -174,6 +186,25 @@ const MatchAnalysis = () => {
     navigate('/team/matches/upload');
   };
 
+  const handleViewMatch = (match) => {
+    setSelectedMatch(match);
+    setShowVideoPlayer(true);
+    setAnalysisView('player');
+  };
+
+  const handleBackToList = () => {
+    setShowVideoPlayer(false);
+    setSelectedMatch(null);
+    setAnalysisView('list');
+  };
+
+  const handleVideoTimeUpdate = (currentTime) => {
+    // Handle video time updates for analysis
+    if (selectedMatch) {
+      // Update analysis based on current video time
+    }
+  };
+
   if (loading) {
     return (
       <div className={`flex items-center justify-center min-h-screen ${isDarkMode
@@ -193,7 +224,151 @@ const MatchAnalysis = () => {
         ? 'bg-gradient-to-b from-gray-900 to-indigo-950 text-white'
         : 'bg-gradient-to-b from-blue-50 to-indigo-100 text-gray-900'
       }`}>
-      <div className="max-w-7xl mx-auto p-6">
+      
+      {/* Video Player View */}
+      {showVideoPlayer && selectedMatch && (
+        <div className="max-w-7xl mx-auto p-6">
+          <div className="mb-6">
+            <button
+              onClick={handleBackToList}
+              className={`flex items-center space-x-2 mb-4 ${isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}
+            >
+              <ArrowLeft size={20} />
+              <span>Back to Matches</span>
+            </button>
+            
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+              <div>
+                <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  {selectedMatch.title}
+                </h1>
+                <p className={`mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  {selectedMatch.date} • {selectedMatch.duration} • {selectedMatch.type}
+                </p>
+              </div>
+              
+              <div className="flex space-x-2 mt-4 md:mt-0">
+                <button className={`flex items-center px-3 py-2 rounded-lg ${isDarkMode
+                    ? 'bg-gray-700 hover:bg-gray-600 text-white'
+                    : 'bg-gray-200 hover:bg-gray-300 text-gray-900'
+                  }`}>
+                  <Download size={16} className="mr-2" />
+                  Export
+                </button>
+                <button className={`flex items-center px-3 py-2 rounded-lg ${isDarkMode
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                    : 'bg-blue-500 hover:bg-blue-600 text-white'
+                  }`}>
+                  <Share size={16} className="mr-2" />
+                  Share
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Video Player */}
+            <div className="lg:col-span-2">
+              <VideoPlayer
+                videoSrc={`/api/videos/${selectedMatch.id}`}
+                analysisData={selectedMatch.analysisData}
+                onTimeUpdate={handleVideoTimeUpdate}
+              />
+            </div>
+
+            {/* Analysis Sidebar */}
+            <div className="space-y-6">
+              {/* Match Stats */}
+              <div className={`p-6 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white shadow-md'}`}>
+                <h3 className={`text-lg font-semibold mb-4 flex items-center ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  <BarChart className="mr-2" size={20} />
+                  Match Statistics
+                </h3>
+                
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Players Detected</span>
+                    <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>10</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Total Plays</span>
+                    <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>45</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Possessions</span>
+                    <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>120</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Shooting %</span>
+                    <span className={`font-bold ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>48.5%</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Key Events */}
+              <div className={`p-6 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white shadow-md'}`}>
+                <h3 className={`text-lg font-semibold mb-4 flex items-center ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  <Activity className="mr-2" size={20} />
+                  Key Events
+                </h3>
+                
+                <div className="space-y-2">
+                  {[
+                    { time: '02:15', type: 'Turnover', player: 'PG #23' },
+                    { time: '05:30', type: '3-Pointer', player: 'SG #30' },
+                    { time: '08:45', type: 'Fast Break', player: 'SF #35' },
+                    { time: '12:20', type: 'Block', player: 'C #11' }
+                  ].map((event, index) => (
+                    <div
+                      key={index}
+                      className={`flex items-center justify-between p-2 rounded ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <span className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                          {event.time}
+                        </span>
+                        <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                          {event.type}
+                        </span>
+                      </div>
+                      <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                        {event.player}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Analysis Tools */}
+              <div className={`p-6 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white shadow-md'}`}>
+                <h3 className={`text-lg font-semibold mb-4 flex items-center ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  <Target className="mr-2" size={20} />
+                  Analysis Tools
+                </h3>
+                
+                <div className="space-y-2">
+                  <button className={`w-full text-left px-3 py-2 rounded ${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}>
+                    Player Tracking Analysis
+                  </button>
+                  <button className={`w-full text-left px-3 py-2 rounded ${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}>
+                    Shot Chart Generation
+                  </button>
+                  <button className={`w-full text-left px-3 py-2 rounded ${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}>
+                    Movement Heatmap
+                  </button>
+                  <button className={`w-full text-left px-3 py-2 rounded ${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}>
+                    Performance Report
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* List View */}
+      {!showVideoPlayer && (
+        <div className="max-w-7xl mx-auto p-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <div>
             <h1 className={`text-2xl font-bold ${isDarkMode
@@ -441,6 +616,7 @@ const MatchAnalysis = () => {
               Close
             </button>
           </div>
+        </div>
         </div>
       )}
     </div>

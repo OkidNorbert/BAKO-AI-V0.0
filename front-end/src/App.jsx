@@ -20,7 +20,9 @@ import Register from '@/pages/Register';
 // Team / Organization Pages
 import TeamDashboard from '@/pages/team/TeamDashboard';
 import TeamRoster from '@/pages/team/TeamRoster';
+import TeamCreateEdit from '@/pages/team/TeamCreateEdit';
 import MatchAnalysis from '@/pages/team/MatchAnalysis';
+import MatchUpload from '@/pages/team/MatchUpload';
 import TeamAnalytics from '@/pages/team/TeamAnalytics';
 import TeamSettings from '@/pages/team/TeamSettings';
 import TeamSchedule from '@/pages/team/TeamSchedule';
@@ -30,6 +32,11 @@ import PlayerDashboard from '@/pages/player/PlayerDashboard';
 import PlayerProfile from '@/pages/player/PlayerProfile';
 import SkillAnalytics from '@/pages/player/SkillAnalytics';
 import TrainingVideos from '@/pages/player/TrainingVideos';
+
+// Shared Pages
+import Profile from '@/pages/shared/Profile';
+import Notifications from '@/pages/shared/Notifications';
+import Help from '@/pages/shared/Help';
 
 function App() {
   return (
@@ -63,7 +70,10 @@ function App() {
                 <Route index element={<TeamDashboard />} />
                 <Route path="dashboard" element={<TeamDashboard />} />
                 <Route path="roster" element={<TeamRoster />} />
+                <Route path="roster/new" element={<TeamCreateEdit />} />
+                <Route path="roster/edit/:teamId" element={<TeamCreateEdit />} />
                 <Route path="matches" element={<MatchAnalysis />} />
+                <Route path="matches/upload" element={<MatchUpload />} />
                 <Route path="schedule" element={<TeamSchedule />} />
                 <Route path="analytics" element={<TeamAnalytics />} />
                 <Route path="settings" element={<TeamSettings />} />
@@ -79,6 +89,23 @@ function App() {
                 <Route path="skills" element={<SkillAnalytics />} />
                 <Route path="training" element={<TrainingVideos />} />
               </Route>
+            </Route>
+
+            {/* Shared Routes */}
+            <Route path="/profile" element={<ProtectedRoute allowedRoles={['team', 'player']} />}>
+              <Route element={<Layout />}>
+                <Route index element={<Profile />} />
+              </Route>
+            </Route>
+            
+            <Route path="/notifications" element={<ProtectedRoute allowedRoles={['team', 'player']} />}>
+              <Route element={<Layout />}>
+                <Route index element={<Notifications />} />
+              </Route>
+            </Route>
+            
+            <Route path="/help" element={<Layout />}>
+              <Route index element={<Help />} />
             </Route>
 
             {/* Catch all route - Redirect to Login if unknown, or Home */}

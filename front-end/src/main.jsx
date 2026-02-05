@@ -5,6 +5,10 @@ import App from './App.jsx';
 import './index.css';
 import reportWebVitals from './reportWebVitals';
 
+// Test if React is working
+console.log('React is loading...');
+console.log('App component:', App);
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>

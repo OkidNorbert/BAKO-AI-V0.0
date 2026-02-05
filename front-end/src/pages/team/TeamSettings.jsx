@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../utils/axiosConfig';
 import {
@@ -10,7 +11,8 @@ import {
   Instagram,
   Users,
   Timer,
-  Shuffle
+  Shuffle,
+  Plus
 } from 'lucide-react';
 
 const TeamSettings = () => {
@@ -154,6 +156,35 @@ const TeamSettings = () => {
             {successMessage}
           </div>
         )}
+
+        {/* Team Management Actions */}
+        <div className={`p-6 rounded-lg mb-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white shadow-md'}`}>
+          <h2 className={`text-xl font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            Team Management
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Link
+              to="/team/roster/new"
+              className={`flex items-center justify-center p-4 rounded-lg transition-colors ${isDarkMode 
+                  ? 'bg-orange-600 hover:bg-orange-700 text-white' 
+                  : 'bg-orange-500 hover:bg-orange-600 text-white'
+                }`}
+            >
+              <Plus className="mr-2" size={20} />
+              Create New Team
+            </Link>
+            <Link
+              to="/team/roster/edit/current"
+              className={`flex items-center justify-center p-4 rounded-lg transition-colors ${isDarkMode 
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                  : 'bg-blue-500 hover:bg-blue-600 text-white'
+                }`}
+            >
+              <Settings className="mr-2" size={20} />
+              Edit Current Team
+            </Link>
+          </div>
+        </div>
 
         {/* Basic Information */}
         <div className={sectionClassName}>
