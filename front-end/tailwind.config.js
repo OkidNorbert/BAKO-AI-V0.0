@@ -26,10 +26,19 @@ export default {
           light: '#34D399',
           dark: '#059669',
         },
+        bako: {
+          orange: '#F97316',
+          wood: '#D4A373',
+          court: '#E65100',
+        }
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',
         'slide-in': 'slideIn 0.5s ease-in-out',
+        'bounce-slow': 'bounce 3s infinite',
+        'spin-slow': 'spin 8s linear infinite',
+        'wiggle': 'wiggle 1s ease-in-out infinite',
+        'float': 'float 6s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: {
@@ -40,6 +49,14 @@ export default {
           '0%': { transform: 'translateY(20px)', opacity: '0' },
           '100%': { transform: 'translateY(0)', opacity: '1' },
         },
+        wiggle: {
+          '0%, 100%': { transform: 'rotate(-3deg)' },
+          '50%': { transform: 'rotate(3deg)' },
+        },
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-20px)' },
+        }
       },
     },
   },

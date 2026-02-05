@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '@/utils/axiosConfig';
 import { useTheme } from '@/context/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
 import {
   Video,
   Calendar,
@@ -58,6 +59,8 @@ const PlayerDashboard = () => {
     fitness: []
   });
 
+  const { user } = useAuth();
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -80,55 +83,37 @@ const PlayerDashboard = () => {
       setTrainingHistory(historyResponse.data || []);
       setNotifications(notificationsResponse.data || []);
 
-      // Set performance metrics with defaults if API fails
-      const metrics = metricsResponse.data || {
-        shootingAccuracy: 68.5,
-        dribbleSpeed: 7.2,
-        verticalJump: 28.5,
-        sprintSpeed: 4.8,
-        overallRating: 85,
-        improvementRate: 12.3,
+      // Set performance metrics with robust fallback
+      const metricsData = metricsResponse.data || {};
+      setPerformanceMetrics({
+        shootingAccuracy: metricsData.shootingAccuracy || 0,
+        dribbleSpeed: metricsData.dribbleSpeed || 0,
+        verticalJump: metricsData.verticalJump || 0,
+        sprintSpeed: metricsData.sprintSpeed || 0,
+        overallRating: metricsData.overallRating || 0,
+        improvementRate: metricsData.improvementRate || 0,
         weeklyStats: {
-          sessionsCompleted: 4,
-          minutesTrained: 180,
-          shotsAttempted: 85,
-          shotsMade: 58
+          sessionsCompleted: metricsData.weeklyStats?.sessionsCompleted || 0,
+          minutesTrained: metricsData.weeklyStats?.minutesTrained || 0,
+          shotsAttempted: metricsData.weeklyStats?.shotsAttempted || 0,
+          shotsMade: metricsData.weeklyStats?.shotsMade || 0
         }
-      };
-      setPerformanceMetrics(metrics);
+      });
 
-      // Set skill trends with mock data if API fails
+      // Set skill trends
       const trends = trendsResponse.data || {
-        shooting: [
-          { date: '2025-01-20', value: 65, improvement: 2.5 },
-          { date: '2025-01-27', value: 68.5, improvement: 3.5 },
-          { date: '2025-02-03', value: 72, improvement: 4.5 },
-          { date: '2025-02-10', value: 75, improvement: 3.0 }
-        ],
-        dribbling: [
-          { date: '2025-01-20', value: 6.8, improvement: 1.2 },
-          { date: '2025-01-27', value: 7.2, improvement: 2.4 },
-          { date: '2025-02-03', value: 7.8, improvement: 2.6 },
-          { date: '2025-02-10', value: 8.1, improvement: 2.3 }
-        ],
-        defense: [
-          { date: '2025-01-20', value: 70, improvement: 3.0 },
-          { date: '2025-01-27', value: 73, improvement: 3.5 },
-          { date: '2025-02-03', value: 76, improvement: 3.8 },
-          { date: '2025-02-10', value: 79, improvement: 3.2 }
-        ],
-        fitness: [
-          { date: '2025-01-20', value: 65, improvement: 2.0 },
-          { date: '2025-01-27', value: 68, improvement: 3.5 },
-          { date: '2025-02-03', value: 71, improvement: 3.8 },
-          { date: '2025-02-10', value: 74, improvement: 3.6 }
-        ]
+        shooting: [],
+        dribbling: [],
+        defense: [],
+        fitness: []
       };
       setSkillTrends(trends);
 
     } catch (err) {
       console.error('fetchData:', err);
-      if (err.response?.status === 401) navigate('/login');
+      if (err.response?.status === 401) {
+        navigate('/login');
+      }
       else if (err.code === 'ERR_NETWORK') setError('Unable to connect. Please check your connection.');
       else setError('Failed to fetch data. Please try again.');
       setTrainingVideos([]);

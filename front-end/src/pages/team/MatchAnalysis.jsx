@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/context/ThemeContext';
-import axios from 'axios';
-import api from '../../utils/axiosConfig';
+import { adminAPI } from '../../services/api';
 import VideoPlayer from '../../components/team/video-player';
 import {
   Search,
@@ -107,18 +106,9 @@ const MatchAnalysis = () => {
       setLoading(true);
       setError('');
 
-      // Mock match data
-      setTimeout(() => {
-        const mockMatches = [
-          { id: '1', title: 'vs. Lakers', date: '2025-01-20', type: 'league', analysisStatus: 'analyzed', duration: '1:45:00', notes: 'Great defense in Q4' },
-          { id: '2', title: 'Practice Scrimmage', date: '2025-01-22', type: 'practice', analysisStatus: 'processing', duration: '0:55:00', notes: 'Focus on pick and roll' },
-          { id: '3', title: 'vs. Warriors', date: '2025-01-25', type: 'league', analysisStatus: 'pending', duration: '1:50:00', notes: 'Upload pending' },
-          { id: '4', title: 'Shooting Drills', date: '2025-01-26', type: 'practice', analysisStatus: 'analyzed', duration: '0:30:00', notes: 'Curry 3pt drills' },
-          { id: '5', title: 'vs. Bulls', date: '2025-01-18', type: 'league', analysisStatus: 'error', duration: '1:40:00', notes: 'Cor corrupted file' },
-        ];
-        setMatches(mockMatches);
-        setLoading(false);
-      }, 1000);
+      const response = await adminAPI.getMatches();
+      setMatches(response.data || []);
+      setLoading(false);
 
     } catch (error) {
       console.error('Error in fetchData:', error);
@@ -173,13 +163,26 @@ const MatchAnalysis = () => {
 
   const handleUpdateMatch = async (e) => {
     e.preventDefault();
-    // Mock update
-    setUpdateSuccess('Match updated successfully');
-    setTimeout(() => {
-      setMatches(matches.map(m => m.id === editingMatch.id ? { ...m, ...formData } : m));
-      setShowEditModal(false);
-      setUpdateSuccess('');
-    }, 1000);
+    try {
+      setUpdateLoading(true);
+      setUpdateError('');
+
+      const response = await adminAPI.updateMatch(editingMatch.id, formData);
+      const updatedMatch = response.data || { ...editingMatch, ...formData };
+
+      setMatches(matches.map(m => m.id === editingMatch.id ? updatedMatch : m));
+      setUpdateSuccess('Match updated successfully');
+
+      setTimeout(() => {
+        setShowEditModal(false);
+        setUpdateSuccess('');
+      }, 1000);
+    } catch (error) {
+      console.error('Error updating match:', error);
+      setUpdateError('Failed to update match');
+    } finally {
+      setUpdateLoading(false);
+    }
   };
 
   const handleAddMatchClick = () => {

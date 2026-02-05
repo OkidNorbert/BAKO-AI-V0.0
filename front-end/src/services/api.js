@@ -36,26 +36,26 @@ api.interceptors.response.use(
       try {
         // Get the refresh token from localStorage
         const refreshToken = localStorage.getItem('refreshToken');
-        
+
         if (!refreshToken) {
           // No refresh token available, redirect to login
           handleLogout('Your session has expired. Please log in again.');
           return Promise.reject(error);
         }
-        
+
         // Try to refresh the token directly
         const response = await axios.post(
-          `${import.meta.env.VITE_API_URL || '/api'}/auth/refresh-token`, 
+          `${import.meta.env.VITE_API_URL || '/api'}/auth/refresh-token`,
           { refreshToken }
         );
-        
+
         if (response.data && response.data.accessToken) {
           const newToken = response.data.accessToken;
           // Save the new token
           localStorage.setItem('accessToken', newToken);
           // Update the authorization header
           originalRequest.headers.Authorization = `Bearer ${newToken}`;
-          
+
           // Retry the original request
           return api(originalRequest);
         } else {
@@ -75,7 +75,7 @@ api.interceptors.response.use(
       // The request was made and the server responded with a status code
       // that falls out of the range of 2xx
       const { status, data } = error.response;
-      
+
       // Handle specific error cases
       switch (status) {
         case 401:
@@ -103,7 +103,7 @@ api.interceptors.response.use(
       // Something happened in setting up the request that triggered an Error
       showToast('An unexpected error occurred.', 'error');
     }
-    
+
     return Promise.reject(error);
   }
 );
@@ -142,17 +142,24 @@ export const adminAPI = {
   getUsers: () => api.get('/admin/users'),
   updateUserRole: (userId, role) => api.put(`/admin/users/${userId}/role`, { role }),
   getStats: () => api.get('/admin/stats'),
-  
+
   // Schedule endpoints
   getSchedule: () => api.get('/admin/schedule'),
   getPlayers: () => api.get('/admin/users?role=player'),
   getRoster: async () => {
     return api.get('/admin/players');
   },
+  updatePlayerStatus: (playerId, status) => api.patch(`/admin/players/${playerId}/status`, { status }),
   createScheduleEvent: (eventData) => api.post('/admin/schedule', eventData),
   updateScheduleEvent: (eventId, eventData) => api.put(`/admin/schedule/${eventId}`, eventData),
   deleteScheduleEvent: (eventId) => api.delete(`/admin/schedule/${eventId}`),
-  
+
+  // Match endpoints
+  getMatches: () => api.get('/admin/matches'),
+  getMatchById: (matchId) => api.get(`/admin/matches/${matchId}`),
+  updateMatch: (matchId, data) => api.put(`/admin/matches/${matchId}`, data),
+  deleteMatch: (matchId) => api.delete(`/admin/matches/${matchId}`),
+
   // Attendance endpoints
   getAttendance: (date) => {
     const formattedDate = encodeURIComponent(date);
@@ -167,7 +174,7 @@ export const adminAPI = {
     console.log(`Making request to /admin/attendance/report with date=${formattedDate}`);
     return api.get(`/admin/attendance/report?date=${formattedDate}`, { responseType: 'blob' });
   },
-  
+
   // Payment endpoints
   getPayments: async () => {
     return api.get('/admin/payments');
@@ -227,10 +234,10 @@ export const playerAPI = {
   getPlayerById: (playerId) => api.get(`/player/players/${playerId}`),
   addActivity: (playerId, activityData) => api.post(`/player/players/${playerId}/activities`, activityData),
   getPlayerActivities: (playerId) => api.get(`/player/players/${playerId}/activities`),
-  
+
   // Schedule endpoints
   getSchedule: () => api.get('/player/schedule'),
-  
+
   // Training endpoints
   recordTraining: (trainingData) => api.post('/player/training', trainingData),
   getTraining: (date) => {
@@ -238,11 +245,11 @@ export const playerAPI = {
     console.log(`Making request to /player/training with date=${formattedDate}`);
     return api.get(`/player/training?date=${formattedDate}`);
   },
-  
+
   // Profile endpoints
   getProfile: () => api.get('/player/profile'),
   updateProfile: (profileData) => api.put('/player/profile', profileData),
-  
+
   // Notification endpoints
   getNotifications: () => api.get('/player/notifications'),
   markNotificationAsRead: (notificationId) => api.put(`/player/notifications/${notificationId}/read`),

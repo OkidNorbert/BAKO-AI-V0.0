@@ -153,6 +153,38 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const bypassLogin = (role) => {
+    const mockUser = {
+      role: role,
+      name: role === 'team' ? 'Dev Team' : 'Dev Player',
+      id: 'dev-id-' + Math.random().toString(36).substr(2, 9),
+      email: `dev-${role}@example.com`
+    };
+
+    // Create a fake JWT token that can be parsed by the frontend
+    // Header.Payload.Signature
+    const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+    const payload = btoa(JSON.stringify({
+      user: mockUser,
+      role: role,
+      id: mockUser.id,
+      exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24) // 24 hours
+    }));
+    const signature = "fake-signature";
+    const fakeToken = `${header}.${payload}.${signature}`;
+
+    localStorage.setItem('accessToken', fakeToken);
+    localStorage.setItem('refreshToken', 'dev-refresh-token');
+    localStorage.setItem('userRole', role);
+    localStorage.setItem('userName', mockUser.name);
+    localStorage.setItem('userId', mockUser.id);
+
+    setUser(mockUser);
+    setIsAuthenticated(true);
+
+    return { success: true, user: mockUser };
+  };
+
   const value = {
     user,
     loading,
@@ -161,7 +193,8 @@ export const AuthProvider = ({ children }) => {
     error,
     login,
     register,
-    logout
+    logout,
+    bypassLogin
   };
 
   return (

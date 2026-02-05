@@ -44,52 +44,29 @@ const TeamDashboard = () => {
         setLoading(true);
         setError('');
 
-        // In real app, this would call actual API endpoints
-        // For now, using mock data that matches our component structure
-        const mockStats = {
-          totalPlayers: 12,
-          totalMatches: 8,
-          matchesAnalyzed: 6,
-          recentActivities: [
-            { id: 1, type: 'match', title: 'vs. Lakers', time: '2 hours ago', status: 'completed' },
-            { id: 2, type: 'player', title: 'New player added', time: '1 day ago', status: 'success' },
-            { id: 3, type: 'analysis', title: 'Match analysis complete', time: '2 days ago', status: 'completed' }
-          ],
-          performanceData: {
-            monthly: {
-              labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-              datasets: [
-                {
-                  label: 'Wins',
-                  data: [4, 5, 3, 6, 4, 5],
-                  backgroundColor: 'rgba(34, 197, 94, 0.2)',
-                  borderColor: 'rgba(34, 197, 94, 1)',
-                  borderWidth: 2
-                },
-                {
-                  label: 'Losses',
-                  data: [2, 1, 3, 1, 2, 1],
-                  backgroundColor: 'rgba(239, 68, 68, 0.2)',
-                  borderColor: 'rgba(239, 68, 68, 1)',
-                  borderWidth: 2
-                }
-              ]
-            },
-            playerPositions: [
-              { label: 'Point Guard', value: 3, color: 'rgba(239, 68, 68, 0.8)' },
-              { label: 'Shooting Guard', value: 3, color: 'rgba(59, 130, 246, 0.8)' },
-              { label: 'Small Forward', value: 2, color: 'rgba(34, 197, 94, 0.8)' },
-              { label: 'Power Forward', value: 2, color: 'rgba(251, 191, 36, 0.8)' },
-              { label: 'Center', value: 2, color: 'rgba(168, 85, 247, 0.8)' }
-            ]
-          }
-        };
+        const [statsResponse, notificationsResponse] = await Promise.all([
+          adminAPI.getStats().catch(() => ({ data: {} })),
+          adminAPI.getNotifications().catch(() => ({ data: [] }))
+        ]);
 
-        setStats(prev => ({ ...prev, ...mockStats, loading: false }));
+        const statsData = statsResponse.data || {};
+        const recentActivities = notificationsResponse.data || [];
+
+        setStats({
+          totalPlayers: statsData.totalPlayers || 0,
+          totalMatches: statsData.totalMatches || 0,
+          matchesAnalyzed: statsData.matchesAnalyzed || 0,
+          winRate: statsData.winRate || 0,
+          recentActivities: recentActivities.slice(0, 5), // Use notifications as proxy for activity for now
+          performanceData: statsData.performanceData || null,
+        });
+
+        setLoading(false);
       } catch (error) {
         console.error('Error fetching team stats:', error);
         setError('Failed to load team statistics');
         setStats(prev => ({ ...prev, loading: false }));
+        setLoading(false);
       }
     };
 
@@ -245,10 +222,25 @@ const TeamDashboard = () => {
         <div className="lg:col-span-2 space-y-6">
 
           {/* Team Stats Component */}
-          <TeamStats />
+          <TeamStats stats={{
+            totalPlayers: stats.totalPlayers || 0,
+            activePlayers: stats.totalPlayers || 0,
+            gamesAnalyzed: stats.matchesAnalyzed || 0,
+            totalVideos: stats.matchesAnalyzed || 0,
+            winRate: stats.winRate || 0,
+            gamesPlayed: stats.totalMatches || 0,
+            trainingVideos: 0
+          }} />
 
           {/* Recent Games Component */}
-          <RecentGames />
+          {/* Transform mock activities to match RecentGames expected format */}
+          <RecentGames games={stats.recentActivities.map(activity => ({
+            id: activity.id,
+            title: activity.title,
+            type: activity.type === 'match' ? 'win' : (activity.type === 'analysis' ? 'analysis' : 'training'),
+            description: activity.message || activity.status || '',
+            date: activity.createdAt || activity.date || new Date().toISOString()
+          }))} />
 
         </div>
 
@@ -257,8 +249,7 @@ const TeamDashboard = () => {
 
           {/* Performance Chart */}
           <TeamDashboardChart
-            data={stats.performanceData}
-            period="monthly"
+            data={stats.performanceData || []}
           />
 
           {/* Player Management Overview */}

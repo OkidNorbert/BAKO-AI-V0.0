@@ -67,17 +67,11 @@ const TeamSchedule = () => {
       setLoading(true);
       setError('');
 
-      // Mock fetch
       const response = await adminAPI.getSchedule();
       setEvents(response.data || []);
     } catch (error) {
       console.error('Error fetching schedule:', error);
-      // setError('Failed to fetch schedule data. Please try again later.');
-      // Fallback to mock for demo
-      setEvents([
-        { id: '1', title: 'Morning Shootaround', eventType: 'practice', date: new Date().toISOString(), startTime: '08:00', endTime: '09:30', location: 'Main Court', attendees: 12, description: 'Focus on 3pt shooting' },
-        { id: '2', title: 'Vs. Westside Warriors', eventType: 'match', date: new Date(Date.now() + 86400000).toISOString(), startTime: '19:00', endTime: '21:30', location: 'Home Arena', attendees: 15, description: 'League Game' }
-      ]);
+      setError('Failed to fetch schedule data. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -85,26 +79,19 @@ const TeamSchedule = () => {
 
   const fetchCoachesAndPlayers = async () => {
     try {
-      // Mock fetch
-      setCoaches([
-        { _id: 'c1', firstName: 'Steve', lastName: 'Kerr' },
-        { _id: 'c2', firstName: 'Gregg', lastName: 'Popovich' }
-      ]);
-      setPlayers([
-        { _id: 'p1', firstName: 'LeBron', lastName: 'James' },
-        { _id: 'p2', firstName: 'Stephen', lastName: 'Curry' },
-        { _id: 'p3', firstName: 'Kevin', lastName: 'Durant' }
-      ]);
-      /*
-      const [coachesRes, playersRes] = await Promise.all([
-        adminAPI.getPlayers(), // mapped to coaches
-        adminAPI.getRoster() // mapped to players
-      ]);
-      setCoaches(coachesRes.data || []);
-      setPlayers(playersRes.data || []);
-      */
+      // Fetch coaches (users with role 'coach' or 'admin')
+      const usersResponse = await adminAPI.getUsers();
+      const allUsers = usersResponse.data || [];
+      const coachesList = allUsers.filter(u => u.role === 'coach' || u.role === 'admin');
+
+      // Fetch players from roster
+      const rosterResponse = await adminAPI.getRoster();
+      const playersList = rosterResponse.data || [];
+
+      setCoaches(coachesList);
+      setPlayers(playersList);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error fetching coaches/players:', error);
     }
   };
 
@@ -121,8 +108,10 @@ const TeamSchedule = () => {
       setError('');
 
       const response = await adminAPI.createScheduleEvent(newEvent);
+      const createdEvent = response.data;
 
-      setEvents([...events, { ...newEvent, id: Date.now(), attendees: newEvent.playerIds.length, date: new Date().toISOString() }]); // Mock update
+      // Update local state with the newly created event from server
+      setEvents([...events, createdEvent]);
       setShowAddModal(false);
       setNewEvent({
         coachId: '',
@@ -141,9 +130,7 @@ const TeamSchedule = () => {
       });
     } catch (error) {
       console.error('Error adding event:', error);
-      // Mock success for demo
-      setEvents([...events, { ...newEvent, id: Date.now(), attendees: newEvent.playerIds.length, date: new Date().toISOString() }]);
-      setShowAddModal(false);
+      setError('Failed to create event');
     } finally {
       setLoading(false);
     }
@@ -219,15 +206,15 @@ const TeamSchedule = () => {
 
   return (
     <div className={`min-h-screen ${isDarkMode
-        ? 'bg-gradient-to-b from-gray-900 to-indigo-950 text-white'
-        : 'bg-gradient-to-b from-blue-50 to-indigo-100 text-gray-900'
+      ? 'bg-gradient-to-b from-gray-900 to-indigo-950 text-white'
+      : 'bg-gradient-to-b from-blue-50 to-indigo-100 text-gray-900'
       }`}>
       <div className="max-w-7xl mx-auto p-6">
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className={`text-2xl font-bold ${isDarkMode
-                ? 'text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-400'
-                : 'text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-red-600'
+              ? 'text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-400'
+              : 'text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-red-600'
               }`}>Team Schedule</h1>
             <p className={`mt-1 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
               Manage practices, matches, and team events
@@ -236,8 +223,8 @@ const TeamSchedule = () => {
           <button
             onClick={handleAddEventClick}
             className={`flex items-center space-x-2 px-4 py-2 rounded-full shadow-md transition-all duration-200 hover:shadow-lg hover:scale-105 ${isDarkMode
-                ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white'
-                : 'bg-gradient-to-r from-orange-500 to-red-500 text-white'
+              ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white'
+              : 'bg-gradient-to-r from-orange-500 to-red-500 text-white'
               }`}
           >
             <Plus className="h-4 w-4" />
@@ -255,8 +242,8 @@ const TeamSchedule = () => {
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
               className={`rounded-md ${isDarkMode
-                  ? 'bg-gray-700 text-white'
-                  : 'bg-gray-50 text-gray-900'
+                ? 'bg-gray-700 text-white'
+                : 'bg-gray-50 text-gray-900'
                 }`}
             >
               <option value="all">All Events</option>
@@ -285,8 +272,8 @@ const TeamSchedule = () => {
                     <h3 className="font-semibold text-lg">{event.title}</h3>
                     <div className="flex items-center mt-1">
                       <span className={`text-xs px-2 py-0.5 rounded-full uppercase font-bold ${event.eventType === 'match' ? 'bg-red-100 text-red-800' :
-                          event.eventType === 'practice' ? 'bg-orange-100 text-orange-800' :
-                            event.eventType === 'workout' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+                        event.eventType === 'practice' ? 'bg-orange-100 text-orange-800' :
+                          event.eventType === 'workout' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
                         }`}>
                         {event.eventType}
                       </span>
@@ -299,8 +286,8 @@ const TeamSchedule = () => {
                     <button
                       onClick={() => handleEditClick(event)}
                       className={`p-1 rounded-md ${isDarkMode
-                          ? 'hover:bg-gray-700'
-                          : 'hover:bg-gray-100'
+                        ? 'hover:bg-gray-700'
+                        : 'hover:bg-gray-100'
                         }`}
                     >
                       <Edit className="h-4 w-4 text-blue-500" />
@@ -308,8 +295,8 @@ const TeamSchedule = () => {
                     <button
                       onClick={() => handleDeleteEvent(event.id)}
                       className={`p-1 rounded-md ${isDarkMode
-                          ? 'hover:bg-gray-700'
-                          : 'hover:bg-gray-100'
+                        ? 'hover:bg-gray-700'
+                        : 'hover:bg-gray-100'
                         }`}
                     >
                       <Trash className="h-4 w-4 text-red-500" />
@@ -443,12 +430,12 @@ const TeamSchedule = () => {
                         type="button"
                         onClick={() => handleDayToggle(day)}
                         className={`px-3 py-1 text-sm rounded-full ${newEvent.days.includes(day)
-                            ? isDarkMode
-                              ? 'bg-orange-600 text-white'
-                              : 'bg-orange-500 text-white'
-                            : isDarkMode
-                              ? 'bg-gray-700 text-gray-300'
-                              : 'bg-gray-200 text-gray-700'
+                          ? isDarkMode
+                            ? 'bg-orange-600 text-white'
+                            : 'bg-orange-500 text-white'
+                          : isDarkMode
+                            ? 'bg-gray-700 text-gray-300'
+                            : 'bg-gray-200 text-gray-700'
                           }`}
                       >
                         {day}
@@ -536,8 +523,8 @@ const TeamSchedule = () => {
                     type="button"
                     onClick={() => setShowAddModal(false)}
                     className={`px-4 py-2 rounded-lg ${isDarkMode
-                        ? 'bg-gray-700 hover:bg-gray-600 text-white'
-                        : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
+                      ? 'bg-gray-700 hover:bg-gray-600 text-white'
+                      : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
                       }`}
                   >
                     Cancel
@@ -546,8 +533,8 @@ const TeamSchedule = () => {
                     type="submit"
                     disabled={loading}
                     className={`px-4 py-2 rounded-lg ${isDarkMode
-                        ? 'bg-orange-600 hover:bg-orange-700 text-white'
-                        : 'bg-orange-500 hover:bg-orange-600 text-white'
+                      ? 'bg-orange-600 hover:bg-orange-700 text-white'
+                      : 'bg-orange-500 hover:bg-orange-600 text-white'
                       } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     {loading ? 'Adding...' : 'Add Event'}

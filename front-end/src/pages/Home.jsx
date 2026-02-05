@@ -21,8 +21,8 @@ const Home = () => {
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDarkMode
-        ? 'bg-gradient-to-b from-gray-900 to-purple-950'
-        : 'bg-gradient-to-b from-blue-100 to-purple-100'
+      ? 'bg-gradient-to-b from-gray-900 to-purple-950'
+      : 'bg-gradient-to-b from-blue-100 to-purple-100'
       }`}>
       {/* Hero Section */}
       <div className="relative overflow-hidden pt-10 pb-20">
@@ -46,8 +46,8 @@ const Home = () => {
             </div>
 
             <h1 className={`text-5xl sm:text-6xl md:text-7xl font-bold mb-6 ${isDarkMode
-                ? 'text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-red-500 to-purple-600'
-                : 'text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-orange-500'
+              ? 'text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-red-500 to-purple-600'
+              : 'text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-orange-500'
               } animate-gradient`}>
               BAKO Analytics
             </h1>
@@ -60,8 +60,8 @@ const Home = () => {
               <Link
                 to="/login"
                 className={`transform transition duration-200 hover:scale-105 shadow-lg px-8 py-4 rounded-full text-xl font-bold flex items-center justify-center space-x-2 ${isDarkMode
-                    ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white hover:from-orange-600 hover:to-red-700'
-                    : 'bg-gradient-to-r from-blue-600 to-indigo-700 text-white hover:from-blue-700 hover:to-indigo-800'
+                  ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white hover:from-orange-600 hover:to-red-700'
+                  : 'bg-gradient-to-r from-blue-600 to-indigo-700 text-white hover:from-blue-700 hover:to-indigo-800'
                   }`}
               >
                 Get Started
@@ -71,8 +71,8 @@ const Home = () => {
               <Link
                 to="/gallery" // Keeping gallery or maybe a 'demo' link
                 className={`transform transition duration-200 hover:scale-105 shadow-lg px-8 py-4 rounded-full text-xl font-bold flex items-center justify-center space-x-2 ${isDarkMode
-                    ? 'bg-gradient-to-r from-gray-800 to-gray-900 text-white border-2 border-gray-700 hover:from-gray-900 hover:to-black'
-                    : 'bg-white text-indigo-600 border-2 border-indigo-100 hover:bg-indigo-50'
+                  ? 'bg-gradient-to-r from-gray-800 to-gray-900 text-white border-2 border-gray-700 hover:from-gray-900 hover:to-black'
+                  : 'bg-white text-indigo-600 border-2 border-indigo-100 hover:bg-indigo-50'
                   }`}
               >
                 View Features
@@ -182,8 +182,8 @@ const Home = () => {
 
           <div className="text-center mt-16">
             <Link to="/gallery" className={`inline-flex items-center px-6 py-3 rounded-full font-semibold transition-all duration-200 ${isDarkMode
-                ? 'bg-orange-500 text-white hover:bg-orange-400'
-                : 'bg-indigo-600 text-white hover:bg-indigo-700'
+              ? 'bg-orange-500 text-white hover:bg-orange-400'
+              : 'bg-indigo-600 text-white hover:bg-indigo-700'
               }`}>
               See Analysis Examples
               <Activity className="h-5 w-5 ml-2" />
@@ -194,8 +194,8 @@ const Home = () => {
 
       {/* About/Mission Section */}
       <div className={`py-20 relative ${isDarkMode
-          ? 'bg-gradient-to-r from-gray-900 to-purple-950'
-          : 'bg-gradient-to-r from-indigo-50 to-purple-100'
+        ? 'bg-gradient-to-r from-gray-900 to-purple-950'
+        : 'bg-gradient-to-r from-indigo-50 to-purple-100'
         }`}>
         <div className="absolute top-0 right-0 opacity-10">
           <svg width="150" height="150" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -243,8 +243,8 @@ const Home = () => {
               </div>
               <div className="relative">
                 <div className={`w-full h-64 rounded-2xl overflow-hidden relative ${isDarkMode
-                    ? 'bg-gradient-to-r from-purple-800 to-indigo-900'
-                    : 'bg-gradient-to-r from-blue-300 to-purple-300'
+                  ? 'bg-gradient-to-r from-purple-800 to-indigo-900'
+                  : 'bg-gradient-to-r from-blue-300 to-purple-300'
                   }`}>
                   {/* Background pattern */}
                   <div className="absolute inset-0 opacity-10" style={{
