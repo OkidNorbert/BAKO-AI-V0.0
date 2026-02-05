@@ -260,7 +260,7 @@ const PlayerDashboard = () => {
                   <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Weekly Sessions</span>
                   <Timer className={`h-4 w-4 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
                 </div>
-                <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{performanceMetrics.weeklyStats.sessionsCompleted}</p>
+                <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{performanceMetrics.weeklyStats?.sessionsCompleted || 0}</p>
               </div>
             </div>
 
@@ -269,15 +269,15 @@ const PlayerDashboard = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
                   <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Minutes Trained</p>
-                  <p className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{performanceMetrics.weeklyStats.minutesTrained}</p>
+                  <p className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{performanceMetrics.weeklyStats?.minutesTrained || 0}</p>
                 </div>
                 <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
                   <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Shots Attempted</p>
-                  <p className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{performanceMetrics.weeklyStats.shotsAttempted}</p>
+                  <p className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{performanceMetrics.weeklyStats?.shotsAttempted || 0}</p>
                 </div>
                 <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
                   <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Shots Made</p>
-                  <p className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{performanceMetrics.weeklyStats.shotsMade}</p>
+                  <p className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{performanceMetrics.weeklyStats?.shotsMade || 0}</p>
                 </div>
               </div>
             </div>

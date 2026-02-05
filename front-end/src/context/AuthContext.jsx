@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import api from '@/utils/axiosConfig';
+import { MOCK_AUTH_ENABLED, mockRegister, mockLogin, mockLogout } from '@/utils/mockAuth';
 
 const AuthContext = createContext(null);
 
@@ -17,7 +18,7 @@ export const AuthProvider = ({ children }) => {
     const userRole = localStorage.getItem('userRole');
     const userName = localStorage.getItem('userName');
     const userId = localStorage.getItem('userId');
-    
+
     console.log('AuthContext: Initial state from localStorage:', {
       hasAccessToken: !!accessToken,
       hasRefreshToken: !!refreshToken,
@@ -25,9 +26,9 @@ export const AuthProvider = ({ children }) => {
       userName,
       userId
     });
-    
+
     if (accessToken && userRole) {
-      const userData = { 
+      const userData = {
         role: userRole,
         name: userName || 'User',
         id: userId
@@ -42,10 +43,10 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     console.log('AuthContext: Login attempt for:', email);
     try {
-      const response = await api.post('/auth/login', {
-        email,
-        password
-      });
+      // Use mock auth if enabled, otherwise use real API
+      const response = MOCK_AUTH_ENABLED
+        ? await mockLogin(email, password)
+        : await api.post('/auth/login', { email, password });
 
       console.log('AuthContext: Login response:', response.data);
 
@@ -56,21 +57,21 @@ export const AuthProvider = ({ children }) => {
         const userRole = tokenPayload.user?.role || tokenPayload.role;
         const userId = tokenPayload.user?.id || response.data.user?.id;
         const userName = response.data.user?.name || 'User';
-        
+
         console.log('AuthContext: Extracted user info:', {
           userRole,
           userName,
           userId
         });
-        
+
         localStorage.setItem('accessToken', accessToken);
         localStorage.setItem('refreshToken', refreshToken);
         localStorage.setItem('userRole', userRole);
         localStorage.setItem('userName', userName);
         localStorage.setItem('userId', userId);
-        
+
         // Set user state immediately
-        const userData = { 
+        const userData = {
           role: userRole,
           name: userName,
           id: userId,
@@ -79,7 +80,7 @@ export const AuthProvider = ({ children }) => {
         console.log('AuthContext: Setting user state after login:', userData);
         setUser(userData);
         setIsAuthenticated(true);
-        
+
         return { success: true, user: userData };
       } else {
         console.log('AuthContext: Login failed - no token received');
@@ -100,22 +101,25 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       setLoading(true);
-      const response = await api.post('/auth/register', userData);
+      // Use mock auth if enabled, otherwise use real API
+      const response = MOCK_AUTH_ENABLED
+        ? await mockRegister(userData)
+        : await api.post('/auth/register', userData);
       const { accessToken, refreshToken, user } = response.data;
-      
+
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
-      localStorage.setItem('userRole', user.role || 'admin');
+      localStorage.setItem('userRole', user.role || 'player');
       localStorage.setItem('userName', user.name || 'User');
       localStorage.setItem('userId', user.id);
-      
+
       setUser(user);
       setIsAuthenticated(true);
-      
-      return user;
+
+      return { success: true, user };
     } catch (error) {
       setError(error.response?.data?.message || 'Registration failed');
-      throw error;
+      return { success: false, error: error.response?.data?.message || 'Registration failed' };
     } finally {
       setLoading(false);
     }
@@ -127,7 +131,12 @@ export const AuthProvider = ({ children }) => {
       // Only if we have a token, otherwise just clear local state
       const token = localStorage.getItem('accessToken');
       if (token) {
-        await api.post('/auth/logout');
+        // Use mock auth if enabled, otherwise use real API
+        if (MOCK_AUTH_ENABLED) {
+          await mockLogout();
+        } else {
+          await api.post('/auth/logout');
+        }
       }
     } catch (error) {
       console.error('Error logging out:', error);
