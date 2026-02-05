@@ -6,18 +6,9 @@ import {
   Users,
   Video,
   Calendar,
-  CreditCard,
-  FileText,
   Settings,
-  Bell,
-  ClipboardCheck,
-  Shield,
-  Activity,
   BarChart2,
-  DollarSign,
-  UserPlus,
-  Heart,
-  Database,
+  Shield,
   Trophy
 } from 'lucide-react';
 
@@ -28,16 +19,9 @@ const AdminSidebar = ({ isOpen }) => {
     { path: '/team/dashboard', icon: Home, label: 'Dashboard', color: 'from-blue-500 to-indigo-600' },
     { path: '/team/roster', icon: Users, label: 'Team Roster', color: 'from-purple-500 to-violet-600' },
     { path: '/team/matches', icon: Video, label: 'Match Analysis', color: 'from-orange-400 to-pink-500' },
-    { path: '/team/scouts', icon: UserPlus, label: 'Scouting', color: 'from-green-500 to-teal-600' },
     { path: '/team/schedule', icon: Calendar, label: 'Schedule', color: 'from-yellow-400 to-amber-600' },
-    { path: '/team/billing', icon: DollarSign, label: 'Financials', color: 'from-green-500 to-emerald-600' },
-    { path: '/team/injuries', icon: Activity, label: 'Injury Reports', color: 'from-red-500 to-orange-600' },
     { path: '/team/reports', icon: BarChart2, label: 'Reports & Analytics', color: 'from-gray-500 to-gray-600' },
-    { path: '/team/data-management', icon: Database, label: 'Data Management', color: 'from-blue-500 to-indigo-600' },
-    { path: '/team/settings', icon: Settings, label: 'Settings', color: 'from-purple-500 to-indigo-700' },
-    { path: '/team/notifications', icon: Bell, label: 'Notifications', color: 'from-rose-500 to-red-600' },
-    { path: '/team/attendance', icon: ClipboardCheck, label: 'Attendance', color: 'from-emerald-500 to-green-600' },
-    { path: '/team/security', icon: Shield, label: 'Security', color: 'from-indigo-500 to-purple-600' }
+    { path: '/team/settings', icon: Settings, label: 'Settings', color: 'from-purple-500 to-indigo-700' }
   ];
 
   // Count unread messages in communications
@@ -56,8 +40,8 @@ const AdminSidebar = ({ isOpen }) => {
             <Trophy className="h-6 w-6 text-white" />
           </div>
           <h1 className={`text-xl font-bold ${isDarkMode
-              ? 'text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-400'
-              : 'text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-red-600'
+            ? 'text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-400'
+            : 'text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-red-600'
             }`}>
             BAKO Analytics
           </h1>

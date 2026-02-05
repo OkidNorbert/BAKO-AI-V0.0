@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import api from '@/utils/axiosConfig';
+import { adminAPI } from '../../services/api'; // Updated import
 import { useTheme } from '@/context/ThemeContext';
 import {
   User,
@@ -40,18 +40,10 @@ const TeamRoster = () => {
     try {
       setLoading(true);
       setError('');
-      // Mock data for development
-      setTimeout(() => {
-        const mockPlayers = [
-          { _id: '1', firstName: 'LeBron', lastName: 'James', position: 'SF', jerseyNumber: '23', status: 'active', ppg: 25.7, gp: 71 },
-          { _id: '2', firstName: 'Stephen', lastName: 'Curry', position: 'PG', jerseyNumber: '30', status: 'active', ppg: 29.4, gp: 68 },
-          { _id: '3', firstName: 'Kevin', lastName: 'Durant', position: 'PF', jerseyNumber: '35', status: 'injured', ppg: 27.1, gp: 55 },
-          { _id: '4', firstName: 'Giannis', lastName: 'Antetokounmpo', position: 'PF', jerseyNumber: '34', status: 'active', ppg: 31.1, gp: 63 },
-          { _id: '5', firstName: 'Luka', lastName: 'Doncic', position: 'PG', jerseyNumber: '77', status: 'active', ppg: 28.4, gp: 66 },
-        ];
-        setPlayers(mockPlayers);
-        setLoading(false);
-      }, 800);
+
+      const response = await adminAPI.getRoster();
+      setPlayers(response.data || []);
+      setLoading(false);
 
     } catch (error) {
       console.error('Error fetching players:', error);
@@ -65,7 +57,7 @@ const TeamRoster = () => {
   const handleToggleStatus = async (player) => {
     try {
       const newStatus = player.status === 'active' ? 'inactive' : 'active';
-      // await api.patch(`/admin/players/${player._id}/status`, { status: newStatus });
+      await adminAPI.updatePlayerStatus(player._id, newStatus);
 
       setPlayers(players.map(p =>
         p._id === player._id ? { ...p, status: newStatus } : p
@@ -156,8 +148,8 @@ const TeamRoster = () => {
               <button
                 onClick={fetchPlayers}
                 className={`flex items-center px-3 py-2 rounded-lg transition ${isDarkMode
-                    ? 'bg-gray-800 hover:bg-gray-700 text-white'
-                    : 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-200'
+                  ? 'bg-gray-800 hover:bg-gray-700 text-white'
+                  : 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-200'
                   }`}
               >
                 <RefreshCw size={16} className="mr-2" />
@@ -166,8 +158,8 @@ const TeamRoster = () => {
               <Link
                 to="/team/roster/add"
                 className={`flex items-center px-3 py-2 rounded-lg transition ${isDarkMode
-                    ? 'bg-orange-600 hover:bg-orange-700 text-white'
-                    : 'bg-orange-500 hover:bg-orange-600 text-white'
+                  ? 'bg-orange-600 hover:bg-orange-700 text-white'
+                  : 'bg-orange-500 hover:bg-orange-600 text-white'
                   }`}
               >
                 <Plus size={16} className="mr-2" />
@@ -176,8 +168,8 @@ const TeamRoster = () => {
               <Link
                 to="/team/reports"
                 className={`flex items-center px-3 py-2 rounded-lg transition ${isDarkMode
-                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                    : 'bg-blue-500 hover:bg-blue-600 text-white'
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                  : 'bg-blue-500 hover:bg-blue-600 text-white'
                   }`}
               >
                 <TrendingUp size={16} className="mr-2" />
@@ -282,8 +274,8 @@ const TeamRoster = () => {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className={`w-full pl-10 pr-4 py-2 rounded-lg focus:ring-2 ${isDarkMode
-                      ? 'bg-gray-700 text-white placeholder-gray-400 focus:ring-orange-600 border-gray-600'
-                      : 'bg-gray-50 text-gray-900 placeholder-gray-500 focus:ring-orange-500 border border-gray-300'
+                    ? 'bg-gray-700 text-white placeholder-gray-400 focus:ring-orange-600 border-gray-600'
+                    : 'bg-gray-50 text-gray-900 placeholder-gray-500 focus:ring-orange-500 border border-gray-300'
                     }`}
                 />
               </div>
@@ -294,8 +286,8 @@ const TeamRoster = () => {
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                   className={`rounded-lg ${isDarkMode
-                      ? 'bg-gray-700 text-white border-gray-600'
-                      : 'bg-gray-50 text-gray-900 border border-gray-300'
+                    ? 'bg-gray-700 text-white border-gray-600'
+                    : 'bg-gray-50 text-gray-900 border border-gray-300'
                     }`}
                 >
                   <option value="all">All Status</option>
@@ -379,8 +371,8 @@ const TeamRoster = () => {
                           <div className="flex items-center">
                             <div className="flex-shrink-0 h-10 w-10">
                               <div className={`h-10 w-10 rounded-full flex items-center justify-center ${isDarkMode
-                                  ? 'bg-gray-700 text-orange-400'
-                                  : 'bg-orange-100 text-orange-600'
+                                ? 'bg-gray-700 text-orange-400'
+                                : 'bg-orange-100 text-orange-600'
                                 }`}>
                                 <User size={20} />
                               </div>
@@ -412,16 +404,16 @@ const TeamRoster = () => {
                           <button
                             onClick={() => handleToggleStatus(player)}
                             className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${player.status === 'active'
+                              ? isDarkMode
+                                ? 'bg-green-900/50 text-green-400 hover:bg-green-800/70'
+                                : 'bg-green-100 text-green-800 hover:bg-green-200'
+                              : player.status === 'injured' || player.status === 'inactive'
                                 ? isDarkMode
-                                  ? 'bg-green-900/50 text-green-400 hover:bg-green-800/70'
-                                  : 'bg-green-100 text-green-800 hover:bg-green-200'
-                                : player.status === 'injured' || player.status === 'inactive'
-                                  ? isDarkMode
-                                    ? 'bg-red-900/50 text-red-400 hover:bg-red-800/70'
-                                    : 'bg-red-100 text-red-800 hover:bg-red-200'
-                                  : isDarkMode
-                                    ? 'bg-yellow-900/50 text-yellow-400 hover:bg-yellow-800/70'
-                                    : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
+                                  ? 'bg-red-900/50 text-red-400 hover:bg-red-800/70'
+                                  : 'bg-red-100 text-red-800 hover:bg-red-200'
+                                : isDarkMode
+                                  ? 'bg-yellow-900/50 text-yellow-400 hover:bg-yellow-800/70'
+                                  : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
                               }`}
                           >
                             {player.status === 'active' ? (
@@ -443,8 +435,8 @@ const TeamRoster = () => {
                             <Link
                               to={`/team/players/${player._id}/update`}
                               className={`p-1 rounded-md ${isDarkMode
-                                  ? 'text-blue-400 hover:bg-gray-700'
-                                  : 'text-blue-600 hover:bg-blue-100'
+                                ? 'text-blue-400 hover:bg-gray-700'
+                                : 'text-blue-600 hover:bg-blue-100'
                                 }`}
                               title="Edit Player"
                             >
@@ -453,8 +445,8 @@ const TeamRoster = () => {
                             <button
                               onClick={() => handleViewPerformance(player._id)}
                               className={`p-1 rounded-md ${isDarkMode
-                                  ? 'text-green-400 hover:bg-gray-700'
-                                  : 'text-green-600 hover:bg-green-100'
+                                ? 'text-green-400 hover:bg-gray-700'
+                                : 'text-green-600 hover:bg-green-100'
                                 }`}
                               title="View Performance"
                             >
@@ -463,8 +455,8 @@ const TeamRoster = () => {
                             <Link
                               to={`/team/players/${player._id}`}
                               className={`p-1 rounded-md ${isDarkMode
-                                  ? 'text-gray-400 hover:bg-gray-700'
-                                  : 'text-gray-600 hover:bg-gray-100'
+                                ? 'text-gray-400 hover:bg-gray-700'
+                                : 'text-gray-600 hover:bg-gray-100'
                                 }`}
                               title="View Profile"
                             >

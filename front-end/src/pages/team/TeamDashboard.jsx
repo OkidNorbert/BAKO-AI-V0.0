@@ -56,6 +56,7 @@ const TeamDashboard = () => {
           totalPlayers: statsData.totalPlayers || 0,
           totalMatches: statsData.totalMatches || 0,
           matchesAnalyzed: statsData.matchesAnalyzed || 0,
+          winRate: statsData.winRate || 0,
           recentActivities: recentActivities.slice(0, 5), // Use notifications as proxy for activity for now
           performanceData: statsData.performanceData || null,
         });
@@ -225,10 +226,10 @@ const TeamDashboard = () => {
             totalPlayers: stats.totalPlayers || 0,
             activePlayers: stats.totalPlayers || 0,
             gamesAnalyzed: stats.matchesAnalyzed || 0,
-            totalVideos: (stats.matchesAnalyzed || 0) + 2,
-            winRate: 65,
+            totalVideos: stats.matchesAnalyzed || 0,
+            winRate: stats.winRate || 0,
             gamesPlayed: stats.totalMatches || 0,
-            trainingVideos: 12
+            trainingVideos: 0
           }} />
 
           {/* Recent Games Component */}

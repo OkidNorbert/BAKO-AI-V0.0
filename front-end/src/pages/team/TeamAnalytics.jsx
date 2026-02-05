@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../context/ThemeContext';
-import axios from 'axios';
+import { adminAPI } from '../../services/api';
 import {
   BarChart as BarChartIcon,
   LineChart as LineChartIcon,
@@ -102,86 +102,10 @@ const TeamAnalytics = () => {
       setLoading(true);
       setError('');
 
-      // Mock basketball analytics data
-      const mockData = {
-        teamPerformance: {
-          wins: 18,
-          losses: 7,
-          winPercentage: 72.0,
-          pointsPerGame: 98.5,
-          pointsAllowed: 91.2,
-          trend: [
-            { date: '2025-01-01', wins: 12, losses: 3, winPercentage: 80.0 },
-            { date: '2025-01-15', wins: 15, losses: 4, winPercentage: 78.9 },
-            { date: '2025-02-01', wins: 18, losses: 7, winPercentage: 72.0 }
-          ]
-        },
-        playerStats: {
-          totalPlayers: 15,
-          activePlayers: 12,
-          averageRating: 78.5,
-          topPerformers: [
-            { name: 'John Smith', rating: 92, position: 'PG', points: 18.5, assists: 7.2 },
-            { name: 'Mike Johnson', rating: 88, position: 'SF', points: 16.8, rebounds: 8.1 },
-            { name: 'David Lee', rating: 85, position: 'C', points: 14.2, rebounds: 10.3 }
-          ],
-          positionBreakdown: [
-            { position: 'PG', count: 3, avgRating: 82 },
-            { position: 'SG', count: 2, avgRating: 79 },
-            { position: 'SF', count: 3, avgRating: 81 },
-            { position: 'PF', count: 3, avgRating: 77 },
-            { position: 'C', count: 4, avgRating: 80 }
-          ]
-        },
-        shootingAnalytics: {
-          fieldGoalPercentage: 47.8,
-          threePointPercentage: 36.5,
-          freeThrowPercentage: 78.2,
-          shootingTrends: [
-            { date: '2025-01-01', fg: 45.2, three: 34.1, ft: 76.5 },
-            { date: '2025-01-15', fg: 46.8, three: 35.7, ft: 77.8 },
-            { date: '2025-02-01', fg: 47.8, three: 36.5, ft: 78.2 }
-          ],
-          shotDistribution: [
-            { type: 'Layups', percentage: 35 },
-            { type: 'Mid-range', percentage: 25 },
-            { type: '3-pointers', percentage: 30 },
-            { type: 'Free throws', percentage: 10 }
-          ]
-        },
-        gameMetrics: {
-          gamesPlayed: 25,
-          averageDuration: 48.5,
-          possessionAnalysis: [
-            { quarter: 'Q1', avgPossessions: 22.3, efficiency: 1.12 },
-            { quarter: 'Q2', avgPossessions: 21.8, efficiency: 1.08 },
-            { quarter: 'Q3', avgPossessions: 23.1, efficiency: 1.15 },
-            { quarter: 'Q4', avgPossessions: 22.7, efficiency: 1.09 }
-          ],
-          turnoverAnalysis: [
-            { type: 'Steals', count: 8.5, percentage: 35 },
-            { type: 'Bad passes', count: 6.2, percentage: 25 },
-            { type: 'Traveling', count: 4.8, percentage: 20 },
-            { type: 'Other', count: 4.5, percentage: 20 }
-          ],
-          reboundingStats: [
-            { type: 'Offensive', count: 12.3, percentage: 35 },
-            { type: 'Defensive', count: 22.8, percentage: 65 }
-          ]
-        },
-        trainingData: {
-          sessionsCompleted: 48,
-          hoursTrained: 96,
-          skillImprovement: [
-            { date: '2025-01-01', shooting: 65, dribbling: 70, defense: 68 },
-            { date: '2025-01-15', shooting: 72, dribbling: 75, defense: 71 },
-            { date: '2025-02-01', shooting: 78, dribbling: 82, defense: 76 }
-          ],
-          attendanceRate: 87.5
-        }
-      };
-
-      setAnalyticsData(mockData);
+      const response = await adminAPI.getReports();
+      if (response.data) {
+        setAnalyticsData(prevData => ({ ...prevData, ...response.data }));
+      }
     } catch (error) {
       console.error('Error fetching analytics:', error);
       setError('Failed to fetch analytics. Please try again.');
@@ -394,8 +318,8 @@ const TeamAnalytics = () => {
               value={dateRange}
               onChange={(e) => setDateRange(e.target.value)}
               className={`rounded-md px-4 py-2 ${isDarkMode
-                  ? 'bg-gray-700 text-white border-gray-600'
-                  : 'bg-white text-gray-900 border-gray-300'
+                ? 'bg-gray-700 text-white border-gray-600'
+                : 'bg-white text-gray-900 border-gray-300'
                 } border`}
             >
               <option value="week">Last Week</option>
@@ -406,8 +330,8 @@ const TeamAnalytics = () => {
             <button
               onClick={fetchAnalytics}
               className={`p-2 rounded-md ${isDarkMode
-                  ? 'bg-gray-700 hover:bg-gray-600 text-white'
-                  : 'bg-white hover:bg-gray-100 text-gray-900'
+                ? 'bg-gray-700 hover:bg-gray-600 text-white'
+                : 'bg-white hover:bg-gray-100 text-gray-900'
                 } border`}
             >
               <RefreshCw className="h-5 w-5" />
@@ -416,10 +340,10 @@ const TeamAnalytics = () => {
               onClick={handleDownloadReport}
               disabled={loading}
               className={`flex items-center px-4 py-2 rounded-md ${loading
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : isDarkMode
-                    ? 'bg-orange-600 hover:bg-orange-700 text-white'
-                    : 'bg-orange-500 hover:bg-orange-600 text-white'
+                ? 'bg-gray-400 cursor-not-allowed'
+                : isDarkMode
+                  ? 'bg-orange-600 hover:bg-orange-700 text-white'
+                  : 'bg-orange-500 hover:bg-orange-600 text-white'
                 }`}
             >
               <Download className="h-4 w-4 mr-2" />
