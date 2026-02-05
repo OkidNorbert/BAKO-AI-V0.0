@@ -17,6 +17,11 @@ import Home from '@/pages/Home';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 
+import About from '@/pages/About';
+import Programs from '@/pages/Programs';
+import Gallery from '@/pages/Gallery';
+import Contact from '@/pages/Contact';
+import FAQ from '@/pages/FAQ';
 // Team / Organization Pages
 import TeamDashboard from '@/pages/team/TeamDashboard';
 import TeamRoster from '@/pages/team/TeamRoster';
@@ -62,6 +67,11 @@ function App() {
               <Route index element={<Home />} />
               <Route path="login" element={<Login />} />
               <Route path="register" element={<Register />} />
+              <Route path="about" element={<About />} />
+              <Route path="programs" element={<Programs />} />
+              <Route path="gallery" element={<Gallery />} />
+              <Route path="contact" element={<Contact />} />
+              <Route path="faq" element={<FAQ />} />
             </Route>
 
             {/* Team / Organization Routes */}
@@ -97,13 +107,13 @@ function App() {
                 <Route index element={<Profile />} />
               </Route>
             </Route>
-            
+
             <Route path="/notifications" element={<ProtectedRoute allowedRoles={['team', 'player']} />}>
               <Route element={<Layout />}>
                 <Route index element={<Notifications />} />
               </Route>
             </Route>
-            
+
             <Route path="/help" element={<Layout />}>
               <Route index element={<Help />} />
             </Route>
