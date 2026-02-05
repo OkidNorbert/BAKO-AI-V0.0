@@ -7,14 +7,10 @@ const Dashboard = () => {
 
   // Redirect to the appropriate dashboard based on user role
   switch (user?.role) {
-    case 'admin':
-      return <Navigate to="/admin/dashboard" replace />;
-    case 'babysitter':
-      return <Navigate to="/babysitter/dashboard" replace />;
-    case 'parent':
-      return <Navigate to="/parent/dashboard" replace />;
-    case 'finance':
-      return <Navigate to="/finance/dashboard" replace />;
+    case 'team':
+      return <Navigate to="/team/dashboard" replace />;
+    case 'player':
+      return <Navigate to="/player/dashboard" replace />;
     default:
       return <Navigate to="/login" replace />;
   }

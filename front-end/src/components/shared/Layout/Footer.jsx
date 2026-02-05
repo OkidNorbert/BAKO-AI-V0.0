@@ -54,11 +54,11 @@ const Footer = () => {
             <h2 className={`text-2xl font-bold mb-4 flex items-center ${
               isDarkMode ? 'text-yellow-300' : 'text-indigo-700'
             }`}>
-              <Rocket className="mr-2 h-6 w-6 animate-pulse" /> 
-              Daystar Daycare
+              <Trophy className="mr-2 h-6 w-6 animate-pulse" /> 
+              BAKO Basketball
             </h2>
             <p className="mb-4 text-lg leading-relaxed" style={{ fontFamily: "'Comic Sans MS', cursive, sans-serif" }}>
-              Where every child's imagination takes flight! We create a magical place for your little stars to learn, play, and grow together!
+              Elevate your game with AI-powered basketball analytics! Track performance, analyze matches, and reach your full potential on the court!
             </p>
             <div className="flex space-x-4 mt-2">
               <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" 
@@ -147,7 +147,7 @@ const Footer = () => {
                 <Mail className={`h-5 w-5 mr-2 ${
                   isDarkMode ? 'text-blue-300' : 'text-blue-600'
                 }`} />
-                <span className="text-lg" style={{ fontFamily: "'Comic Sans MS', cursive, sans-serif" }}>hello@daystardaycare.com</span>
+                <span className="text-lg" style={{ fontFamily: "'Comic Sans MS', cursive, sans-serif" }}>info@bakobasketball.com</span>
               </li>
               <li className="flex items-start">
                 <MapPin className={`h-5 w-5 mr-2 ${
@@ -172,7 +172,7 @@ const Footer = () => {
               <Music className="mr-2 h-5 w-5" /> 
               Join Our Adventure Club!
             </h2>
-            <p className="mb-4 text-lg" style={{ fontFamily: "'Comic Sans MS', cursive, sans-serif" }}>Get fun activity ideas and daycare updates!</p>
+            <p className="mb-4 text-lg" style={{ fontFamily: "'Comic Sans MS', cursive, sans-serif" }}>Get training tips and basketball performance updates!</p>
             <form className="flex flex-col space-y-3">
               <input 
                 type="email" 
@@ -202,9 +202,9 @@ const Footer = () => {
           <p className={`text-sm ${
             isDarkMode ? 'text-gray-400' : 'text-gray-600'
           }`}>
-            &copy; {currentYear} Daystar Daycare. All rights reserved.
+            &copy; {currentYear} BAKO Basketball. All rights reserved.
             <span className="mx-2">|</span>
-            Made with <Heart className="inline h-4 w-4 text-red-500 animate-pulse" /> for happy little explorers!
+            Made with <Heart className="inline h-4 w-4 text-red-500 animate-pulse" /> for champions on the court!
           </p>
         </div>
         

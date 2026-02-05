@@ -9,27 +9,34 @@ import 'react-toastify/dist/ReactToastify.css';
 
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Layout from '@/components/shared/Layout/Layout';
-import AdminLayout from '@/components/shared/Layout/AdminLayout'; // Will be renamed to TeamLayout eventually
-import BabysitterLayout from '@/layouts/BabysitterLayout'; // Will be renamed to PlayerLayout eventually
+import TeamLayout from '@/components/shared/Layout/TeamLayout';
+import PlayerLayout from '@/layouts/PlayerLayout';
 
 // Public Pages
 import Home from '@/pages/Home';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 
-// Team / Organization Pages (formerly Admin)
-import AdminHome from '@/pages/admin/AdminHome'; // TeamDashboard
-import BabysitterManagement from '@/pages/admin/BabysitterManagement'; // TeamRoster
-import ChildManagement from '@/pages/admin/ChildManagement'; // MatchAnalysis
-import Analytics from '@/pages/admin/Analytics'; // TeamAnalytics
-import SystemSettings from '@/pages/admin/SystemSettings'; // TeamSettings
-import Schedule from '@/pages/admin/Schedule'; // TeamSchedule
+// Team / Organization Pages
+import TeamDashboard from '@/pages/team/TeamDashboard';
+import TeamRoster from '@/pages/team/TeamRoster';
+import TeamCreateEdit from '@/pages/team/TeamCreateEdit';
+import MatchAnalysis from '@/pages/team/MatchAnalysis';
+import MatchUpload from '@/pages/team/MatchUpload';
+import TeamAnalytics from '@/pages/team/TeamAnalytics';
+import TeamSettings from '@/pages/team/TeamSettings';
+import TeamSchedule from '@/pages/team/TeamSchedule';
 
-// Personal Player Pages (formerly Babysitter)
-import BabysitterHome from '@/pages/babysitter/BabysitterHome'; // PlayerDashboard
-import BabysitterProfile from '@/pages/babysitter/BabysitterProfile'; // PlayerProfile
-// import TrainingVideos from '@/pages/player/TrainingVideos'; // To be created
-import BabysitterReports from '@/pages/babysitter/BabysitterReports'; // SkillAnalytics
+// Personal Player Pages
+import PlayerDashboard from '@/pages/player/PlayerDashboard';
+import PlayerProfile from '@/pages/player/PlayerProfile';
+import SkillAnalytics from '@/pages/player/SkillAnalytics';
+import TrainingVideos from '@/pages/player/TrainingVideos';
+
+// Shared Pages
+import Profile from '@/pages/shared/Profile';
+import Notifications from '@/pages/shared/Notifications';
+import Help from '@/pages/shared/Help';
 
 function App() {
   return (
@@ -59,26 +66,46 @@ function App() {
 
             {/* Team / Organization Routes */}
             <Route path="/team" element={<ProtectedRoute allowedRoles={['team']} />}>
-              <Route element={<AdminLayout />}>
-                <Route index element={<AdminHome />} />
-                <Route path="dashboard" element={<AdminHome />} />
-                <Route path="roster" element={<BabysitterManagement />} />
-                <Route path="matches" element={<ChildManagement />} />
-                <Route path="schedule" element={<Schedule />} />
-                <Route path="analytics" element={<Analytics />} />
-                <Route path="settings" element={<SystemSettings />} />
+              <Route element={<TeamLayout />}>
+                <Route index element={<TeamDashboard />} />
+                <Route path="dashboard" element={<TeamDashboard />} />
+                <Route path="roster" element={<TeamRoster />} />
+                <Route path="roster/new" element={<TeamCreateEdit />} />
+                <Route path="roster/edit/:teamId" element={<TeamCreateEdit />} />
+                <Route path="matches" element={<MatchAnalysis />} />
+                <Route path="matches/upload" element={<MatchUpload />} />
+                <Route path="schedule" element={<TeamSchedule />} />
+                <Route path="analytics" element={<TeamAnalytics />} />
+                <Route path="settings" element={<TeamSettings />} />
               </Route>
             </Route>
 
             {/* Personal Player Routes */}
             <Route path="/player" element={<ProtectedRoute allowedRoles={['player']} />}>
-              <Route element={<BabysitterLayout />}>
-                <Route index element={<BabysitterHome />} />
-                <Route path="dashboard" element={<BabysitterHome />} />
-                <Route path="profile" element={<BabysitterProfile />} />
-                <Route path="skills" element={<BabysitterReports />} />
-                {/* <Route path="training" element={<TrainingVideos />} /> */}
+              <Route element={<PlayerLayout />}>
+                <Route index element={<PlayerDashboard />} />
+                <Route path="dashboard" element={<PlayerDashboard />} />
+                <Route path="profile" element={<PlayerProfile />} />
+                <Route path="skills" element={<SkillAnalytics />} />
+                <Route path="training" element={<TrainingVideos />} />
               </Route>
+            </Route>
+
+            {/* Shared Routes */}
+            <Route path="/profile" element={<ProtectedRoute allowedRoles={['team', 'player']} />}>
+              <Route element={<Layout />}>
+                <Route index element={<Profile />} />
+              </Route>
+            </Route>
+            
+            <Route path="/notifications" element={<ProtectedRoute allowedRoles={['team', 'player']} />}>
+              <Route element={<Layout />}>
+                <Route index element={<Notifications />} />
+              </Route>
+            </Route>
+            
+            <Route path="/help" element={<Layout />}>
+              <Route index element={<Help />} />
             </Route>
 
             {/* Catch all route - Redirect to Login if unknown, or Home */}

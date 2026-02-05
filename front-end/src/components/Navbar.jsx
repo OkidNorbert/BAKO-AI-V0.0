@@ -14,10 +14,10 @@ const Navbar = () => {
   const getHomeLink = () => {
     if (!user) return '/';
     switch (user.role) {
-      case 'admin':
-        return '/admin';
-      case 'babysitter':
-        return '/babysitter';
+      case 'team':
+        return '/team';
+      case 'player':
+        return '/player';
       default:
         return '/';
     }
@@ -30,7 +30,7 @@ const Navbar = () => {
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
               <Link to={getHomeLink()} className="text-2xl font-bold text-blue-600">
-                Daystar
+                BAKO
               </Link>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
@@ -50,12 +50,20 @@ const Navbar = () => {
                       Admin Panel
                     </Link>
                   )}
-                  {user.role === 'babysitter' && (
+                  {user.role === 'team' && (
                     <Link
-                      to="/children"
+                      to="/team"
                       className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
                     >
-                      Children
+                      Team Dashboard
+                    </Link>
+                  )}
+                  {user.role === 'player' && (
+                    <Link
+                      to="/player"
+                      className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                    >
+                      Player Dashboard
                     </Link>
                   )}
                 </>
