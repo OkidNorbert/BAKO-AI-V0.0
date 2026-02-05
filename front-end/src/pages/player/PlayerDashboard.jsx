@@ -70,84 +70,48 @@ const PlayerDashboard = () => {
       setLoading(true);
       setError('');
 
-      let videosResponse, historyResponse, notificationsResponse, metricsResponse, trendsResponse;
-
-      // Check for dev bypass
-      if (user?.id?.startsWith('dev-id-')) {
-        console.log('PlayerDashboard: Using mock data for dev user');
-        // Mock data
-        videosResponse = { data: [] };
-        historyResponse = { data: [] };
-        notificationsResponse = { data: [] };
-        metricsResponse = { data: {} };
-        trendsResponse = { data: { shooting: [], dribbling: [], defense: [], fitness: [] } };
-
-        // Simulate network delay
-        await new Promise(resolve => setTimeout(resolve, 500));
-      } else {
-        // Fetch real data
-        [videosResponse, historyResponse, notificationsResponse, metricsResponse, trendsResponse] = await Promise.all([
-          api.get('/player/training-videos').catch(() => ({ data: [] })),
-          api.get('/player/training-history').catch(() => ({ data: [] })),
-          api.get('/player/notifications').catch(() => ({ data: [] })),
-          api.get('/player/performance-metrics').catch(() => ({ data: {} })),
-          api.get('/player/skill-trends').catch(() => ({ data: { shooting: [], dribbling: [], defense: [], fitness: [] } }))
-        ]);
-      }
+      // Fetch all player data
+      const [videosResponse, historyResponse, notificationsResponse, metricsResponse, trendsResponse] = await Promise.all([
+        api.get('/player/training-videos').catch(() => ({ data: [] })),
+        api.get('/player/training-history').catch(() => ({ data: [] })),
+        api.get('/player/notifications').catch(() => ({ data: [] })),
+        api.get('/player/performance-metrics').catch(() => ({ data: {} })),
+        api.get('/player/skill-trends').catch(() => ({ data: { shooting: [], dribbling: [], defense: [], fitness: [] } }))
+      ]);
 
       setTrainingVideos(videosResponse.data || []);
       setTrainingHistory(historyResponse.data || []);
       setNotifications(notificationsResponse.data || []);
 
-      // Set performance metrics with defaults if API fails
-      const metrics = metricsResponse.data && Object.keys(metricsResponse.data).length > 0 ? metricsResponse.data : {
-        shootingAccuracy: 68.5,
-        dribbleSpeed: 7.2,
-        verticalJump: 28.5,
-        sprintSpeed: 4.8,
-        overallRating: 85,
-        improvementRate: 12.3,
+      // Set performance metrics with robust fallback
+      const metricsData = metricsResponse.data || {};
+      setPerformanceMetrics({
+        shootingAccuracy: metricsData.shootingAccuracy || 0,
+        dribbleSpeed: metricsData.dribbleSpeed || 0,
+        verticalJump: metricsData.verticalJump || 0,
+        sprintSpeed: metricsData.sprintSpeed || 0,
+        overallRating: metricsData.overallRating || 0,
+        improvementRate: metricsData.improvementRate || 0,
         weeklyStats: {
-          sessionsCompleted: 4,
-          minutesTrained: 180,
-          shotsAttempted: 85,
-          shotsMade: 58
+          sessionsCompleted: metricsData.weeklyStats?.sessionsCompleted || 0,
+          minutesTrained: metricsData.weeklyStats?.minutesTrained || 0,
+          shotsAttempted: metricsData.weeklyStats?.shotsAttempted || 0,
+          shotsMade: metricsData.weeklyStats?.shotsMade || 0
         }
-      };
-      setPerformanceMetrics(metrics);
+      });
 
-      // Set skill trends with mock data if API fails
-      const trends = trendsResponse.data && Object.keys(trendsResponse.data).length > 0 ? trendsResponse.data : {
-        shooting: [
-          { date: '2025-01-20', value: 65, improvement: 2.5 },
-          { date: '2025-01-27', value: 68.5, improvement: 3.5 },
-          { date: '2025-02-03', value: 72, improvement: 4.5 },
-          { date: '2025-02-10', value: 75, improvement: 3.0 }
-        ],
-        dribbling: [
-          { date: '2025-01-20', value: 6.8, improvement: 1.2 },
-          { date: '2025-01-27', value: 7.2, improvement: 2.4 },
-          { date: '2025-02-03', value: 7.8, improvement: 2.6 },
-          { date: '2025-02-10', value: 8.1, improvement: 2.3 }
-        ],
-        defense: [
-          { date: '2025-01-20', value: 70, improvement: 3.0 },
-          { date: '2025-01-27', value: 73, improvement: 3.5 },
-          { date: '2025-02-03', value: 76, improvement: 3.8 },
-          { date: '2025-02-10', value: 79, improvement: 3.2 }
-        ],
-        fitness: [
-          { date: '2025-01-20', value: 65, improvement: 2.0 },
-          { date: '2025-01-27', value: 68, improvement: 3.5 },
-          { date: '2025-02-03', value: 71, improvement: 3.8 },
-          { date: '2025-02-10', value: 74, improvement: 3.6 }
-        ]
+      // Set skill trends
+      const trends = trendsResponse.data || {
+        shooting: [],
+        dribbling: [],
+        defense: [],
+        fitness: []
       };
       setSkillTrends(trends);
 
     } catch (err) {
       console.error('fetchData:', err);
-      if (err.response?.status === 401 && !user?.id?.startsWith('dev-id-')) {
+      if (err.response?.status === 401) {
         navigate('/login');
       }
       else if (err.code === 'ERR_NETWORK') setError('Unable to connect. Please check your connection.');

@@ -74,13 +74,8 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Check if we have a dev token (bypass)
-    const currentToken = localStorage.getItem('accessToken');
-    const isDevToken = currentToken && currentToken.split('.')[2] === 'fake-signature';
-
     // If error is 401 and we haven't tried to refresh token yet
-    // Skip refresh logic for dev tokens to avoid logout loops
-    if (error.response?.status === 401 && !originalRequest._retry && !isDevToken) {
+    if (error.response?.status === 401 && !originalRequest._retry) {
       console.log('Response interceptor: Received 401 error, attempting to refresh token');
 
       if (isRefreshing) {
