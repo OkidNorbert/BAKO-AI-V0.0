@@ -3,6 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import api from '@/utils/axiosConfig';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
+import { MOCK_AUTH_ENABLED } from '@/utils/mockAuth';
+import {
+  MOCK_TRAINING_VIDEOS,
+  MOCK_TRAINING_HISTORY,
+  MOCK_PERFORMANCE_METRICS,
+  MOCK_SKILL_TRENDS,
+  MOCK_NOTIFICATIONS
+} from '@/utils/mockData';
 import {
   Video,
   Calendar,
@@ -69,6 +77,17 @@ const PlayerDashboard = () => {
     try {
       setLoading(true);
       setError('');
+
+      if (MOCK_AUTH_ENABLED) {
+        console.log('Mock mode: skipping API calls in PlayerDashboard');
+        setTrainingVideos(MOCK_TRAINING_VIDEOS);
+        setTrainingHistory(MOCK_TRAINING_HISTORY);
+        setPerformanceMetrics(MOCK_PERFORMANCE_METRICS);
+        setSkillTrends(MOCK_SKILL_TRENDS);
+        setNotifications(MOCK_NOTIFICATIONS);
+        setLoading(false);
+        return;
+      }
 
       // Fetch all player data
       const [videosResponse, historyResponse, notificationsResponse, metricsResponse, trendsResponse] = await Promise.all([

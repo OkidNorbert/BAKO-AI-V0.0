@@ -60,7 +60,15 @@ const Register = () => {
         role: formData.accountType // Use selected account type
       });
 
-      if (!result.success) {
+      if (result.success) {
+        // Explicitly navigate based on the role after successful registration
+        const role = formData.accountType;
+        if (role === 'team') {
+          navigate('/team');
+        } else {
+          navigate('/player');
+        }
+      } else {
         setError(result.error || 'Failed to register');
       }
     } catch (err) {
@@ -110,8 +118,8 @@ const Register = () => {
                 value={formData.accountType}
                 onChange={handleChange}
                 className={`mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${isDarkMode
-                    ? 'bg-gray-700 border-gray-600 text-white'
-                    : 'bg-white border-gray-300 text-gray-900'
+                  ? 'bg-gray-700 border-gray-600 text-white'
+                  : 'bg-white border-gray-300 text-gray-900'
                   }`}
               >
                 <option value="player">Personal Player</option>
@@ -132,8 +140,8 @@ const Register = () => {
                 value={formData.name}
                 onChange={handleChange}
                 className={`mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${isDarkMode
-                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
-                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
+                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
                   }`}
                 placeholder={formData.accountType === 'team' ? "Enter team name" : "Enter your full name"}
               />
@@ -152,8 +160,8 @@ const Register = () => {
                 value={formData.email}
                 onChange={handleChange}
                 className={`mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${isDarkMode
-                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
-                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
+                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
                   }`}
                 placeholder="Enter your email"
               />
@@ -172,8 +180,8 @@ const Register = () => {
                 value={formData.password}
                 onChange={handleChange}
                 className={`mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${isDarkMode
-                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
-                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
+                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
                   }`}
                 placeholder="Create a password"
               />
@@ -192,8 +200,8 @@ const Register = () => {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 className={`mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${isDarkMode
-                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
-                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
+                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
                   }`}
                 placeholder="Confirm your password"
               />

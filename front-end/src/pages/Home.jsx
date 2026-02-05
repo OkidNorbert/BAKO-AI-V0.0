@@ -9,15 +9,8 @@ const Home = () => {
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
 
-  useEffect(() => {
-    if (user) {
-      if (user.role === 'team') {
-        navigate('/team');
-      } else if (user.role === 'player') {
-        navigate('/player');
-      }
-    }
-  }, [user, navigate]);
+  // Removed automatic redirect to dashboard to allow authenticated users to view landing page
+
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDarkMode
@@ -58,13 +51,13 @@ const Home = () => {
 
             <div className="flex flex-col sm:flex-row justify-center gap-6 mt-10">
               <Link
-                to="/login"
+                to={user ? (user.role === 'team' ? '/team' : '/player') : '/login'}
                 className={`transform transition duration-200 hover:scale-105 shadow-lg px-8 py-4 rounded-full text-xl font-bold flex items-center justify-center space-x-2 ${isDarkMode
                   ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white hover:from-orange-600 hover:to-red-700'
                   : 'bg-gradient-to-r from-blue-600 to-indigo-700 text-white hover:from-blue-700 hover:to-indigo-800'
                   }`}
               >
-                Get Started
+                {user ? 'Enter Dashboard' : 'Get Started'}
                 <ArrowRight className="h-6 w-6 ml-2" />
               </Link>
 
