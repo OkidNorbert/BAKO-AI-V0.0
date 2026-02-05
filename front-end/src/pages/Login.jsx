@@ -9,7 +9,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { user, login } = useAuth();
+  const { user, login, bypassLogin } = useAuth();
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
 
@@ -66,8 +66,8 @@ const Login = () => {
 
   return (
     <div className={`min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 ${isDarkMode
-        ? 'bg-gradient-to-b from-gray-900 to-indigo-950 text-white'
-        : 'bg-gradient-to-b from-blue-100 to-purple-100 text-gray-900'
+      ? 'bg-gradient-to-b from-gray-900 to-indigo-950 text-white'
+      : 'bg-gradient-to-b from-blue-100 to-purple-100 text-gray-900'
       }`}>
       <div className="max-w-md w-full space-y-8">
         <div className={`relative p-8 rounded-3xl shadow-xl overflow-hidden ${isDarkMode ? 'bg-gray-800' : 'bg-white'
@@ -120,8 +120,8 @@ const Login = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className={`block w-full pl-10 pr-3 py-3 rounded-xl shadow-sm focus:outline-none ${isDarkMode
-                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-indigo-500 focus:border-indigo-500'
-                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-indigo-500 focus:border-indigo-500'
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-indigo-500 focus:border-indigo-500'
+                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-indigo-500 focus:border-indigo-500'
                       }`}
                     placeholder="Enter your email"
                   />
@@ -148,8 +148,8 @@ const Login = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className={`block w-full pl-10 pr-3 py-3 rounded-xl shadow-sm focus:outline-none ${isDarkMode
-                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-indigo-500 focus:border-indigo-500'
-                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-indigo-500 focus:border-indigo-500'
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-indigo-500 focus:border-indigo-500'
+                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-indigo-500 focus:border-indigo-500'
                       }`}
                     placeholder="Enter your password"
                   />
@@ -177,6 +177,34 @@ const Login = () => {
               </button>
             </div>
           </form>
+
+          <div className="mt-6 border-t border-gray-200 pt-6">
+            <p className={`text-xs text-center mb-4 uppercase tracking-widest font-bold ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+              Developer Access
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => {
+                  bypassLogin('team');
+                  navigate('/team');
+                }}
+                className={`py-2 px-4 rounded-lg text-sm font-medium border border-orange-500 text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors`}
+              >
+                Team Login
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  bypassLogin('player');
+                  navigate('/player');
+                }}
+                className={`py-2 px-4 rounded-lg text-sm font-medium border border-blue-500 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors`}
+              >
+                Player Login
+              </button>
+            </div>
+          </div>
 
           <div className="mt-8 text-center relative z-10">
             <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'

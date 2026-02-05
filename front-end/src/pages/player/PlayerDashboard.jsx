@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '@/utils/axiosConfig';
 import { useTheme } from '@/context/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
 import {
   Video,
   Calendar,
@@ -58,6 +59,8 @@ const PlayerDashboard = () => {
     fitness: []
   });
 
+  const { user } = useAuth();
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -67,21 +70,37 @@ const PlayerDashboard = () => {
       setLoading(true);
       setError('');
 
-      // Fetch all player data
-      const [videosResponse, historyResponse, notificationsResponse, metricsResponse, trendsResponse] = await Promise.all([
-        api.get('/player/training-videos').catch(() => ({ data: [] })),
-        api.get('/player/training-history').catch(() => ({ data: [] })),
-        api.get('/player/notifications').catch(() => ({ data: [] })),
-        api.get('/player/performance-metrics').catch(() => ({ data: {} })),
-        api.get('/player/skill-trends').catch(() => ({ data: { shooting: [], dribbling: [], defense: [], fitness: [] } }))
-      ]);
+      let videosResponse, historyResponse, notificationsResponse, metricsResponse, trendsResponse;
+
+      // Check for dev bypass
+      if (user?.id?.startsWith('dev-id-')) {
+        console.log('PlayerDashboard: Using mock data for dev user');
+        // Mock data
+        videosResponse = { data: [] };
+        historyResponse = { data: [] };
+        notificationsResponse = { data: [] };
+        metricsResponse = { data: {} };
+        trendsResponse = { data: { shooting: [], dribbling: [], defense: [], fitness: [] } };
+
+        // Simulate network delay
+        await new Promise(resolve => setTimeout(resolve, 500));
+      } else {
+        // Fetch real data
+        [videosResponse, historyResponse, notificationsResponse, metricsResponse, trendsResponse] = await Promise.all([
+          api.get('/player/training-videos').catch(() => ({ data: [] })),
+          api.get('/player/training-history').catch(() => ({ data: [] })),
+          api.get('/player/notifications').catch(() => ({ data: [] })),
+          api.get('/player/performance-metrics').catch(() => ({ data: {} })),
+          api.get('/player/skill-trends').catch(() => ({ data: { shooting: [], dribbling: [], defense: [], fitness: [] } }))
+        ]);
+      }
 
       setTrainingVideos(videosResponse.data || []);
       setTrainingHistory(historyResponse.data || []);
       setNotifications(notificationsResponse.data || []);
 
       // Set performance metrics with defaults if API fails
-      const metrics = metricsResponse.data || {
+      const metrics = metricsResponse.data && Object.keys(metricsResponse.data).length > 0 ? metricsResponse.data : {
         shootingAccuracy: 68.5,
         dribbleSpeed: 7.2,
         verticalJump: 28.5,
@@ -98,7 +117,7 @@ const PlayerDashboard = () => {
       setPerformanceMetrics(metrics);
 
       // Set skill trends with mock data if API fails
-      const trends = trendsResponse.data || {
+      const trends = trendsResponse.data && Object.keys(trendsResponse.data).length > 0 ? trendsResponse.data : {
         shooting: [
           { date: '2025-01-20', value: 65, improvement: 2.5 },
           { date: '2025-01-27', value: 68.5, improvement: 3.5 },
@@ -128,7 +147,9 @@ const PlayerDashboard = () => {
 
     } catch (err) {
       console.error('fetchData:', err);
-      if (err.response?.status === 401) navigate('/login');
+      if (err.response?.status === 401 && !user?.id?.startsWith('dev-id-')) {
+        navigate('/login');
+      }
       else if (err.code === 'ERR_NETWORK') setError('Unable to connect. Please check your connection.');
       else setError('Failed to fetch data. Please try again.');
       setTrainingVideos([]);

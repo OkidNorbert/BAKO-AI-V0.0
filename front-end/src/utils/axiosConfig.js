@@ -32,7 +32,7 @@ api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('accessToken');
     const isPublicEndpoint = config.url.includes('/public/');
-    
+
     // Log all API requests for debugging
     console.log('API Request:', {
       url: config.url,
@@ -41,7 +41,7 @@ api.interceptors.request.use(
       hasToken: !!token,
       isPublicEndpoint
     });
-    
+
     if (token) {
       // Log token details for debugging
       try {
@@ -73,11 +73,16 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    
+
+    // Check if we have a dev token (bypass)
+    const currentToken = localStorage.getItem('accessToken');
+    const isDevToken = currentToken && currentToken.split('.')[2] === 'fake-signature';
+
     // If error is 401 and we haven't tried to refresh token yet
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Skip refresh logic for dev tokens to avoid logout loops
+    if (error.response?.status === 401 && !originalRequest._retry && !isDevToken) {
       console.log('Response interceptor: Received 401 error, attempting to refresh token');
-      
+
       if (isRefreshing) {
         console.log('Response interceptor: Token refresh already in progress, adding request to queue');
         // If refreshing, add request to queue
@@ -108,27 +113,27 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       isRefreshing = true;
       refreshAttempts++;
-      
+
       try {
         const refreshToken = localStorage.getItem('refreshToken');
-        
+
         if (!refreshToken) {
           console.warn('Response interceptor: No refresh token available');
           throw new Error('No refresh token available');
         }
-        
+
         console.log('Response interceptor: Attempting to refresh token');
-        
+
         // Create a new axios instance for the refresh call to avoid interceptors loop
         const refreshResponse = await axios.post(
           'http://localhost:5000/api/auth/refresh-token',
           { refreshToken },
           { headers: { 'Content-Type': 'application/json' } }
         );
-        
+
         if (refreshResponse.data && refreshResponse.data.accessToken) {
           const { accessToken } = refreshResponse.data;
-          
+
           // Log new token details
           try {
             const tokenPayload = JSON.parse(atob(accessToken.split('.')[1]));
@@ -140,27 +145,27 @@ api.interceptors.response.use(
           } catch (error) {
             console.warn('Response interceptor: Error parsing new token:', error);
           }
-          
+
           // Save new token
           localStorage.setItem('accessToken', accessToken);
-          
+
           // Update authorization header
           api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
           originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-          
+
           // Process any queued requests
           processQueue(null, accessToken);
-          
+
           // Reset refresh attempts on successful refresh
           refreshAttempts = 0;
-          
+
           // Retry the original request
           return api(originalRequest);
         }
       } catch (refreshError) {
         console.error('Response interceptor: Token refresh failed:', refreshError);
         processQueue(refreshError, null);
-        
+
         // Clear auth data and redirect to login
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
@@ -173,7 +178,7 @@ api.interceptors.response.use(
         isRefreshing = false;
       }
     }
-    
+
     // Handle 403 errors
     if (error.response?.status === 403) {
       const token = localStorage.getItem('accessToken');
@@ -190,7 +195,7 @@ api.interceptors.response.use(
         }
       }
     }
-    
+
     // Handle errors generically
     const errorMessage = error.response?.data?.message || 'An error occurred. Please try again later.';
     toast.error(errorMessage);

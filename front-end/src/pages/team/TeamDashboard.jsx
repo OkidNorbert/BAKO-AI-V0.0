@@ -245,10 +245,25 @@ const TeamDashboard = () => {
         <div className="lg:col-span-2 space-y-6">
 
           {/* Team Stats Component */}
-          <TeamStats />
+          <TeamStats stats={{
+            totalPlayers: stats.totalPlayers || 0,
+            activePlayers: stats.totalPlayers || 0,
+            gamesAnalyzed: stats.matchesAnalyzed || 0,
+            totalVideos: (stats.matchesAnalyzed || 0) + 2,
+            winRate: 65,
+            gamesPlayed: stats.totalMatches || 0,
+            trainingVideos: 12
+          }} />
 
           {/* Recent Games Component */}
-          <RecentGames />
+          {/* Transform mock activities to match RecentGames expected format */}
+          <RecentGames games={stats.recentActivities.map(activity => ({
+            id: activity.id,
+            title: activity.title,
+            type: activity.type === 'match' ? 'win' : (activity.type === 'analysis' ? 'analysis' : 'training'),
+            description: activity.status,
+            date: new Date().toISOString() // Using current date for demo
+          }))} />
 
         </div>
 
@@ -257,8 +272,14 @@ const TeamDashboard = () => {
 
           {/* Performance Chart */}
           <TeamDashboardChart
-            data={stats.performanceData}
-            period="monthly"
+            data={[
+              { date: 'Jan', players: 10, performance: 65, games: 4 },
+              { date: 'Feb', players: 11, performance: 70, games: 5 },
+              { date: 'Mar', players: 12, performance: 68, games: 6 },
+              { date: 'Apr', players: 12, performance: 72, games: 6 },
+              { date: 'May', players: 13, performance: 75, games: 7 },
+              { date: 'Jun', players: 14, performance: 78, games: 8 },
+            ]}
           />
 
           {/* Player Management Overview */}

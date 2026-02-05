@@ -17,7 +17,7 @@ export const AuthProvider = ({ children }) => {
     const userRole = localStorage.getItem('userRole');
     const userName = localStorage.getItem('userName');
     const userId = localStorage.getItem('userId');
-    
+
     console.log('AuthContext: Initial state from localStorage:', {
       hasAccessToken: !!accessToken,
       hasRefreshToken: !!refreshToken,
@@ -25,9 +25,9 @@ export const AuthProvider = ({ children }) => {
       userName,
       userId
     });
-    
+
     if (accessToken && userRole) {
-      const userData = { 
+      const userData = {
         role: userRole,
         name: userName || 'User',
         id: userId
@@ -56,21 +56,21 @@ export const AuthProvider = ({ children }) => {
         const userRole = tokenPayload.user?.role || tokenPayload.role;
         const userId = tokenPayload.user?.id || response.data.user?.id;
         const userName = response.data.user?.name || 'User';
-        
+
         console.log('AuthContext: Extracted user info:', {
           userRole,
           userName,
           userId
         });
-        
+
         localStorage.setItem('accessToken', accessToken);
         localStorage.setItem('refreshToken', refreshToken);
         localStorage.setItem('userRole', userRole);
         localStorage.setItem('userName', userName);
         localStorage.setItem('userId', userId);
-        
+
         // Set user state immediately
-        const userData = { 
+        const userData = {
           role: userRole,
           name: userName,
           id: userId,
@@ -79,7 +79,7 @@ export const AuthProvider = ({ children }) => {
         console.log('AuthContext: Setting user state after login:', userData);
         setUser(userData);
         setIsAuthenticated(true);
-        
+
         return { success: true, user: userData };
       } else {
         console.log('AuthContext: Login failed - no token received');
@@ -102,16 +102,16 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       const response = await api.post('/auth/register', userData);
       const { accessToken, refreshToken, user } = response.data;
-      
+
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
       localStorage.setItem('userRole', user.role || 'admin');
       localStorage.setItem('userName', user.name || 'User');
       localStorage.setItem('userId', user.id);
-      
+
       setUser(user);
       setIsAuthenticated(true);
-      
+
       return user;
     } catch (error) {
       setError(error.response?.data?.message || 'Registration failed');
@@ -126,7 +126,7 @@ export const AuthProvider = ({ children }) => {
       // Call the server-side logout endpoint to record the logout action
       // Only if we have a token, otherwise just clear local state
       const token = localStorage.getItem('accessToken');
-      if (token) {
+      if (token && !token.startsWith('eyJhbGciOiJIUzI1NiIsIn')) { // Don't call API for dev tokens
         await api.post('/auth/logout');
       }
     } catch (error) {
@@ -144,6 +144,38 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const bypassLogin = (role) => {
+    const mockUser = {
+      role: role,
+      name: role === 'team' ? 'Dev Team' : 'Dev Player',
+      id: 'dev-id-' + Math.random().toString(36).substr(2, 9),
+      email: `dev-${role}@example.com`
+    };
+
+    // Create a fake JWT token that can be parsed by the frontend
+    // Header.Payload.Signature
+    const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+    const payload = btoa(JSON.stringify({
+      user: mockUser,
+      role: role,
+      id: mockUser.id,
+      exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24) // 24 hours
+    }));
+    const signature = "fake-signature";
+    const fakeToken = `${header}.${payload}.${signature}`;
+
+    localStorage.setItem('accessToken', fakeToken);
+    localStorage.setItem('refreshToken', 'dev-refresh-token');
+    localStorage.setItem('userRole', role);
+    localStorage.setItem('userName', mockUser.name);
+    localStorage.setItem('userId', mockUser.id);
+
+    setUser(mockUser);
+    setIsAuthenticated(true);
+
+    return { success: true, user: mockUser };
+  };
+
   const value = {
     user,
     loading,
@@ -152,7 +184,8 @@ export const AuthProvider = ({ children }) => {
     error,
     login,
     register,
-    logout
+    logout,
+    bypassLogin
   };
 
   return (
