@@ -58,7 +58,7 @@ def save_video(output_video_frames, output_video_path):
     extension = os.path.splitext(output_video_path)[1].lower()
     
     if extension == '.mp4':
-        # Use mp4v for standard MP4 compatibility
+        # Use mp4v for high quality and better compatibility on systems without H.264 encoders
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     else:
         # Default to XVID for AVI or other formats

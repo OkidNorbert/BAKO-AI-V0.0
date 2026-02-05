@@ -1,8 +1,8 @@
 from ultralytics import YOLO
 import supervision as sv
 import numpy as np
-import pandas as pd
 import sys 
+import pandas as pd
 sys.path.append('../')
 from utils import read_stub, save_stub
 
@@ -22,7 +22,7 @@ class BallTracker:
             # Even lower confidence for the ball
             detections_batch = self.model.predict(
                 frames[i:i+batch_size],
-                conf=0.1, 
+                conf=0.05, # SUPER SENSITIVE for the ball
                 imgsz=1080
             )
             detections += detections_batch
@@ -44,18 +44,16 @@ class BallTracker:
             detection_supervision = sv.Detections.from_ultralytics(detection)
 
             tracks.append({})
-            chosen_bbox =None
-            max_confidence = 0
+            # Find the single best ball in the frame
+            chosen_bbox = None
+            max_confidence = -1
             
-            for frame_detection in detection_supervision:
-                bbox = frame_detection[0].tolist()
-                cls_id = frame_detection[3]
-                confidence = frame_detection[2]
-                
-                if cls_id in ball_indices:
-                    if max_confidence < confidence:
-                        chosen_bbox = bbox
+            # Iterate through detections for the current frame
+            for bbox, confidence, class_id in zip(detection_supervision.xyxy, detection_supervision.confidence, detection_supervision.class_id):
+                if class_id in ball_indices:
+                    if confidence > max_confidence:
                         max_confidence = confidence
+                        chosen_bbox = bbox.tolist()
 
             if chosen_bbox is not None:
                 tracks[frame_num][1] = {"bbox": chosen_bbox, "confidence": float(max_confidence)}

@@ -133,62 +133,47 @@ class TacticalViewConverter:
                 in the tactical view coordinate system. The list index corresponds to the frame number.
         """
         tactical_player_positions = []
+        last_homography = None
         
         for frame_idx, (frame_keypoints, frame_tracks) in enumerate(zip(keypoints_list, player_tracks)):
-            # Initialize empty dictionary for this frame
             tactical_positions = {}
 
-            # Check if there are any detections in the frame
-            kp_list = frame_keypoints.xy.tolist()
-            if not kp_list:
-                tactical_player_positions.append(tactical_positions)
-                continue
-            
-            frame_keypoints = kp_list[0]
+            # Handle keypoints for current frame
+            kp_list = frame_keypoints.xy.tolist() if hasattr(frame_keypoints, 'xy') else []
+            current_homography = None
 
-            # Skip frames with insufficient keypoints
-            if frame_keypoints is None or len(frame_keypoints) == 0:
-                tactical_player_positions.append(tactical_positions)
-                continue
-            
-            # Get detected keypoints for this frame
-            detected_keypoints = frame_keypoints
-            
-            # Filter out undetected keypoints (those with coordinates (0,0))
-            valid_indices = [i for i, kp in enumerate(detected_keypoints) if kp[0] > 0 and kp[1] > 0]
-            
-            # Need at least 4 points for a reliable homography
-            if len(valid_indices) < 4:
-                tactical_player_positions.append(tactical_positions)
-                continue
-            
-            # Create source and target point arrays for homography
-            source_points = np.array([detected_keypoints[i] for i in valid_indices], dtype=np.float32)
-            target_points = np.array([self.key_points[i] for i in valid_indices], dtype=np.float32)
-            
-            try:
-                # Create homography transformer
-                homography = Homography(source_points, target_points)
+            if kp_list and len(kp_list) > 0:
+                detected_keypoints = kp_list[0]
+                valid_indices = [i for i, kp in enumerate(detected_keypoints) if kp[0] > 0 and kp[1] > 0]
                 
-                # Transform each player's position
-                for player_id, player_data in frame_tracks.items():
-                    bbox = player_data["bbox"]
-                    # Use bottom center of bounding box as player position
-                    player_position = np.array([get_foot_position(bbox)])
-                    # Transform to tactical view coordinates
-                    tactical_position = homography.transform_points(player_position)
+                if len(valid_indices) >= 4:
+                    source_points = np.array([detected_keypoints[i] for i in valid_indices], dtype=np.float32)
+                    target_points = np.array([self.key_points[i] for i in valid_indices], dtype=np.float32)
+                    try:
+                        current_homography = Homography(source_points, target_points)
+                        last_homography = current_homography
+                    except:
+                        pass
 
-                    # If tactical position is not in the tactical view, skip
-                    if tactical_position[0][0] < 0 or tactical_position[0][0] > self.width or tactical_position[0][1] < 0 or tactical_position[0][1] > self.height:
+            # Use last good homography if current frame failed
+            transformer = current_homography or last_homography
+
+            if transformer:
+                for player_id, player_data in frame_tracks.items():
+                    # SKIP REFEREES for the tactical map
+                    if player_data.get('class', '').lower() == 'referee':
                         continue
 
-                    tactical_positions[player_id] = tactical_position[0].tolist()
-                    
-            except (ValueError, cv2.error) as e:
-                # If homography fails, continue with empty dictionary
-                pass
+                    bbox = player_data["bbox"]
+                    player_position = np.array([get_foot_position(bbox)])
+                    tactical_position = transformer.transform_points(player_position)
+
+                    if 0 <= tactical_position[0][0] <= self.width and 0 <= tactical_position[0][1] <= self.height:
+                        tactical_positions[player_id] = tactical_position[0].tolist()
             
             tactical_player_positions.append(tactical_positions)
+        
+        return tactical_player_positions
         
         return tactical_player_positions
 

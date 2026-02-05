@@ -20,8 +20,8 @@ class TeamAssigner:
         team_2_class_name (str): Description of Team 2's jersey appearance.
     """
     def __init__(self,
-                 team_1_class_name= "white shirt",
-                 team_2_class_name= "dark blue shirt",
+                 team_1_class_name= "player in grey jersey",
+                 team_2_class_name= "player in red jersey",
                  ):
         """
         Initialize the TeamAssigner with specified team jersey descriptions.
@@ -35,13 +35,23 @@ class TeamAssigner:
     
         self.team_1_class_name = team_1_class_name
         self.team_2_class_name = team_2_class_name
+        self.model_loaded = False
 
     def load_model(self):
         """
         Loads the pre-trained vision model for jersey color classification.
+        Handles connection errors gracefully.
         """
-        self.model = CLIPModel.from_pretrained("patrickjohncyh/fashion-clip")
-        self.processor = CLIPProcessor.from_pretrained("patrickjohncyh/fashion-clip")
+        try:
+            print("Loading Team Assignment Model (Fashion-CLIP)...")
+            self.model = CLIPModel.from_pretrained("patrickjohncyh/fashion-clip", local_files_only=False)
+            self.processor = CLIPProcessor.from_pretrained("patrickjohncyh/fashion-clip", local_files_only=False)
+            print("✅ Team Assignment Model loaded.")
+            self.model_loaded = True
+        except Exception as e:
+            print(f"⚠️ Warning: Could not load Team Assignment Model due to connection/download error: {e}")
+            print("Falling back to default team assignment (No AI color detection).")
+            self.model_loaded = False
 
     def get_player_color(self,frame,bbox):
         """
@@ -54,6 +64,9 @@ class TeamAssigner:
         Returns:
             str: The classified jersey color/description.
         """
+        if not self.model_loaded:
+            return self.team_1_class_name
+
         image = frame[int(bbox[1]):int(bbox[3]),int(bbox[0]):int(bbox[2])]
 
         # Convert to PIL Image
@@ -127,6 +140,10 @@ class TeamAssigner:
                 self.player_team_dict = {}
 
             for player_id, track in player_track.items():
+                # Skip team assignment for referees
+                if track.get('class', '').lower() == 'referee':
+                    continue
+                    
                 team = self.get_player_team(video_frames[frame_num],   
                                                     track['bbox'],
                                                     player_id)

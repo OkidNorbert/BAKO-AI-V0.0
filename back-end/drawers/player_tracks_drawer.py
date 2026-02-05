@@ -47,18 +47,19 @@ class PlayerTracksDrawer:
 
             player_id_has_ball = ball_aquisition[frame_num]
 
-            # Draw Players
+            # Draw Players and Referees
             for track_id, player in player_dict.items():
-                team_id = player_assignment_for_frame.get(track_id,self.default_player_team_id)
-
-                if team_id == 1:
-                    color = self.team_1_color
+                is_referee = player.get("class", "").lower() == "referee"
+                
+                if is_referee:
+                    color = [0, 255, 255] # Yellow for referees
                 else:
-                    color = self.team_2_color
+                    team_id = player_assignment_for_frame.get(track_id,self.default_player_team_id)
+                    color = self.team_1_color if team_id == 1 else self.team_2_color
 
-                frame = draw_ellipse(frame, player["bbox"],color, track_id)
+                frame = draw_ellipse(frame, player["bbox"], color, track_id)
 
-                if track_id == player_id_has_ball:
+                if not is_referee and track_id == player_id_has_ball:
                     frame = draw_traingle(frame, player["bbox"],(0,0,255))
 
             output_video_frames.append(frame)

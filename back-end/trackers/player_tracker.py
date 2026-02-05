@@ -1,5 +1,6 @@
 from ultralytics import YOLO
 import supervision as sv
+import numpy as np
 import sys 
 sys.path.append('../')
 from utils import read_stub, save_stub
@@ -10,7 +11,10 @@ class PlayerTracker:
     """
     def __init__(self, model_path):
         self.model = YOLO(model_path) 
-        self.tracker = sv.ByteTrack()
+        # Tuning for CONGESTION: 
+        # track_activation_threshold 0.25 helps pick up lower confidence matches in crowds
+        # lost_track_buffer 60 remembers players who are occluded for up to 2 seconds
+        self.tracker = sv.ByteTrack(track_activation_threshold=0.25, lost_track_buffer=60)
 
     def detect_frames(self, frames):
         batch_size=10 # Smaller batch for higher resolution
@@ -37,29 +41,42 @@ class PlayerTracker:
         for frame_num, detection in enumerate(detections):
             cls_names = detection.names
             
-            # Robustly find 'player' class
-            player_cls_id = None
+            # Find 'player' and 'referee' classes
+            target_cls_ids = []
             for idx, name in cls_names.items():
-                if name.lower() == 'player':
-                    player_cls_id = idx
-                    break
+                if name.lower() in ['player', 'referee']:
+                    target_cls_ids.append(idx)
 
             detection_supervision = sv.Detections.from_ultralytics(detection)
             
-            # Filter detections to only include players before tracking
-            if player_cls_id is not None:
-                mask = detection_supervision.class_id == player_cls_id
-                detection_supervision = detection_supervision[mask]
+            # Create a refined mask based on class-specific confidence
+            refined_mask = []
+            for class_id, confidence in zip(detection_supervision.class_id, detection_supervision.confidence):
+                class_name = cls_names[class_id].lower()
+                if class_name == 'player' and confidence >= 0.15:
+                    refined_mask.append(True)
+                elif class_name == 'referee' and confidence >= 0.45:
+                    refined_mask.append(True)
+                else:
+                    refined_mask.append(False)
+            
+            detection_supervision = detection_supervision[np.array(refined_mask)]
 
             # Track Objects
             detection_with_tracks = self.tracker.update_with_detections(detection_supervision)
             tracks.append({})
 
-            for frame_detection in detection_with_tracks:
+            for i, frame_detection in enumerate(detection_with_tracks):
                 bbox = frame_detection[0].tolist()
                 track_id = frame_detection[4]
                 confidence = frame_detection[2]
-                tracks[frame_num][track_id] = {"bbox": bbox, "confidence": float(confidence)}
+                class_id = frame_detection[3]
+                class_name = cls_names[class_id]
+                tracks[frame_num][track_id] = {
+                    "bbox": bbox, 
+                    "confidence": float(confidence),
+                    "class": class_name
+                }
         
         save_stub(stub_path,tracks)
         return tracks

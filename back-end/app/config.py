@@ -52,8 +52,8 @@ class Settings(BaseSettings):
     cuda_device: int = 0
     
     # Model paths (relative to backend root)
-    player_detector_path: str = "models/player_detector.pt"
-    ball_detector_path: str = "models/ball_detector_model.pt"
+    player_detector_path: str = "models/nbl_v2_combined.pt"
+    ball_detector_path: str = "models/nbl_v2_combined.pt"
     court_keypoint_detector_path: str = "models/court_keypoint_detector.pt"
     pose_model_path: str = "models/yolov8n-pose.pt"
     
