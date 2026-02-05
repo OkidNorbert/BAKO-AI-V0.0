@@ -86,6 +86,7 @@ function App() {
                 <Route path="matches/upload" element={<MatchUpload />} />
                 <Route path="schedule" element={<TeamSchedule />} />
                 <Route path="analytics" element={<TeamAnalytics />} />
+                <Route path="reports" element={<TeamAnalytics />} />
                 <Route path="settings" element={<TeamSettings />} />
               </Route>
             </Route>

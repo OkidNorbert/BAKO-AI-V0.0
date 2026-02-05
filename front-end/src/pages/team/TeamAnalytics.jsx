@@ -546,7 +546,7 @@ const TeamAnalytics = () => {
                 <div className="flex justify-between">
                   <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Offensive Rebounds</span>
                   <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                    {analyticsData.gameMetrics.reboundingStats[0].count}
+                    {analyticsData.gameMetrics.reboundingStats?.[0]?.count || 0}
                   </span>
                 </div>
               </div>
@@ -554,7 +554,7 @@ const TeamAnalytics = () => {
                 <div className="flex justify-between">
                   <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Defensive Rebounds</span>
                   <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                    {analyticsData.gameMetrics.reboundingStats[1].count}
+                    {analyticsData.gameMetrics.reboundingStats?.[1]?.count || 0}
                   </span>
                 </div>
               </div>
