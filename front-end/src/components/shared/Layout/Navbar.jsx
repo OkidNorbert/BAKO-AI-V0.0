@@ -91,14 +91,7 @@ const Navbar = ({ role }) => {
                   </Link>
                 );
               })}
-              {/* Always show Home link for easy exit from dashboard */}
-              <Link
-                to="/"
-                className={`flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-white hover:bg-white hover:bg-opacity-20`}
-              >
-                <Home className="h-5 w-5" />
-                <span className="ml-2">Landing Page</span>
-              </Link>
+
             </div>
 
             <div className="flex items-center space-x-5">
@@ -113,7 +106,7 @@ const Navbar = ({ role }) => {
                 {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
               </button>
 
-              {user ? (
+              {user && !['/login', '/register'].includes(location.pathname) ? (
                 <div className="relative">
                   <button
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}

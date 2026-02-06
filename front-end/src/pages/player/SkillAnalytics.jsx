@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '@/context/ThemeContext';
-import { MOCK_AUTH_ENABLED } from '@/utils/mockAuth';
-import { MOCK_SKILLS, MOCK_SKILL_SUMMARY } from '@/utils/mockData';
 import api from '@/utils/axiosConfig';
 import {
   BarChart2,
@@ -33,13 +31,7 @@ const SkillAnalytics = () => {
       setLoading(true);
       setError('');
 
-      if (MOCK_AUTH_ENABLED) {
-        console.log('Mock mode: skipping API skills fetch');
-        setSkills(MOCK_SKILLS);
-        setSummary(MOCK_SKILL_SUMMARY);
-        setLoading(false);
-        return;
-      }
+      // Mock data logic removed to prepare for real backend integration
 
       const response = await api.get('/player/skills', {
         params: { startDate: dateRange.start, endDate: dateRange.end }
@@ -47,15 +39,10 @@ const SkillAnalytics = () => {
       if (response.data?.data) {
         setSkills(response.data.data.skills || []);
         setSummary(response.data.data.summary || {});
-      } else {
-        setSkills(getSampleSkills());
-        setSummary({ shooting: 72, defense: 68, playmaking: 65, overall: 68 });
       }
     } catch (err) {
       console.error('Error fetching skills:', err);
-      setError('Failed to load skill analytics. Showing sample data.');
-      setSkills(getSampleSkills());
-      setSummary({ shooting: 72, defense: 68, playmaking: 65, overall: 68 });
+      setError('Failed to load skill analytics.');
     } finally {
       setLoading(false);
     }

@@ -76,26 +76,16 @@ const Login = () => {
           className="absolute inset-0 w-full h-full object-cover transform scale-105 hover:scale-100 transition-transform duration-10000"
         />
 
-        <div className="relative z-20 flex flex-col items-start justify-end p-16 text-white h-full w-full">
-          <div className="mb-6 h-14 w-14 rounded-2xl overflow-hidden shadow-xl ring-2 ring-white/30 p-0 transform -rotate-6">
-            <img
-              src="https://images.unsplash.com/photo-1546519638-68e109498ffc?q=80&w=2090&auto=format&fit=crop"
-              alt="BAKO"
-              className="h-full w-full object-cover"
-            />
-          </div>
-          <h2 className="text-5xl font-black mb-4 tracking-tight leading-none uppercase">
-            Elevate Your <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">Game.</span>
+        <div className="relative z-20 flex flex-col items-start justify-end p-16 pb-24 text-white h-full w-full">
+          {/* Branding removed as per request */}
+          <h2 className="text-5xl font-medium mb-4 tracking-tight leading-none uppercase">
+            Elevate Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">Game.</span>
           </h2>
           <p className="text-xl text-gray-200 max-w-md font-medium">
             AI-Powered Basketball Skill and Performance Analysis for Teams and Players.
           </p>
 
-          <div className="mt-12 flex items-center space-x-4 text-sm font-bold uppercase tracking-widest text-orange-400">
-            <span className="h-[2px] w-12 bg-orange-500"></span>
-            <span>Est. 2026 Nairobi, Kenya</span>
-          </div>
+          {/* Est. text removed as per request */}
         </div>
 
         {/* Floating Accent Shapes */}
@@ -104,31 +94,20 @@ const Login = () => {
       </div>
 
       {/* Right Side: Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-12 lg:p-16">
+      <div className="w-full lg:w-1/2 flex items-start justify-center p-8 sm:p-12 lg:p-16 pt-2 lg:pt-4">
         <div className="max-w-md w-full space-y-8 animate-fade-in-up">
           <div className="text-left">
-            <div className="lg:hidden mb-8">
-              <div className="flex items-center space-x-3">
-                <div className="h-10 w-10 rounded-xl overflow-hidden shadow-lg ring-1 ring-white/20">
-                  <img
-                    src="https://images.unsplash.com/photo-1546519638-68e109498ffc?q=80&w=2090&auto=format&fit=crop"
-                    alt="BAKO"
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-                <span className={`text-2xl font-black tracking-tighter ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>BAKO</span>
-              </div>
-            </div>
+            {/* Mobile branding removed as per request */}
 
-            <h2 className={`text-4xl font-extrabold mb-2 tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            <h2 className={`text-4xl font-medium mb-2 tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
               Welcome Back
             </h2>
-            <p className={`text-lg font-medium mb-8 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            <p className={`text-lg font-medium mb-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
               Sign in to your dashboard to track your latest games.
             </p>
           </div>
 
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <form className="space-y-4" onSubmit={handleSubmit}>
             {error && (
               <div className="bg-red-500/10 border border-red-500/50 text-red-500 p-4 rounded-2xl flex items-center space-x-3 animate-shake">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -138,9 +117,9 @@ const Login = () => {
               </div>
             )}
 
-            <div className="space-y-5">
+            <div className="space-y-4">
               <div>
-                <label htmlFor="email" className={`block text-sm font-bold mb-2 uppercase tracking-wide ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                <label htmlFor="email" className={`block text-xs font-medium mb-1 uppercase tracking-widest ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
                   Email Address
                 </label>
                 <div className="relative group">
@@ -150,7 +129,7 @@ const Login = () => {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className={`block w-full px-5 py-4 rounded-2xl font-medium transition-all duration-200 outline-none border-2 ${isDarkMode
+                    className={`block w-full px-5 py-3.5 rounded-2xl font-medium transition-all duration-200 outline-none border-2 ${isDarkMode
                       ? 'bg-gray-800 border-gray-700 text-white focus:border-indigo-500 placeholder-gray-500'
                       : 'bg-white border-gray-200 text-gray-900 focus:border-indigo-600 placeholder-gray-400'
                       }`}
@@ -163,8 +142,8 @@ const Login = () => {
               </div>
 
               <div>
-                <div className="flex justify-between items-center mb-2">
-                  <label htmlFor="password" className={`block text-sm font-bold uppercase tracking-wide ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                <div className="flex justify-between items-center mb-1">
+                  <label htmlFor="password" className={`block text-xs font-medium uppercase tracking-widest ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
                     Password
                   </label>
                   <a href="#" className="text-xs font-bold text-indigo-500 hover:text-indigo-400 transition-colors uppercase tracking-widest leading-none">
@@ -178,7 +157,7 @@ const Login = () => {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className={`block w-full px-5 py-4 rounded-2xl font-medium transition-all duration-200 outline-none border-2 ${isDarkMode
+                    className={`block w-full px-5 py-3.5 rounded-2xl font-medium transition-all duration-200 outline-none border-2 ${isDarkMode
                       ? 'bg-gray-800 border-gray-700 text-white focus:border-indigo-500 placeholder-gray-500'
                       : 'bg-white border-gray-200 text-gray-900 focus:border-indigo-600 placeholder-gray-400'
                       }`}
@@ -194,7 +173,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full flex justify-center items-center py-4 px-6 rounded-2xl text-white font-black text-lg shadow-xl transform transition duration-200 hover:scale-[1.02] active:scale-[0.98] ${isLoading ? 'bg-indigo-400 cursor-not-allowed' : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:shadow-indigo-500/25'
+              className={`w-full flex justify-center items-center py-4 px-6 rounded-2xl text-white font-medium text-lg shadow-xl transform transition duration-200 hover:scale-[1.02] active:scale-[0.98] ${isLoading ? 'bg-indigo-400 cursor-not-allowed' : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:shadow-indigo-500/25'
                 }`}
             >
               {isLoading ? (
@@ -208,13 +187,37 @@ const Login = () => {
             </button>
           </form>
 
-          <div className="text-center pt-8">
+          <div className="text-center pt-2 space-y-4">
             <p className={`text-lg font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
               New to BAKO?{' '}
               <Link to="/register" className="text-indigo-500 hover:text-indigo-400 font-bold decoration-2 underline-offset-4 hover:underline transition-all">
                 Create an account
               </Link>
             </p>
+
+            <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
+              <span className={`block text-xs font-bold uppercase tracking-[0.2em] mb-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                Developer Access
+              </span>
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <button
+                  onClick={() => bypassLogin('team')}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all border ${isDarkMode
+                    ? 'bg-gray-800/50 border-gray-700 text-orange-400 hover:bg-gray-800 hover:border-orange-500/50'
+                    : 'bg-white border-gray-200 text-orange-600 hover:bg-gray-50 hover:border-orange-300'}`}
+                >
+                  Team Login
+                </button>
+                <button
+                  onClick={() => bypassLogin('player')}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all border ${isDarkMode
+                    ? 'bg-gray-800/50 border-gray-700 text-indigo-400 hover:bg-gray-800 hover:border-indigo-500/50'
+                    : 'bg-white border-gray-200 text-indigo-600 hover:bg-gray-50 hover:border-indigo-300'}`}
+                >
+                  Player Login
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

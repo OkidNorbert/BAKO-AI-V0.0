@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../context/ThemeContext';
-import { MOCK_AUTH_ENABLED } from '@/utils/mockAuth';
-import { MOCK_FULL_TEAM_ANALYTICS } from '@/utils/mockData';
 import { adminAPI } from '../../services/api';
 import {
   BarChart as BarChartIcon,
@@ -104,12 +102,7 @@ const TeamAnalytics = () => {
       setLoading(true);
       setError('');
 
-      if (MOCK_AUTH_ENABLED) {
-        console.log('Mock mode: skipping API fetch for Analytics');
-        setAnalyticsData(prevData => ({ ...prevData, ...MOCK_FULL_TEAM_ANALYTICS }));
-        setLoading(false);
-        return;
-      }
+      // Mock data logic removed to prepare for real backend integration
 
       const response = await adminAPI.getReports();
       if (response.data) {
