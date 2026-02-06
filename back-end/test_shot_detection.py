@@ -39,6 +39,7 @@ async def test_personal_shot_detection(video_path: str):
     # Process detections for drawing
     player_tracks = [{} for _ in range(len(frames))]
     ball_tracks = [{} for _ in range(len(frames))]
+    hoop_tracks = [{} for _ in range(len(frames))]
     
     for det in results.get('detections', []):
         f = det['frame']
@@ -47,6 +48,8 @@ async def test_personal_shot_detection(video_path: str):
                 player_tracks[f][det['track_id']] = {'bbox': det['bbox']}
             elif det['object_type'] == 'ball':
                 ball_tracks[f][det['track_id']] = {'bbox': det['bbox']}
+            elif det['object_type'] == 'hoop':
+                hoop_tracks[f][det['track_id']] = {'bbox': det['bbox']}
     
     output_frames = frames.copy()
     
@@ -57,6 +60,14 @@ async def test_personal_shot_detection(video_path: str):
     # Process for drawer
     output_frames = player_drawer.draw(output_frames, player_tracks, player_assignment, team_stats)
     output_frames = ball_drawer.draw(output_frames, ball_tracks)
+    
+    # Draw hoops manually (simple boxes)
+    import cv2
+    for f in range(len(frames)):
+        for h_id, h_track in hoop_tracks[f].items():
+            bbox = h_track['bbox']
+            cv2.rectangle(output_frames[f], (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), (255, 255, 0), 2)
+            cv2.putText(output_frames[f], "HOOP", (int(bbox[0]), int(bbox[1]) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 1)
     
     # Draw shot markers
     import cv2

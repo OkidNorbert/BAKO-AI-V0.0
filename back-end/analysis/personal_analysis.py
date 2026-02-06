@@ -301,18 +301,20 @@ async def run_personal_analysis(video_path: str, options: Optional[Dict[str, Any
         try:
             # Check if ball detector model exists
             model_path = BALL_DETECTOR_PATH
-            if not model_path or not os.path.exists(model_path):
+            if model_path is None or not os.path.exists(str(model_path)):
                 # Try relative path if absolute fails
                 if os.path.exists('models/nbl_v2_combined.pt'):
                     model_path = 'models/nbl_v2_combined.pt'
+                else:
+                    model_path = None
             
-            if not model_path or not os.path.exists(model_path):
+            if model_path is None:
                 print(f"Warning: Ball detector model not found, skipping shot detection")
             else:
                 # Initialize ball tracker and shot detector
                 ball_tracker = BallTracker(model_path)
                 shot_detector = ShotDetector(
-                    hoop_detection_model_path=str(model_path),  # Force string conversion
+                    hoop_detection_model_path=model_path,
                     min_shot_arc_height=50,
                     hoop_proximity_threshold=100,
                     trajectory_window=30,
@@ -341,6 +343,26 @@ async def run_personal_analysis(video_path: str, options: Optional[Dict[str, Any
                 
                 # Calculate shot statistics
                 shot_stats = shot_detector.calculate_shot_statistics(shots)
+                
+                # Add ball and hoop detections to the main detections list for visualization
+                for f_idx, tracks in enumerate(ball_tracks):
+                    for b_id, b_track in tracks.items():
+                        if 'bbox' in b_track:
+                            detections.append({
+                                "frame": f_idx,
+                                "object_type": "ball",
+                                "track_id": b_id,
+                                "bbox": b_track['bbox']
+                            })
+                
+                for f_idx, hoop in enumerate(hoop_detections):
+                    if hoop and 'bbox' in hoop:
+                        detections.append({
+                            "frame": f_idx,
+                            "object_type": "hoop",
+                            "track_id": 0,
+                            "bbox": hoop['bbox']
+                        })
                 
         except Exception as e:
             print(f"Shot detection failed: {e}")

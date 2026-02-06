@@ -11,7 +11,7 @@ import {
   Shield,
   Trophy
 } from 'lucide-react';
-import BasketballLogo from './BasketballLogo';
+import BasketballLogo from '../BasketballLogo';
 
 const AdminSidebar = ({ isOpen }) => {
   const { isDarkMode } = useTheme();
