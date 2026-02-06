@@ -11,7 +11,7 @@ import {
   Shield,
   Trophy
 } from 'lucide-react';
-import BasketballLogo from './BasketballLogo';
+
 
 const AdminSidebar = ({ isOpen }) => {
   const { isDarkMode } = useTheme();
@@ -37,8 +37,12 @@ const AdminSidebar = ({ isOpen }) => {
       } border-r custom-admin-sidebar-scrollbar`}>
       <div className="h-full px-3 py-4 overflow-y-auto">
         <div className="mb-8 px-3 flex items-center">
-          <div className={`h-11 w-11 rounded-full bg-white flex items-center justify-center mr-3 shadow-sm`}>
-            <BasketballLogo className="h-9 w-9" color="#ef4444" />
+          <div className="h-11 w-11 rounded-lg overflow-hidden mr-3 shadow-md ring-1 ring-gray-200">
+            <img
+              src="https://images.unsplash.com/photo-1546519638-68e109498ffc?q=80&w=2090&auto=format&fit=crop"
+              alt="BAKO"
+              className="h-full w-full object-cover"
+            />
           </div>
           <h1 className={`text-xl font-bold ${isDarkMode
             ? 'text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-400'

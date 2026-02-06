@@ -22,6 +22,7 @@ import {
   Trophy
 } from 'lucide-react';
 
+
 const Footer = () => {
   const { isDarkMode } = useTheme();
   const currentYear = new Date().getFullYear();
@@ -53,8 +54,14 @@ const Footer = () => {
           <div className="flex flex-col">
             <h2 className={`text-2xl font-bold mb-4 flex items-center ${isDarkMode ? 'text-yellow-300' : 'text-indigo-700'
               }`}>
-              <Trophy className="mr-2 h-6 w-6 animate-pulse" />
-              BAKO Basketball
+              <div className="mr-3 h-10 w-10 rounded-lg overflow-hidden shadow-sm">
+                <img
+                  src="https://images.unsplash.com/photo-1546519638-68e109498ffc?q=80&w=2090&auto=format&fit=crop"
+                  alt="BAKO Logo"
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              BAKO Analytics
             </h2>
             <p className="mb-4 text-lg leading-relaxed" style={{ fontFamily: "'Comic Sans MS', cursive, sans-serif" }}>
               Elevate your game with AI-powered basketball analytics! Track performance, analyze matches, and reach your full potential on the court!
@@ -165,15 +172,15 @@ const Footer = () => {
                 type="email"
                 placeholder="Your email address"
                 className={`px-4 py-2 rounded-lg focus:outline-none ${isDarkMode
-                    ? 'bg-gray-800 text-white border border-gray-700 focus:border-yellow-400'
-                    : 'bg-white text-gray-900 border-2 border-indigo-200 focus:border-indigo-400'
+                  ? 'bg-gray-800 text-white border border-gray-700 focus:border-yellow-400'
+                  : 'bg-white text-gray-900 border-2 border-indigo-200 focus:border-indigo-400'
                   }`}
               />
               <button
                 type="submit"
                 className={`px-4 py-3 rounded-lg font-medium transition-all transform hover:scale-105 ${isDarkMode
-                    ? 'bg-gradient-to-r from-yellow-500 to-yellow-400 text-gray-900 hover:from-yellow-400 hover:to-yellow-300 shadow-lg'
-                    : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-500 hover:to-purple-500 shadow-lg'
+                  ? 'bg-gradient-to-r from-yellow-500 to-yellow-400 text-gray-900 hover:from-yellow-400 hover:to-yellow-300 shadow-lg'
+                  : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-500 hover:to-purple-500 shadow-lg'
                   }`}
               >
                 Join the Fun!

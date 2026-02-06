@@ -7,12 +7,9 @@ const Gallery = () => {
     const [selectedImage, setSelectedImage] = useState(null);
 
     const images = [
-        { src: "https://images.unsplash.com/photo-1546519638-68e109498ffc?q=80&w=2090", type: "wide" },
-        { src: "https://images.unsplash.com/photo-1519861531473-920026393112?q=80&w=2076", type: "tall" },
-        { src: "https://images.unsplash.com/photo-1504450758481-7338eba7524a?q=80&w=2069", type: "square" },
-        { src: "https://images.unsplash.com/photo-1518407613690-d9fc990e795f?q=80&w=2070", type: "wide" },
-        { src: "https://images.unsplash.com/photo-1628779238951-be2c9f256544?q=80&w=1000", type: "tall" },
-        { src: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=1000", type: "square" }
+        { src: "https://images.unsplash.com/photo-1546519638-68e109498ffc?q=80&w=2090", type: "wide", title: "Gallery 1" },
+        { src: "https://images.unsplash.com/photo-1519861531473-920026393112?q=80&w=2076", type: "tall", title: "Gallery 2" },
+        { src: "https://images.unsplash.com/photo-1518407613690-d9fc990e795f?q=80&w=2070", type: "wide", title: "Gallery 3" }
     ];
 
     return (
@@ -39,9 +36,10 @@ const Gallery = () => {
                                 alt={`Gallery ${idx}`}
                                 className="w-full h-auto object-cover"
                             />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-sm">
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center backdrop-blur-sm">
+                                <span className="text-white text-2xl font-black mb-2 transform -rotate-3">{img.title}</span>
                                 <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-                                    <Maximize2 className="w-10 h-10 text-white" />
+                                    <Maximize2 className="w-8 h-8 text-white/80" />
                                 </div>
                             </div>
 
