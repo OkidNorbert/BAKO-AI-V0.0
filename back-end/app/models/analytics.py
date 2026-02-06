@@ -42,8 +42,12 @@ class PlayerAnalyticsSummary(BaseModel):
     
     # Skill stats
     total_shot_attempts: int = 0
+    total_shots_made: int = 0
+    total_shots_missed: int = 0
+    shot_success_rate: Optional[float] = Field(None, description="Shot success percentage (0-100)")
     avg_shot_form_consistency: Optional[float] = None
     total_dribbles: int = 0
+
     
     # Progress indicators
     speed_trend: Optional[str] = Field(None, description="'improving', 'stable', 'declining'")
@@ -71,9 +75,15 @@ class TeamAnalyticsSummary(BaseModel):
     avg_passes_per_game: Optional[float] = None
     pass_success_rate: Optional[float] = None
     
+    # Shooting
+    total_shot_attempts: int = 0
+    total_shots_made: int = 0
+    team_shooting_percentage: Optional[float] = None
+    
     # Defense
     total_interceptions: int = 0
     avg_interceptions_per_game: Optional[float] = None
+
     
     class Config:
         from_attributes = True

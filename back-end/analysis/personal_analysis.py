@@ -19,18 +19,25 @@ async def run_personal_analysis(video_path: str, options: Optional[Dict[str, Any
     
     Focuses on a single primary subject and extracts:
     - Pose keypoints and joint angles
-    - Shot form analysis
+    - Shot form analysis and success rate
     - Dribbling patterns
     - Movement metrics (speed, distance)
     
     Args:
         video_path: Path to the video file
+        options: Optional configuration dict with keys:
+            - detections_stride: Frame stride for detections
+            - max_detections: Max detections to return
+            - detect_shots: Whether to run shot detection (default: True)
         
     Returns:
         Dictionary containing personal analysis results
     """
     from utils import read_video
     from app.config import get_settings
+    from shot_detector import ShotDetector
+    from trackers import BallTracker
+    from configs import BALL_DETECTOR_PATH
     
     settings = get_settings()
     
@@ -67,15 +74,17 @@ async def run_personal_analysis(video_path: str, options: Optional[Dict[str, Any
     
     # Track all detections and select primary subject
     all_detections = []
-    player_presence = {}  # track_id -> frame_count
-    player_bbox_sizes = {}  # track_id -> total bbox area
+    player_stats = {}  # track_id -> {frames: int, total_area: float, ball_interaction: int}
     
     if has_pose:
         # Run pose detection with tracking
         batch_size = 20
         for i in range(0, len(video_frames), batch_size):
             batch = video_frames[i:i+batch_size]
-            results = pose_model.predict(batch, conf=0.5, classes=[0])  # Class 0 = person
+            results = pose_model.track(batch, conf=0.5, classes=[0], persist=True)  # Class 0 = person
+            
+            # Check for ball in these frames to find interaction
+            # (Heuristic: who is closest to the ball or hoop later)
             
             for frame_offset, result in enumerate(results):
                 frame_idx = i + frame_offset
@@ -83,21 +92,31 @@ async def run_personal_analysis(video_path: str, options: Optional[Dict[str, Any
                 if result.boxes is not None and len(result.boxes) > 0:
                     for j, box in enumerate(result.boxes):
                         bbox = box.xyxy[0].tolist()
-                        track_id = int(box.id[0]) if box.id is not None else j
+                        track_id = int(box.id[0]) if box.id is not None else -1
+                        if track_id == -1: continue
                         
                         # Calculate bbox area
                         area = (bbox[2] - bbox[0]) * (bbox[3] - bbox[1])
                         
-                        # Track presence and size
-                        player_presence[track_id] = player_presence.get(track_id, 0) + 1
-                        player_bbox_sizes[track_id] = player_bbox_sizes.get(track_id, 0) + area
+                        if track_id not in player_stats:
+                            player_stats[track_id] = {'frames': 0, 'total_area': 0, 'interaction_score': 0}
                         
-                        # Get keypoints if available
+                        player_stats[track_id]['frames'] += 1
+                        player_stats[track_id]['total_area'] += area
+                        
+                        # Get keypoints
                         keypoints = None
                         if result.keypoints is not None and j < len(result.keypoints):
-                            kp = result.keypoints[j]
-                            if kp.xy is not None:
-                                keypoints = kp.xy[0].tolist()
+                            kp = result.keypoints[j].xy[0].tolist()
+                            keypoints = kp
+                            
+                            # Heuristic: person moving their arms significantly or near the center
+                            # tends to be the player.
+                            if len(kp) > 10:
+                                wrist_y = kp[10][1]
+                                shoulder_y = kp[6][1]
+                                if wrist_y < shoulder_y: # Arm raised
+                                    player_stats[track_id]['interaction_score'] += 1
                         
                         all_detections.append({
                             "frame": frame_idx,
@@ -106,14 +125,16 @@ async def run_personal_analysis(video_path: str, options: Optional[Dict[str, Any
                             "keypoints": keypoints,
                         })
     
-    # Select primary subject (largest average bbox + longest presence)
-    if player_presence:
-        # Score each player
+    # Select primary subject (Prioritize interaction > presence > size)
+    if player_stats:
         scores = {}
-        for track_id in player_presence:
-            presence_score = player_presence[track_id] / total_frames
-            avg_size = player_bbox_sizes[track_id] / player_presence[track_id]
-            scores[track_id] = presence_score * 0.4 + (avg_size / 100000) * 0.6
+        for tid, stats in player_stats.items():
+            presence = stats['frames'] / total_frames
+            avg_size = stats['total_area'] / stats['frames']
+            interaction = stats['interaction_score'] / stats['frames']
+            
+            # Weighted score
+            scores[tid] = (interaction * 1.0) + (presence * 0.5) + (avg_size / 200000 * 0.3)
         
         primary_player = max(scores, key=scores.get)
     else:
@@ -263,13 +284,77 @@ async def run_personal_analysis(video_path: str, options: Optional[Dict[str, Any
         if accel > 2:  # Threshold for significant acceleration
             acceleration_events += 1
     
+    # Shot Success Detection
+    shot_stats = {
+        'total_attempts': shot_attempts,
+        'total_made': 0,
+        'total_missed': 0,
+        'overall_percentage': 0.0,
+        'by_type': {},
+        'shots': []
+    }
+    
+    # Run shot detection if enabled (default: True)
+    detect_shots = options.get('detect_shots', True) if options else True
+    
+    if detect_shots:
+        try:
+            # Check if ball detector model exists
+            model_path = BALL_DETECTOR_PATH
+            if not model_path or not os.path.exists(model_path):
+                # Try relative path if absolute fails
+                if os.path.exists('models/nbl_v2_combined.pt'):
+                    model_path = 'models/nbl_v2_combined.pt'
+            
+            if not model_path or not os.path.exists(model_path):
+                print(f"Warning: Ball detector model not found, skipping shot detection")
+            else:
+                # Initialize ball tracker and shot detector
+                ball_tracker = BallTracker(model_path)
+                shot_detector = ShotDetector(
+                    hoop_detection_model_path=str(model_path),  # Force string conversion
+                    min_shot_arc_height=50,
+                    hoop_proximity_threshold=100,
+                    trajectory_window=30,
+                    success_time_window=15
+                )
+                
+                # Track ball
+                ball_tracks = ball_tracker.get_object_tracks(
+                    video_frames, 
+                    read_from_stub=False
+                )
+                ball_tracks = ball_tracker.interpolate_ball_positions(ball_tracks)
+                
+                # Detect hoop (if model available, otherwise use heuristics)
+                hoop_detections = shot_detector.detect_hoop_locations(
+                    video_frames,
+                    read_from_stub=False
+                )
+                
+                # Detect and analyze shots
+                shots = shot_detector.detect_shots(
+                    ball_tracks,
+                    hoop_detections,
+                    fps=fps
+                )
+                
+                # Calculate shot statistics
+                shot_stats = shot_detector.calculate_shot_statistics(shots)
+                
+        except Exception as e:
+            print(f"Shot detection failed: {e}")
+            # Keep default shot_stats
+
+    
     # Training load score (composite metric)
     training_load = min(100, (
         (dribble_count * 0.5) +
-        (shot_attempts * 5) +
+        (shot_stats['total_attempts'] * 5) +
         (total_distance * 2) +
         (acceleration_events * 1)
     ))
+
     
     return {
         "total_frames": total_frames,
@@ -277,8 +362,13 @@ async def run_personal_analysis(video_path: str, options: Optional[Dict[str, Any
         "primary_player_frames": len(primary_detections),
         
         # Skill metrics
-        "shot_attempts": shot_attempts,
+        "shot_attempts": shot_stats['total_attempts'],
+        "shots_made": shot_stats['total_made'],
+        "shots_missed": shot_stats['total_missed'],
+        "shot_success_rate": shot_stats['overall_percentage'],
         "shot_form_consistency": round(form_consistency, 1),
+        "shot_breakdown_by_type": shot_stats['by_type'],
+        "shot_details": shot_stats.get('shots', []),
         "dribble_count": dribble_count,
         "dribble_frequency_per_minute": round(dribble_frequency, 1),
         
@@ -296,6 +386,7 @@ async def run_personal_analysis(video_path: str, options: Optional[Dict[str, Any
         "training_load_score": round(training_load, 1),
         "detections": detections,
     }
+
 
 
 def calculate_angle(p1: List[float], p2: List[float], p3: List[float]) -> Optional[float]:

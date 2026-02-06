@@ -40,11 +40,13 @@ async def run_team_analysis(video_path: str, options: Optional[Dict[str, Any]] =
     from pass_and_interception_detector import PassAndInterceptionDetector
     from tactical_view_converter import TacticalViewConverter
     from speed_and_distance_calculator import SpeedAndDistanceCalculator
+    from shot_detector import ShotDetector
     from configs import (
         PLAYER_DETECTOR_PATH,
         BALL_DETECTOR_PATH,
         COURT_KEYPOINT_DETECTOR_PATH,
     )
+
     
     # Read video frames
     video_frames = read_video(video_path)
@@ -123,6 +125,77 @@ async def run_team_analysis(video_path: str, options: Optional[Dict[str, Any]] =
     unique_players = set()
     for frame_tracks in player_tracks:
         unique_players.update(frame_tracks.keys())
+    
+    # Shot Detection and Analysis
+    try:
+        shot_detector = ShotDetector(
+            hoop_detection_model_path=BALL_DETECTOR_PATH,  # Use combined model for hoop detection
+            min_shot_arc_height=50,
+            hoop_proximity_threshold=100,
+            trajectory_window=30,
+            success_time_window=15
+        )
+        
+        # Detect hoop locations
+        hoop_detections = shot_detector.detect_hoop_locations(
+            video_frames,
+            read_from_stub=False
+        )
+        
+        # Get video FPS
+        fps = 30  # Default
+        try:
+            import cv2
+            cap = cv2.VideoCapture(video_path)
+            fps = cap.get(cv2.CAP_PROP_FPS) or 30
+            cap.release()
+        except:
+            pass
+        
+        # Detect shots
+        shots = shot_detector.detect_shots(
+            ball_tracks,
+            hoop_detections,
+            fps=fps,
+            court_keypoints=court_keypoints
+        )
+        
+        # Calculate overall shot statistics
+        shot_stats = shot_detector.calculate_shot_statistics(shots)
+        
+        # Break down shots by team
+        team_1_shots = []
+        team_2_shots = []
+        
+        for shot in shots:
+            start_frame = shot['start_frame']
+            if start_frame < len(ball_possession) and start_frame < len(player_assignment):
+                player_with_ball = ball_possession[start_frame]
+                if player_with_ball != -1 and player_with_ball in player_assignment[start_frame]:
+                    team = player_assignment[start_frame][player_with_ball].get('team', 0)
+                    shot_with_team = {**shot, 'team': team, 'player_id': player_with_ball}
+                    
+                    if team == 1:
+                        team_1_shots.append(shot_with_team)
+                    elif team == 2:
+                        team_2_shots.append(shot_with_team)
+        
+        team_1_shot_stats = shot_detector.calculate_shot_statistics(team_1_shots)
+        team_2_shot_stats = shot_detector.calculate_shot_statistics(team_2_shots)
+        
+    except Exception as e:
+        print(f"Shot detection failed: {e}")
+        shot_stats = {
+            'total_attempts': 0,
+            'total_made': 0,
+            'total_missed': 0,
+            'overall_percentage': 0.0,
+            'by_type': {},
+            'shots': []
+        }
+        team_1_shot_stats = shot_stats.copy()
+        team_2_shot_stats = shot_stats.copy()
+
 
     # Build per-frame detections for overlays (optional, can be large)
     detections_stride = 1
@@ -221,6 +294,27 @@ async def run_team_analysis(video_path: str, options: Optional[Dict[str, Any]] =
         "team_2_possession_percent": round(team_2_pct, 1),
         "total_passes": len(passes),
         "total_interceptions": len(interceptions),
+        
+        # Shot statistics
+        "total_shot_attempts": shot_stats['total_attempts'],
+        "total_shots_made": shot_stats['total_made'],
+        "total_shots_missed": shot_stats['total_missed'],
+        "overall_shooting_percentage": shot_stats['overall_percentage'],
+        "shot_breakdown_by_type": shot_stats['by_type'],
+        
+        # Team 1 shooting
+        "team_1_shot_attempts": team_1_shot_stats['total_attempts'],
+        "team_1_shots_made": team_1_shot_stats['total_made'],
+        "team_1_shooting_percentage": team_1_shot_stats['overall_percentage'],
+        "team_1_shot_breakdown": team_1_shot_stats['by_type'],
+        
+        # Team 2 shooting
+        "team_2_shot_attempts": team_2_shot_stats['total_attempts'],
+        "team_2_shots_made": team_2_shot_stats['total_made'],
+        "team_2_shooting_percentage": team_2_shot_stats['overall_percentage'],
+        "team_2_shot_breakdown": team_2_shot_stats['by_type'],
+        
         "events": events,
         "detections": detections,
     }
+
