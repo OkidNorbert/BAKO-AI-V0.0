@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '@/context/ThemeContext';
+import { MOCK_AUTH_ENABLED } from '@/utils/mockAuth';
+import { MOCK_SKILLS, MOCK_SKILL_SUMMARY } from '@/utils/mockData';
 import api from '@/utils/axiosConfig';
 import {
   BarChart2,
@@ -30,6 +32,15 @@ const SkillAnalytics = () => {
     try {
       setLoading(true);
       setError('');
+
+      if (MOCK_AUTH_ENABLED) {
+        console.log('Mock mode: skipping API skills fetch');
+        setSkills(MOCK_SKILLS);
+        setSummary(MOCK_SKILL_SUMMARY);
+        setLoading(false);
+        return;
+      }
+
       const response = await api.get('/player/skills', {
         params: { startDate: dateRange.start, endDate: dateRange.end }
       });

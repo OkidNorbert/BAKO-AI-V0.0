@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/context/ThemeContext';
+import { MOCK_AUTH_ENABLED } from '@/utils/mockAuth';
+import { MOCK_MATCHES } from '@/utils/mockData';
 import { adminAPI } from '../../services/api';
 import VideoPlayer from '../../components/team/video-player';
 import {
@@ -105,6 +107,19 @@ const MatchAnalysis = () => {
     try {
       setLoading(true);
       setError('');
+
+      if (MOCK_AUTH_ENABLED) {
+        console.log('Mock mode: skipping API fetch for Matches');
+        // Map mock data and ensure analysisStatus is set properly
+        setMatches(MOCK_MATCHES.map(m => ({
+          ...m,
+          analysisStatus: m.status || 'analyzed',
+          type: m.type || 'league',
+          duration: m.duration || '48:00'
+        })));
+        setLoading(false);
+        return;
+      }
 
       const response = await adminAPI.getMatches();
       setMatches(response.data || []);

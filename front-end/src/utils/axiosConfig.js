@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import { MOCK_AUTH_ENABLED } from './mockAuth';
 
 // Create axios instance with default config
 const api = axios.create({
@@ -191,9 +192,11 @@ api.interceptors.response.use(
       }
     }
 
-    // Handle errors generically
-    const errorMessage = error.response?.data?.message || 'An error occurred. Please try again later.';
-    toast.error(errorMessage);
+    // Handle errors generically - suppress toasts in mock mode
+    if (!MOCK_AUTH_ENABLED) {
+      const errorMessage = error.response?.data?.message || 'An error occurred. Please try again later.';
+      toast.error(errorMessage);
+    }
     return Promise.reject(error);
   }
 );

@@ -11,6 +11,7 @@ import {
   Shield,
   Trophy
 } from 'lucide-react';
+import BasketballLogo from './BasketballLogo';
 
 const AdminSidebar = ({ isOpen }) => {
   const { isDarkMode } = useTheme();
@@ -21,7 +22,8 @@ const AdminSidebar = ({ isOpen }) => {
     { path: '/team/matches', icon: Video, label: 'Match Analysis', color: 'from-orange-400 to-pink-500' },
     { path: '/team/schedule', icon: Calendar, label: 'Schedule', color: 'from-yellow-400 to-amber-600' },
     { path: '/team/reports', icon: BarChart2, label: 'Reports & Analytics', color: 'from-gray-500 to-gray-600' },
-    { path: '/team/settings', icon: Settings, label: 'Settings', color: 'from-purple-500 to-indigo-700' }
+    { path: '/team/settings', icon: Settings, label: 'Settings', color: 'from-purple-500 to-indigo-700' },
+    { path: '/', icon: Home, label: 'Back to Website', color: 'from-pink-500 to-orange-500' }
   ];
 
   // Count unread messages in communications
@@ -35,9 +37,8 @@ const AdminSidebar = ({ isOpen }) => {
       } border-r custom-admin-sidebar-scrollbar`}>
       <div className="h-full px-3 py-4 overflow-y-auto">
         <div className="mb-8 px-3 flex items-center">
-          <div className={`h-10 w-10 rounded-full bg-gradient-to-tr ${isDarkMode ? 'from-orange-600 to-red-600' : 'from-orange-500 to-red-600'
-            } flex items-center justify-center mr-3`}>
-            <Trophy className="h-6 w-6 text-white" />
+          <div className={`h-11 w-11 rounded-full bg-white flex items-center justify-center mr-3 shadow-sm`}>
+            <BasketballLogo className="h-9 w-9" color="#ef4444" />
           </div>
           <h1 className={`text-xl font-bold ${isDarkMode
             ? 'text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-400'

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { adminAPI } from '../../services/api'; // Updated import
 import { useTheme } from '@/context/ThemeContext';
+import { MOCK_AUTH_ENABLED } from '@/utils/mockAuth';
+import { MOCK_TEAM_ROSTER } from '@/utils/mockData';
 import {
   User,
   Calendar,
@@ -40,6 +42,14 @@ const TeamRoster = () => {
     try {
       setLoading(true);
       setError('');
+
+      if (MOCK_AUTH_ENABLED) {
+        console.log('Mock mode: skipping API fetch for Roster');
+        // Map mock data to include _id if needed by keys
+        setPlayers(MOCK_TEAM_ROSTER.map(p => ({ ...p, _id: p.id })));
+        setLoading(false);
+        return;
+      }
 
       const response = await adminAPI.getRoster();
       setPlayers(response.data || []);

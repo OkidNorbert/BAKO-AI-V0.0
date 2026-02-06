@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '@/context/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
+import { MOCK_AUTH_ENABLED } from '@/utils/mockAuth';
 import api from '@/utils/axiosConfig';
 import {
   User,
@@ -41,6 +43,7 @@ const PlayerProfile = () => {
   const [success, setSuccess] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const { isDarkMode } = useTheme();
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchProfile();
@@ -50,6 +53,31 @@ const PlayerProfile = () => {
     try {
       setLoading(true);
       setError('');
+
+      if (MOCK_AUTH_ENABLED) {
+        console.log('Mock mode: skipping API profile fetch');
+        // Split name into first and last if possible
+        const nameParts = (user?.name || 'New Player').split(' ');
+        setProfile({
+          firstName: nameParts[0] || '',
+          lastName: nameParts.slice(1).join(' ') || '',
+          email: user?.email || 'player@example.com',
+          phone: '(555) 123-4567',
+          address: '123 Basketball Ave, Hoop City',
+          dateOfBirth: '2005-01-01',
+          position: 'Point Guard',
+          jerseyNumber: '10',
+          experience: '5',
+          height: "6'2\"",
+          weight: '185 lbs',
+          bio: 'Aspiring professional player focusing on shooting consistency and playmaking.',
+          profileImage: null,
+          createdAt: new Date().toISOString()
+        });
+        setLoading(false);
+        return;
+      }
+
       const response = await api.get('/player/profile');
       setProfile(response.data);
     } catch (err) {
@@ -110,6 +138,16 @@ const PlayerProfile = () => {
       setSaving(true);
       setError('');
       setSuccess('');
+
+      if (MOCK_AUTH_ENABLED) {
+        console.log('Mock mode: simulating profile save');
+        await new Promise(resolve => setTimeout(resolve, 800)); // Simulate delay
+        setSuccess('Profile updated successfully (Mock Mode)');
+        setIsEditing(false);
+        setSaving(false);
+        return;
+      }
+
       await api.put('/player/profile', profile);
       setSuccess('Profile updated successfully');
       setIsEditing(false);

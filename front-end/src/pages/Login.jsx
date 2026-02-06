@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { Trophy, ArrowRight } from 'lucide-react';
+import BasketballLogo from '@/components/shared/BasketballLogo';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -15,7 +16,7 @@ const Login = () => {
 
   useEffect(() => {
     if (user) {
-      // Redirect based on user role
+      // Redirect based on user role if already logged in
       switch (user.role) {
         case 'team':
           navigate('/team');
@@ -59,7 +60,7 @@ const Login = () => {
     }
   };
 
-  // If users are already logged in, don't render the login form
+  // If users are already logged in, skip the form
   if (user) {
     return null;
   }
@@ -77,8 +78,8 @@ const Login = () => {
           <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-24 h-24 bg-pink-400 rounded-full opacity-30"></div>
 
           <div className="text-center relative z-10">
-            <div className="mx-auto h-24 w-24 bg-gradient-to-r from-orange-400 to-red-500 rounded-xl mb-5 flex items-center justify-center shadow-lg">
-              <Trophy className="h-14 w-14 text-white" />
+            <div className="mx-auto h-28 w-28 bg-white rounded-2xl mb-5 flex items-center justify-center shadow-lg transform -rotate-3 hover:rotate-0 transition-transform duration-300">
+              <BasketballLogo className="h-20 w-20" color="#ef4444" />
             </div>
 
             <h2 className={`text-3xl font-extrabold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'
@@ -178,33 +179,7 @@ const Login = () => {
             </div>
           </form>
 
-          <div className="mt-6 border-t border-gray-200 pt-6">
-            <p className={`text-xs text-center mb-4 uppercase tracking-widest font-bold ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-              Developer Access
-            </p>
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                type="button"
-                onClick={() => {
-                  bypassLogin('team');
-                  navigate('/team');
-                }}
-                className={`py-2 px-4 rounded-lg text-sm font-medium border border-orange-500 text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors`}
-              >
-                Team Login
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  bypassLogin('player');
-                  navigate('/player');
-                }}
-                className={`py-2 px-4 rounded-lg text-sm font-medium border border-blue-500 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors`}
-              >
-                Player Login
-              </button>
-            </div>
-          </div>
+
 
           <div className="mt-8 text-center relative z-10">
             <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'
