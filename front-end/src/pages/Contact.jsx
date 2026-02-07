@@ -76,7 +76,6 @@ const Contact = () => {
                                     </div>
                                     <div>
                                         <h4 className="font-bold text-lg uppercase tracking-wide">Headquarters</h4>
-                                        <p className={`text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>123 Sunshine Avenue</p>
                                         <p className={`text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Nairobi, Kenya</p>
                                     </div>
                                 </div>

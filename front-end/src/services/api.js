@@ -187,7 +187,7 @@ export const adminAPI = {
   getPlayerPayments: (playerId) => api.get(`/payments/player/${playerId}/history`),
   recordPlayerPayment: (paymentData) => api.post(`/payments/player`, paymentData),
   getPaymentStats: () => api.get('/payments/stats'),
-  sendPaymentReminder: (parentId) => api.post(`/payments/parent/${parentId}/reminder`),
+  sendPaymentReminder: (playerId) => api.post(`/payments/player/${playerId}/reminder`),
   getOverduePayments: async () => {
     return api.get('/admin/payments/overdue');
   },

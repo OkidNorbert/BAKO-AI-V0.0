@@ -271,7 +271,7 @@ const Navbar = ({ role }) => {
                   {user.name || (user.firstName && `${user.firstName} ${user.lastName}`)}
                 </p>
                 <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-indigo-200'}`}>
-                  {user.email || "Staff Member"}
+                  {user.email || "Account"}
                 </p>
               </div>
             </div>
@@ -309,7 +309,7 @@ const Navbar = ({ role }) => {
               onClick={() => setIsMenuOpen(false)}
             >
               <User className="h-5 w-5 mr-2" />
-              <span>Staff Login</span>
+              <span>Sign In</span>
             </Link>
           )}
 
