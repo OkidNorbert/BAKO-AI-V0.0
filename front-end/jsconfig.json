@@ -2,20 +2,40 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "components/*": ["./src/components/*"],
-      "layouts/*": ["./src/layouts/*"],
-      "context/*": ["./src/context/*"],
-      "pages/*": ["./src/pages/*"],
-      "utils/*": ["./src/utils/*"]
+      "@/*": [
+        "./src/*"
+      ],
+      "components/*": [
+        "./src/components/*"
+      ],
+      "layouts/*": [
+        "./src/layouts/*"
+      ],
+      "context/*": [
+        "./src/context/*"
+      ],
+      "pages/*": [
+        "./src/pages/*"
+      ],
+      "utils/*": [
+        "./src/utils/*"
+      ]
     },
-    "jsx": "react",
-    "target": "ES2020",
+    "jsx": "react-jsx",
+    "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "node",
     "resolveJsonModule": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "types": []
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "build"]
-} 
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build"
+  ]
+}
