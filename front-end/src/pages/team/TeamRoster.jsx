@@ -158,7 +158,7 @@ const TeamRoster = () => {
                 Refresh
               </button>
               <Link
-                to="/team/roster/add"
+                to="/team/roster/new"
                 className={`flex items-center px-3 py-2 rounded-lg transition ${isDarkMode
                   ? 'bg-orange-600 hover:bg-orange-700 text-white'
                   : 'bg-orange-500 hover:bg-orange-600 text-white'
@@ -470,14 +470,33 @@ const TeamRoster = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="6" className="px-6 py-10 text-center text-sm">
-                        <div className="flex flex-col items-center">
-                          <User className={`h-10 w-10 ${isDarkMode ? 'text-gray-600' : 'text-gray-400'
-                            }`} />
-                          <p className={`mt-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                            }`}>
-                            No players found matching your filters
-                          </p>
+                      <td colSpan="6" className="px-6 py-12 text-center">
+                        <div className="flex flex-col items-center gap-4">
+                          <User className={`h-14 w-14 ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`} />
+                          <div>
+                            <p className={`text-base font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                              {players.length === 0
+                                ? 'You have no players in your team'
+                                : 'No players found matching your filters'}
+                            </p>
+                            <p className={`mt-1 text-sm ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                              {players.length === 0
+                                ? 'Add your first player to get started.'
+                                : 'Try adjusting your search or filters.'}
+                            </p>
+                          </div>
+                          {players.length === 0 && (
+                            <Link
+                              to="/team/roster/new"
+                              className={`inline-flex items-center px-4 py-2 rounded-lg font-medium ${isDarkMode
+                                ? 'bg-orange-600 hover:bg-orange-700 text-white'
+                                : 'bg-orange-500 hover:bg-orange-600 text-white'
+                                }`}
+                            >
+                              <Plus size={18} className="mr-2" />
+                              Add Player
+                            </Link>
+                          )}
                         </div>
                       </td>
                     </tr>
