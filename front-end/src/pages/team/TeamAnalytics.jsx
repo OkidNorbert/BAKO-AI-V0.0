@@ -609,7 +609,7 @@ const TeamAnalytics = () => {
               </div>
               <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
                 <div className="flex justify-between">
-                  <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Attendance Rate</span>
+                  <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Session completion</span>
                   <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                     {analyticsData.trainingData.attendanceRate}%
                   </span>

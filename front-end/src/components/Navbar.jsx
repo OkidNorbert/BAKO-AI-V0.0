@@ -17,6 +17,7 @@ const Navbar = () => {
     if (!user) return '/';
     switch (user.role) {
       case 'team':
+      case 'admin':
         return '/team';
       case 'player':
         return '/player';
@@ -50,14 +51,6 @@ const Navbar = () => {
                   >
                     Dashboard
                   </Link>
-                  {user.role === 'admin' && (
-                    <Link
-                      to="/admin/panel"
-                      className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                    >
-                      Admin Panel
-                    </Link>
-                  )}
                 </>
               )}
             </div>

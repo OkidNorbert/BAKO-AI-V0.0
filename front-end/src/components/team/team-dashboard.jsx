@@ -73,7 +73,7 @@ const TeamDashboard = () => {
   };
 
   const handleExportReport = async () => {
-    navigate('/admin/export');
+    navigate('/team/reports');
   };
 
   // Navigation handlers
@@ -81,7 +81,7 @@ const TeamDashboard = () => {
   const navigateToRoster = () => navigate('/team/roster');
   const navigateToPlayers = () => navigate('/team/roster');
   const navigateToAnalytics = () => navigate('/team/analytics');
-  const navigateToVideoUpload = () => navigate('/team/videos/upload');
+  const navigateToVideoUpload = () => navigate('/team/matches/upload');
   const navigateToSchedule = () => navigate('/team/schedule');
 
   if (loading) {

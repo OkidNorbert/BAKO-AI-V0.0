@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
-import { adminAPI } from '../../services/api'; // Assuming this still works or is mocked
+import { adminAPI } from '../../services/api';
 import {
   Calendar as CalendarIcon,
   Clock,
@@ -504,17 +504,16 @@ const TeamSchedule = () => {
                   ></textarea>
                 </div>
 
-                {/* Attendance Required */}
                 <div className="flex items-center">
                   <input
                     type="checkbox"
-                    id="attendanceRequired"
+                    id="eventRequired"
                     checked={newEvent.mandatory}
                     onChange={(e) => setNewEvent({ ...newEvent, mandatory: e.target.checked })}
                     className="mr-2"
                   />
-                  <label htmlFor="attendanceRequired" className="text-sm font-medium">
-                    Mandatory Attendance
+                  <label htmlFor="eventRequired" className="text-sm font-medium">
+                    Required
                   </label>
                 </div>
 
@@ -560,7 +559,6 @@ const TeamSchedule = () => {
               </div>
 
               <form onSubmit={handleUpdateEvent} className="space-y-6">
-                {/* Simplified Edit Form - just Title and Type for demo */}
                 <div>
                   <label className="block text-sm font-medium mb-1">Event Title</label>
                   <input

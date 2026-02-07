@@ -251,3 +251,141 @@ CREATE TRIGGER update_players_updated_at
 CREATE TRIGGER update_videos_updated_at
     BEFORE UPDATE ON videos
     FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+-- ============================================
+-- SCHEDULES TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS schedules (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    start_time TIMESTAMPTZ NOT NULL,
+    end_time TIMESTAMPTZ NOT NULL,
+    type TEXT NOT NULL,
+    location TEXT,
+    description TEXT,
+    created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_schedules_org ON schedules(organization_id);
+
+-- ============================================
+-- MATCHES TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS matches (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    opponent TEXT NOT NULL,
+    date TIMESTAMPTZ NOT NULL,
+    location TEXT,
+    result TEXT,
+    score_us INTEGER,
+    score_them INTEGER,
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_matches_org ON matches(organization_id);
+
+-- ============================================
+-- NOTIFICATIONS TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS notifications (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    recipient_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    message TEXT NOT NULL,
+    type TEXT DEFAULT 'info',
+    read BOOLEAN DEFAULT FALSE,
+    action_link TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_notifications_recipient ON notifications(recipient_id);
+
+-- ============================================
+-- RLS POLICIES FOR NEW TABLES
+-- ============================================
+
+ALTER TABLE schedules ENABLE ROW LEVEL SECURITY;
+ALTER TABLE matches ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+
+-- Schedules: viewable by org members, editable by owners
+CREATE POLICY "Org members can view schedules" ON schedules
+    FOR SELECT USING (
+        organization_id IN (
+            SELECT id FROM organizations WHERE owner_id::text = auth.uid()::text
+            UNION
+            SELECT organization_id FROM players WHERE user_id::text = auth.uid()::text
+        )
+    );
+
+CREATE POLICY "Owners can manage schedules" ON schedules
+    FOR ALL USING (
+        organization_id IN (SELECT id FROM organizations WHERE owner_id::text = auth.uid()::text)
+    );
+
+-- Matches: similar to schedules
+CREATE POLICY "Org members can view matches" ON matches
+    FOR SELECT USING (
+        organization_id IN (
+            SELECT id FROM organizations WHERE owner_id::text = auth.uid()::text
+            UNION
+            SELECT organization_id FROM players WHERE user_id::text = auth.uid()::text
+        )
+    );
+
+CREATE POLICY "Owners can manage matches" ON matches
+    FOR ALL USING (
+        organization_id IN (SELECT id FROM organizations WHERE owner_id::text = auth.uid()::text)
+    );
+
+-- Notifications: generic
+CREATE POLICY "Users can manage own notifications" ON notifications
+    FOR ALL USING (recipient_id::text = auth.uid()::text);
+
+-- Triggers
+CREATE TRIGGER update_schedules_updated_at
+    BEFORE UPDATE ON schedules
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+CREATE TRIGGER update_matches_updated_at
+    BEFORE UPDATE ON matches
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+-- ============================================
+-- ACTIVITIES TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS activities (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    player_id UUID REFERENCES players(id) ON DELETE CASCADE,
+    type TEXT NOT NULL,
+    description TEXT,
+    date TIMESTAMPTZ DEFAULT NOW(),
+    metadata JSONB,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_activities_player ON activities(player_id);
+
+ALTER TABLE activities ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can manage own activities" ON activities
+    FOR ALL USING (
+        player_id IN (
+            SELECT id FROM players WHERE user_id::text = auth.uid()::text
+        )
+    );
+
+CREATE POLICY "Org owners can view activities" ON activities
+    FOR SELECT USING (
+        player_id IN (
+            SELECT id FROM players WHERE organization_id IN (
+                SELECT id FROM organizations WHERE owner_id::text = auth.uid()::text
+            )
+        )
+    );

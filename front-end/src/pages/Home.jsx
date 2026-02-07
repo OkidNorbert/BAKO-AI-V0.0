@@ -62,7 +62,7 @@ const Home = () => {
               </Link>
 
               <Link
-                to="/gallery" // Keeping gallery or maybe a 'demo' link
+                to="/gallery"
                 className={`transform transition duration-200 hover:scale-105 shadow-lg px-8 py-4 rounded-full text-xl font-bold flex items-center justify-center space-x-2 ${isDarkMode
                   ? 'bg-gradient-to-r from-gray-800 to-gray-900 text-white border-2 border-gray-700 hover:from-gray-900 hover:to-black'
                   : 'bg-white text-indigo-600 border-2 border-indigo-100 hover:bg-indigo-50'

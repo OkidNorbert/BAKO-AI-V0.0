@@ -17,7 +17,7 @@ const Contact = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        alert('Message sent! (This is a demo)');
+        alert('Thank you! We\'ll be in touch soon.');
     };
 
     return (

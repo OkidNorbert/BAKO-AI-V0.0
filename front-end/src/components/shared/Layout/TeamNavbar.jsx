@@ -28,12 +28,10 @@ const TeamNavbar = ({ onSidebarToggle }) => {
   const userMenuRef = useRef(null);
   const notificationsRef = useRef(null);
 
-  // Fetch notifications and communications
+  // Fetch notifications
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        // Mock data logic removed to prepare for real backend integration
-
         // Fetch notifications using adminAPI
         const notificationsResponse = await adminAPI.getNotifications();
 

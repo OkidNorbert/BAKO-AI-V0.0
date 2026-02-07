@@ -168,6 +168,17 @@ async def refresh_token(
     )
 
 
+@router.post("/refresh-token", response_model=TokenResponse)
+async def refresh_token_alias(
+    body: RefreshTokenRequest,
+    supabase: SupabaseService = Depends(get_supabase),
+):
+    """
+    Alias for /refresh to support frontend expectations.
+    """
+    return await refresh_token(body, supabase)
+
+
 @router.get("/me", response_model=User)
 async def get_current_user_profile(
     current_user: dict = Depends(get_current_user),
