@@ -7,9 +7,10 @@ const Gallery = () => {
     const [selectedImage, setSelectedImage] = useState(null);
 
     const images = [
-        { src: "https://images.unsplash.com/photo-1546519638-68e109498ffc?q=80&w=2090", type: "wide", title: "Gallery 1" },
-        { src: "https://images.unsplash.com/photo-1519861531473-920026393112?q=80&w=2076", type: "tall", title: "Gallery 2" },
-        { src: "https://images.unsplash.com/photo-1518407613690-d9fc990e795f?q=80&w=2070", type: "wide", title: "Gallery 3" }
+        { src: "/gallery/1Y9YTgSyvxiEBUjWPFycH.png", type: "wide", title: "AI Basketball Analysis" },
+        { src: "/gallery/3CE0QdATLCZ2JwJZsYuBX.png", type: "tall", title: "Performance Insights" },
+        { src: "/gallery/Create%20a%20modern%20LinkedIn.jpg", type: "wide", title: "Basketball Analytics" },
+        { src: "/gallery/Create%20a%20modern%20LinkedIn-st.jpg", type: "wide", title: "Court & Data" }
     ];
 
     return (
@@ -33,7 +34,7 @@ const Gallery = () => {
                         >
                             <img
                                 src={img.src}
-                                alt={`Gallery ${idx}`}
+                                alt={img.title}
                                 className="w-full h-auto object-cover"
                             />
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center backdrop-blur-sm">

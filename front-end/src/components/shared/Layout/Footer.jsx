@@ -14,12 +14,11 @@ import {
   Instagram,
   Twitter,
   Rocket,
-  Baby,
-  BookOpen,
   Music,
   Palette,
+  Trophy,
   Smile,
-  Trophy
+  Baby
 } from 'lucide-react';
 
 
@@ -87,42 +86,37 @@ const Footer = () => {
             <h2 className={`text-xl font-bold mb-4 flex items-center ${isDarkMode ? 'text-yellow-300' : 'text-indigo-700'
               }`}>
               <Palette className="mr-2 h-5 w-5" />
-              Adventure Links
+              Quick Links
             </h2>
             <ul className="space-y-3">
               <li>
-                <Link to="/about" className={`hover:underline flex items-center group ${isDarkMode ? 'text-gray-300 hover:text-yellow-300' : 'text-gray-600 hover:text-indigo-700'
+                <Link to="/about" className={`hover:underline flex items-center ${isDarkMode ? 'text-gray-300 hover:text-yellow-300' : 'text-gray-600 hover:text-indigo-700'
                   }`}>
-                  <div className="w-3 h-3 rounded-full bg-red-400 mr-2 group-hover:animate-bounce"></div>
-                  <Baby size={16} className="mr-1" /> About Our Playground
+                  About
                 </Link>
               </li>
               <li>
-                <Link to="/programs" className={`hover:underline flex items-center group ${isDarkMode ? 'text-gray-300 hover:text-yellow-300' : 'text-gray-600 hover:text-indigo-700'
+                <Link to="/programs" className={`hover:underline flex items-center ${isDarkMode ? 'text-gray-300 hover:text-yellow-300' : 'text-gray-600 hover:text-indigo-700'
                   }`}>
-                  <div className="w-3 h-3 rounded-full bg-green-400 mr-2 group-hover:animate-bounce"></div>
-                  <BookOpen size={16} className="mr-1" /> Learning Adventures
+                  Programs
                 </Link>
               </li>
               <li>
-                <Link to="/gallery" className={`hover:underline flex items-center group ${isDarkMode ? 'text-gray-300 hover:text-yellow-300' : 'text-gray-600 hover:text-indigo-700'
+                <Link to="/gallery" className={`hover:underline flex items-center ${isDarkMode ? 'text-gray-300 hover:text-yellow-300' : 'text-gray-600 hover:text-indigo-700'
                   }`}>
-                  <div className="w-3 h-3 rounded-full bg-blue-400 mr-2 group-hover:animate-bounce"></div>
-                  <Palette size={16} className="mr-1" /> Fun Photo Gallery
+                  Gallery
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className={`hover:underline flex items-center group ${isDarkMode ? 'text-gray-300 hover:text-yellow-300' : 'text-gray-600 hover:text-indigo-700'
+                <Link to="/contact" className={`hover:underline flex items-center ${isDarkMode ? 'text-gray-300 hover:text-yellow-300' : 'text-gray-600 hover:text-indigo-700'
                   }`}>
-                  <div className="w-3 h-3 rounded-full bg-purple-400 mr-2 group-hover:animate-bounce"></div>
-                  <Mail size={16} className="mr-1" /> Say Hello!
+                  Contact
                 </Link>
               </li>
               <li>
-                <Link to="/faq" className={`hover:underline flex items-center group ${isDarkMode ? 'text-gray-300 hover:text-yellow-300' : 'text-gray-600 hover:text-indigo-700'
+                <Link to="/faq" className={`hover:underline flex items-center ${isDarkMode ? 'text-gray-300 hover:text-yellow-300' : 'text-gray-600 hover:text-indigo-700'
                   }`}>
-                  <div className="w-3 h-3 rounded-full bg-yellow-400 mr-2 group-hover:animate-bounce"></div>
-                  <Smile size={16} className="mr-1" /> Parent Questions
+                  FAQ
                 </Link>
               </li>
             </ul>

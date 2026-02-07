@@ -149,25 +149,18 @@ const Home = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="aspect-w-1 aspect-h-1 rounded-2xl overflow-hidden shadow-lg transform transition duration-300 hover:scale-102">
               <img
-                src="https://images.unsplash.com/photo-1546519638-68e109498ffc?q=80&w=2090&auto=format&fit=crop"
-                alt="Gallery 1"
+                src="/gallery/1Y9YTgSyvxiEBUjWPFycH.png"
+                alt="AI Basketball Analysis"
                 className="w-full h-full object-cover"
               />
             </div>
             <div className="aspect-w-1 aspect-h-1 rounded-2xl overflow-hidden shadow-lg transform transition duration-300 hover:scale-102 mt-10 md:mt-20">
               <img
-                src="https://images.unsplash.com/photo-1519861531473-920026393112?q=80&w=2076&auto=format&fit=crop"
-                alt="Gallery 2"
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="aspect-w-1 aspect-h-1 rounded-2xl overflow-hidden shadow-lg transform transition duration-300 hover:scale-102">
-              <img
-                src="https://images.unsplash.com/photo-1518407613690-d9fc990e795f?q=80&w=2070&auto=format&fit=crop"
-                alt="Gallery 3"
+                src="/gallery/3CE0QdATLCZ2JwJZsYuBX.png"
+                alt="Performance Insights"
                 className="w-full h-full object-cover"
               />
             </div>

@@ -22,8 +22,7 @@ const AdminSidebar = ({ isOpen }) => {
     { path: '/team/matches', icon: Video, label: 'Match Analysis', color: 'from-orange-400 to-pink-500' },
     { path: '/team/schedule', icon: Calendar, label: 'Schedule', color: 'from-yellow-400 to-amber-600' },
     { path: '/team/reports', icon: BarChart2, label: 'Reports & Analytics', color: 'from-gray-500 to-gray-600' },
-    { path: '/team/settings', icon: Settings, label: 'Settings', color: 'from-purple-500 to-indigo-700' },
-    { path: '/', icon: Home, label: 'Back to Website', color: 'from-pink-500 to-orange-500' }
+    { path: '/team/settings', icon: Settings, label: 'Settings', color: 'from-purple-500 to-indigo-700' }
   ];
 
   // Count unread messages in communications
