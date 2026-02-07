@@ -36,9 +36,13 @@ const SkillAnalytics = () => {
       const response = await api.get('/player/skills', {
         params: { startDate: dateRange.start, endDate: dateRange.end }
       });
-      if (response.data?.data) {
-        setSkills(response.data.data.skills || []);
-        setSummary(response.data.data.summary || {});
+      const data = response.data?.data ?? response.data;
+      if (data) {
+        setSkills(Array.isArray(data.skills) ? data.skills : []);
+        setSummary(data.summary && typeof data.summary === 'object' ? data.summary : {});
+      } else {
+        setSkills([]);
+        setSummary({});
       }
     } catch (err) {
       console.error('Error fetching skills:', err);
@@ -47,14 +51,6 @@ const SkillAnalytics = () => {
       setLoading(false);
     }
   };
-
-  const getSampleSkills = () => [
-    { id: '1', name: 'Shooting', category: 'offense', score: 72, trend: 'up', lastUpdated: new Date().toISOString() },
-    { id: '2', name: 'Defense', category: 'defense', score: 68, trend: 'up', lastUpdated: new Date().toISOString() },
-    { id: '3', name: 'Playmaking', category: 'offense', score: 65, trend: 'neutral', lastUpdated: new Date().toISOString() },
-    { id: '4', name: 'Rebounding', category: 'defense', score: 61, trend: 'up', lastUpdated: new Date().toISOString() },
-    { id: '5', name: 'Free Throws', category: 'offense', score: 78, trend: 'up', lastUpdated: new Date().toISOString() }
-  ];
 
   const formatDate = (dateString) => {
     try {
@@ -104,7 +100,7 @@ const SkillAnalytics = () => {
               <span className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Overall Score</span>
               <Target className="h-8 w-8 text-orange-500" />
             </div>
-            <p className="text-3xl font-bold mt-2">{summary.overall ?? 68}</p>
+            <p className="text-3xl font-bold mt-2">{summary.overall != null && summary.overall !== '' ? summary.overall : '—'}</p>
             <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Based on recent sessions</p>
           </div>
           <div className={`rounded-xl p-6 shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
@@ -112,14 +108,14 @@ const SkillAnalytics = () => {
               <span className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Shooting</span>
               <Zap className="h-8 w-8 text-yellow-500" />
             </div>
-            <p className="text-3xl font-bold mt-2">{summary.shooting ?? 72}</p>
+            <p className="text-3xl font-bold mt-2">{summary.shooting != null && summary.shooting !== '' ? summary.shooting : '—'}</p>
           </div>
           <div className={`rounded-xl p-6 shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
             <div className="flex items-center justify-between">
               <span className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Defense</span>
               <Activity className="h-8 w-8 text-green-500" />
             </div>
-            <p className="text-3xl font-bold mt-2">{summary.defense ?? 68}</p>
+            <p className="text-3xl font-bold mt-2">{summary.defense != null && summary.defense !== '' ? summary.defense : '—'}</p>
           </div>
         </div>
 
@@ -141,18 +137,26 @@ const SkillAnalytics = () => {
                 </tr>
               </thead>
               <tbody className={`divide-y ${isDarkMode ? 'divide-gray-700' : 'divide-gray-200'}`}>
-                {skills.map((skill) => (
-                  <tr key={skill.id}>
-                    <td className="px-6 py-4 font-medium">{skill.name}</td>
-                    <td className={`px-6 py-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{skill.category}</td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium ${isDarkMode ? 'bg-orange-900/50 text-orange-300' : 'bg-orange-100 text-orange-800'}`}>
-                        {skill.score}
-                      </span>
+                {skills.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className={`px-6 py-12 text-center ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                      No skill data for this period. Complete training sessions to see analytics here.
                     </td>
-                    <td className={`px-6 py-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{formatDate(skill.lastUpdated)}</td>
                   </tr>
-                ))}
+                ) : (
+                  skills.map((skill) => (
+                    <tr key={skill.id}>
+                      <td className="px-6 py-4 font-medium">{skill.name}</td>
+                      <td className={`px-6 py-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{skill.category}</td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium ${isDarkMode ? 'bg-orange-900/50 text-orange-300' : 'bg-orange-100 text-orange-800'}`}>
+                          {skill.score}
+                        </span>
+                      </td>
+                      <td className={`px-6 py-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{formatDate(skill.lastUpdated)}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

@@ -67,12 +67,13 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('userName', userName);
         localStorage.setItem('userId', userId);
 
-        // Set user state immediately
+        // Set user state immediately (teamId = team-created player account)
         const userData = {
           role: userRole,
           name: userName,
           id: userId,
-          email: response.data.user?.email
+          email: response.data.user?.email,
+          teamId: response.data.user?.teamId ?? response.data.user?.team_id
         };
         console.log('AuthContext: Setting user state after login:', userData);
         setUser(userData);

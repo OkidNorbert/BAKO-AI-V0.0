@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
+import { adminAPI, playerAPI } from '../../services/api';
 import {
   Bell,
   Calendar,
@@ -15,156 +17,104 @@ import {
   ChevronRight,
   Eye,
   Trash2,
-  Settings,
   RefreshCw
 } from 'lucide-react';
 
 const Notifications = () => {
   const { user } = useAuth();
   const { isDarkMode } = useTheme();
+  const navigate = useNavigate();
 
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [selectedNotification, setSelectedNotification] = useState(null);
 
+  // Personal player (no teamId) has no notifications — redirect to dashboard
   useEffect(() => {
+    if (user?.role === 'player' && !user?.teamId) {
+      navigate('/player', { replace: true });
+    }
+  }, [user?.role, user?.teamId, navigate]);
+
+  useEffect(() => {
+    if (user?.role === 'player' && !user?.teamId) return;
     fetchNotifications();
-  }, [filter]);
+  }, [filter, user?.role, user?.teamId]);
 
   const fetchNotifications = async () => {
+    if (user?.role === 'player' && !user?.teamId) return;
     try {
       setLoading(true);
-
-      // Mock notifications data
-      const mockNotifications = [
-        {
-          id: 1,
-          type: 'video_analysis',
-          title: 'Video Analysis Complete',
-          message: 'Your training video analysis is ready. View your shooting mechanics and performance metrics.',
-          timestamp: '2025-02-05T10:30:00Z',
-          read: false,
-          priority: 'high',
-          actionUrl: user?.role === 'team' ? '/team/matches' : '/player/training'
-        },
-        {
-          id: 2,
-          type: 'team_invite',
-          title: 'Team Invitation',
-          message: 'You have been invited to join "Warriors Basketball Team". Accept or decline the invitation.',
-          timestamp: '2025-02-04T15:45:00Z',
-          read: false,
-          priority: 'medium',
-          actionUrl: '/team/invites'
-        },
-        {
-          id: 3,
-          type: 'achievement',
-          title: 'New Achievement Unlocked',
-          message: 'Congratulations! You\'ve unlocked the "Sharpshooter" badge for maintaining 40%+ 3-point accuracy.',
-          timestamp: '2025-02-03T09:20:00Z',
-          read: true,
-          priority: 'low',
-          actionUrl: '/player/achievements'
-        },
-        {
-          id: 4,
-          type: 'training_reminder',
-          title: 'Training Reminder',
-          message: 'Don\'t forget your scheduled training session today at 4:00 PM.',
-          timestamp: '2025-02-02T08:00:00Z',
-          read: true,
-          priority: 'medium',
-          actionUrl: '/player/schedule'
-        },
-        {
-          id: 5,
-          type: 'match_scheduled',
-          title: 'Match Scheduled',
-          message: 'New match scheduled against "Lakers" on February 10th at 7:00 PM.',
-          timestamp: '2025-02-01T14:30:00Z',
-          read: true,
-          priority: 'high',
-          actionUrl: '/team/schedule'
-        },
-        {
-          id: 6,
-          type: 'performance_update',
-          title: 'Performance Update',
-          message: 'Your shooting accuracy has improved by 5% this week. Keep up the great work!',
-          timestamp: '2025-01-31T18:00:00Z',
-          read: true,
-          priority: 'low',
-          actionUrl: '/player/skills'
-        },
-        {
-          id: 7,
-          type: 'system_update',
-          title: 'System Update',
-          message: 'New features have been added to the video analysis tools. Check out the latest improvements.',
-          timestamp: '2025-01-30T12:00:00Z',
-          read: false,
-          priority: 'low',
-          actionUrl: null
-        }
-      ];
-
-      // Filter notifications based on selected filter
-      let filteredNotifications = mockNotifications;
+      let raw = [];
+      if (user?.role === 'team') {
+        const res = await adminAPI.getNotifications();
+        const data = res?.data;
+        raw = Array.isArray(data) ? data : (data?.sent && data?.received ? [...(data.sent || []), ...(data.received || [])] : []);
+      } else if (user?.role === 'player' && user?.teamId) {
+        const res = await playerAPI.getNotifications();
+        raw = Array.isArray(res?.data) ? res.data : [];
+      }
+      const list = raw.map(n => ({
+        id: n.id,
+        type: n.type || 'system_update',
+        title: n.title || 'Notification',
+        message: n.message || n.body || '',
+        timestamp: n.timestamp || n.createdAt || n.created_at,
+        read: !!n.read,
+        priority: n.priority || 'medium',
+        actionUrl: n.actionUrl || n.action_url || null
+      }));
+      let filtered = list;
       if (filter !== 'all') {
-        filteredNotifications = mockNotifications.filter(n => n.type === filter);
+        filtered = list.filter(n => n.type === filter);
       }
-
-      // Filter based on user role
       if (user?.role === 'player') {
-        filteredNotifications = filteredNotifications.filter(n =>
-          !['team_invite', 'match_scheduled'].includes(n.type)
-        );
+        filtered = filtered.filter(n => !['team_invite', 'match_scheduled'].includes(n.type));
       }
-
-      setNotifications(filteredNotifications);
+      setNotifications(filtered);
     } catch (error) {
       console.error('Error fetching notifications:', error);
+      setNotifications([]);
     } finally {
       setLoading(false);
     }
   };
 
   const markAsRead = async (notificationId) => {
+    setNotifications(prev =>
+      prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
+    );
     try {
-      setNotifications(prev =>
-        prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
-      );
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
+      if (user?.role === 'team') await adminAPI.markNotificationAsRead(notificationId);
+      else if (user?.role === 'player') await playerAPI.markNotificationAsRead(notificationId);
+    } catch (e) {
+      console.warn('Error marking notification as read:', e);
     }
   };
 
   const deleteNotification = async (notificationId) => {
+    setNotifications(prev => prev.filter(n => n.id !== notificationId));
     try {
-      setNotifications(prev => prev.filter(n => n.id !== notificationId));
-    } catch (error) {
-      console.error('Error deleting notification:', error);
+      if (user?.role === 'team') await adminAPI.deleteNotification(notificationId);
+      else if (user?.role === 'player') await playerAPI.deleteNotification(notificationId);
+    } catch (e) {
+      console.warn('Error deleting notification:', e);
     }
   };
 
   const markAllAsRead = async () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     try {
-      setNotifications(prev =>
-        prev.map(n => ({ ...n, read: true }))
-      );
-    } catch (error) {
-      console.error('Error marking all notifications as read:', error);
+      if (user?.role === 'player') await playerAPI.markAllNotificationsAsRead();
+      // team may not have mark-all endpoint; leave as local-only if needed
+    } catch (e) {
+      console.warn('Error marking all as read:', e);
     }
   };
 
   const clearAllNotifications = async () => {
-    try {
-      setNotifications([]);
-    } catch (error) {
-      console.error('Error clearing notifications:', error);
-    }
+    setNotifications([]);
   };
 
   const getNotificationIcon = (type) => {
@@ -224,6 +174,11 @@ const Notifications = () => {
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;
+
+  // Don't render notifications UI for personal player (redirecting)
+  if (user?.role === 'player' && !user?.teamId) {
+    return null;
+  }
 
   const filters = [
     { value: 'all', label: 'All Notifications' },

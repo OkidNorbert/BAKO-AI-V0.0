@@ -18,7 +18,7 @@ const Navbar = ({ role }) => {
     navigate('/');
   };
 
-  // Role-specific navigation links
+  // Role-specific navigation links (player: Notifications only if account created by a team)
   const getNavLinks = () => {
     switch (role) {
       case 'admin':
@@ -28,14 +28,18 @@ const Navbar = ({ role }) => {
           { to: '/team/profile', icon: <User className="h-5 w-5" />, label: 'Profile' },
           { to: '/team/notifications', icon: <Bell className="h-5 w-5" />, label: 'Notifications' }
         ];
-      case 'player':
-        return [
+      case 'player': {
+        const base = [
           { to: '/player', icon: <Home className="h-5 w-5" />, label: 'Dashboard' },
           { to: '/player/profile', icon: <User className="h-5 w-5" />, label: 'Profile' },
           { to: '/player/training', icon: <Video className="h-5 w-5" />, label: 'Training Videos' },
-          { to: '/player/skills', icon: <TrendingUp className="h-5 w-5" />, label: 'Skill Analytics' },
-          { to: '/player/notifications', icon: <Bell className="h-5 w-5" />, label: 'Notifications' }
+          { to: '/player/skills', icon: <TrendingUp className="h-5 w-5" />, label: 'Skill Analytics' }
         ];
+        if (user?.teamId) {
+          base.push({ to: '/player/notifications', icon: <Bell className="h-5 w-5" />, label: 'Notifications' });
+        }
+        return base;
+      }
       default:
         return [];
     }
@@ -54,7 +58,7 @@ const Navbar = ({ role }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="flex justify-between h-20">
           <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-2 group">
+            <Link to={user && role ? `/${role}` : '/'} className="flex items-center space-x-2 group">
               <div className={`h-12 w-12 rounded-xl overflow-hidden shadow-md ring-2 transition-all duration-300 transform group-hover:scale-110 ${isDarkMode ? 'ring-orange-500/50' : 'ring-white/30'
                 }`}>
                 <img
@@ -141,33 +145,28 @@ const Navbar = ({ role }) => {
                   {isDropdownOpen && (
                     <div className={`absolute right-0 mt-2 w-48 rounded-xl shadow-xl z-20 py-2 ${isDarkMode ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-800'
                       }`}>
-                      <Link
-                        to={`/${role}/profile`}
-                        className={`flex items-center px-4 py-2 text-sm hover:text-indigo-600 ${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-indigo-50'
-                          }`}
-                        onClick={() => setIsDropdownOpen(false)}
-                      >
-                        <User className="h-4 w-4 mr-2" />
-                        <span>Your Profile</span>
-                      </Link>
-                      <Link
-                        to={`/${role}/notifications`}
-                        className={`flex items-center px-4 py-2 text-sm hover:text-indigo-600 ${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-indigo-50'
-                          }`}
-                        onClick={() => setIsDropdownOpen(false)}
-                      >
-                        <Bell className="h-4 w-4 mr-2" />
-                        <span>Notifications</span>
-                      </Link>
-                      <Link
-                        to="/register"
-                        className={`flex items-center px-4 py-2 text-sm hover:text-indigo-600 ${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-indigo-50'
-                          }`}
-                        onClick={() => setIsDropdownOpen(false)}
-                      >
-                        <User className="h-4 w-4 mr-2" />
-                        <span>Register New Account</span>
-                      </Link>
+                      {!(role === 'player' && !user?.teamId) && (
+                        <Link
+                          to={`/${role}/notifications`}
+                          className={`flex items-center px-4 py-2 text-sm hover:text-indigo-600 ${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-indigo-50'
+                            }`}
+                          onClick={() => setIsDropdownOpen(false)}
+                        >
+                          <Bell className="h-4 w-4 mr-2" />
+                          <span>Notifications</span>
+                        </Link>
+                      )}
+                      {role !== 'player' && (
+                        <Link
+                          to="/register"
+                          className={`flex items-center px-4 py-2 text-sm hover:text-indigo-600 ${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-indigo-50'
+                            }`}
+                          onClick={() => setIsDropdownOpen(false)}
+                        >
+                          <User className="h-4 w-4 mr-2" />
+                          <span>Register New Account</span>
+                        </Link>
+                      )}
                       <div className={`my-1 border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}></div>
                       <button
                         onClick={() => {

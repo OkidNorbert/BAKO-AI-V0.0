@@ -99,6 +99,7 @@ function App() {
                 <Route path="profile" element={<PlayerProfile />} />
                 <Route path="skills" element={<SkillAnalytics />} />
                 <Route path="training" element={<TrainingVideos />} />
+                <Route path="notifications" element={<Notifications />} />
               </Route>
             </Route>
 

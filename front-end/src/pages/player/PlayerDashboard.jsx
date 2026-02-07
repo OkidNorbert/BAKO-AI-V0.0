@@ -72,18 +72,24 @@ const PlayerDashboard = () => {
 
       // Mock data logic removed to prepare for real backend integration
 
-      // Fetch all player data
-      const [videosResponse, historyResponse, notificationsResponse, metricsResponse, trendsResponse] = await Promise.all([
+      // Fetch player data (notifications only for team-created accounts)
+      const promises = [
         api.get('/player/training-videos').catch(() => ({ data: [] })),
         api.get('/player/training-history').catch(() => ({ data: [] })),
-        api.get('/player/notifications').catch(() => ({ data: [] })),
+        ...(user?.teamId ? [api.get('/player/notifications').catch(() => ({ data: [] }))] : []),
         api.get('/player/performance-metrics').catch(() => ({ data: {} })),
         api.get('/player/skill-trends').catch(() => ({ data: { shooting: [], dribbling: [], defense: [], fitness: [] } }))
-      ]);
+      ];
+      const results = await Promise.all(promises);
+      const videosResponse = results[0];
+      const historyResponse = results[1];
+      const metricsResponse = user?.teamId ? results[3] : results[2];
+      const trendsResponse = user?.teamId ? results[4] : results[3];
+      const notificationsResponse = user?.teamId ? results[2] : null;
 
       setTrainingVideos(videosResponse.data || []);
       setTrainingHistory(historyResponse.data || []);
-      setNotifications(notificationsResponse.data || []);
+      setNotifications(notificationsResponse?.data || []);
 
       // Set performance metrics with robust fallback
       const metricsData = metricsResponse.data || {};
@@ -170,44 +176,46 @@ const PlayerDashboard = () => {
           </div>
         )}
 
-        <div className={`mb-6 rounded-xl shadow-lg overflow-hidden`}>
-          <div className={`px-6 py-4 text-xl font-semibold ${isDarkMode ? 'bg-gray-700' : 'bg-indigo-50'}`}>
-            <h2 className="flex items-center">
-              <Bell className={`h-6 w-6 mr-2 ${isDarkMode ? 'text-orange-400' : 'text-indigo-600'}`} />
-              Recent Notifications
-              {unreadCount > 0 && <span className={`ml-2 px-2 py-0.5 text-xs rounded-full ${isDarkMode ? 'bg-indigo-900 text-indigo-300' : 'bg-indigo-100 text-indigo-700'}`}>{unreadCount} new</span>}
-            </h2>
-          </div>
-          <div className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-            {notifications.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8">
-                <Bell className={`h-12 w-12 mb-3 ${isDarkMode ? 'text-gray-600' : 'text-gray-300'}`} />
-                <p className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>No notifications yet.</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {notifications.slice(0, 3).map((n, i) => (
-                  <div key={n.id || i} className={`p-4 rounded-lg ${n.read ? (isDarkMode ? 'bg-gray-700' : 'bg-gray-50') : (isDarkMode ? 'bg-indigo-900/30 border border-indigo-700' : 'bg-indigo-50 border border-indigo-200')}`} onClick={() => !n.read && markAsRead(n.id)}>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className={`font-medium ${!n.read && (isDarkMode ? 'text-indigo-300' : 'text-indigo-700')}`}>{n.title}</h3>
-                        <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>{n.message}</p>
+        {user?.teamId && (
+          <div className={`mb-6 rounded-xl shadow-lg overflow-hidden`}>
+            <div className={`px-6 py-4 text-xl font-semibold ${isDarkMode ? 'bg-gray-700' : 'bg-indigo-50'}`}>
+              <h2 className="flex items-center">
+                <Bell className={`h-6 w-6 mr-2 ${isDarkMode ? 'text-orange-400' : 'text-indigo-600'}`} />
+                Recent Notifications
+                {unreadCount > 0 && <span className={`ml-2 px-2 py-0.5 text-xs rounded-full ${isDarkMode ? 'bg-indigo-900 text-indigo-300' : 'bg-indigo-100 text-indigo-700'}`}>{unreadCount} new</span>}
+              </h2>
+            </div>
+            <div className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+              {notifications.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8">
+                  <Bell className={`h-12 w-12 mb-3 ${isDarkMode ? 'text-gray-600' : 'text-gray-300'}`} />
+                  <p className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>No notifications yet.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {notifications.slice(0, 3).map((n, i) => (
+                    <div key={n.id || i} className={`p-4 rounded-lg ${n.read ? (isDarkMode ? 'bg-gray-700' : 'bg-gray-50') : (isDarkMode ? 'bg-indigo-900/30 border border-indigo-700' : 'bg-indigo-50 border border-indigo-200')}`} onClick={() => !n.read && markAsRead(n.id)}>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className={`font-medium ${!n.read && (isDarkMode ? 'text-indigo-300' : 'text-indigo-700')}`}>{n.title}</h3>
+                          <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>{n.message}</p>
+                        </div>
+                        <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{formatDate(n.createdAt)}</span>
                       </div>
-                      <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{formatDate(n.createdAt)}</span>
                     </div>
-                  </div>
-                ))}
-                {notifications.length > 3 && (
-                  <div className="text-center mt-4">
-                    <Link to="/player/notifications" className={`inline-flex items-center px-4 py-2 rounded-md ${isDarkMode ? 'bg-indigo-900 hover:bg-indigo-800 text-indigo-100' : 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700'}`}>
-                      View All ({notifications.length}) <ChevronRight className="h-4 w-4 ml-1" />
-                    </Link>
-                  </div>
-                )}
-              </div>
-            )}
+                  ))}
+                  {notifications.length > 3 && (
+                    <div className="text-center mt-4">
+                      <Link to="/player/notifications" className={`inline-flex items-center px-4 py-2 rounded-md ${isDarkMode ? 'bg-indigo-900 hover:bg-indigo-800 text-indigo-100' : 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700'}`}>
+                        View All ({notifications.length}) <ChevronRight className="h-4 w-4 ml-1" />
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Performance Metrics Section */}
         <div className={`rounded-xl shadow-lg overflow-hidden mb-6`}>
