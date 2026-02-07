@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
-import { MOCK_AUTH_ENABLED } from '@/utils/mockAuth';
 import api from '@/utils/axiosConfig';
 import {
   User,
@@ -54,29 +53,7 @@ const PlayerProfile = () => {
       setLoading(true);
       setError('');
 
-      if (MOCK_AUTH_ENABLED) {
-        console.log('Mock mode: skipping API profile fetch');
-        // Split name into first and last if possible
-        const nameParts = (user?.name || 'New Player').split(' ');
-        setProfile({
-          firstName: nameParts[0] || '',
-          lastName: nameParts.slice(1).join(' ') || '',
-          email: user?.email || 'player@example.com',
-          phone: '(555) 123-4567',
-          address: '123 Basketball Ave, Hoop City',
-          dateOfBirth: '2005-01-01',
-          position: 'Point Guard',
-          jerseyNumber: '10',
-          experience: '5',
-          height: "6'2\"",
-          weight: '185 lbs',
-          bio: 'Aspiring professional player focusing on shooting consistency and playmaking.',
-          profileImage: null,
-          createdAt: new Date().toISOString()
-        });
-        setLoading(false);
-        return;
-      }
+      // Mock data logic removed to prepare for real backend integration
 
       const response = await api.get('/player/profile');
       setProfile(response.data);
@@ -134,26 +111,21 @@ const PlayerProfile = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSaving(true);
+    setError('');
+    setSuccess('');
+
+    // Mock save logic removed
     try {
-      setSaving(true);
-      setError('');
-      setSuccess('');
-
-      if (MOCK_AUTH_ENABLED) {
-        console.log('Mock mode: simulating profile save');
-        await new Promise(resolve => setTimeout(resolve, 800)); // Simulate delay
-        setSuccess('Profile updated successfully (Mock Mode)');
-        setIsEditing(false);
-        setSaving(false);
-        return;
-      }
-
       await api.put('/player/profile', profile);
-      setSuccess('Profile updated successfully');
+      setSuccess('Profile updated successfully!');
       setIsEditing(false);
     } catch (err) {
       console.error('Error updating profile:', err);
-      setError('Failed to update profile. Please try again later.');
+      setError(err.response?.data?.message || 'Failed to update profile. Please try again.');
+      if (err.response?.status === 401) {
+        setError('Session expired. Please login again.');
+      }
     } finally {
       setSaving(false);
     }

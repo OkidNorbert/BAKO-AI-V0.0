@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '@/context/ThemeContext';
-import { MOCK_AUTH_ENABLED } from '@/utils/mockAuth';
-import { MOCK_TRAINING_VIDEOS } from '@/utils/mockData';
 import api from '@/utils/axiosConfig';
 import { Video, Upload, PlayCircle, Calendar, RefreshCw, AlertCircle } from 'lucide-react';
 
@@ -21,12 +19,7 @@ const TrainingVideos = () => {
       setLoading(true);
       setError('');
 
-      if (MOCK_AUTH_ENABLED) {
-        console.log('Mock mode: skipping API videos fetch');
-        setVideos(MOCK_TRAINING_VIDEOS);
-        setLoading(false);
-        return;
-      }
+      // Mock data logic removed to prepare for real backend integration
 
       const response = await api.get('/player/training-videos');
       setVideos(Array.isArray(response.data) ? response.data : response.data?.videos || []);
@@ -49,21 +42,7 @@ const TrainingVideos = () => {
     setUploading(true);
     setError('');
     try {
-      if (MOCK_AUTH_ENABLED) {
-        console.log('Mock mode: simulating video upload');
-        await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate upload time
-
-        // Add a new mock video
-        const newVideo = {
-          id: Math.random().toString(36).substr(2, 9),
-          title: file.name,
-          uploadedAt: new Date().toISOString(),
-          status: 'processing'
-        };
-        setVideos(prev => [newVideo, ...prev]);
-        setUploading(false);
-        return;
-      }
+      // Mock data logic removed to prepare for real backend integration
 
       const formData = new FormData();
       formData.append('video', file);

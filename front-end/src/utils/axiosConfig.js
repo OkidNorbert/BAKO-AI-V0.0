@@ -1,7 +1,5 @@
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
-import { MOCK_AUTH_ENABLED } from './mockAuth';
-
 // Create axios instance with default config
 const api = axios.create({
   baseURL: 'http://localhost:5000/api',  // Explicitly point to server port
@@ -192,10 +190,14 @@ api.interceptors.response.use(
       }
     }
 
-    // Handle errors generically - suppress toasts in mock mode
-    if (!MOCK_AUTH_ENABLED) {
-      const errorMessage = error.response?.data?.message || 'An error occurred. Please try again later.';
+    // Handle errors generically
+    const errorMessage = error.response?.data?.message || 'An error occurred. Please try again later.';
+
+    // Suppress toasts if this is a developer bypass session
+    if (localStorage.getItem('isDevSession') !== 'true') {
       toast.error(errorMessage);
+    } else {
+      console.log('Suppressing error toast in dev session:', errorMessage);
     }
     return Promise.reject(error);
   }

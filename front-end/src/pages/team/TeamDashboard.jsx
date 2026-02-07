@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
-import { MOCK_AUTH_ENABLED } from '../../utils/mockAuth';
-import { MOCK_TEAM_STATS, MOCK_TEAM_NOTIFICATIONS } from '../../utils/mockData';
 import { adminAPI } from '../../services/api';
 import {
   Users,
@@ -46,19 +44,7 @@ const TeamDashboard = () => {
         setLoading(true);
         setError('');
 
-        if (MOCK_AUTH_ENABLED) {
-          console.log('Mock mode: skipping API calls in TeamDashboard');
-          setStats({
-            totalPlayers: MOCK_TEAM_STATS.totalPlayers,
-            totalMatches: MOCK_TEAM_STATS.totalMatches,
-            matchesAnalyzed: MOCK_TEAM_STATS.matchesAnalyzed,
-            winRate: MOCK_TEAM_STATS.winRate,
-            recentActivities: MOCK_TEAM_NOTIFICATIONS.slice(0, 5),
-            performanceData: MOCK_TEAM_STATS.performanceData,
-          });
-          setLoading(false);
-          return;
-        }
+        // Mock data logic removed to prepare for real backend integration
 
         const [statsResponse, notificationsResponse] = await Promise.all([
           adminAPI.getStats().catch(() => ({ data: {} })),

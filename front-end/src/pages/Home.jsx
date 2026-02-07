@@ -46,7 +46,7 @@ const Home = () => {
             </h1>
             <p className={`text-xl sm:text-2xl ${isDarkMode ? 'text-gray-300' : 'text-indigo-900'
               } mb-8 max-w-3xl mx-auto font-medium`}>
-              Elevate Your Game. AI-Powered Basketball Performance Analysis for Teams and Players.
+              Elevate Your Game. AI-Powered Basketball Skill and Performance Analysis for Teams and Players.
             </p>
 
             <div className="flex flex-col sm:flex-row justify-center gap-6 mt-10">
@@ -153,21 +153,21 @@ const Home = () => {
             <div className="aspect-w-1 aspect-h-1 rounded-2xl overflow-hidden shadow-lg transform transition duration-300 hover:scale-102">
               <img
                 src="https://images.unsplash.com/photo-1546519638-68e109498ffc?q=80&w=2090&auto=format&fit=crop"
-                alt="Basketball hoop"
+                alt="Gallery 1"
                 className="w-full h-full object-cover"
               />
             </div>
             <div className="aspect-w-1 aspect-h-1 rounded-2xl overflow-hidden shadow-lg transform transition duration-300 hover:scale-102 mt-10 md:mt-20">
               <img
                 src="https://images.unsplash.com/photo-1519861531473-920026393112?q=80&w=2076&auto=format&fit=crop"
-                alt="Players in action"
+                alt="Gallery 2"
                 className="w-full h-full object-cover"
               />
             </div>
             <div className="aspect-w-1 aspect-h-1 rounded-2xl overflow-hidden shadow-lg transform transition duration-300 hover:scale-102">
               <img
                 src="https://images.unsplash.com/photo-1518407613690-d9fc990e795f?q=80&w=2070&auto=format&fit=crop"
-                alt="Training drill"
+                alt="Gallery 3"
                 className="w-full h-full object-cover"
               />
             </div>

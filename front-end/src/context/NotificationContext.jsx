@@ -1,8 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '@/utils/axiosConfig';
 import { useAuth } from './AuthContext';
-import { MOCK_AUTH_ENABLED } from '@/utils/mockAuth';
-import { MOCK_NOTIFICATIONS } from '@/utils/mockData';
 
 const NotificationContext = createContext(null);
 
@@ -18,14 +16,12 @@ export const NotificationProvider = ({ children }) => {
     if (isAuthenticated) {
       fetchNotifications();
 
-      // Set up polling for new notifications every minute (only if not in mock mode)
-      if (!MOCK_AUTH_ENABLED) {
-        const intervalId = setInterval(() => {
-          fetchNotifications();
-        }, 60000);
+      // Polling for new notifications every minute
+      const intervalId = setInterval(() => {
+        fetchNotifications();
+      }, 60000);
 
-        return () => clearInterval(intervalId);
-      }
+      return () => clearInterval(intervalId);
     }
   }, [isAuthenticated]);
 
@@ -49,12 +45,7 @@ export const NotificationProvider = ({ children }) => {
         return;
       }
 
-      if (MOCK_AUTH_ENABLED) {
-        console.log(`Mock mode: Using test notifications for role: ${role}`);
-        setNotifications(MOCK_NOTIFICATIONS);
-        setLoading(false);
-        return;
-      }
+      // Mock data logic removed to prepare for real backend integration
 
       console.log(`Fetching notifications for role: ${role}`);
 
@@ -83,39 +74,7 @@ export const NotificationProvider = ({ children }) => {
         // For other errors, try to continue with fallback data
       }
 
-      // Use the test real-time notification placeholder
-      console.log('Using a test real-time notification placeholder');
-      const testNotifications = [
-        {
-          id: '1',
-          title: 'Real-time Test Notification',
-          message: 'This is a test notification from the BAKO notification system.',
-          type: 'alert',
-          read: false,
-          createdAt: new Date(),
-          source: 'https://via.placeholder.com/40x40?text=DS:1'
-        },
-        {
-          id: '2',
-          title: 'Training Session Completed',
-          message: 'Your training session was analyzed and is ready for review.',
-          type: 'training',
-          read: true,
-          createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
-          source: 'https://via.placeholder.com/40x40?text=DS:2'
-        },
-        {
-          id: '3',
-          title: 'Important System Alert',
-          message: 'The basketball analytics system will be under maintenance this Friday for updates.',
-          type: 'alert',
-          read: false,
-          createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-          source: 'https://via.placeholder.com/40x40?text=DS:3'
-        }
-      ];
-
-      setNotifications(testNotifications);
+      setNotifications([]);
     } catch (err) {
       console.error('Error in fetchNotifications:', err);
 
@@ -128,15 +87,20 @@ export const NotificationProvider = ({ children }) => {
       }
 
       // In case of complete failure, show a single error notification
-      setNotifications([{
-        id: 'error-1',
-        title: 'Notification System Error',
-        message: 'Could not connect to notification service. Please try again later.',
-        type: 'alert',
-        read: false,
-        createdAt: new Date(),
-        source: 'https://via.placeholder.com/40x40?text=ERROR'
-      }]);
+      // Only show error card if not in a dev session
+      if (localStorage.getItem('isDevSession') !== 'true') {
+        setNotifications([{
+          id: 'error-1',
+          title: 'Notification System Error',
+          message: 'Could not connect to notification service. Please try again later.',
+          type: 'alert',
+          read: false,
+          createdAt: new Date(),
+          source: 'https://via.placeholder.com/40x40?text=ERROR'
+        }]);
+      } else {
+        setNotifications([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -166,12 +130,6 @@ export const NotificationProvider = ({ children }) => {
 
       if (!role) {
         console.warn('No user role found, cannot mark notification as read');
-        return;
-      }
-
-      // Skip API call in mock mode
-      if (MOCK_AUTH_ENABLED) {
-        setLoading(false);
         return;
       }
 
@@ -206,12 +164,6 @@ export const NotificationProvider = ({ children }) => {
         return;
       }
 
-      // Skip API call in mock mode
-      if (MOCK_AUTH_ENABLED) {
-        setLoading(false);
-        return;
-      }
-
       // Attempt to update on the server
       try {
         await api.put(`/${role}/notifications/read-all`);
@@ -240,12 +192,6 @@ export const NotificationProvider = ({ children }) => {
 
       if (!role) {
         console.warn('No user role found, cannot delete notification');
-        return;
-      }
-
-      // Skip API call in mock mode
-      if (MOCK_AUTH_ENABLED) {
-        setLoading(false);
         return;
       }
 

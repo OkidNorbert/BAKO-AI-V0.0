@@ -18,8 +18,6 @@ import {
 } from 'lucide-react';
 import { adminAPI } from '../../../services/api';
 import { Menu, Transition } from '@headlessui/react';
-import { MOCK_AUTH_ENABLED } from '@/utils/mockAuth';
-import { MOCK_TEAM_NOTIFICATIONS } from '@/utils/mockData';
 
 const TeamNavbar = ({ onSidebarToggle }) => {
   const navigate = useNavigate();
@@ -37,12 +35,7 @@ const TeamNavbar = ({ onSidebarToggle }) => {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        if (MOCK_AUTH_ENABLED) {
-          console.log('Mock mode: skipping API notifications fetch');
-          setNotifications(MOCK_TEAM_NOTIFICATIONS);
-          setCommunications([]);
-          return;
-        }
+        // Mock data logic removed to prepare for real backend integration
 
         // Fetch notifications using adminAPI
         const notificationsResponse = await adminAPI.getNotifications();
@@ -216,8 +209,8 @@ const TeamNavbar = ({ onSidebarToggle }) => {
 
   return (
     <nav className={`border-b transition-colors duration-300 ${isDarkMode
-        ? 'bg-gradient-to-r from-gray-900 via-indigo-950 to-purple-900 shadow-xl border-gray-700'
-        : 'bg-gradient-to-r from-blue-500 to-indigo-600 shadow-lg border-blue-600'
+      ? 'bg-gradient-to-r from-gray-900 via-indigo-950 to-purple-900 shadow-xl border-gray-700'
+      : 'bg-gradient-to-r from-blue-500 to-indigo-600 shadow-lg border-blue-600'
       }`}>
       {/* African pattern decoration - top border */}
       <div className="h-1 w-full bg-gradient-to-r from-yellow-400 via-red-500 to-pink-500"></div>
@@ -229,8 +222,8 @@ const TeamNavbar = ({ onSidebarToggle }) => {
               type="button"
               onClick={toggleSidebar}
               className={`p-2 rounded-md ${isDarkMode
-                  ? 'text-gray-300 hover:text-white hover:bg-gray-700'
-                  : 'text-white hover:text-white hover:bg-white hover:bg-opacity-20'
+                ? 'text-gray-300 hover:text-white hover:bg-gray-700'
+                : 'text-white hover:text-white hover:bg-white hover:bg-opacity-20'
                 }`}
             >
               {isSidebarOpen ? (
@@ -245,8 +238,8 @@ const TeamNavbar = ({ onSidebarToggle }) => {
             <button
               onClick={toggleTheme}
               className={`p-2 rounded-md ${isDarkMode
-                  ? 'bg-gray-800 text-yellow-400 hover:bg-gray-700'
-                  : 'bg-white bg-opacity-20 text-white hover:bg-opacity-30'
+                ? 'bg-gray-800 text-yellow-400 hover:bg-gray-700'
+                : 'bg-white bg-opacity-20 text-white hover:bg-opacity-30'
                 }`}
               aria-label="Toggle theme"
             >
@@ -262,8 +255,8 @@ const TeamNavbar = ({ onSidebarToggle }) => {
               <button
                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
                 className={`p-2 rounded-md relative ${isDarkMode
-                    ? 'text-gray-300 hover:text-white hover:bg-gray-700'
-                    : 'text-white hover:bg-white hover:bg-opacity-20'
+                  ? 'text-gray-300 hover:text-white hover:bg-gray-700'
+                  : 'text-white hover:bg-white hover:bg-opacity-20'
                   }`}
               >
                 <Bell className="h-5 w-5" />
@@ -333,8 +326,8 @@ const TeamNavbar = ({ onSidebarToggle }) => {
               <Menu as="div" className="relative inline-block text-left">
                 <div>
                   <Menu.Button className={`flex items-center space-x-2 p-2 rounded-lg transition-all duration-200 ${isDarkMode
-                      ? 'hover:bg-gray-800'
-                      : 'hover:bg-white hover:bg-opacity-20'
+                    ? 'hover:bg-gray-800'
+                    : 'hover:bg-white hover:bg-opacity-20'
                     }`}>
                     <div className={`h-8 w-8 rounded-full overflow-hidden border-2 ${isDarkMode ? 'border-yellow-400' : 'border-white'
                       }`}>
@@ -369,8 +362,8 @@ const TeamNavbar = ({ onSidebarToggle }) => {
                   leaveTo="transform opacity-0 scale-95"
                 >
                   <Menu.Items className={`absolute right-0 mt-2 w-56 origin-top-right rounded-xl shadow-lg ring-1 ring-opacity-5 focus:outline-none ${isDarkMode
-                      ? 'bg-gray-800 ring-gray-700'
-                      : 'bg-white ring-gray-200'
+                    ? 'bg-gray-800 ring-gray-700'
+                    : 'bg-white ring-gray-200'
                     }`}>
                     <div className="py-2">
                       <div className={`px-4 py-3 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'
@@ -384,12 +377,12 @@ const TeamNavbar = ({ onSidebarToggle }) => {
                           <button
                             onClick={() => navigate('/admin/profile')}
                             className={`flex w-full items-center px-4 py-2 text-sm ${active
-                                ? isDarkMode
-                                  ? 'bg-gray-700 text-white'
-                                  : 'bg-gray-100 text-gray-900'
-                                : isDarkMode
-                                  ? 'text-gray-300'
-                                  : 'text-gray-700'
+                              ? isDarkMode
+                                ? 'bg-gray-700 text-white'
+                                : 'bg-gray-100 text-gray-900'
+                              : isDarkMode
+                                ? 'text-gray-300'
+                                : 'text-gray-700'
                               }`}
                           >
                             <User className="mr-3 h-5 w-5" />
@@ -402,12 +395,12 @@ const TeamNavbar = ({ onSidebarToggle }) => {
                           <button
                             onClick={() => navigate('/admin/settings')}
                             className={`flex w-full items-center px-4 py-2 text-sm ${active
-                                ? isDarkMode
-                                  ? 'bg-gray-700 text-white'
-                                  : 'bg-gray-100 text-gray-900'
-                                : isDarkMode
-                                  ? 'text-gray-300'
-                                  : 'text-gray-700'
+                              ? isDarkMode
+                                ? 'bg-gray-700 text-white'
+                                : 'bg-gray-100 text-gray-900'
+                              : isDarkMode
+                                ? 'text-gray-300'
+                                : 'text-gray-700'
                               }`}
                           >
                             <Settings className="mr-3 h-5 w-5" />
@@ -422,12 +415,12 @@ const TeamNavbar = ({ onSidebarToggle }) => {
                             <button
                               onClick={handleLogout}
                               className={`flex w-full items-center px-4 py-2 text-sm ${active
-                                  ? isDarkMode
-                                    ? 'bg-gray-700 text-red-400'
-                                    : 'bg-gray-100 text-red-600'
-                                  : isDarkMode
-                                    ? 'text-red-400'
-                                    : 'text-red-600'
+                                ? isDarkMode
+                                  ? 'bg-gray-700 text-red-400'
+                                  : 'bg-gray-100 text-red-600'
+                                : isDarkMode
+                                  ? 'text-red-400'
+                                  : 'text-red-600'
                                 }`}
                             >
                               <LogOut className="mr-3 h-5 w-5" />

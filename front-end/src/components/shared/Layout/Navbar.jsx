@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { useTheme } from '../../../context/ThemeContext';
 import { Bell, Calendar, User, Home, FileText, Trophy, Sun, Moon, ChevronDown, LogOut, Video, TrendingUp } from 'lucide-react';
-import BasketballLogo from '../BasketballLogo';
+
 
 const Navbar = ({ role }) => {
   const { user, logout } = useAuth();
@@ -55,9 +55,13 @@ const Navbar = ({ role }) => {
         <div className="flex justify-between h-20">
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-2 group">
-              <div className={`p-1 rounded-full transition-all duration-300 transform group-hover:scale-110 ${isDarkMode ? 'bg-gray-800' : 'bg-white'
+              <div className={`h-12 w-12 rounded-xl overflow-hidden shadow-md ring-2 transition-all duration-300 transform group-hover:scale-110 ${isDarkMode ? 'ring-orange-500/50' : 'ring-white/30'
                 }`}>
-                <BasketballLogo className={`h-10 w-10`} color={isDarkMode ? '#FB923C' : '#4F46E5'} />
+                <img
+                  src="https://images.unsplash.com/photo-1546519638-68e109498ffc?q=80&w=2090&auto=format&fit=crop"
+                  alt="BAKO"
+                  className="h-full w-full object-cover"
+                />
               </div>
               <div className="flex flex-col">
                 <span className="text-2xl font-bold text-white">BAKO</span>
@@ -87,14 +91,7 @@ const Navbar = ({ role }) => {
                   </Link>
                 );
               })}
-              {/* Always show Home link for easy exit from dashboard */}
-              <Link
-                to="/"
-                className={`flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-white hover:bg-white hover:bg-opacity-20`}
-              >
-                <Home className="h-5 w-5" />
-                <span className="ml-2">Landing Page</span>
-              </Link>
+
             </div>
 
             <div className="flex items-center space-x-5">
@@ -109,7 +106,7 @@ const Navbar = ({ role }) => {
                 {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
               </button>
 
-              {user ? (
+              {user && !['/login', '/register'].includes(location.pathname) ? (
                 <div className="relative">
                   <button
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}

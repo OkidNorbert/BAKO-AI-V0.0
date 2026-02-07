@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTheme } from '../context/ThemeContext';
-import { Target, Users, Globe, Award, Dribbble, Heart } from 'lucide-react';
+import { Target, Users, Globe, Award, Heart } from 'lucide-react';
+
 
 const About = () => {
     const { isDarkMode } = useTheme();
@@ -75,11 +76,11 @@ const About = () => {
                         { icon: <Target className="w-12 h-12" />, title: "Precision", desc: "Pixel-perfect tracking.", color: "text-red-500", bg: "bg-red-100" },
                         { icon: <Users className="w-12 h-12" />, title: "Teamwork", desc: "Built for coaches & squads.", color: "text-blue-500", bg: "bg-blue-100" },
                         { icon: <Globe className="w-12 h-12" />, title: "Global", desc: "From Africa to the World.", color: "text-green-500", bg: "bg-green-100" },
-                        { icon: <Trophy className="w-12 h-12" />, title: "Excellence", desc: "Championship standards.", color: "text-yellow-500", bg: "bg-yellow-100" }
+                        { icon: <img src="https://images.unsplash.com/photo-1546519638-68e109498ffc?q=80&w=2090&auto=format&fit=crop" alt="Excellence" className="w-12 h-12 rounded-lg object-cover shadow-sm" />, title: "Excellence", desc: "Championship standards.", color: "text-orange-500", bg: "bg-orange-100" }
                     ].map((item, idx) => (
                         <div key={idx} className={`relative p-8 rounded-3xl border-2 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl ${isDarkMode
-                                ? 'bg-gray-800 border-gray-700 hover:border-orange-500'
-                                : 'bg-white border-gray-100 hover:border-orange-400'
+                            ? 'bg-gray-800 border-gray-700 hover:border-orange-500'
+                            : 'bg-white border-gray-100 hover:border-orange-400'
                             }`}>
                             <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 ${isDarkMode ? 'bg-gray-700' : item.bg} ${item.color}`}>
                                 {item.icon}
@@ -99,7 +100,6 @@ const About = () => {
     );
 };
 
-// Simple Icon component wrapper if needed, or import directly
-import { Trophy } from 'lucide-react';
+
 
 export default About;

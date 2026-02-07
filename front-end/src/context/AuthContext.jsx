@@ -1,6 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import api from '@/utils/axiosConfig';
-import { MOCK_AUTH_ENABLED, mockRegister, mockLogin, mockLogout } from '@/utils/mockAuth';
 
 const AuthContext = createContext(null);
 
@@ -42,12 +41,10 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     console.log('AuthContext: Login attempt for:', email);
+    // Clear dev session flag on real login
+    localStorage.removeItem('isDevSession');
     try {
-      // Use mock auth if enabled, otherwise use real API
-      const response = MOCK_AUTH_ENABLED
-        ? await mockLogin(email, password)
-        : await api.post('/auth/login', { email, password });
-
+      const response = await api.post('/auth/login', { email, password });
       console.log('AuthContext: Login response:', response.data);
 
       if (response.data && response.data.accessToken) {
@@ -101,10 +98,7 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       setLoading(true);
-      // Use mock auth if enabled, otherwise use real API
-      const response = MOCK_AUTH_ENABLED
-        ? await mockRegister(userData)
-        : await api.post('/auth/register', userData);
+      const response = await api.post('/auth/register', userData);
       const { accessToken, refreshToken, user } = response.data;
 
       localStorage.setItem('accessToken', accessToken);
@@ -127,27 +121,19 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      // Call the server-side logout endpoint to record the logout action
-      // Only if we have a token, otherwise just clear local state
       const token = localStorage.getItem('accessToken');
       if (token) {
-        // Use mock auth if enabled, otherwise use real API
-        if (MOCK_AUTH_ENABLED) {
-          await mockLogout();
-        } else {
-          await api.post('/auth/logout');
-        }
+        await api.post('/auth/logout');
       }
     } catch (error) {
       console.error('Error logging out:', error);
-      // Continue with logout even if the server request fails
     } finally {
-      // Clear local storage and state regardless of server response
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('userRole');
       localStorage.removeItem('userName');
       localStorage.removeItem('userId');
+      localStorage.removeItem('isDevSession'); // Clear dev session flag
       setUser(null);
       setIsAuthenticated(false);
     }
@@ -161,14 +147,15 @@ export const AuthProvider = ({ children }) => {
       email: `dev-${role}@example.com`
     };
 
-    // Create a fake JWT token that can be parsed by the frontend
-    // Header.Payload.Signature
+    // Set dev session flag to suppress network error popups
+    localStorage.setItem('isDevSession', 'true');
+
     const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
     const payload = btoa(JSON.stringify({
       user: mockUser,
       role: role,
       id: mockUser.id,
-      exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24) // 24 hours
+      exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24)
     }));
     const signature = "fake-signature";
     const fakeToken = `${header}.${payload}.${signature}`;
@@ -212,4 +199,4 @@ export const useAuth = () => {
   return context;
 };
 
-export default AuthContext; 
+export default AuthContext;
