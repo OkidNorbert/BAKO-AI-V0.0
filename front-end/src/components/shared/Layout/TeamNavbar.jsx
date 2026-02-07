@@ -12,8 +12,6 @@ import {
   Moon,
   X,
   ChevronDown,
-  MessageSquare,
-  Mail,
   Settings
 } from 'lucide-react';
 import { adminAPI } from '../../../services/api';
@@ -26,7 +24,6 @@ const TeamNavbar = ({ onSidebarToggle }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
-  const [communications, setCommunications] = useState([]);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const userMenuRef = useRef(null);
   const notificationsRef = useRef(null);
@@ -58,17 +55,6 @@ const TeamNavbar = ({ onSidebarToggle }) => {
           }
         } else {
           setNotifications([]);
-        }
-
-        // Fetch communications
-        try {
-          const communicationsResponse = await adminAPI.getCommunications();
-
-          // Ensure communications is an array
-          setCommunications(Array.isArray(communicationsResponse.data) ? communicationsResponse.data : []);
-        } catch (commError) {
-          console.error('Error fetching communications:', commError);
-          setCommunications([]);
         }
       } catch (error) {
         console.error('Error fetching notifications:', error);
@@ -134,43 +120,25 @@ const TeamNavbar = ({ onSidebarToggle }) => {
     }
   };
 
-  // Safely combine notifications and communications for the dropdown
-  const combinedItems = [
-    ...(Array.isArray(notifications) ? notifications.map(item => ({
-      ...item,
-      source: 'notification',
-      title: item.title || 'Notification',
-      date: item.createdAt
-    })) : []),
-    ...(Array.isArray(communications) ? communications.filter(comm => comm?.type === 'notification').map(item => ({
-      id: `comm-${item._id || item.id || Date.now() + Math.random().toString(36).substring(2, 9)}`,
-      title: item.subject || 'Message',
-      message: item.content,
-      type: 'info',
-      read: false,
-      createdAt: item.sentDate,
-      source: 'communication'
-    })) : [])
-  ].sort((a, b) => {
-    // Safely handle date parsing
-    try {
-      return new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt);
-    } catch (error) {
-      return 0;
-    }
-  });
+  const notificationItems = Array.isArray(notifications)
+    ? notifications.map(item => ({
+        ...item,
+        source: 'notification',
+        title: item.title || 'Notification',
+        date: item.createdAt
+      })).sort((a, b) => {
+        try {
+          return new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt);
+        } catch {
+          return 0;
+        }
+      })
+    : [];
 
-  const unreadCount = Array.isArray(combinedItems)
-    ? combinedItems.filter(item => !item.read).length
-    : 0;
+  const unreadCount = notificationItems.filter(item => !item.read).length;
 
   const getNotificationIcon = (item) => {
     if (!item) return null;
-
-    if (item.source === 'communication') {
-      return <Mail className="h-4 w-4 text-blue-500 mr-2" />;
-    }
-
     switch (item.type) {
       case 'success':
         return <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>;
@@ -185,24 +153,14 @@ const TeamNavbar = ({ onSidebarToggle }) => {
 
   const handleItemClick = async (item) => {
     if (!item) return;
-
-    if (item.source === 'notification') {
-      try {
-        await markNotificationAsRead(item.id);
-        // Update the notifications state to reflect the read status
-        setNotifications(prevNotifications =>
-          prevNotifications.map(notification =>
-            notification.id === item.id
-              ? { ...notification, read: true }
-              : notification
-          )
-        );
-        navigate('/admin/notifications');
-      } catch (error) {
-        console.error('Error marking notification as read:', error);
-      }
-    } else {
-      navigate('/admin/communications');
+    try {
+      await markNotificationAsRead(item.id);
+      setNotifications(prev =>
+        prev.map(n => (n.id === item.id ? { ...n, read: true } : n))
+      );
+      navigate('/team/notifications');
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
     }
     setIsNotificationsOpen(false);
   };
@@ -274,7 +232,7 @@ const TeamNavbar = ({ onSidebarToggle }) => {
                     <div className="flex justify-between items-center">
                       <h3 className="font-semibold">Notifications</h3>
                       <button
-                        onClick={() => navigate('/admin/notifications')}
+                        onClick={() => navigate('/team/notifications')}
                         className={`text-sm ${isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-500'
                           }`}
                       >
@@ -283,8 +241,8 @@ const TeamNavbar = ({ onSidebarToggle }) => {
                     </div>
                   </div>
                   <div className="max-h-96 overflow-y-auto">
-                    {combinedItems.length > 0 ? (
-                      combinedItems.map((item) => (
+                    {notificationItems.length > 0 ? (
+                      notificationItems.map((item) => (
                         <div
                           key={item.id}
                           className={`px-4 py-3 border-b cursor-pointer ${isDarkMode ? 'border-gray-700 hover:bg-gray-700' : 'border-gray-100 hover:bg-gray-50'
@@ -375,7 +333,7 @@ const TeamNavbar = ({ onSidebarToggle }) => {
                       <Menu.Item>
                         {({ active }) => (
                           <button
-                            onClick={() => navigate('/admin/profile')}
+                            onClick={() => navigate('/team/profile')}
                             className={`flex w-full items-center px-4 py-2 text-sm ${active
                               ? isDarkMode
                                 ? 'bg-gray-700 text-white'
@@ -393,7 +351,7 @@ const TeamNavbar = ({ onSidebarToggle }) => {
                       <Menu.Item>
                         {({ active }) => (
                           <button
-                            onClick={() => navigate('/admin/settings')}
+                            onClick={() => navigate('/team/settings')}
                             className={`flex w-full items-center px-4 py-2 text-sm ${active
                               ? isDarkMode
                                 ? 'bg-gray-700 text-white'

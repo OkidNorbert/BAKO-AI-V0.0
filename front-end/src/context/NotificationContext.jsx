@@ -217,14 +217,10 @@ export const NotificationProvider = ({ children }) => {
   // Get appropriate icon class based on notification type
   const getNotificationTypeClass = (type) => {
     switch (type) {
-      case 'payment':
-        return 'bg-purple-50 border-purple-200';
       case 'training':
         return 'bg-green-50 border-green-200';
       case 'alert':
         return 'bg-red-50 border-red-200';
-      case 'budget':
-        return 'bg-yellow-50 border-yellow-200';
       case 'success':
         return 'bg-green-50 border-green-200';
       default:

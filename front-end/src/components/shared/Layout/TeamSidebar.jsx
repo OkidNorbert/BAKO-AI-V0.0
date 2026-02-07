@@ -25,9 +25,6 @@ const AdminSidebar = ({ isOpen }) => {
     { path: '/team/settings', icon: Settings, label: 'Settings', color: 'from-purple-500 to-indigo-700' }
   ];
 
-  // Count unread messages in communications
-  const hasCommunicationsIndicator = false; // Will be implemented with real data
-
   return (
     <aside className={`fixed top-0 left-0 z-40 h-screen transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'
       } w-64 ${isDarkMode
@@ -80,11 +77,6 @@ const AdminSidebar = ({ isOpen }) => {
                   <>
                     <item.icon className={`w-5 h-5 ${!isActive && 'transition-transform group-hover:scale-110'}`} />
                     <span className="ml-3 font-medium">{item.label}</span>
-                    {item.path === '/team/communications' && hasCommunicationsIndicator && (
-                      <span className="inline-flex items-center justify-center w-5 h-5 ml-auto text-xs font-semibold text-white bg-red-500 rounded-full">
-                        !
-                      </span>
-                    )}
                   </>
                 )}
               </NavLink>

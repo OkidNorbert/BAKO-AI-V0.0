@@ -127,16 +127,6 @@ export const authAPI = {
   refreshToken: (refreshToken) => api.post('/auth/refresh-token', { refreshToken }),
 };
 
-// Incident API
-export const incidentAPI = {
-  getAllIncidents: () => api.get('/incidents'),
-  getIncidentById: (id) => api.get(`/incidents/${id}`),
-  createIncident: (data) => api.post('/incidents', data),
-  updateIncident: (id, data) => api.put(`/incidents/${id}`, data),
-  deleteIncident: (id) => api.delete(`/incidents/${id}`),
-  getIncidentStats: () => api.get('/incidents/stats'),
-};
-
 // Admin API
 export const adminAPI = {
   getUsers: () => api.get('/admin/users'),
@@ -160,40 +150,6 @@ export const adminAPI = {
   updateMatch: (matchId, data) => api.put(`/admin/matches/${matchId}`, data),
   deleteMatch: (matchId) => api.delete(`/admin/matches/${matchId}`),
 
-  // Attendance endpoints
-  getAttendance: (date) => {
-    const formattedDate = encodeURIComponent(date);
-    console.log(`Making request to /admin/attendance with date=${formattedDate}`);
-    return api.get(`/admin/attendance?date=${formattedDate}`);
-  },
-  addAttendanceRecord: (record) => api.post('/admin/attendance', record),
-  updateAttendanceStatus: (id, status) => api.patch(`/admin/attendance/${id}/status`, { status }),
-  deleteAttendanceRecord: (id) => api.delete(`/admin/attendance/${id}`),
-  getAttendanceReport: (date) => {
-    const formattedDate = encodeURIComponent(date);
-    console.log(`Making request to /admin/attendance/report with date=${formattedDate}`);
-    return api.get(`/admin/attendance/report?date=${formattedDate}`, { responseType: 'blob' });
-  },
-
-  // Payment endpoints
-  getPayments: async () => {
-    return api.get('/admin/payments');
-  },
-  processPayment: (paymentData) => api.post('/admin/payments', paymentData),
-  updatePaymentStatus: (paymentId, status) => api.patch(`/admin/payments/${paymentId}/status`, { status }),
-  getPaymentReceipt: (paymentId) => api.get(`/admin/payments/${paymentId}/receipt`, { responseType: 'blob' }),
-  markPlayerAsPaid: (playerId, paymentData) => api.post(`/admin/payments/player/${playerId}/paid`, paymentData),
-  // Player payment endpoints
-  getPlayerPayments: (playerId) => api.get(`/payments/player/${playerId}/history`),
-  recordPlayerPayment: (paymentData) => api.post(`/payments/player`, paymentData),
-  getPaymentStats: () => api.get('/payments/stats'),
-  sendPaymentReminder: (playerId) => api.post(`/payments/player/${playerId}/reminder`),
-  getOverduePayments: async () => {
-    return api.get('/admin/payments/overdue');
-  },
-  deletePayment: (paymentId) => api.delete(`/admin/payments/${paymentId}`),
-  updatePayment: (paymentId, paymentData) => api.put(`/admin/payments/${paymentId}`, paymentData),
-
   // Security endpoints
   getSecuritySettings: () => api.get('/admin/security/settings'),
   updateSecuritySettings: (settings) => api.put('/admin/security/settings', settings),
@@ -209,22 +165,6 @@ export const adminAPI = {
   updateNotification: (notificationId, notificationData) => api.put(`/admin/notifications/${notificationId}`, notificationData),
   deleteNotification: (notificationId) => api.delete(`/admin/notifications/${notificationId}`),
   markNotificationAsRead: (notificationId) => api.put(`/admin/notifications/${notificationId}/mark-as-read`),
-
-  // Communications endpoints
-  getCommunications: () => api.get('/admin/communications'),
-  createCommunication: (communicationData) => api.post('/admin/communications', communicationData),
-  deleteCommunication: (communicationId) => api.delete(`/admin/communications/${communicationId}`),
-
-  // Reports
-  getReports: () => api.get('/admin/reports'),
-  generateReport: (reportType, params) => api.post('/admin/reports', { type: reportType, ...params }),
-
-  // Budget Management
-  getBudgets: () => api.get('/admin/budgets'),
-  getBudgetById: (id) => api.get(`/admin/budgets/${id}`),
-  createBudget: (budgetData) => api.post('/admin/budgets', budgetData),
-  updateBudget: (id, budgetData) => api.put(`/admin/budgets/${id}`, budgetData),
-  deleteBudget: (id) => api.delete(`/admin/budgets/${id}`),
 };
 
 // Player API

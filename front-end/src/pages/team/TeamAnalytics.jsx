@@ -101,15 +101,36 @@ const TeamAnalytics = () => {
     try {
       setLoading(true);
       setError('');
-
-      // Mock data logic removed to prepare for real backend integration
-
-      const response = await adminAPI.getReports();
-      if (response.data) {
-        setAnalyticsData(prevData => ({ ...prevData, ...response.data }));
-      }
-    } catch (error) {
-      console.error('Error fetching analytics:', error);
+      const [statsRes, matchesRes] = await Promise.all([
+        adminAPI.getStats().catch(() => ({ data: null })),
+        adminAPI.getMatches().catch(() => ({ data: [] }))
+      ]);
+      const stats = statsRes?.data;
+      const matches = Array.isArray(matchesRes?.data) ? matchesRes.data : [];
+      const wins = matches.filter(m => m.result === 'win' || m.status === 'won').length;
+      const losses = matches.filter(m => m.result === 'loss' || m.status === 'lost').length;
+      const total = wins + losses || 1;
+      setAnalyticsData(prev => ({
+        ...prev,
+        ...(stats && typeof stats === 'object' ? stats : {}),
+        teamPerformance: {
+          ...prev.teamPerformance,
+          ...(stats?.teamPerformance || {}),
+          wins: stats?.teamPerformance?.wins ?? wins,
+          losses: stats?.teamPerformance?.losses ?? losses,
+          winPercentage: stats?.teamPerformance?.winPercentage ?? Math.round((wins / total) * 100),
+          pointsPerGame: stats?.teamPerformance?.pointsPerGame ?? prev.teamPerformance.pointsPerGame,
+          pointsAllowed: stats?.teamPerformance?.pointsAllowed ?? prev.teamPerformance.pointsAllowed,
+          trend: stats?.teamPerformance?.trend ?? prev.teamPerformance.trend
+        },
+        playerStats: stats?.playerStats ?? prev.playerStats,
+        gameMetrics: {
+          ...prev.gameMetrics,
+          gamesPlayed: stats?.gameMetrics?.gamesPlayed ?? matches.length
+        }
+      }));
+    } catch (err) {
+      console.error('Error fetching analytics:', err);
       setError('Failed to fetch analytics. Please try again.');
     } finally {
       setLoading(false);
