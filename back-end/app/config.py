@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     app_name: str = "Basketball Analysis API"
     app_version: str = "1.0.0"
     debug: bool = False
+    default_rate_limit: str = "100 per minute"
     
     # Server settings
     host: str = "0.0.0.0"
@@ -52,8 +53,11 @@ class Settings(BaseSettings):
     cuda_device: int = 0
     
     # Model paths (relative to backend root)
-    player_detector_path: str = "models/nbl_v2_combined.pt"
-    ball_detector_path: str = "models/nbl_v2_combined.pt"
+    team_model_path: str = "models/nbl_v3_combined.pt"
+    personal_model_path: str = "models/nbl_v2_combined.pt"
+    
+    player_detector_path: str = "models/nbl_v3_combined.pt"
+    ball_detector_path: str = "models/nbl_v3_combined.pt"
     court_keypoint_detector_path: str = "models/court_keypoint_detector.pt"
     pose_model_path: str = "models/yolov8n-pose.pt"
     

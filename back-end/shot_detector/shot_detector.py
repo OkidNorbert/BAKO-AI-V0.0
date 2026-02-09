@@ -84,7 +84,16 @@ class ShotDetector:
         batch_size = 20
         for i in range(0, len(video_frames), batch_size):
             batch = video_frames[i:i+batch_size]
-            results = self.hoop_model.predict(batch, conf=0.5, classes=[2])  # Class 2 = hoop
+            
+            # Find hoop class index dynamically
+            hoop_indices = [idx for idx, name in self.hoop_model.names.items() if 'hoop' in name.lower()]
+            if not hoop_indices:
+                # Fallback to class 2 if names aren't clear, but log warning
+                hoop_class = 2
+            else:
+                hoop_class = hoop_indices[0]
+                
+            results = self.hoop_model.predict(batch, conf=0.5, classes=[hoop_class])
             
             for result in results:
                 if result.boxes is not None and len(result.boxes) > 0:

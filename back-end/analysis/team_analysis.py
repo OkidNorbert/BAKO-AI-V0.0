@@ -42,8 +42,7 @@ async def run_team_analysis(video_path: str, options: Optional[Dict[str, Any]] =
     from speed_and_distance_calculator import SpeedAndDistanceCalculator
     from shot_detector import ShotDetector
     from configs import (
-        PLAYER_DETECTOR_PATH,
-        BALL_DETECTOR_PATH,
+        TEAM_MODEL_PATH,
         COURT_KEYPOINT_DETECTOR_PATH,
     )
 
@@ -59,8 +58,8 @@ async def run_team_analysis(video_path: str, options: Optional[Dict[str, Any]] =
         }
     
     # Initialize trackers
-    player_tracker = PlayerTracker(PLAYER_DETECTOR_PATH)
-    ball_tracker = BallTracker(BALL_DETECTOR_PATH)
+    player_tracker = PlayerTracker(TEAM_MODEL_PATH)
+    ball_tracker = BallTracker(TEAM_MODEL_PATH)
     court_keypoint_detector = CourtKeypointDetector(COURT_KEYPOINT_DETECTOR_PATH)
     
     # Run detection (no stub caching for API use)
@@ -129,7 +128,7 @@ async def run_team_analysis(video_path: str, options: Optional[Dict[str, Any]] =
     # Shot Detection and Analysis
     try:
         shot_detector = ShotDetector(
-            hoop_detection_model_path=BALL_DETECTOR_PATH,  # Use combined model for hoop detection
+            hoop_detection_model_path=TEAM_MODEL_PATH,  # Use team model for hoop detection
             min_shot_arc_height=50,
             hoop_proximity_threshold=100,
             trajectory_window=30,

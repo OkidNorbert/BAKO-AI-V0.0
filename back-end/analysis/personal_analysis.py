@@ -37,7 +37,7 @@ async def run_personal_analysis(video_path: str, options: Optional[Dict[str, Any
     from app.config import get_settings
     from shot_detector import ShotDetector
     from trackers import BallTracker
-    from configs import BALL_DETECTOR_PATH
+    from configs import PERSONAL_MODEL_PATH
     
     settings = get_settings()
     
@@ -300,7 +300,7 @@ async def run_personal_analysis(video_path: str, options: Optional[Dict[str, Any
     if detect_shots:
         try:
             # Check if ball detector model exists
-            model_path = BALL_DETECTOR_PATH
+            model_path = PERSONAL_MODEL_PATH
             if model_path is None or not os.path.exists(str(model_path)):
                 # Try relative path if absolute fails
                 if os.path.exists('models/nbl_v2_combined.pt'):
