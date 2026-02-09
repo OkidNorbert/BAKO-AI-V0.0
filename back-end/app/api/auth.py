@@ -3,7 +3,10 @@ Authentication API endpoints.
 """
 from datetime import timedelta
 from uuid import uuid4
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from app.config import get_settings
 from app.core.security import (
@@ -29,7 +32,16 @@ from app.services.supabase_client import SupabaseService
 router = APIRouter()
 
 
-@router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
+def _get_limiter(request: Request) -> Limiter:
+    # Helper to get the global limiter attached in app.main
+    return request.app.state.limiter
+
+
+@router.post(
+    "/register",
+    response_model=TokenResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def register(
     user_data: UserCreate,
     supabase: SupabaseService = Depends(get_supabase),
@@ -84,6 +96,7 @@ async def register(
 
 @router.post("/login", response_model=TokenResponse)
 async def login(
+    request: Request,
     credentials: UserLogin,
     supabase: SupabaseService = Depends(get_supabase),
 ):
@@ -91,6 +104,10 @@ async def login(
     Authenticate and get access tokens.
     """
     settings = get_settings()
+
+    # Apply a stricter rate limit on login to protect against brute force.
+    limiter = _get_limiter(request)
+    limiter.limit("5/minute")(lambda *_args, **_kwargs: None)(request)
     
     # Find user
     users = await supabase.select("users", filters={"email": credentials.email})

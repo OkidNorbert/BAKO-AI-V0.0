@@ -2,7 +2,7 @@ from ultralytics import YOLO
 import torch
 
 def test_new_model():
-    model_path = "models/nbl_v2_combined.pt"
+    model_path = "models/nbl_v3_combined.pt"
     print(f"Loading model from {model_path}...")
     
     try:

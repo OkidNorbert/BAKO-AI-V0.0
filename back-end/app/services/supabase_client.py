@@ -26,6 +26,22 @@ class SupabaseService:
         self._client: Optional[Client] = None
         self._settings = get_settings()
         self._initialized = False
+        # Allowlist of tables this service is permitted to touch. This reduces
+        # the blast radius of accidental or malicious misuse.
+        self._allowed_tables: set[str] = {
+            "users",
+            "videos",
+            "organizations",
+            "players",
+            "teams",
+            "analysis_results",
+            "detections",
+            "analytics",
+            "notifications",
+            "activities",
+            "matches",
+            "schedules",
+        }
     
     def _initialize(self) -> None:
         """Initialize the Supabase client if not already done."""
@@ -117,6 +133,8 @@ class SupabaseService:
         """Insert a record into a table."""
         if not self.is_connected:
             return {"id": "mock-id", **data}
+        if table not in self._allowed_tables:
+            raise ValueError(f"Table '{table}' is not allowed for insert operations")
         
         response = await self._run_sync(lambda: self.client.table(table).insert(data).execute())
         return response.data[0] if response.data else {}
@@ -127,6 +145,8 @@ class SupabaseService:
             return 0
         if not self.is_connected:
             return len(rows)
+        if table not in self._allowed_tables:
+            raise ValueError(f"Table '{table}' is not allowed for bulk insert operations")
 
         inserted = 0
         for i in range(0, len(rows), chunk_size):
@@ -147,6 +167,8 @@ class SupabaseService:
         """Select records from a table."""
         if not self.is_connected:
             return []
+        if table not in self._allowed_tables:
+            raise ValueError(f"Table '{table}' is not allowed for select operations")
         
         query = self.client.table(table).select(columns)
         
@@ -179,6 +201,8 @@ class SupabaseService:
             return []
         if not values:
             return []
+        if table not in self._allowed_tables:
+            raise ValueError(f"Table '{table}' is not allowed for select operations")
 
         query = self.client.table(table).select(columns).in_(column, values)
         if filters:
@@ -196,6 +220,8 @@ class SupabaseService:
         """Select a single record by ID."""
         if not self.is_connected:
             return None
+        if table not in self._allowed_tables:
+            raise ValueError(f"Table '{table}' is not allowed for select operations")
         
         response = await self._run_sync(
             lambda: self.client.table(table).select(columns).eq("id", id).single().execute()
@@ -206,6 +232,8 @@ class SupabaseService:
         """Update a record by ID."""
         if not self.is_connected:
             return {"id": id, **data}
+        if table not in self._allowed_tables:
+            raise ValueError(f"Table '{table}' is not allowed for update operations")
         
         response = await self._run_sync(lambda: self.client.table(table).update(data).eq("id", id).execute())
         return response.data[0] if response.data else {}
@@ -214,6 +242,8 @@ class SupabaseService:
         """Delete a record by ID."""
         if not self.is_connected:
             return True
+        if table not in self._allowed_tables:
+            raise ValueError(f"Table '{table}' is not allowed for delete operations")
         
         await self._run_sync(lambda: self.client.table(table).delete().eq("id", id).execute())
         return True
@@ -224,6 +254,8 @@ class SupabaseService:
             return True
         if not filters:
             raise ValueError("delete_where requires filters")
+        if table not in self._allowed_tables:
+            raise ValueError(f"Table '{table}' is not allowed for delete operations")
 
         query = self.client.table(table).delete()
         for key, value in filters.items():

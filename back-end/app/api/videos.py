@@ -7,8 +7,22 @@ from uuid import uuid4
 from datetime import datetime
 from typing import Optional
 from urllib.parse import quote
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query, status
+
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Request,
+    UploadFile,
+    File,
+    Form,
+    Query,
+    status,
+)
 from fastapi.responses import FileResponse
+
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from app.config import get_settings
 from app.dependencies import get_current_user, get_supabase
@@ -24,6 +38,10 @@ from app.services.supabase_client import SupabaseService
 
 
 router = APIRouter()
+
+
+def _get_limiter(request: Request) -> Limiter:
+    return request.app.state.limiter
 
 
 def get_video_info(file_path: str) -> dict:
@@ -62,6 +80,7 @@ def get_video_info(file_path: str) -> dict:
 
 @router.post("/upload", response_model=Video, status_code=status.HTTP_201_CREATED)
 async def upload_video(
+    request: Request,
     file: UploadFile = File(...),
     title: Optional[str] = Form(None, max_length=200),
     description: Optional[str] = Form(None, max_length=1000),
@@ -78,6 +97,10 @@ async def upload_video(
     - **organization_id**: Required for TEAM analysis
     """
     settings = get_settings()
+
+    # Apply a modest rate limit to uploads to avoid resource exhaustion.
+    limiter = _get_limiter(request)
+    limiter.limit("10/hour")(lambda *_args, **_kwargs: None)(request)
     
     # Validate file extension
     if not file.filename:
@@ -94,6 +117,19 @@ async def upload_video(
             detail=f"Invalid file type. Allowed: {settings.allowed_video_extensions}"
         )
     
+    # Basic content-type validation (defence-in-depth – still rely on OpenCV check later)
+    allowed_mime_types = {
+        "video/mp4",
+        "video/x-msvideo",
+        "video/quicktime",
+        "video/x-matroska",
+    }
+    if file.content_type and file.content_type.lower() not in allowed_mime_types:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid content type for video upload",
+        )
+
     # Validate file size
     file.file.seek(0, 2)  # Seek to end
     file_size = file.file.tell()
@@ -125,10 +161,12 @@ async def upload_video(
                 detail="You don't have access to this organization"
             )
     
-    # Generate unique filename and save
+    # Generate unique filename and save. We never trust the original name for paths.
     video_id = str(uuid4())
     filename = f"{video_id}.{ext}"
-    storage_path = os.path.join(settings.upload_dir, current_user["id"], filename)
+    # Ensure uploader id does not introduce path traversal
+    safe_uploader_id = str(current_user["id"]).replace("/", "_").replace("\\", "_")
+    storage_path = os.path.join(settings.upload_dir, safe_uploader_id, filename)
     
     os.makedirs(os.path.dirname(storage_path), exist_ok=True)
     

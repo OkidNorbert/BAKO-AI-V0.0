@@ -18,6 +18,12 @@ from app.core import BasketballAPIException
 from app.api import auth, videos, analysis, teams, players, analytics, admin, player_routes
 from app.middleware.timeout import TimeoutMiddleware
 
+# Basic rate limiting for abuse protection
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -79,7 +85,12 @@ def create_app() -> FastAPI:
         openapi_url="/api/openapi.json",
         lifespan=lifespan,
     )
-    
+
+    # Attach a rate limiter to the app. We keep limits conservative but safe by default.
+    limiter = Limiter(key_func=get_remote_address, default_limits=[settings.default_rate_limit])
+    app.state.limiter = limiter
+    app.add_middleware(SlowAPIMiddleware)
+
     # Configure CORS
     # - In production, require explicit origins (settings.cors_origins)
     # - In debug, allow "*" but disable credentials to avoid insecure/invalid combo
@@ -131,17 +142,36 @@ def register_exception_handlers(app: FastAPI) -> None:
             },
         )
     
+    @app.exception_handler(RateLimitExceeded)
+    async def rate_limit_handler(
+        request: Request, exc: RateLimitExceeded
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            content={
+                "error": "Too many requests",
+                "details": {"message": str(exc)},
+            },
+        )
+
     @app.exception_handler(Exception)
     async def general_exception_handler(
         request: Request, exc: Exception
     ) -> JSONResponse:
-        # Log the error in production
-        print(f"Unhandled error: {exc}")
+        # Log the error without leaking internals to clients
+        settings = get_settings()
+        # Use standard logging so deployments can aggregate logs
+        import logging
+
+        logger = logging.getLogger("basketball_api")
+        logger.exception("Unhandled error", exc_info=exc)
+
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={
                 "error": "An unexpected error occurred",
-                "details": {"type": type(exc).__name__},
+                # Only expose minimal type information; no stack traces or messages.
+                "details": {"type": type(exc).__name__} if settings.debug else {},
             },
         )
 
