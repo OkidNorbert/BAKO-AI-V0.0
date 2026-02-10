@@ -110,7 +110,7 @@ async def run_team_analysis(video_path: str, options: Optional[Dict[str, Any]] =
     
     for frame_idx, (possession, assignment) in enumerate(zip(ball_possession, player_assignment)):
         if possession != -1 and possession in assignment:
-            team = assignment[possession].get("team", 0)
+            team = assignment[possession]
             if team == 1:
                 team_1_possession += 1
             elif team == 2:
@@ -155,6 +155,9 @@ async def run_team_analysis(video_path: str, options: Optional[Dict[str, Any]] =
         shots = shot_detector.detect_shots(
             ball_tracks,
             hoop_detections,
+            player_tracks=player_tracks,
+            player_assignment=player_assignment,
+            ball_possession=ball_possession,
             fps=fps,
             court_keypoints=court_keypoints
         )
@@ -171,7 +174,7 @@ async def run_team_analysis(video_path: str, options: Optional[Dict[str, Any]] =
             if start_frame < len(ball_possession) and start_frame < len(player_assignment):
                 player_with_ball = ball_possession[start_frame]
                 if player_with_ball != -1 and player_with_ball in player_assignment[start_frame]:
-                    team = player_assignment[start_frame][player_with_ball].get('team', 0)
+                    team = player_assignment[start_frame][player_with_ball]
                     shot_with_team = {**shot, 'team': team, 'player_id': player_with_ball}
                     
                     if team == 1:
@@ -228,7 +231,7 @@ async def run_team_analysis(video_path: str, options: Optional[Dict[str, Any]] =
                 "track_id": int(track_id),
                 "bbox": bbox,
                 "confidence": float(track.get("confidence", 1.0)),
-                "team_id": assignment.get(track_id, {}).get("team"),
+                "team_id": assignment.get(track_id),
                 "has_ball": possession_player == track_id,
                 "keypoints": None,
             })

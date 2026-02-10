@@ -8,6 +8,7 @@ from ball_aquisition import BallAquisitionDetector
 from pass_and_interception_detector import PassAndInterceptionDetector
 from tactical_view_converter import TacticalViewConverter
 from speed_and_distance_calculator import SpeedAndDistanceCalculator
+from shot_detector import ShotDetector
 from drawers import (
     PlayerTracksDrawer, 
     BallTracksDrawer,
@@ -16,12 +17,14 @@ from drawers import (
     FrameNumberDrawer,
     PassInterceptionDrawer,
     TacticalViewDrawer,
-    SpeedAndDistanceDrawer
+    SpeedAndDistanceDrawer,
+    ShotDrawer
 )
 from configs import(
     STUBS_DEFAULT_PATH,
     PLAYER_DETECTOR_PATH,
     BALL_DETECTOR_PATH,
+    TEAM_MODEL_PATH,
     COURT_KEYPOINT_DETECTOR_PATH,
     OUTPUT_VIDEO_PATH
 )
@@ -105,6 +108,26 @@ def main():
     player_distances_per_frame = speed_and_distance_calculator.calculate_distance(tactical_player_positions)
     player_speed_per_frame = speed_and_distance_calculator.calculate_speed(player_distances_per_frame)
 
+    # Tactical Shot Analysis
+    shot_detector = ShotDetector(hoop_detection_model_path=TEAM_MODEL_PATH if 'TEAM_MODEL_PATH' in globals() else PLAYER_DETECTOR_PATH)
+    hoop_detections = shot_detector.detect_hoop_locations(video_frames, read_from_stub=True, stub_path=os.path.join(args.stub_path, 'hoop_detections_stub.pkl'))
+    
+    # Calculate FPS
+    import cv2
+    cap = cv2.VideoCapture(args.input_video)
+    fps = cap.get(cv2.CAP_PROP_FPS) or 30
+    cap.release()
+
+    shots = shot_detector.detect_shots(
+        ball_tracks, 
+        hoop_detections, 
+        player_tracks=player_tracks,
+        player_assignment=player_assignment,
+        ball_possession=ball_aquisition,
+        fps=fps,
+        court_keypoints=court_keypoints_per_frame
+    )
+
     # Draw output   
     # Initialize Drawers
     player_tracks_drawer = PlayerTracksDrawer()
@@ -115,6 +138,7 @@ def main():
     pass_and_interceptions_drawer = PassInterceptionDrawer()
     tactical_view_drawer = TacticalViewDrawer()
     speed_and_distance_drawer = SpeedAndDistanceDrawer()
+    shot_drawer = ShotDrawer()
 
     ## Draw object Tracks
     output_video_frames = player_tracks_drawer.draw(video_frames, 
@@ -124,7 +148,7 @@ def main():
     output_video_frames = ball_tracks_drawer.draw(output_video_frames, ball_tracks)
 
     ## Draw KeyPoints
-    output_video_frames = court_keypoint_drawer.draw(output_video_frames, court_keypoints_per_frame)
+    # output_video_frames = court_keypoint_drawer.draw(output_video_frames, court_keypoints_per_frame)
 
     ## Draw Frame Number
     output_video_frames = frame_number_drawer.draw(output_video_frames)
@@ -134,10 +158,12 @@ def main():
                                                         player_assignment,
                                                         ball_aquisition)
 
-    # Draw Passes and Interceptions
     output_video_frames = pass_and_interceptions_drawer.draw(output_video_frames,
                                                              passes,
                                                              interceptions)
+    
+    # Draw Shots and Scoreboard
+    output_video_frames = shot_drawer.draw(output_video_frames, shots, hoop_detections=hoop_detections)
     
     # Speed and Distance Drawer
     output_video_frames = speed_and_distance_drawer.draw(output_video_frames,

@@ -20,8 +20,8 @@ class ShotDetector:
         hoop_detection_model_path: Optional[str] = None,
         min_shot_arc_height: int = 50,
         hoop_proximity_threshold: int = 100,
-        trajectory_window: int = 30,
-        success_time_window: int = 15,
+        trajectory_window: int = 40,
+        success_time_window: int = 45,
     ):
         """
         Initialize the shot detector.
@@ -124,20 +124,14 @@ class ShotDetector:
         self,
         ball_tracks: List[Dict[int, Dict]],
         hoop_detections: List[Optional[Dict]],
+        player_tracks: Optional[List[Dict[int, Dict]]] = None,
+        player_assignment: Optional[List[Dict[int, Any]]] = None,
+        ball_possession: Optional[List[int]] = None,
         fps: float = 30.0,
         court_keypoints: Optional[List] = None
     ) -> List[Dict[str, Any]]:
         """
-        Detect shot attempts and their outcomes.
-        
-        Args:
-            ball_tracks: Ball tracking data per frame
-            hoop_detections: Hoop detection data per frame
-            fps: Video frames per second
-            court_keypoints: Optional court keypoint data for shot location
-            
-        Returns:
-            List of shot events with outcome information
+        Detect shot attempts and their outcomes with tactical analysis.
         """
         shots = []
         
@@ -145,31 +139,101 @@ class ShotDetector:
         ball_trajectory = self._extract_ball_trajectory(ball_tracks)
         
         if len(ball_trajectory) < 10:
-            return shots  # Need minimum trajectory data
+            return shots
         
-        # Find hoop location (use most common or median position)
-        hoop_location = self._get_stable_hoop_location(hoop_detections)
+        hoop_location_stable = self._get_stable_hoop_location(hoop_detections)
+        shot_attempts = self._detect_shot_attempts(ball_trajectory, hoop_location_stable)
         
-        # Detect shot attempts by identifying upward trajectories
-        shot_attempts = self._detect_shot_attempts(ball_trajectory, hoop_location)
-        
-        # Analyze each shot attempt for success/failure
         for attempt in shot_attempts:
+            # For each attempt, get the hoop location at the time of the shot
+            shot_hoop_location = self._get_hoop_at_frame(hoop_detections, attempt['peak_frame'])
+            if not shot_hoop_location:
+                shot_hoop_location = hoop_location_stable
+
             shot_outcome = self._analyze_shot_outcome(
                 attempt,
                 ball_trajectory,
-                hoop_location,
+                hoop_detections,
                 fps
             )
             
             if shot_outcome:
+                # Filter out shots where no hoop was seen during the core window
+                if shot_outcome.get('hoop_seen_count', 0) == 0:
+                    continue
+
                 # Add shot type classification
                 shot_outcome['shot_type'] = self._classify_shot_type(
                     attempt,
                     ball_trajectory,
-                    hoop_location,
+                    shot_hoop_location,
                     court_keypoints
                 )
+                
+                # --- Tactical Analysis: Contestedness & Quality & 2pt/3pt ---
+                if player_tracks and player_assignment and ball_possession:
+                    start_frame = attempt['start_frame']
+                    
+                    # Search for shooter in a window around the shot start (up to 20 frames back)
+                    shooter_id = -1
+                    search_range = range(max(0, start_frame - 20), min(len(ball_possession), start_frame + 5))
+                    for f_search in reversed(search_range):
+                        if ball_possession[f_search] != -1:
+                            shooter_id = ball_possession[f_search]
+                            break
+                    
+                    if shooter_id != -1 and shooter_id in player_assignment[start_frame]:
+                        shooter_team = player_assignment[start_frame][shooter_id]
+                        shooter_pos = self._get_bbox_center(player_tracks[start_frame][shooter_id]['bbox'])
+                        
+                        # Find nearest defender (different team)
+                        min_dist_def = float('inf')
+                        for p_id, p_track in player_tracks[start_frame].items():
+                            if p_id in player_assignment[start_frame]:
+                                p_team = player_assignment[start_frame][p_id]
+                                if p_team and p_team != shooter_team:
+                                    defender_pos = self._get_bbox_center(p_track['bbox'])
+                                    dist_def = math.sqrt((shooter_pos[0]-defender_pos[0])**2 + (defender_pos[1]-defender_pos[1])**2)
+                                    if dist_def < min_dist_def:
+                                        min_dist_def = dist_def
+                        
+                        shot_outcome['defender_distance'] = round(min_dist_def, 2)
+                        # Thresholds (pixels, relative to typical resolution)
+                        if min_dist_def < 80:
+                            shot_outcome['contestedness'] = "Heavily Contested"
+                            shot_outcome['shot_quality'] = "Low (IQ Problem)" if shot_outcome['outcome'] == 'missed' else "Difficult Make"
+                        elif min_dist_def < 180:
+                            shot_outcome['contestedness'] = "Contested"
+                            shot_outcome['shot_quality'] = "Average"
+                        else:
+                            shot_outcome['contestedness'] = "Wide Open"
+                            shot_outcome['shot_quality'] = "High Quality"
+                        
+                        # Realistic 2-point vs 3-point based on distance in meters (if possible)
+                        # Using shot-time location strictly
+                        current_hoop = self._get_hoop_at_frame(hoop_detections, start_frame)
+                        dist_to_hoop_target = current_hoop if current_hoop else shot_hoop_location
+
+                        # Try to calculate distance in meters using keypoints
+                        dist_meters = None
+                        if court_keypoints and start_frame < len(court_keypoints):
+                            dist_meters = self._get_distance_meters(
+                                shooter_pos, 
+                                (dist_to_hoop_target['x'], dist_to_hoop_target['y']), 
+                                court_keypoints[start_frame]
+                            )
+                        
+                        if dist_meters is not None:
+                            shot_outcome['shot_type'] = "three-pointer" if dist_meters > 6.75 else "two-pointer"
+                            shot_outcome['shooter_distance_meters'] = round(dist_meters, 2)
+                        else:
+                            dist_to_hoop_px = math.sqrt((shooter_pos[0]-dist_to_hoop_target['x'])**2 + (shooter_pos[1]-dist_to_hoop_target['y'])**2)
+                            shot_outcome['shot_type'] = "three-pointer" if dist_to_hoop_px > 350 else "two-pointer"
+                            shot_outcome['shooter_distance_px'] = round(dist_to_hoop_px, 2)
+                        
+                        shot_outcome['player_id'] = shooter_id
+                        shot_outcome['team_id'] = shooter_team
+                
                 shots.append(shot_outcome)
         
         return shots
@@ -232,11 +296,45 @@ class ShotDetector:
         centers = [d['center'] for d in valid_detections]
         rim_ys = [d['rim_y'] for d in valid_detections]
         
+        # If we have very few detections, just use the first valid one
+        if len(valid_detections) < 3:
+            return {
+                'x': valid_detections[0]['center'][0],
+                'y': valid_detections[0]['center'][1],
+                'rim_y': valid_detections[0]['rim_y']
+            }
+        
         return {
             'x': np.median([c[0] for c in centers]),
             'y': np.median([c[1] for c in centers]),
             'rim_y': np.median(rim_ys)
         }
+
+    def _get_hoop_at_frame(self, hoop_detections, frame_num):
+        """Get hoop location at a specific frame, or closest detection if missing."""
+        if frame_num < 0 or frame_num >= len(hoop_detections):
+            return None
+            
+        if hoop_detections[frame_num]:
+            h = hoop_detections[frame_num]
+            return {
+                'x': h['center'][0],
+                'y': h['center'][1],
+                'rim_y': h['rim_y']
+            }
+            
+        # Search nearby frames if missing (ONLY 5 frames now for panning safety)
+        for i in range(1, 6):
+            for side in [-1, 1]:
+                f = frame_num + i * side
+                if 0 <= f < len(hoop_detections) and hoop_detections[f]:
+                    h = hoop_detections[f]
+                    return {
+                        'x': h['center'][0],
+                        'y': h['center'][1],
+                        'rim_y': h['rim_y']
+                    }
+        return None
     
     def _detect_shot_attempts(
         self,
@@ -250,8 +348,9 @@ class ShotDetector:
         while i < len(trajectory) - 5:
             point = trajectory[i]
             
-            # Look for upward movement (negative dy in screen coords)
-            if point.get('vy', 0) < -5:  # Moving up significantly
+            # Smooth velocity check (average over 3 frames)
+            avg_vy = sum(trajectory[k].get('vy', 0) for k in range(i, min(i+3, len(trajectory)))) / 3
+            if avg_vy < -4:  # Moving up consistently
                 
                 # Find the peak of this arc
                 peak_idx = i
@@ -279,7 +378,7 @@ class ShotDetector:
                         peak_dist = abs(trajectory[peak_idx]['x'] - hoop_location['x'])
                         toward_hoop = peak_dist < start_dist * 1.5  # Allow some variance
                     
-                    if toward_hoop:
+                    if toward_hoop and peak_y < (hoop_location['y'] + 100 if hoop_location else 1000):
                         attempts.append({
                             'start_frame': point['frame'],
                             'start_idx': i,
@@ -290,9 +389,10 @@ class ShotDetector:
                             'peak_position': (trajectory[peak_idx]['x'], trajectory[peak_idx]['y'])
                         })
                         
-                        # Skip ahead to avoid duplicate detection
-                        i = peak_idx + 5
+                        # Skip ahead significantly to avoid duplicate detection of the same shot
+                        i = peak_idx + self.success_time_window
                         continue
+
             
             i += 1
         
@@ -302,85 +402,152 @@ class ShotDetector:
         self,
         attempt: Dict,
         trajectory: List[Dict],
-        hoop_location: Optional[Dict],
+        hoop_detections: List[Optional[Dict]],
         fps: float
     ) -> Optional[Dict[str, Any]]:
         """
-        Analyze whether a shot attempt was successful.
-        
-        A shot is successful if:
-        1. The ball passes through/near the hoop location
-        2. The ball is descending (positive vy)
-        3. This occurs within a reasonable time window after the peak
+        Analyze whether a shot attempt was successful by checking frame-by-frame
+        for "meeting" events between the ball and the hoop.
         """
-        if not hoop_location:
-            # Can't determine success without hoop location
-            return {
-                'start_frame': attempt['start_frame'],
-                'peak_frame': attempt['peak_frame'],
-                'outcome': 'unknown',
-                'confidence': 0.0,
-                'timestamp_seconds': attempt['start_frame'] / fps
-            }
-        
         peak_idx = attempt['peak_idx']
-        
-        # Look for ball passing through hoop region after peak
-        success_detected = False
-        outcome_frame = None
-        min_distance = float('inf')
-        
         end_idx = min(peak_idx + self.success_time_window, len(trajectory))
         
-        for i in range(peak_idx, end_idx):
-            point = trajectory[i]
+        made_detected = False
+        min_dist_at_rim = float('inf')
+        outcome_frame = None
+        hoop_seen_count = 0
+        
+        # Look for the moment of intersection or crossing
+        # We check every frame in the success window
+        for i in range(max(0, peak_idx - 5), end_idx):
+            ball_point = trajectory[i]
+            frame_num = ball_point['frame']
             
-            # Check if ball is near hoop horizontally
-            horizontal_dist = abs(point['x'] - hoop_location['x'])
+            # STRICT CHECK: Was the hoop actually detected by the model in this frame?
+            if frame_num < len(hoop_detections) and hoop_detections[frame_num]:
+                hoop_seen_count += 1
+
+            # Get the hoop location (interpolated slightly)
+            hoop = self._get_hoop_at_frame(hoop_detections, frame_num)
+            if not hoop:
+                continue
+                
+            # Horizontal and vertical distances to the rim
+            horizontal_dist = abs(ball_point['x'] - hoop['x'])
+            vertical_dist = abs(ball_point['y'] - hoop['rim_y'])
             
-            # Check if ball is at or passing through rim level (descending)
-            vertical_dist = abs(point['y'] - hoop_location['rim_y'])
-            is_descending = point.get('vy', 0) > 0
-            
-            # Calculate distance to hoop center
-            dist_to_hoop = math.sqrt(horizontal_dist**2 + vertical_dist**2)
-            
-            if dist_to_hoop < min_distance:
-                min_distance = dist_to_hoop
-            
-            # Success condition: close to hoop and descending
-            if (horizontal_dist < self.hoop_proximity_threshold and 
-                vertical_dist < 50 and 
-                is_descending):
-                success_detected = True
-                outcome_frame = point['frame']
+            # Check if ball has passed rim level
+            if ball_point['y'] >= hoop['rim_y'] and outcome_frame is None:
+                outcome_frame = frame_num
+                min_dist_at_rim = horizontal_dist
+                
+                # SUCCESS CONDITION: 
+                # If the ball is within the hoop's horizontal zone at the moment it crosses the rim
+                if horizontal_dist < 85: 
+                    made_detected = True
+                    break
+
+            # SECONDARY CHECK: Collision/Meeting
+            # If the ball center is inside the "Hoop Cylinder" zone
+            # (X is within hoop width, Y is between rim and net bottom)
+            if horizontal_dist < 60 and 0 <= (ball_point['y'] - hoop['rim_y']) < 100:
+                made_detected = True
+                outcome_frame = frame_num
+                min_dist_at_rim = horizontal_dist
                 break
         
-        # Determine outcome
-        if success_detected:
+        # If we never crossed rim but window ended
+        if outcome_frame is None:
+            outcome_frame = trajectory[end_idx-1]['frame']
+            # Find closest distance seen
+            for i in range(peak_idx, end_idx):
+                h = self._get_hoop_at_frame(hoop_detections, trajectory[i]['frame'])
+                if h:
+                    dist = math.sqrt((trajectory[i]['x'] - h['x'])**2 + (trajectory[i]['y'] - h['rim_y'])**2)
+                    if dist < min_dist_at_rim:
+                        min_dist_at_rim = dist
+
+        # Determine final outcome
+        if made_detected:
             outcome = 'made'
-            confidence = min(1.0, self.hoop_proximity_threshold / (min_distance + 1))
+            confidence = 0.98
         else:
-            # Check if ball came close to hoop
-            if min_distance < self.hoop_proximity_threshold * 2:
-                outcome = 'missed'
-                confidence = 0.7
+            # If tracking was lost before the ball reached rim level
+            # We check if the last tracked position was still above the rim
+            last_idx = end_idx - 1
+            if last_idx >= 0:
+                last_point = trajectory[last_idx]
+                h_last = self._get_hoop_at_frame(hoop_detections, last_point['frame'])
+                if h_last and last_point['y'] < h_last['rim_y'] - 30:
+                    # Ball was lost before it reached the "Danger Zone"
+                    outcome = 'unknown'
+                    confidence = 0.0
+                else:
+                    outcome = 'missed'
+                    confidence = 0.8 if min_dist_at_rim < 150 else 0.5
             else:
-                outcome = 'missed'
-                confidence = 0.5
+                outcome = 'unknown'
+                confidence = 0.0
         
         return {
             'start_frame': attempt['start_frame'],
             'peak_frame': attempt['peak_frame'],
-            'outcome_frame': outcome_frame or attempt['peak_frame'],
+            'outcome_frame': outcome_frame or (trajectory[end_idx-1]['frame'] if end_idx > 0 else attempt['start_frame']),
             'outcome': outcome,
             'confidence': confidence,
             'timestamp_seconds': attempt['start_frame'] / fps,
             'arc_height_pixels': attempt['arc_height'],
-            'distance_to_hoop_pixels': min_distance,
+            'distance_at_rim': round(min_dist_at_rim, 2),
             'start_position': attempt['start_position'],
-            'peak_position': attempt['peak_position']
+            'peak_position': attempt['peak_position'],
+            'hoop_seen_count': hoop_seen_count
         }
+
+    def _get_distance_meters(self, pos1, pos2, frame_keypoints):
+        """Calculate real-world distance between two points using homography."""
+        try:
+            # Handle keypoints for current frame
+            kp_list = frame_keypoints.xy.tolist() if hasattr(frame_keypoints, 'xy') else []
+            if not kp_list: return None
+            
+            detected_keypoints = kp_list[0]
+            valid_indices = [i for i, kp in enumerate(detected_keypoints) if kp[0] > 0 and kp[1] > 0]
+            
+            if len(valid_indices) < 4: return None
+            
+            # Standard dimensions for mapping
+            actual_width = 28.0
+            actual_height = 15.0
+            tactical_w = 300
+            tactical_h = 161
+            
+            # Simple tactical keypoints mapping (from TacticalViewConverter)
+            tactical_kps = [
+                (0,0), (0,10), (0,55), (0,107), (0,151), (0,161), # Left Edge
+                (150,161), (150,0), # Middle
+                (62,55), (62,107), # Left Free Throw
+                (300,161), (300,151), (300,107), (300,55), (300,10), (300,0), # Right Edge
+                (238,55), (238,107) # Right Free Throw
+            ]
+            
+            # Map detected pixels to tactical pixels
+            src = np.array([detected_keypoints[i] for i in valid_indices], dtype=np.float32)
+            dst = np.array([tactical_kps[i] for i in valid_indices], dtype=np.float32)
+            
+            M, _ = cv2.findHomography(src, dst)
+            if M is None: return None
+            
+            # Transform positions
+            pts = np.array([pos1, pos2], dtype=np.float32).reshape(-1, 1, 2)
+            trans_pts = cv2.perspectiveTransform(pts, M).reshape(-1, 2)
+            
+            # Convert tactical pixels to meters
+            m1 = (trans_pts[0][0] * actual_width / tactical_w, trans_pts[0][1] * actual_height / tactical_h)
+            m2 = (trans_pts[1][0] * actual_width / tactical_w, trans_pts[1][1] * actual_height / tactical_h)
+            
+            return math.sqrt((m1[0]-m2[0])**2 + (m1[1]-m2[1])**2)
+        except:
+            return None
     
     def _classify_shot_type(
         self,

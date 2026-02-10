@@ -38,6 +38,7 @@ async def run_personal_analysis(video_path: str, options: Optional[Dict[str, Any
     from shot_detector import ShotDetector
     from trackers import BallTracker
     from configs import PERSONAL_MODEL_PATH
+    from analysis.skill_diagnostic import SkillDiagnosticService
     
     settings = get_settings()
     
@@ -354,7 +355,6 @@ async def run_personal_analysis(video_path: str, options: Optional[Dict[str, Any
                                 "track_id": b_id,
                                 "bbox": b_track['bbox']
                             })
-                
                 for f_idx, hoop in enumerate(hoop_detections):
                     if hoop and 'bbox' in hoop:
                         detections.append({
@@ -363,6 +363,36 @@ async def run_personal_analysis(video_path: str, options: Optional[Dict[str, Any
                             "track_id": 0,
                             "bbox": hoop['bbox']
                         })
+                # --- Skill Diagnostic Logic Integration ---
+                try:
+                    diagnostic_service = SkillDiagnosticService()
+                    # Convert primary_detections to the format expected by the service
+                    pose_tracks_formatted = [{} for _ in range(total_frames)]
+                    for det in primary_detections:
+                        f = det['frame']
+                        tid = det['track_id']
+                        if 0 <= f < total_frames:
+                            pose_tracks_formatted[f][tid] = {'keypoints': det['keypoints']}
+                    
+                    # Analyze each shot and attach feedback
+                    coached_shots = []
+                    for s in shots:
+                        # Find matching entry angle from shot detector result
+                        analysis = diagnostic_service.analyze_single_shot(s, pose_tracks_formatted)
+                        coached_shots.append({
+                            **s,
+                            'biometrics': analysis['biometrics'],
+                            'faults': analysis['faults'],
+                            'feedback': analysis['feedback']
+                        })
+                    
+                    # Update shot_stats to include coached details
+                    shot_stats['shots'] = coached_shots
+                    
+                except Exception as diag_err:
+                    print(f"Skill Diagnostic failed: {diag_err}")
+                # -------------------------------------------
+
                 
         except Exception as e:
             print(f"Shot detection failed: {e}")
