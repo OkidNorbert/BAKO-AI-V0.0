@@ -13,20 +13,12 @@ class BallAquisitionDetector:
     """
 
     def __init__(self):
-        """
-        Initialize the BallAquisitionDetector with default thresholds.
-
-        Attributes:
-            possession_threshold (int): Maximum distance (in pixels) at which
-                a player can be considered to have the ball if containment is insufficient.
-            min_frames (int): Minimum number of consecutive frames required for a player
-                to be considered in possession of the ball.
-            containment_threshold (float): Containment ratio above which a player
-                is considered to hold the ball without requiring distance checking.
-        """
-        self.possession_threshold = 50
-        self.min_frames = 11
-        self.containment_threshold = 0.8
+        # possession_threshold: 120 pixels is about a hand's reach in 1080p
+        # min_frames: 3 frames (~0.1s) is enough to confirm intent
+        # containment_threshold: 0.6 means if 60% of ball is in box, it's held
+        self.possession_threshold = 120
+        self.min_frames = 3
+        self.containment_threshold = 0.6
         
     def get_key_basketball_player_assignment_points(self, player_bbox,ball_center):
         """
@@ -188,30 +180,39 @@ class BallAquisitionDetector:
         possession_list = [-1] * num_frames
         consecutive_possession_count = {}
         
+        last_confirmed_player = -1
+        lost_frames = 0
+        max_lost_frames = 5 # Grace period for flickery tracking
+        
         for frame_num in range(num_frames):
             ball_info = ball_tracks[frame_num].get(1, {})
-            if not ball_info:
-                continue
-                
             ball_bbox = ball_info.get('bbox', [])
-            if not ball_bbox:
-                continue
-                
-            ball_center = get_center_of_bbox(ball_bbox)
             
-            best_player_id = self.find_best_candidate_for_possession(
-                ball_center, 
-                player_tracks[frame_num], 
-                ball_bbox
-            )
+            best_player_id = -1
+            if ball_bbox:
+                ball_center = get_center_of_bbox(ball_bbox)
+                best_player_id = self.find_best_candidate_for_possession(
+                    ball_center, 
+                    player_tracks[frame_num], 
+                    ball_bbox
+                )
 
             if best_player_id != -1:
-                number_of_consecutive_frames = consecutive_possession_count.get(best_player_id, 0) + 1
-                consecutive_possession_count = {best_player_id: number_of_consecutive_frames} 
+                count = consecutive_possession_count.get(best_player_id, 0) + 1
+                consecutive_possession_count = {best_player_id: count} 
 
-                if consecutive_possession_count[best_player_id] >= self.min_frames:
+                if count >= self.min_frames:
                     possession_list[frame_num] = best_player_id
+                    last_confirmed_player = best_player_id
+                    lost_frames = 0
             else:
-                consecutive_possession_count ={}
+                # No clear possession in this frame
+                if last_confirmed_player != -1 and lost_frames < max_lost_frames:
+                    # Maintain possession for a few frames to handle ball-player occlusion/distance jitters
+                    possession_list[frame_num] = last_confirmed_player
+                    lost_frames += 1
+                else:
+                    last_confirmed_player = -1
+                    consecutive_possession_count = {}
     
         return possession_list

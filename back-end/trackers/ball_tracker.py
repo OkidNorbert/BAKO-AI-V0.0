@@ -62,7 +62,8 @@ class BallTracker:
         return tracks
 
     def remove_wrong_detections(self,ball_positions):
-        maximum_allowed_distance = 60 # Increased distance for high res
+        # A basketball can move VERY fast. 120 pixels/frame is ~2ms displacement in 1080p.
+        maximum_allowed_distance = 120 
         last_good_frame_index = -1
 
         for i in range(len(ball_positions)):
@@ -78,6 +79,7 @@ class BallTracker:
             frame_gap = i - last_good_frame_index
             adjusted_max_distance = maximum_allowed_distance * frame_gap
 
+            # Distance check to filter out flickering background objects
             if np.linalg.norm(np.array(last_good_box[:2]) - np.array(current_box[:2])) > adjusted_max_distance:
                 ball_positions[i] = {}
             else:
@@ -91,8 +93,12 @@ class BallTracker:
             return ball_positions
 
         df_ball_positions = pd.DataFrame(extracted_bboxes, columns=['x1','y1','x2','y2'])
-        df_ball_positions = df_ball_positions.interpolate()
-        df_ball_positions = df_ball_positions.bfill()
+        
+        # Interpolate only if gap is smaller than 30 frames (1 second)
+        # to avoid drawing a "straight line" across the court if the ball is gone for 5 seconds
+        df_ball_positions = df_ball_positions.interpolate(limit=30, limit_direction='both')
+        df_ball_positions = df_ball_positions.bfill(limit=10) # Minimal fill at start
+        df_ball_positions = df_ball_positions.ffill(limit=10) # Minimal fill at end
 
         output_positions = []
         for x in df_ball_positions.to_numpy().tolist():

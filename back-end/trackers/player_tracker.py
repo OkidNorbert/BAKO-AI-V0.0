@@ -13,8 +13,8 @@ class PlayerTracker:
         self.model = YOLO(model_path) 
         # Tuning for CONGESTION: 
         # track_activation_threshold 0.25 helps pick up lower confidence matches in crowds
-        # lost_track_buffer 60 remembers players who are occluded for up to 2 seconds
-        self.tracker = sv.ByteTrack(track_activation_threshold=0.25, lost_track_buffer=60)
+        # lost_track_buffer 90 remembers players who are occluded for up to 3 seconds
+        self.tracker = sv.ByteTrack(track_activation_threshold=0.25, lost_track_buffer=90)
 
     def detect_frames(self, frames):
         batch_size=10 # Smaller batch for higher resolution
@@ -23,7 +23,7 @@ class PlayerTracker:
             # HIGHER RESOLUTION (imgsz=1080) and LOWER CONFIDENCE
             detections_batch = self.model.predict(
                 frames[i:i+batch_size], 
-                conf=0.15, 
+                conf=0.1, 
                 imgsz=1080
             )
             detections += detections_batch
@@ -53,9 +53,9 @@ class PlayerTracker:
             refined_mask = []
             for class_id, confidence in zip(detection_supervision.class_id, detection_supervision.confidence):
                 class_name = cls_names[class_id].lower()
-                if class_name == 'player' and confidence >= 0.15:
+                if class_name == 'player' and confidence >= 0.1:
                     refined_mask.append(True)
-                elif class_name == 'referee' and confidence >= 0.45:
+                elif class_name == 'referee' and confidence >= 0.25:
                     refined_mask.append(True)
                 else:
                     refined_mask.append(False)

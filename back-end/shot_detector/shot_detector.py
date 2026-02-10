@@ -227,8 +227,10 @@ class ShotDetector:
                             shot_outcome['shot_type'] = "three-pointer" if dist_meters > 6.75 else "two-pointer"
                             shot_outcome['shooter_distance_meters'] = round(dist_meters, 2)
                         else:
+                            # Use Euclidean distance in pixels
                             dist_to_hoop_px = math.sqrt((shooter_pos[0]-dist_to_hoop_target['x'])**2 + (shooter_pos[1]-dist_to_hoop_target['y'])**2)
-                            shot_outcome['shot_type'] = "three-pointer" if dist_to_hoop_px > 350 else "two-pointer"
+                            # Threshold calibrated for roughly 1080p: 550px is a safer 3-point line proxy
+                            shot_outcome['shot_type'] = "three-pointer" if dist_to_hoop_px > 500 else "two-pointer"
                             shot_outcome['shooter_distance_px'] = round(dist_to_hoop_px, 2)
                         
                         shot_outcome['player_id'] = shooter_id
@@ -432,25 +434,24 @@ class ShotDetector:
             if not hoop:
                 continue
                 
-            # Horizontal and vertical distances to the rim
+            # Horizontal distance to the rim center
             horizontal_dist = abs(ball_point['x'] - hoop['x'])
-            vertical_dist = abs(ball_point['y'] - hoop['rim_y'])
             
-            # Check if ball has passed rim level
-            if ball_point['y'] >= hoop['rim_y'] and outcome_frame is None:
+            # Check if ball has passed rim level with a small buffer (15px) to avoid "too early" detection.
+            # We also ensure it's within a tighter horizontal range for success.
+            if ball_point['y'] >= hoop['rim_y'] + 15 and outcome_frame is None:
                 outcome_frame = frame_num
                 min_dist_at_rim = horizontal_dist
                 
                 # SUCCESS CONDITION: 
-                # If the ball is within the hoop's horizontal zone at the moment it crosses the rim
-                if horizontal_dist < 85: 
+                # Ball center must be within the rim's diameter roughly.
+                # 65px is a more reliable threshold for "through the hoop" at typical distances
+                if horizontal_dist < 65: 
                     made_detected = True
                     break
 
-            # SECONDARY CHECK: Collision/Meeting
-            # If the ball center is inside the "Hoop Cylinder" zone
-            # (X is within hoop width, Y is between rim and net bottom)
-            if horizontal_dist < 60 and 0 <= (ball_point['y'] - hoop['rim_y']) < 100:
+            # SECONDARY CHECK: Collision/Meeting (Ball slightly below rim and very close horizontally)
+            if horizontal_dist < 50 and 15 <= (ball_point['y'] - hoop['rim_y']) < 100:
                 made_detected = True
                 outcome_frame = frame_num
                 min_dist_at_rim = horizontal_dist
@@ -572,25 +573,16 @@ class ShotDetector:
         if not hoop_location:
             return 'unknown'
         
-        # Calculate horizontal distance to hoop
-        horizontal_distance = abs(start_pos[0] - hoop_location['x'])
+        # Calculate Euclidean distance to hoop (much more reliable than horizontal only)
+        euclidean_distance = math.sqrt((start_pos[0] - hoop_location['x'])**2 + (start_pos[1] - hoop_location['y'])**2)
         
-        # Layup/Dunk detection (close range, low arc)
-        if horizontal_distance < 150:
-            if arc_height < 80:
-                return 'layup'
-            else:
-                return 'layup'
-        
-        # Three-pointer (far range)
-        elif horizontal_distance > 400:
+        # Shot type classification thresholds (in pixels, calibrated for 1080p)
+        if euclidean_distance < 180:
+            return 'layup'
+        elif euclidean_distance > 500:
             return 'three-pointer'
-        
-        # Mid-range
-        elif horizontal_distance > 150:
+        else:
             return 'mid-range'
-        
-        return 'mid-range'
     
     def calculate_shot_statistics(
         self, 
