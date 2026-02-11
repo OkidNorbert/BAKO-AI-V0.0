@@ -15,7 +15,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import get_settings
 from app.core import BasketballAPIException
-from app.api import auth, videos, analysis, teams, players, analytics, admin, player_routes
+from app.api import auth, videos, analysis, teams, players, analytics, admin, player_routes, advanced_analytics
 from app.middleware.timeout import TimeoutMiddleware
 
 # Basic rate limiting for abuse protection
@@ -208,6 +208,7 @@ def register_routes(app: FastAPI) -> None:
     app.include_router(teams.router, prefix="/api/teams", tags=["Teams"])
     app.include_router(players.router, prefix="/api/players", tags=["Players"])
     app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])
+    app.include_router(advanced_analytics.router, prefix="/api/analytics/advanced", tags=["Advanced Analytics"])
     app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
     app.include_router(player_routes.router, prefix="/api/player", tags=["Player Portal"])
 

@@ -36,7 +36,7 @@ async def run_team_analysis(video_path: str, options: Optional[Dict[str, Any]] =
     from trackers import PlayerTracker, BallTracker
     from team_assigner import TeamAssigner
     from court_keypoint_detector import CourtKeypointDetector
-    from ball_aquisition_detector import BallAquisitionDetector
+    from ball_aquisition.ball_aquisition_detector import BallAquisitionDetector
     from pass_and_interception_detector import PassAndInterceptionDetector
     from tactical_view_converter import TacticalViewConverter
     from speed_and_distance_calculator import SpeedAndDistanceCalculator
@@ -63,9 +63,9 @@ async def run_team_analysis(video_path: str, options: Optional[Dict[str, Any]] =
     court_keypoint_detector = CourtKeypointDetector(COURT_KEYPOINT_DETECTOR_PATH)
     
     # Run detection (no stub caching for API use)
-    player_tracks = player_tracker.get_object_tracks(video_frames, read_from_stub=False)
-    ball_tracks = ball_tracker.get_object_tracks(video_frames, read_from_stub=False)
-    court_keypoints = court_keypoint_detector.get_court_keypoints(video_frames, read_from_stub=False)
+    player_tracks = player_tracker.get_object_tracks(video_frames, read_from_stub=False, stub_path=None)
+    ball_tracks = ball_tracker.get_object_tracks(video_frames, read_from_stub=False, stub_path=None)
+    court_keypoints = court_keypoint_detector.get_court_keypoints(video_frames, read_from_stub=False, stub_path=None)
     
     # Clean ball tracks
     ball_tracks = ball_tracker.remove_wrong_detections(ball_tracks)
@@ -74,7 +74,7 @@ async def run_team_analysis(video_path: str, options: Optional[Dict[str, Any]] =
     # Team assignment
     team_assigner = TeamAssigner()
     player_assignment = team_assigner.get_player_teams_across_frames(
-        video_frames, player_tracks, read_from_stub=False
+        video_frames, player_tracks, read_from_stub=False, stub_path=None
     )
     
     # Ball possession
@@ -288,7 +288,37 @@ async def run_team_analysis(video_path: str, options: Optional[Dict[str, Any]] =
     
     duration_seconds = total_frames / fps
     
-    return {
+    # ============================================
+    # ADVANCED ANALYTICS (OPT-IN)
+    # ============================================
+    advanced_analytics = None
+    if options and options.get("enable_advanced_analytics", False):
+        try:
+            print("Running advanced analytics...")
+            from analytics_engine import AnalyticsCoordinator
+            
+            coordinator = AnalyticsCoordinator()
+            advanced_analytics = coordinator.process_all(
+                video_frames=video_frames,
+                player_tracks=player_tracks,
+                ball_tracks=ball_tracks,
+                tactical_positions=tactical_positions,
+                player_assignment=player_assignment,
+                ball_possession=ball_possession,
+                events=events,
+                shots=shots,
+                court_keypoints=court_keypoints,
+                speeds=speeds,
+                video_path=video_path,
+                fps=fps
+            )
+            print(f"Advanced analytics complete: {len(advanced_analytics.get('modules_executed', []))} modules succeeded")
+        except Exception as e:
+            print(f"Advanced analytics failed: {e}")
+            advanced_analytics = {"error": str(e), "status": "failed"}
+    
+    # Build result dictionary
+    result = {
         "total_frames": total_frames,
         "duration_seconds": duration_seconds,
         "players_detected": len(unique_players),
@@ -319,4 +349,10 @@ async def run_team_analysis(video_path: str, options: Optional[Dict[str, Any]] =
         "events": events,
         "detections": detections,
     }
+    
+    # Add advanced analytics if available
+    if advanced_analytics:
+        result["advanced_analytics"] = advanced_analytics
+    
+    return result
 

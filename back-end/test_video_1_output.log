@@ -1,0 +1,515 @@
+================================================================================
+  Testing Advanced Analytics with video_1.mp4
+================================================================================
+
+📹 Video: input_videos/video_1.mp4
+⚙️  Options: {'enable_advanced_analytics': True, 'detections_stride': 5, 'max_detections': 50000}
+
+🚀 Starting analysis...
+
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 1 basketball, 7 players, 372.8ms
+1: 640x1088 1 basketball, 7 players, 372.8ms
+2: 640x1088 1 basketball, 1 hoop, 9 players, 372.8ms
+3: 640x1088 1 basketball, 1 hoop, 8 players, 372.8ms
+4: 640x1088 1 basketball, 1 hoop, 8 players, 372.8ms
+5: 640x1088 1 hoop, 8 players, 372.8ms
+6: 640x1088 2 basketballs, 1 hoop, 7 players, 372.8ms
+7: 640x1088 1 basketball, 8 players, 372.8ms
+8: 640x1088 1 basketball, 7 players, 372.8ms
+9: 640x1088 1 basketball, 9 players, 372.8ms
+Speed: 21.2ms preprocess, 372.8ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 1 basketball, 6 players, 506.0ms
+1: 640x1088 1 basketball, 1 hoop, 4 players, 506.0ms
+2: 640x1088 1 basketball, 2 hoops, 5 players, 506.0ms
+3: 640x1088 2 basketballs, 1 hoop, 4 players, 506.0ms
+4: 640x1088 1 basketball, 3 players, 506.0ms
+5: 640x1088 2 basketballs, 1 hoop, 7 players, 506.0ms
+6: 640x1088 1 basketball, 10 players, 506.0ms
+7: 640x1088 1 basketball, 6 players, 506.0ms
+8: 640x1088 1 basketball, 8 players, 506.0ms
+9: 640x1088 1 basketball, 7 players, 506.0ms
+Speed: 9.5ms preprocess, 506.0ms inference, 1.9ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 1 basketball, 4 players, 399.0ms
+1: 640x1088 1 basketball, 1 hoop, 5 players, 399.0ms
+2: 640x1088 1 hoop, 4 players, 399.0ms
+3: 640x1088 1 basketball, 5 players, 399.0ms
+4: 640x1088 1 basketball, 4 players, 399.0ms
+5: 640x1088 1 basketball, 1 hoop, 3 players, 399.0ms
+6: 640x1088 1 basketball, 1 hoop, 4 players, 399.0ms
+7: 640x1088 1 basketball, 2 hoops, 5 players, 399.0ms
+8: 640x1088 1 basketball, 1 hoop, 4 players, 399.0ms
+9: 640x1088 1 basketball, 5 players, 399.0ms
+Speed: 10.3ms preprocess, 399.0ms inference, 17.8ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 2 basketballs, 2 hoops, 4 players, 399.6ms
+1: 640x1088 1 basketball, 1 hoop, 4 players, 399.6ms
+2: 640x1088 2 basketballs, 4 players, 399.6ms
+3: 640x1088 1 basketball, 5 players, 399.6ms
+4: 640x1088 1 basketball, 1 hoop, 4 players, 399.6ms
+5: 640x1088 1 basketball, 4 players, 399.6ms
+6: 640x1088 1 basketball, 5 players, 399.6ms
+7: 640x1088 1 basketball, 5 players, 399.6ms
+8: 640x1088 1 basketball, 4 players, 399.6ms
+9: 640x1088 2 basketballs, 1 hoop, 3 players, 399.6ms
+Speed: 16.0ms preprocess, 399.6ms inference, 0.9ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 1 basketball, 3 players, 223.5ms
+1: 640x1088 1 basketball, 6 players, 223.5ms
+2: 640x1088 1 basketball, 3 players, 223.5ms
+3: 640x1088 1 basketball, 1 hoop, 3 players, 223.5ms
+4: 640x1088 1 basketball, 1 hoop, 4 players, 223.5ms
+5: 640x1088 1 basketball, 1 hoop, 5 players, 223.5ms
+6: 640x1088 6 players, 223.5ms
+7: 640x1088 1 basketball, 1 hoop, 4 players, 223.5ms
+8: 640x1088 1 basketball, 4 players, 223.5ms
+9: 640x1088 1 basketball, 1 hoop, 4 players, 223.5ms
+Speed: 9.9ms preprocess, 223.5ms inference, 0.8ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 1 basketball, 5 players, 265.6ms
+1: 640x1088 1 basketball, 5 players, 265.6ms
+2: 640x1088 1 basketball, 4 players, 265.6ms
+3: 640x1088 1 basketball, 4 players, 265.6ms
+4: 640x1088 1 basketball, 3 players, 265.6ms
+5: 640x1088 1 basketball, 3 players, 265.6ms
+6: 640x1088 1 basketball, 5 players, 265.6ms
+7: 640x1088 1 basketball, 3 players, 265.6ms
+8: 640x1088 1 basketball, 5 players, 265.6ms
+9: 640x1088 1 basketball, 9 players, 265.6ms
+Speed: 9.2ms preprocess, 265.6ms inference, 1.3ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 1 basketball, 9 players, 416.0ms
+1: 640x1088 1 basketball, 7 players, 416.0ms
+2: 640x1088 1 basketball, 4 players, 416.0ms
+3: 640x1088 1 basketball, 5 players, 416.0ms
+4: 640x1088 1 basketball, 1 hoop, 5 players, 416.0ms
+5: 640x1088 6 players, 416.0ms
+6: 640x1088 5 players, 416.0ms
+7: 640x1088 1 basketball, 6 players, 416.0ms
+8: 640x1088 1 basketball, 5 players, 416.0ms
+9: 640x1088 5 players, 416.0ms
+Speed: 9.4ms preprocess, 416.0ms inference, 4.8ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 6 players, 257.6ms
+1: 640x1088 8 players, 257.6ms
+2: 640x1088 8 players, 257.6ms
+3: 640x1088 7 players, 257.6ms
+4: 640x1088 8 players, 257.6ms
+5: 640x1088 5 players, 1 referee, 257.6ms
+6: 640x1088 7 players, 257.6ms
+7: 640x1088 7 players, 257.6ms
+8: 640x1088 6 players, 257.6ms
+9: 640x1088 6 players, 257.6ms
+Speed: 13.1ms preprocess, 257.6ms inference, 1.6ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 1 hoop, 7 players, 243.1ms
+1: 640x1088 5 players, 243.1ms
+2: 640x1088 1 basketball, 6 players, 243.1ms
+3: 640x1088 1 basketball, 6 players, 243.1ms
+4: 640x1088 7 players, 243.1ms
+5: 640x1088 6 players, 243.1ms
+6: 640x1088 8 players, 243.1ms
+7: 640x1088 9 players, 243.1ms
+8: 640x1088 7 players, 243.1ms
+9: 640x1088 6 players, 243.1ms
+Speed: 12.5ms preprocess, 243.1ms inference, 0.7ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 6 players, 212.4ms
+1: 640x1088 2 basketballs, 6 players, 212.4ms
+2: 640x1088 3 basketballs, 5 players, 212.4ms
+3: 640x1088 1 basketball, 5 players, 212.4ms
+4: 640x1088 2 basketballs, 5 players, 212.4ms
+5: 640x1088 4 basketballs, 6 players, 212.4ms
+6: 640x1088 1 basketball, 5 players, 212.4ms
+7: 640x1088 2 basketballs, 6 players, 1 referee, 212.4ms
+8: 640x1088 2 basketballs, 5 players, 1 referee, 212.4ms
+9: 640x1088 2 basketballs, 5 players, 1 referee, 212.4ms
+Speed: 8.6ms preprocess, 212.4ms inference, 0.8ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 2 basketballs, 6 players, 1 referee, 252.8ms
+1: 640x1088 1 basketball, 6 players, 252.8ms
+2: 640x1088 1 basketball, 6 players, 1 referee, 252.8ms
+3: 640x1088 3 basketballs, 8 players, 1 referee, 252.8ms
+4: 640x1088 6 players, 1 referee, 252.8ms
+5: 640x1088 1 basketball, 1 hoop, 6 players, 1 referee, 252.8ms
+6: 640x1088 4 basketballs, 5 players, 252.8ms
+7: 640x1088 1 basketball, 6 players, 252.8ms
+8: 640x1088 2 basketballs, 1 hoop, 7 players, 1 referee, 252.8ms
+9: 640x1088 1 basketball, 6 players, 1 referee, 252.8ms
+Speed: 8.6ms preprocess, 252.8ms inference, 0.9ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 1 basketball, 7 players, 1 referee, 270.8ms
+1: 640x1088 2 basketballs, 1 hoop, 9 players, 1 referee, 270.8ms
+2: 640x1088 1 basketball, 1 hoop, 9 players, 1 referee, 270.8ms
+3: 640x1088 1 basketball, 1 hoop, 9 players, 2 referees, 270.8ms
+4: 640x1088 1 basketball, 1 hoop, 8 players, 2 referees, 270.8ms
+5: 640x1088 1 basketball, 1 hoop, 10 players, 2 referees, 270.8ms
+6: 640x1088 1 basketball, 1 hoop, 8 players, 1 referee, 270.8ms
+7: 640x1088 2 basketballs, 1 hoop, 7 players, 1 referee, 1 shot-clock, 270.8ms
+8: 640x1088 1 basketball, 1 hoop, 9 players, 1 referee, 1 shot-clock, 270.8ms
+9: 640x1088 1 hoop, 7 players, 1 referee, 1 shot-clock, 270.8ms
+Speed: 8.9ms preprocess, 270.8ms inference, 1.1ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 1 hoop, 5 players, 1 shot-clock, 211.8ms
+1: 640x1088 1 basketball, 1 hoop, 7 players, 1 referee, 1 shot-clock, 211.8ms
+2: 640x1088 1 basketball, 1 hoop, 6 players, 1 referee, 1 shot-clock, 211.8ms
+3: 640x1088 1 basketball, 1 hoop, 7 players, 1 referee, 1 shot-clock, 211.8ms
+4: 640x1088 1 basketball, 1 hoop, 6 players, 1 referee, 211.8ms
+5: 640x1088 1 basketball, 1 hoop, 6 players, 2 referees, 1 shot-clock, 211.8ms
+6: 640x1088 1 basketball, 1 hoop, 8 players, 1 referee, 1 shot-clock, 211.8ms
+7: 640x1088 1 basketball, 1 hoop, 7 players, 1 shot-clock, 211.8ms
+8: 640x1088 1 basketball, 1 hoop, 7 players, 1 referee, 1 shot-clock, 211.8ms
+9: 640x1088 1 basketball, 1 hoop, 6 players, 1 referee, 1 shot-clock, 211.8ms
+Speed: 8.5ms preprocess, 211.8ms inference, 1.4ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 1 basketball, 1 hoop, 6 players, 1 referee, 1 shot-clock, 207.4ms
+1: 640x1088 1 basketball, 1 hoop, 9 players, 1 referee, 1 shot-clock, 207.4ms
+2: 640x1088 1 basketball, 1 hoop, 7 players, 1 referee, 1 shot-clock, 207.4ms
+3: 640x1088 1 basketball, 1 hoop, 7 players, 1 referee, 1 shot-clock, 207.4ms
+4: 640x1088 1 basketball, 1 hoop, 9 players, 1 referee, 1 shot-clock, 207.4ms
+5: 640x1088 1 basketball, 1 hoop, 7 players, 1 referee, 1 shot-clock, 207.4ms
+6: 640x1088 1 basketball, 1 hoop, 10 players, 1 referee, 1 shot-clock, 207.4ms
+7: 640x1088 1 basketball, 1 hoop, 7 players, 1 shot-clock, 207.4ms
+8: 640x1088 1 basketball, 1 hoop, 6 players, 1 referee, 1 shot-clock, 207.4ms
+9: 640x1088 1 basketball, 1 hoop, 5 players, 1 shot-clock, 207.4ms
+Speed: 9.0ms preprocess, 207.4ms inference, 0.9ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 1 basketball, 1 hoop, 4 players, 1 shot-clock, 200.3ms
+1: 640x1088 1 basketball, 1 hoop, 6 players, 1 shot-clock, 200.3ms
+2: 640x1088 1 basketball, 1 hoop, 4 players, 1 shot-clock, 200.3ms
+3: 640x1088 1 basketball, 1 hoop, 6 players, 1 shot-clock, 200.3ms
+4: 640x1088 1 basketball, 1 hoop, 5 players, 1 shot-clock, 200.3ms
+5: 640x1088 1 basketball, 1 hoop, 5 players, 1 shot-clock, 200.3ms
+6: 640x1088 1 basketball, 1 hoop, 5 players, 1 shot-clock, 200.3ms
+7: 640x1088 1 basketball, 1 hoop, 6 players, 1 shot-clock, 200.3ms
+8: 640x1088 1 basketball, 1 hoop, 6 players, 1 shot-clock, 200.3ms
+9: 640x1088 1 basketball, 1 hoop, 9 players, 1 shot-clock, 200.3ms
+Speed: 8.5ms preprocess, 200.3ms inference, 0.8ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 1 basketball, 1 hoop, 11 players, 1 referee, 1 shot-clock, 207.2ms
+1: 640x1088 1 basketball, 1 hoop, 8 players, 1 referee, 1 shot-clock, 207.2ms
+2: 640x1088 1 basketball, 1 hoop, 11 players, 1 referee, 1 shot-clock, 207.2ms
+3: 640x1088 1 basketball, 1 hoop, 9 players, 1 referee, 1 shot-clock, 207.2ms
+4: 640x1088 1 basketball, 1 hoop, 9 players, 1 referee, 1 shot-clock, 207.2ms
+5: 640x1088 1 basketball, 1 hoop, 7 players, 1 referee, 1 shot-clock, 207.2ms
+6: 640x1088 1 basketball, 1 hoop, 7 players, 1 referee, 1 shot-clock, 207.2ms
+7: 640x1088 1 basketball, 1 hoop, 7 players, 1 referee, 1 shot-clock, 207.2ms
+8: 640x1088 1 basketball, 1 hoop, 7 players, 1 referee, 1 shot-clock, 207.2ms
+9: 640x1088 1 basketball, 1 hoop, 7 players, 1 referee, 1 shot-clock, 207.2ms
+Speed: 8.4ms preprocess, 207.2ms inference, 0.8ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 1 basketball, 1 hoop, 9 players, 2 referees, 1 shot-clock, 267.9ms
+1: 640x1088 1 basketball, 1 hoop, 7 players, 2 referees, 1 shot-clock, 267.9ms
+2: 640x1088 1 basketball, 1 hoop, 8 players, 2 referees, 1 shot-clock, 267.9ms
+3: 640x1088 1 basketball, 1 hoop, 8 players, 1 referee, 1 shot-clock, 267.9ms
+4: 640x1088 1 basketball, 1 hoop, 6 players, 1 referee, 1 shot-clock, 267.9ms
+5: 640x1088 1 basketball, 1 hoop, 4 players, 1 referee, 1 shot-clock, 267.9ms
+6: 640x1088 1 basketball, 1 hoop, 3 players, 1 referee, 1 shot-clock, 267.9ms
+7: 640x1088 1 basketball, 1 hoop, 5 players, 1 referee, 1 shot-clock, 267.9ms
+8: 640x1088 1 basketball, 1 hoop, 6 players, 1 referee, 1 shot-clock, 267.9ms
+9: 640x1088 1 basketball, 1 hoop, 5 players, 1 referee, 1 shot-clock, 267.9ms
+Speed: 8.5ms preprocess, 267.9ms inference, 0.7ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 1 basketball, 1 hoop, 6 players, 1 referee, 1 shot-clock, 208.0ms
+1: 640x1088 1 basketball, 1 hoop, 5 players, 1 shot-clock, 208.0ms
+2: 640x1088 1 basketball, 1 hoop, 6 players, 1 shot-clock, 208.0ms
+3: 640x1088 1 basketball, 1 hoop, 5 players, 1 shot-clock, 208.0ms
+4: 640x1088 1 basketball, 1 hoop, 5 players, 1 shot-clock, 208.0ms
+5: 640x1088 1 hoop, 6 players, 1 referee, 1 shot-clock, 208.0ms
+6: 640x1088 1 hoop, 8 players, 1 referee, 1 shot-clock, 208.0ms
+7: 640x1088 1 hoop, 7 players, 1 referee, 1 shot-clock, 208.0ms
+8: 640x1088 1 hoop, 6 players, 1 referee, 1 shot-clock, 208.0ms
+9: 640x1088 1 basketball, 1 hoop, 6 players, 1 referee, 1 shot-clock, 208.0ms
+Speed: 8.6ms preprocess, 208.0ms inference, 0.8ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 2 basketballs, 1 hoop, 7 players, 1 referee, 1 shot-clock, 211.2ms
+1: 640x1088 1 basketball, 1 hoop, 5 players, 1 referee, 1 shot-clock, 211.2ms
+2: 640x1088 1 hoop, 5 players, 1 referee, 1 shot-clock, 211.2ms
+3: 640x1088 2 basketballs, 1 hoop, 5 players, 1 referee, 1 shot-clock, 211.2ms
+4: 640x1088 1 hoop, 6 players, 1 referee, 1 shot-clock, 211.2ms
+5: 640x1088 1 hoop, 5 players, 1 referee, 1 shot-clock, 211.2ms
+6: 640x1088 1 hoop, 4 players, 1 referee, 1 shot-clock, 211.2ms
+7: 640x1088 1 hoop, 5 players, 1 referee, 1 shot-clock, 211.2ms
+8: 640x1088 1 hoop, 5 players, 1 referee, 1 shot-clock, 211.2ms
+9: 640x1088 1 hoop, 5 players, 1 referee, 1 shot-clock, 211.2ms
+Speed: 8.9ms preprocess, 211.2ms inference, 0.8ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 1 basketball, 1 hoop, 6 players, 1 referee, 1 shot-clock, 237.4ms
+1: 640x1088 1 hoop, 7 players, 1 referee, 1 shot-clock, 237.4ms
+Speed: 9.1ms preprocess, 237.4ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 2 basketballs, 1 hoop, 7 players, 207.0ms
+1: 640x1088 1 basketball, 7 players, 207.0ms
+2: 640x1088 1 basketball, 1 hoop, 11 players, 207.0ms
+3: 640x1088 1 basketball, 1 hoop, 13 players, 207.0ms
+4: 640x1088 1 basketball, 1 hoop, 11 players, 207.0ms
+5: 640x1088 1 hoop, 9 players, 207.0ms
+6: 640x1088 3 basketballs, 1 hoop, 8 players, 207.0ms
+7: 640x1088 1 basketball, 1 hoop, 10 players, 207.0ms
+8: 640x1088 1 basketball, 1 hoop, 7 players, 207.0ms
+9: 640x1088 2 basketballs, 9 players, 207.0ms
+Speed: 8.2ms preprocess, 207.0ms inference, 0.8ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 1 basketball, 8 players, 256.1ms
+1: 640x1088 1 basketball, 2 hoops, 4 players, 256.1ms
+2: 640x1088 2 basketballs, 3 hoops, 5 players, 256.1ms
+3: 640x1088 3 basketballs, 3 hoops, 4 players, 256.1ms
+4: 640x1088 1 basketball, 1 hoop, 4 players, 256.1ms
+5: 640x1088 3 basketballs, 3 hoops, 11 players, 256.1ms
+6: 640x1088 1 basketball, 2 hoops, 12 players, 256.1ms
+7: 640x1088 1 basketball, 1 hoop, 11 players, 256.1ms
+8: 640x1088 1 basketball, 2 hoops, 10 players, 256.1ms
+9: 640x1088 1 basketball, 9 players, 256.1ms
+Speed: 8.0ms preprocess, 256.1ms inference, 20.6ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 1 basketball, 5 players, 311.9ms
+1: 640x1088 1 basketball, 2 hoops, 5 players, 311.9ms
+2: 640x1088 2 hoops, 8 players, 311.9ms
+3: 640x1088 1 basketball, 1 hoop, 7 players, 311.9ms
+4: 640x1088 1 basketball, 6 players, 311.9ms
+5: 640x1088 1 basketball, 1 hoop, 8 players, 311.9ms
+6: 640x1088 1 basketball, 1 hoop, 5 players, 311.9ms
+7: 640x1088 1 basketball, 2 hoops, 8 players, 311.9ms
+8: 640x1088 1 basketball, 1 hoop, 5 players, 311.9ms
+9: 640x1088 2 basketballs, 2 hoops, 7 players, 311.9ms
+Speed: 11.6ms preprocess, 311.9ms inference, 1.1ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 2 basketballs, 2 hoops, 7 players, 283.1ms
+1: 640x1088 2 basketballs, 1 hoop, 5 players, 283.1ms
+2: 640x1088 3 basketballs, 2 hoops, 5 players, 283.1ms
+3: 640x1088 2 basketballs, 1 hoop, 5 players, 283.1ms
+4: 640x1088 1 basketball, 2 hoops, 5 players, 283.1ms
+5: 640x1088 1 basketball, 1 hoop, 4 players, 283.1ms
+6: 640x1088 1 basketball, 1 hoop, 5 players, 283.1ms
+7: 640x1088 1 basketball, 3 hoops, 5 players, 283.1ms
+8: 640x1088 2 basketballs, 1 hoop, 4 players, 283.1ms
+9: 640x1088 2 basketballs, 3 hoops, 3 players, 283.1ms
+Speed: 9.1ms preprocess, 283.1ms inference, 1.0ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 1 basketball, 3 players, 247.3ms
+1: 640x1088 1 basketball, 7 players, 247.3ms
+2: 640x1088 1 basketball, 1 hoop, 4 players, 247.3ms
+3: 640x1088 1 basketball, 3 hoops, 4 players, 247.3ms
+4: 640x1088 1 basketball, 1 hoop, 6 players, 247.3ms
+5: 640x1088 1 basketball, 1 hoop, 6 players, 247.3ms
+6: 640x1088 1 hoop, 6 players, 247.3ms
+7: 640x1088 1 basketball, 2 hoops, 6 players, 247.3ms
+8: 640x1088 1 basketball, 5 players, 247.3ms
+9: 640x1088 1 basketball, 1 hoop, 7 players, 247.3ms
+Speed: 8.9ms preprocess, 247.3ms inference, 1.6ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 1 basketball, 5 players, 223.1ms
+1: 640x1088 1 basketball, 5 players, 223.1ms
+2: 640x1088 1 basketball, 4 players, 223.1ms
+3: 640x1088 2 basketballs, 5 players, 223.1ms
+4: 640x1088 1 basketball, 4 players, 223.1ms
+5: 640x1088 1 basketball, 3 players, 223.1ms
+6: 640x1088 1 basketball, 5 players, 223.1ms
+7: 640x1088 1 basketball, 6 players, 223.1ms
+8: 640x1088 1 basketball, 6 players, 223.1ms
+9: 640x1088 1 basketball, 12 players, 223.1ms
+Speed: 9.7ms preprocess, 223.1ms inference, 0.8ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 1 basketball, 9 players, 259.4ms
+1: 640x1088 3 basketballs, 8 players, 259.4ms
+2: 640x1088 2 basketballs, 4 players, 259.4ms
+3: 640x1088 1 basketball, 1 hoop, 5 players, 259.4ms
+4: 640x1088 1 basketball, 2 hoops, 5 players, 259.4ms
+5: 640x1088 6 players, 259.4ms
+6: 640x1088 1 basketball, 6 players, 259.4ms
+7: 640x1088 1 basketball, 8 players, 259.4ms
+8: 640x1088 1 basketball, 8 players, 259.4ms
+9: 640x1088 7 players, 259.4ms
+Speed: 8.2ms preprocess, 259.4ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 10 players, 221.5ms
+1: 640x1088 10 players, 221.5ms
+2: 640x1088 9 players, 221.5ms
+3: 640x1088 10 players, 221.5ms
+4: 640x1088 9 players, 221.5ms
+5: 640x1088 6 players, 1 referee, 221.5ms
+6: 640x1088 1 basketball, 9 players, 221.5ms
+7: 640x1088 11 players, 221.5ms
+8: 640x1088 8 players, 221.5ms
+9: 640x1088 7 players, 221.5ms
+Speed: 8.9ms preprocess, 221.5ms inference, 1.9ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 1 hoop, 7 players, 207.2ms
+1: 640x1088 6 players, 207.2ms
+2: 640x1088 2 basketballs, 6 players, 207.2ms
+3: 640x1088 1 basketball, 8 players, 207.2ms
+4: 640x1088 8 players, 207.2ms
+5: 640x1088 7 players, 207.2ms
+6: 640x1088 9 players, 207.2ms
+7: 640x1088 10 players, 207.2ms
+8: 640x1088 10 players, 207.2ms
+9: 640x1088 1 basketball, 7 players, 207.2ms
+Speed: 8.9ms preprocess, 207.2ms inference, 0.8ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 1 basketball, 8 players, 201.5ms
+1: 640x1088 2 basketballs, 7 players, 201.5ms
+2: 640x1088 4 basketballs, 1 hoop, 6 players, 201.5ms
+3: 640x1088 1 basketball, 6 players, 201.5ms
+4: 640x1088 3 basketballs, 5 players, 201.5ms
+5: 640x1088 4 basketballs, 9 players, 201.5ms
+6: 640x1088 2 basketballs, 6 players, 201.5ms
+7: 640x1088 2 basketballs, 6 players, 1 referee, 201.5ms
+8: 640x1088 3 basketballs, 5 players, 1 referee, 201.5ms
+9: 640x1088 2 basketballs, 5 players, 1 referee, 201.5ms
+Speed: 8.0ms preprocess, 201.5ms inference, 0.8ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 3 basketballs, 6 players, 1 referee, 198.8ms
+1: 640x1088 1 basketball, 6 players, 198.8ms
+2: 640x1088 1 basketball, 7 players, 1 referee, 198.8ms
+3: 640x1088 4 basketballs, 1 hoop, 8 players, 1 referee, 198.8ms
+4: 640x1088 1 basketball, 6 players, 1 referee, 198.8ms
+5: 640x1088 2 basketballs, 2 hoops, 6 players, 1 referee, 198.8ms
+6: 640x1088 5 basketballs, 1 hoop, 5 players, 198.8ms
+7: 640x1088 1 basketball, 6 players, 198.8ms
+8: 640x1088 3 basketballs, 1 hoop, 8 players, 1 referee, 198.8ms
+9: 640x1088 3 basketballs, 1 hoop, 8 players, 1 referee, 198.8ms
+Speed: 7.9ms preprocess, 198.8ms inference, 0.8ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 3 basketballs, 1 hoop, 8 players, 2 referees, 266.4ms
+1: 640x1088 5 basketballs, 1 hoop, 11 players, 1 referee, 266.4ms
+2: 640x1088 1 basketball, 1 hoop, 11 players, 1 referee, 266.4ms
+3: 640x1088 1 basketball, 1 hoop, 11 players, 2 referees, 266.4ms
+4: 640x1088 1 basketball, 1 hoop, 8 players, 2 referees, 266.4ms
+5: 640x1088 1 basketball, 1 hoop, 10 players, 3 referees, 266.4ms
+6: 640x1088 1 basketball, 1 hoop, 8 players, 2 referees, 266.4ms
+7: 640x1088 3 basketballs, 1 hoop, 7 players, 2 referees, 1 shot-clock, 266.4ms
+8: 640x1088 1 basketball, 1 hoop, 10 players, 1 referee, 1 shot-clock, 266.4ms
+9: 640x1088 1 basketball, 1 hoop, 8 players, 1 referee, 1 shot-clock, 266.4ms
+Speed: 7.8ms preprocess, 266.4ms inference, 0.8ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 1 hoop, 7 players, 1 referee, 1 shot-clock, 215.6ms
+1: 640x1088 1 basketball, 1 hoop, 10 players, 1 referee, 1 shot-clock, 215.6ms
+2: 640x1088 1 basketball, 1 hoop, 6 players, 1 referee, 1 shot-clock, 215.6ms
+3: 640x1088 1 basketball, 1 hoop, 7 players, 1 referee, 1 shot-clock, 215.6ms
+4: 640x1088 1 basketball, 1 hoop, 9 players, 1 referee, 1 shot-clock, 215.6ms
+5: 640x1088 1 basketball, 2 hoops, 9 players, 2 referees, 1 shot-clock, 215.6ms
+6: 640x1088 2 basketballs, 2 hoops, 8 players, 1 referee, 1 shot-clock, 215.6ms
+7: 640x1088 1 basketball, 1 hoop, 8 players, 1 referee, 1 shot-clock, 215.6ms
+8: 640x1088 1 basketball, 1 hoop, 8 players, 1 referee, 1 shot-clock, 215.6ms
+9: 640x1088 1 basketball, 1 hoop, 7 players, 1 referee, 1 shot-clock, 215.6ms
+Speed: 8.0ms preprocess, 215.6ms inference, 0.8ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 1 basketball, 2 hoops, 8 players, 1 referee, 1 shot-clock, 213.5ms
+1: 640x1088 1 basketball, 1 hoop, 9 players, 1 referee, 1 shot-clock, 213.5ms
+2: 640x1088 1 basketball, 1 hoop, 7 players, 1 referee, 1 shot-clock, 213.5ms
+3: 640x1088 1 basketball, 1 hoop, 8 players, 1 referee, 1 shot-clock, 213.5ms
+4: 640x1088 1 basketball, 1 hoop, 10 players, 1 referee, 1 shot-clock, 213.5ms
+5: 640x1088 1 basketball, 1 hoop, 8 players, 1 referee, 1 shot-clock, 213.5ms
+6: 640x1088 1 basketball, 1 hoop, 11 players, 1 referee, 1 shot-clock, 213.5ms
+7: 640x1088 1 basketball, 1 hoop, 7 players, 1 referee, 1 shot-clock, 213.5ms
+8: 640x1088 1 basketball, 1 hoop, 8 players, 1 referee, 1 shot-clock, 213.5ms
+9: 640x1088 1 basketball, 1 hoop, 6 players, 1 shot-clock, 213.5ms
+Speed: 8.1ms preprocess, 213.5ms inference, 1.1ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 1 basketball, 1 hoop, 7 players, 1 shot-clock, 219.1ms
+1: 640x1088 1 basketball, 1 hoop, 7 players, 1 shot-clock, 219.1ms
+2: 640x1088 1 basketball, 1 hoop, 5 players, 1 shot-clock, 219.1ms
+3: 640x1088 1 basketball, 1 hoop, 8 players, 1 shot-clock, 219.1ms
+4: 640x1088 1 basketball, 1 hoop, 5 players, 1 shot-clock, 219.1ms
+5: 640x1088 1 basketball, 1 hoop, 5 players, 1 shot-clock, 219.1ms
+6: 640x1088 1 basketball, 1 hoop, 5 players, 1 shot-clock, 219.1ms
+7: 640x1088 1 basketball, 1 hoop, 7 players, 1 shot-clock, 219.1ms
+8: 640x1088 2 basketballs, 1 hoop, 7 players, 1 shot-clock, 219.1ms
+9: 640x1088 1 basketball, 1 hoop, 10 players, 1 referee, 1 shot-clock, 219.1ms
+Speed: 9.7ms preprocess, 219.1ms inference, 0.8ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 1 basketball, 1 hoop, 11 players, 1 referee, 1 shot-clock, 201.9ms
+1: 640x1088 1 basketball, 1 hoop, 10 players, 1 referee, 1 shot-clock, 201.9ms
+2: 640x1088 1 basketball, 1 hoop, 13 players, 1 referee, 1 shot-clock, 201.9ms
+3: 640x1088 2 basketballs, 1 hoop, 13 players, 1 referee, 1 shot-clock, 201.9ms
+4: 640x1088 1 basketball, 1 hoop, 10 players, 1 referee, 1 shot-clock, 201.9ms
+5: 640x1088 1 basketball, 1 hoop, 10 players, 1 referee, 1 shot-clock, 201.9ms
+6: 640x1088 1 basketball, 1 hoop, 9 players, 1 referee, 1 shot-clock, 201.9ms
+7: 640x1088 1 basketball, 1 hoop, 8 players, 1 referee, 1 shot-clock, 201.9ms
+8: 640x1088 1 basketball, 1 hoop, 8 players, 2 referees, 1 shot-clock, 201.9ms
+9: 640x1088 1 basketball, 1 hoop, 8 players, 2 referees, 1 shot-clock, 201.9ms
+Speed: 8.2ms preprocess, 201.9ms inference, 0.8ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 1 basketball, 1 hoop, 10 players, 2 referees, 1 shot-clock, 266.4ms
+1: 640x1088 1 basketball, 1 hoop, 10 players, 2 referees, 1 shot-clock, 266.4ms
+2: 640x1088 1 basketball, 1 hoop, 10 players, 2 referees, 1 shot-clock, 266.4ms
+3: 640x1088 1 basketball, 1 hoop, 9 players, 1 referee, 1 shot-clock, 266.4ms
+4: 640x1088 1 basketball, 1 hoop, 7 players, 1 referee, 1 shot-clock, 266.4ms
+5: 640x1088 1 basketball, 1 hoop, 6 players, 1 referee, 1 shot-clock, 266.4ms
+6: 640x1088 1 basketball, 1 hoop, 3 players, 1 referee, 1 shot-clock, 266.4ms
+7: 640x1088 1 basketball, 1 hoop, 5 players, 1 referee, 1 shot-clock, 266.4ms
+8: 640x1088 1 basketball, 1 hoop, 6 players, 1 referee, 1 shot-clock, 266.4ms
+9: 640x1088 2 basketballs, 1 hoop, 7 players, 1 referee, 1 shot-clock, 266.4ms
+Speed: 9.4ms preprocess, 266.4ms inference, 0.8ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 1 basketball, 1 hoop, 6 players, 1 referee, 1 shot-clock, 204.2ms
+1: 640x1088 1 basketball, 1 hoop, 8 players, 1 shot-clock, 204.2ms
+2: 640x1088 1 basketball, 1 hoop, 7 players, 1 shot-clock, 204.2ms
+3: 640x1088 1 basketball, 1 hoop, 7 players, 1 shot-clock, 204.2ms
+4: 640x1088 2 basketballs, 1 hoop, 8 players, 1 referee, 1 shot-clock, 204.2ms
+5: 640x1088 1 hoop, 6 players, 1 referee, 1 shot-clock, 204.2ms
+6: 640x1088 1 hoop, 8 players, 1 referee, 1 shot-clock, 204.2ms
+7: 640x1088 1 hoop, 7 players, 1 referee, 1 shot-clock, 204.2ms
+8: 640x1088 1 hoop, 7 players, 1 referee, 1 shot-clock, 204.2ms
+9: 640x1088 2 basketballs, 1 hoop, 8 players, 1 referee, 1 shot-clock, 204.2ms
+Speed: 8.1ms preprocess, 204.2ms inference, 0.8ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 2 basketballs, 1 hoop, 7 players, 1 referee, 1 shot-clock, 198.9ms
+1: 640x1088 2 basketballs, 1 hoop, 5 players, 1 referee, 1 shot-clock, 198.9ms
+2: 640x1088 1 hoop, 5 players, 1 referee, 1 shot-clock, 198.9ms
+3: 640x1088 2 basketballs, 1 hoop, 5 players, 1 referee, 1 shot-clock, 198.9ms
+4: 640x1088 1 hoop, 6 players, 1 referee, 1 shot-clock, 198.9ms
+5: 640x1088 1 hoop, 6 players, 1 referee, 1 shot-clock, 198.9ms
+6: 640x1088 1 hoop, 4 players, 1 referee, 1 shot-clock, 198.9ms
+7: 640x1088 1 hoop, 5 players, 1 referee, 1 shot-clock, 198.9ms
+8: 640x1088 1 hoop, 6 players, 1 referee, 1 shot-clock, 198.9ms
+9: 640x1088 1 hoop, 7 players, 1 referee, 1 shot-clock, 198.9ms
+Speed: 8.4ms preprocess, 198.9ms inference, 1.0ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
+0: 640x1088 2 basketballs, 1 hoop, 6 players, 1 referee, 1 shot-clock, 199.2ms
+1: 640x1088 1 basketball, 1 hoop, 8 players, 1 referee, 1 shot-clock, 199.2ms
+Speed: 16.7ms preprocess, 199.2ms inference, 1.8ms postprocess per image at shape (1, 3, 640, 1088)
+
+WARNING ⚠️ imgsz=[1080] must be multiple of max stride 32, updating to [1088]
