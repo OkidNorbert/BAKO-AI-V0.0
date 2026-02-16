@@ -115,17 +115,17 @@ const Footer = () => {
               <li className="flex items-start">
                 <Phone className={`h-5 w-5 mr-2 flex-shrink-0 ${isDarkMode ? 'text-green-300' : 'text-green-600'
                   }`} />
-                <span className="text-lg">+254 123 456 789</span>
+                <span className="text-lg">+254 784136754</span>
               </li>
               <li className="flex items-start">
                 <Mail className={`h-5 w-5 mr-2 flex-shrink-0 ${isDarkMode ? 'text-blue-300' : 'text-blue-600'
                   }`} />
-                <span className="text-lg">info@bakobasketball.com</span>
+                <span className="text-lg">akumann48@gmail.com</span>
               </li>
               <li className="flex items-start">
                 <MapPin className={`h-5 w-5 mr-2 flex-shrink-0 ${isDarkMode ? 'text-red-300' : 'text-red-600'
                   }`} />
-                <span className="text-lg">Nairobi, Kenya</span>
+                <span className="text-lg">UCU Mukono, Uganda</span>
               </li>
               <li className="flex items-start">
                 <Clock className={`h-5 w-5 mr-2 flex-shrink-0 ${isDarkMode ? 'text-yellow-300' : 'text-yellow-600'

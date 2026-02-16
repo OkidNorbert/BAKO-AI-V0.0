@@ -54,7 +54,7 @@ const Contact = () => {
                                     </div>
                                     <div>
                                         <h4 className="font-bold text-lg uppercase tracking-wide">Phone</h4>
-                                        <p className={`text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>+254 123 456 789</p>
+                                        <p className={`text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>+254 784136754</p>
                                         <p className={`text-sm mt-1 uppercase font-bold tracking-wider opacity-60`}>Mon-Fri • Tip Off 7am</p>
                                     </div>
                                 </div>
@@ -65,7 +65,7 @@ const Contact = () => {
                                     </div>
                                     <div>
                                         <h4 className="font-bold text-lg uppercase tracking-wide">Email</h4>
-                                        <p className={`text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>info@bakobasketball.com</p>
+                                        <p className={`text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>akumann48@gmail.com</p>
                                         <p className={`text-sm mt-1 uppercase font-bold tracking-wider opacity-60`}>24HR Response Time</p>
                                     </div>
                                 </div>
@@ -76,7 +76,7 @@ const Contact = () => {
                                     </div>
                                     <div>
                                         <h4 className="font-bold text-lg uppercase tracking-wide">Headquarters</h4>
-                                        <p className={`text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Nairobi, Kenya</p>
+                                        <p className={`text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>UCU Mukono, Uganda</p>
                                     </div>
                                 </div>
                             </div>
