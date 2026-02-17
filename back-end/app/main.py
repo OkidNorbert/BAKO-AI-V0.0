@@ -209,6 +209,10 @@ def register_routes(app: FastAPI) -> None:
             "docs": "/docs",
             "health": "/api/health",
         }
+
+    @app.get("/api/test-proxy")
+    async def test_proxy():
+        return {"status": "proxy-ok"}
     
     # Register API routers
     app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])

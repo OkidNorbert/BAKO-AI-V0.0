@@ -297,3 +297,12 @@ async def update_current_user_profile(
         created_at=updated.get("created_at"),
         updated_at=updated.get("updated_at"),
     )
+
+
+@router.post("/logout")
+async def logout():
+    """
+    Log out the current user.
+    Since we use stateless JWT, this is primarily for client-side cleanup.
+    """
+    return {"message": "Successfully logged out"}

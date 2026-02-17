@@ -14,6 +14,10 @@ from app.models.notification import Notification
 
 router = APIRouter()
 
+@router.get("/debug-portal")
+async def debug_portal():
+    return {"status": "portal-registered"}
+
 @router.get("/players")
 async def get_my_player(
     current_user: dict = Depends(require_personal_account),
@@ -129,6 +133,31 @@ async def get_training_sessions(
             
     return videos
 
+
+@router.get("/training-videos")
+async def get_training_videos(
+    current_user: dict = Depends(require_personal_account),
+    supabase: SupabaseService = Depends(get_supabase),
+):
+    """
+    Alias for /training to satisfy frontend PlayerDashboard.
+    """
+    return await get_training_sessions(current_user=current_user, supabase=supabase)
+
+
+@router.get("/training-history")
+async def get_training_history(
+    current_user: dict = Depends(require_personal_account),
+    supabase: SupabaseService = Depends(get_supabase),
+):
+    """
+    Get training history for the player.
+    """
+    players = await supabase.select("players", filters={"user_id": current_user["id"]})
+    if not players:
+        return []
+    return await get_player_activities(player_id=players[0]["id"], current_user=current_user, supabase=supabase)
+
 @router.post("/training")
 async def log_training(
     training_data: dict, 
@@ -178,6 +207,67 @@ async def delete_notification(
 ):
     await supabase.delete("notifications", notification_id)
     return {"message": "Deleted"}
+
+
+@router.get("/performance-metrics")
+async def get_performance_metrics(
+    current_user: dict = Depends(require_personal_account),
+    supabase: SupabaseService = Depends(get_supabase),
+):
+    """
+    Get performance metrics for the player.
+    """
+    # Placeholder data matching frontend expectations
+    return {
+        "shootingAccuracy": 0,
+        "dribbleSpeed": 0,
+        "verticalJump": 0,
+        "sprintSpeed": 0,
+        "overallRating": 0,
+        "improvementRate": 0,
+        "weeklyStats": {
+            "sessionsCompleted": 0,
+            "minutesTrained": 0,
+            "shotsAttempted": 0,
+            "shotsMade": 0
+        }
+    }
+
+
+@router.get("/skill-trends")
+async def get_skill_trends(
+    current_user: dict = Depends(require_personal_account),
+    supabase: SupabaseService = Depends(get_supabase),
+):
+    """
+    Get skill improvement trends.
+    """
+    return {
+        "shooting": [],
+        "dribbling": [],
+        "defense": [],
+        "fitness": []
+    }
+
+
+@router.get("/skills")
+async def get_skills_analytics(
+    startDate: Optional[str] = Query(None),
+    endDate: Optional[str] = Query(None),
+    current_user: dict = Depends(require_personal_account),
+    supabase: SupabaseService = Depends(get_supabase),
+):
+    """
+    Get detailed skill analytics for SkillAnalytics page.
+    """
+    return {
+        "skills": [],
+        "summary": {
+            "overall": 0,
+            "shooting": 0,
+            "defense": 0
+        }
+    }
 
 @router.get("/profile")
 async def get_profile(
