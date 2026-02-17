@@ -77,11 +77,23 @@ async def register(
     
     await supabase.insert("users", user_record)
     
+    # If team account, check for org or create one?
+    # Schema says organizations(owner_id).
+    org_id = None
+    if user_data.account_type == AccountType.TEAM:
+        org_id = str(uuid4())
+        await supabase.insert("organizations", {
+            "id": org_id,
+            "name": f"{user_data.full_name or user_id}'s Team",
+            "owner_id": user_id
+        })
+
     # Create tokens
     token_data = {
         "sub": user_id,
         "email": user_data.email,
         "account_type": user_data.account_type.value,
+        "organization_id": org_id
     }
     
     access_token = create_access_token(token_data)
@@ -126,11 +138,19 @@ async def login(
             detail="Invalid credentials"
         )
     
+    # Fetch organization_id if applicable
+    org_id = None
+    if user["account_type"] == AccountType.TEAM.value:
+        orgs = await supabase.select("organizations", filters={"owner_id": user["id"]})
+        if orgs:
+            org_id = orgs[0]["id"]
+            
     # Create tokens
     token_data = {
         "sub": user["id"],
         "email": user["email"],
         "account_type": user["account_type"],
+        "organization_id": org_id
     }
     
     access_token = create_access_token(token_data)
@@ -205,19 +225,26 @@ async def get_current_user_profile(
     Get the currently authenticated user's profile.
     """
     user = await supabase.select_one("users", current_user["id"])
-    
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
-    
+
+    # Fetch org info
+    org_id = None
+    if user["account_type"] == AccountType.TEAM.value:
+        orgs = await supabase.select("organizations", filters={"owner_id": user["id"]})
+        if orgs:
+            org_id = orgs[0]["id"]
+            
     return User(
         id=user["id"],
         email=user["email"],
         account_type=AccountType(user["account_type"]),
         full_name=user.get("full_name"),
         avatar_url=user.get("avatar_url"),
+        organization_id=org_id,
         created_at=user.get("created_at"),
         updated_at=user.get("updated_at"),
     )

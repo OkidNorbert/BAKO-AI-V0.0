@@ -19,18 +19,18 @@ export const AuthProvider = ({ children }) => {
     const userId = localStorage.getItem('userId');
 
     console.log('AuthContext: Initial state from localStorage:', {
-      hasAccessToken: !!accessToken,
-      hasRefreshToken: !!refreshToken,
       userRole,
       userName,
-      userId
+      userId,
+      organizationId: localStorage.getItem('organizationId')
     });
 
     if (accessToken && userRole) {
       const userData = {
         role: userRole,
         name: userName || 'User',
-        id: userId
+        id: userId,
+        organization_id: localStorage.getItem('organizationId')
       };
       console.log('AuthContext: Setting initial user state:', userData);
       setUser(userData);
@@ -54,11 +54,13 @@ export const AuthProvider = ({ children }) => {
         const userRole = tokenPayload.user?.role || tokenPayload.role;
         const userId = tokenPayload.user?.id || response.data.user?.id;
         const userName = response.data.user?.name || 'User';
+        const organizationId = tokenPayload.organization_id || response.data.user?.organization_id;
 
         console.log('AuthContext: Extracted user info:', {
           userRole,
           userName,
-          userId
+          userId,
+          organizationId
         });
 
         localStorage.setItem('accessToken', accessToken);
@@ -66,6 +68,9 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('userRole', userRole);
         localStorage.setItem('userName', userName);
         localStorage.setItem('userId', userId);
+        if (organizationId) {
+          localStorage.setItem('organizationId', organizationId);
+        }
 
         // Set user state immediately (teamId = team-created player account)
         const userData = {
@@ -73,6 +78,7 @@ export const AuthProvider = ({ children }) => {
           name: userName,
           id: userId,
           email: response.data.user?.email,
+          organization_id: organizationId,
           teamId: response.data.user?.teamId ?? response.data.user?.team_id
         };
         console.log('AuthContext: Setting user state after login:', userData);

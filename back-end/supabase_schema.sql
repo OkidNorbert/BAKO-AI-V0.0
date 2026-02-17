@@ -176,38 +176,38 @@ ALTER TABLE analytics ENABLE ROW LEVEL SECURITY;
 
 -- Users can only see their own data
 CREATE POLICY "Users can view own profile" ON users
-    FOR SELECT USING (auth.uid()::text = id::text);
+    FOR SELECT USING ((SELECT auth.uid())::text = id::text);
 
 CREATE POLICY "Users can update own profile" ON users
-    FOR UPDATE USING (auth.uid()::text = id::text);
+    FOR UPDATE USING ((SELECT auth.uid())::text = id::text);
 
 -- Organizations: owners only
 CREATE POLICY "Owners can manage organizations" ON organizations
-    FOR ALL USING (auth.uid()::text = owner_id::text);
+    FOR ALL USING ((SELECT auth.uid())::text = owner_id::text);
 
 -- Videos: uploaders only
 CREATE POLICY "Uploaders can manage videos" ON videos
-    FOR ALL USING (auth.uid()::text = uploader_id::text);
+    FOR ALL USING ((SELECT auth.uid())::text = uploader_id::text);
 
 -- Players: org owners or personal users
 CREATE POLICY "Users can manage their players" ON players
     FOR ALL USING (
-        auth.uid()::text = user_id::text
+        (SELECT auth.uid())::text = user_id::text
         OR organization_id IN (
-            SELECT id FROM organizations WHERE owner_id::text = auth.uid()::text
+            SELECT id FROM organizations WHERE owner_id::text = (SELECT auth.uid())::text
         )
     );
 
 -- Detections: via video ownership
 CREATE POLICY "Users can view own detections" ON detections
     FOR SELECT USING (
-        video_id IN (SELECT id FROM videos WHERE uploader_id::text = auth.uid()::text)
+        video_id IN (SELECT id FROM videos WHERE uploader_id::text = (SELECT auth.uid())::text)
     );
 
 -- Analysis results: via video ownership
 CREATE POLICY "Users can view own analysis" ON analysis_results
     FOR SELECT USING (
-        video_id IN (SELECT id FROM videos WHERE uploader_id::text = auth.uid()::text)
+        video_id IN (SELECT id FROM videos WHERE uploader_id::text = (SELECT auth.uid())::text)
     );
 
 -- Analytics: via player ownership
@@ -215,9 +215,9 @@ CREATE POLICY "Users can view own analytics" ON analytics
     FOR SELECT USING (
         player_id IN (
             SELECT id FROM players 
-            WHERE user_id::text = auth.uid()::text
+            WHERE user_id::text = (SELECT auth.uid())::text
             OR organization_id IN (
-                SELECT id FROM organizations WHERE owner_id::text = auth.uid()::text
+                SELECT id FROM organizations WHERE owner_id::text = (SELECT auth.uid())::text
             )
         )
     );
@@ -233,7 +233,8 @@ BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql
+SET search_path = '';
 
 -- Apply trigger to relevant tables
 CREATE TRIGGER update_users_updated_at
@@ -315,38 +316,40 @@ ALTER TABLE matches ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 
 -- Schedules: viewable by org members, editable by owners
-CREATE POLICY "Org members can view schedules" ON schedules
+-- Schedules: viewable by org members (including owners)
+CREATE POLICY "Users can view schedules" ON schedules
     FOR SELECT USING (
         organization_id IN (
-            SELECT id FROM organizations WHERE owner_id::text = auth.uid()::text
+            SELECT id FROM organizations WHERE owner_id::text = (SELECT auth.uid())::text
             UNION
-            SELECT organization_id FROM players WHERE user_id::text = auth.uid()::text
+            SELECT organization_id FROM players WHERE user_id::text = (SELECT auth.uid())::text
         )
     );
 
 CREATE POLICY "Owners can manage schedules" ON schedules
-    FOR ALL USING (
-        organization_id IN (SELECT id FROM organizations WHERE owner_id::text = auth.uid()::text)
+    FOR INSERT, UPDATE, DELETE WITH CHECK (
+        organization_id IN (SELECT id FROM organizations WHERE owner_id::text = (SELECT auth.uid())::text)
     );
 
 -- Matches: similar to schedules
-CREATE POLICY "Org members can view matches" ON matches
+-- Matches: viewable by org members (including owners)
+CREATE POLICY "Users can view matches" ON matches
     FOR SELECT USING (
         organization_id IN (
-            SELECT id FROM organizations WHERE owner_id::text = auth.uid()::text
+            SELECT id FROM organizations WHERE owner_id::text = (SELECT auth.uid())::text
             UNION
-            SELECT organization_id FROM players WHERE user_id::text = auth.uid()::text
+            SELECT organization_id FROM players WHERE user_id::text = (SELECT auth.uid())::text
         )
     );
 
 CREATE POLICY "Owners can manage matches" ON matches
-    FOR ALL USING (
-        organization_id IN (SELECT id FROM organizations WHERE owner_id::text = auth.uid()::text)
+    FOR INSERT, UPDATE, DELETE WITH CHECK (
+        organization_id IN (SELECT id FROM organizations WHERE owner_id::text = (SELECT auth.uid())::text)
     );
 
 -- Notifications: generic
 CREATE POLICY "Users can manage own notifications" ON notifications
-    FOR ALL USING (recipient_id::text = auth.uid()::text);
+    FOR ALL USING (recipient_id::text = (SELECT auth.uid())::text);
 
 -- Triggers
 CREATE TRIGGER update_schedules_updated_at
@@ -374,18 +377,20 @@ CREATE INDEX idx_activities_player ON activities(player_id);
 
 ALTER TABLE activities ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can manage own activities" ON activities
-    FOR ALL USING (
+-- Activities: viewable by self or org owner
+CREATE POLICY "Users can view activities" ON activities
+    FOR SELECT USING (
         player_id IN (
-            SELECT id FROM players WHERE user_id::text = auth.uid()::text
+            SELECT id FROM players WHERE user_id::text = (SELECT auth.uid())::text
+            OR organization_id IN (
+                SELECT id FROM organizations WHERE owner_id::text = (SELECT auth.uid())::text
+            )
         )
     );
 
-CREATE POLICY "Org owners can view activities" ON activities
-    FOR SELECT USING (
+CREATE POLICY "Players can manage own activities" ON activities
+    FOR INSERT, UPDATE, DELETE WITH CHECK (
         player_id IN (
-            SELECT id FROM players WHERE organization_id IN (
-                SELECT id FROM organizations WHERE owner_id::text = auth.uid()::text
-            )
+            SELECT id FROM players WHERE user_id::text = (SELECT auth.uid())::text
         )
     );

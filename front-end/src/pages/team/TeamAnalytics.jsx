@@ -105,28 +105,29 @@ const TeamAnalytics = () => {
         adminAPI.getStats().catch(() => ({ data: null })),
         adminAPI.getMatches().catch(() => ({ data: [] }))
       ]);
-      const stats = statsRes?.data;
+      const stats = statsRes?.data || {};
       const matches = Array.isArray(matchesRes?.data) ? matchesRes.data : [];
+
       const wins = matches.filter(m => m.result === 'win' || m.status === 'won').length;
       const losses = matches.filter(m => m.result === 'loss' || m.status === 'lost').length;
       const total = wins + losses || 1;
+
       setAnalyticsData(prev => ({
         ...prev,
-        ...(stats && typeof stats === 'object' ? stats : {}),
         teamPerformance: {
           ...prev.teamPerformance,
-          ...(stats?.teamPerformance || {}),
-          wins: stats?.teamPerformance?.wins ?? wins,
-          losses: stats?.teamPerformance?.losses ?? losses,
-          winPercentage: stats?.teamPerformance?.winPercentage ?? Math.round((wins / total) * 100),
-          pointsPerGame: stats?.teamPerformance?.pointsPerGame ?? prev.teamPerformance.pointsPerGame,
-          pointsAllowed: stats?.teamPerformance?.pointsAllowed ?? prev.teamPerformance.pointsAllowed,
-          trend: stats?.teamPerformance?.trend ?? prev.teamPerformance.trend
+          wins: wins,
+          losses: losses,
+          winPercentage: Math.round((wins / total) * 100),
         },
-        playerStats: stats?.playerStats ?? prev.playerStats,
+        playerStats: {
+          ...prev.playerStats,
+          totalPlayers: stats.total_players || 0,
+          activePlayers: stats.total_players || 0, // Placeholder
+        },
         gameMetrics: {
           ...prev.gameMetrics,
-          gamesPlayed: stats?.gameMetrics?.gamesPlayed ?? matches.length
+          gamesPlayed: stats.total_matches || matches.length,
         }
       }));
     } catch (err) {

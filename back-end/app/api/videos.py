@@ -26,6 +26,7 @@ from slowapi.util import get_remote_address
 
 from app.config import get_settings
 from app.dependencies import get_current_user, get_supabase
+from app.models.user import AccountType
 from app.models.video import (
     VideoUpload,
     Video,
@@ -49,7 +50,17 @@ def get_video_info(file_path: str) -> dict:
     try:
         import cv2
         cap = cv2.VideoCapture(file_path)
-        
+    except ImportError:
+        print("⚠️ OpenCV not installed, skipping video metadata extraction")
+        return {
+            "fps": 30.0,
+            "frame_count": 0,
+            "width": 1920,
+            "height": 1080,
+            "duration_seconds": 0,
+        }
+    
+    try:
         if not cap.isOpened():
             return {}
         
@@ -220,7 +231,17 @@ async def list_videos(
     """
     List videos uploaded by the current user.
     """
-    filters = {"uploader_id": current_user["id"]}
+    # If TEAM account, filter by organization_id by default if possible
+    filters = {}
+    if current_user.get("account_type") == AccountType.TEAM.value:
+        orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
+        if orgs:
+            filters["organization_id"] = orgs[0]["id"]
+        else:
+            filters["uploader_id"] = current_user["id"]
+    else:
+        filters["uploader_id"] = current_user["id"]
+        
     if status_filter:
         filters["status"] = status_filter.value
     

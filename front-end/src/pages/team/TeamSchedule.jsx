@@ -395,8 +395,8 @@ const TeamSchedule = () => {
                     >
                       <option value="">Select Coach</option>
                       {coaches.map((coach) => (
-                        <option key={coach._id} value={coach._id}>
-                          {coach.firstName} {coach.lastName}
+                        <option key={coach.id} value={coach.id}>
+                          {coach.name || coach.full_name}
                         </option>
                       ))}
                     </select>
@@ -413,8 +413,8 @@ const TeamSchedule = () => {
                     className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 h-32"
                   >
                     {players.map((player) => (
-                      <option key={player._id} value={player._id}>
-                        {player.firstName} {player.lastName}
+                      <option key={player.id} value={player.id}>
+                        {player.name}
                       </option>
                     ))}
                   </select>

@@ -44,6 +44,7 @@ class User(UserBase):
     account_type: AccountType
     full_name: Optional[str] = None
     avatar_url: Optional[str] = None
+    organization_id: Optional[UUID] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
     
@@ -74,4 +75,5 @@ class TokenPayload(BaseModel):
     sub: str  # User ID
     email: str
     account_type: AccountType
+    organization_id: Optional[str] = None
     exp: datetime

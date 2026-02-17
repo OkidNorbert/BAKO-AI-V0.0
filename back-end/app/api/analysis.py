@@ -29,8 +29,12 @@ router = APIRouter()
 
 def _run_dispatch_in_thread(video_path: str, mode: AnalysisMode, options: dict | None):
     """Run async dispatch in a dedicated thread event loop."""
-    from analysis.dispatcher import dispatch_analysis
-    return asyncio.run(dispatch_analysis(video_path, mode, options=options))
+    try:
+        from analysis.dispatcher import dispatch_analysis
+        return asyncio.run(dispatch_analysis(video_path, mode, options=options))
+    except ImportError:
+        print("⚠️ Analysis dispatcher not available (heavy dependencies missing)")
+        return {"status": "skipped", "reason": "heavy dependencies missing"}
 
 
 async def run_analysis_background(video_id: str, mode: str, supabase: SupabaseService, options: Optional[dict] = None):

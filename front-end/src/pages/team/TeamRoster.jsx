@@ -59,10 +59,10 @@ const TeamRoster = () => {
   const handleToggleStatus = async (player) => {
     try {
       const newStatus = player.status === 'active' ? 'inactive' : 'active';
-      await adminAPI.updatePlayerStatus(player._id, newStatus);
+      await adminAPI.updatePlayerStatus(player.id, newStatus);
 
       setPlayers(players.map(p =>
-        p._id === player._id ? { ...p, status: newStatus } : p
+        p.id === player.id ? { ...p, status: newStatus } : p
       ));
 
       toast.success(`Player ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
@@ -86,16 +86,16 @@ const TeamRoster = () => {
 
       switch (sortBy) {
         case 'name':
-          comparison = `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`);
+          comparison = (a.name || '').localeCompare(b.name || '');
           break;
         case 'position':
           comparison = (a.position || '').localeCompare(b.position || '');
           break;
         case 'status':
-          comparison = a.status.localeCompare(b.status);
+          comparison = (a.status || '').localeCompare(b.status || '');
           break;
         case 'ppg':
-          comparison = a.ppg - b.ppg;
+          comparison = (a.ppg || 0) - (b.ppg || 0);
           break;
         default:
           comparison = 0;
@@ -116,8 +116,7 @@ const TeamRoster = () => {
 
   const filteredPlayers = sortData(players.filter(player => {
     const matchesSearch =
-      (player.firstName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (player.lastName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (player.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
       (player.position?.toLowerCase() || '').includes(searchTerm.toLowerCase());
 
     const matchesStatusFilter = statusFilter === 'all' || player.status === statusFilter;
@@ -367,7 +366,7 @@ const TeamRoster = () => {
                   }`}>
                   {filteredPlayers.length > 0 ? (
                     filteredPlayers.map((player) => (
-                      <tr key={player._id} className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'
+                      <tr key={player.id} className={`${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'
                         } transition duration-150`}>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
@@ -382,18 +381,18 @@ const TeamRoster = () => {
                             <div className="ml-4">
                               <div className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'
                                 }`}>
-                                {player.firstName} {player.lastName}
+                                {player.name}
                               </div>
                               <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'
                                 }`}>
-                                ID: {player._id}
+                                ID: {player.id}
                               </div>
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                            {player.jerseyNumber}
+                            {player.jersey_number}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -435,7 +434,7 @@ const TeamRoster = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex space-x-1">
                             <Link
-                              to={`/team/players/${player._id}/update`}
+                              to={`/team/players/${player.id}/update`}
                               className={`p-1 rounded-md ${isDarkMode
                                 ? 'text-blue-400 hover:bg-gray-700'
                                 : 'text-blue-600 hover:bg-blue-100'
@@ -445,7 +444,7 @@ const TeamRoster = () => {
                               <Edit size={18} />
                             </Link>
                             <button
-                              onClick={() => handleViewPerformance(player._id)}
+                              onClick={() => handleViewPerformance(player.id)}
                               className={`p-1 rounded-md ${isDarkMode
                                 ? 'text-green-400 hover:bg-gray-700'
                                 : 'text-green-600 hover:bg-green-100'
@@ -455,7 +454,7 @@ const TeamRoster = () => {
                               <TrendingUp size={18} />
                             </button>
                             <Link
-                              to={`/team/players/${player._id}`}
+                              to={`/team/players/${player.id}`}
                               className={`p-1 rounded-md ${isDarkMode
                                 ? 'text-gray-400 hover:bg-gray-700'
                                 : 'text-gray-600 hover:bg-gray-100'
