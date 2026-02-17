@@ -3,18 +3,27 @@ import { Navigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 
 const ProtectedRoute = ({ allowedRoles = [] }) => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const location = useLocation();
 
   console.log('ProtectedRoute: Rendering with props:', {
     hasUser: !!user,
     userRole: user?.role,
+    loading,
     requiredRoles: allowedRoles,
     currentPath: location.pathname
   });
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+      </div>
+    );
+  }
+
   if (!user) {
-    console.log('ProtectedRoute: No user found, redirecting to login');
+    console.log('ProtectedRoute: No user found and not loading, redirecting to login');
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

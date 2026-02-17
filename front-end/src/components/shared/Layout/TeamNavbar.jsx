@@ -156,7 +156,7 @@ const TeamNavbar = ({ onSidebarToggle }) => {
       setNotifications(prev =>
         prev.map(n => (n.id === item.id ? { ...n, read: true } : n))
       );
-      navigate('/notifications');
+      navigate('/team/notifications');
     } catch (error) {
       console.error('Error marking notification as read:', error);
     }
@@ -230,7 +230,7 @@ const TeamNavbar = ({ onSidebarToggle }) => {
                     <div className="flex justify-between items-center">
                       <h3 className="font-semibold">Notifications</h3>
                       <button
-                        onClick={() => navigate('/notifications')}
+                        onClick={() => navigate('/team/notifications')}
                         className={`text-sm ${isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-500'
                           }`}
                       >
@@ -331,7 +331,7 @@ const TeamNavbar = ({ onSidebarToggle }) => {
                       <Menu.Item>
                         {({ active }) => (
                           <button
-                            onClick={() => navigate('/profile')}
+                            onClick={() => navigate('/team/profile')}
                             className={`flex w-full items-center px-4 py-2 text-sm ${active
                               ? isDarkMode
                                 ? 'bg-gray-700 text-white'

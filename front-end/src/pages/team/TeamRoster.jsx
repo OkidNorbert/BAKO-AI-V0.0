@@ -20,7 +20,7 @@ import {
   ArrowUpDown,
   Trash
 } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import { showToast } from '@/components/shared/Toast';
 
 const TeamRoster = () => {
   const [players, setPlayers] = useState([]);
@@ -50,7 +50,7 @@ const TeamRoster = () => {
     } catch (error) {
       console.error('Error fetching players:', error);
       setError('Failed to fetch roster. Please try again later.');
-      toast.error('Failed to load roster');
+      showToast('Failed to load roster', 'error');
       setPlayers([]);
       setLoading(false);
     }
@@ -65,10 +65,10 @@ const TeamRoster = () => {
         p.id === player.id ? { ...p, status: newStatus } : p
       ));
 
-      toast.success(`Player ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
+      showToast(`Player ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`, 'success');
     } catch (error) {
       console.error('Error updating player status:', error);
-      toast.error('Failed to update player status');
+      showToast('Failed to update player status', 'error');
     }
   };
 

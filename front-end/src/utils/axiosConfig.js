@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { toast } from 'react-hot-toast';
+import { showToast } from '../components/shared/Toast';
 // Create axios instance with default config
 const api = axios.create({
   baseURL: '/api',  // Use relative path to work with Vite proxy
@@ -74,7 +74,11 @@ api.interceptors.response.use(
     const originalRequest = error.config;
 
     // If error is 401 and we haven't tried to refresh token yet
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    const isAuthRequest = originalRequest.url.includes('/auth/login') ||
+      originalRequest.url.includes('/auth/register') ||
+      originalRequest.url.includes('/auth/refresh-token');
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthRequest) {
       console.log('Response interceptor: Received 401 error, attempting to refresh token');
 
       if (isRefreshing) {
@@ -191,11 +195,18 @@ api.interceptors.response.use(
     }
 
     // Handle errors generically
-    const errorMessage = error.response?.data?.message || 'An error occurred. Please try again later.';
+    const errorMessage = error.response?.data?.message || error.message || 'An error occurred. Please try again later.';
 
     // Suppress toasts if this is a developer bypass session
     if (localStorage.getItem('isDevSession') !== 'true') {
-      toast.error(errorMessage);
+      // Don't show toast for 401 unless it's an auth request (like login failure)
+      if (error.response?.status !== 401 || isAuthRequest) {
+        // Special case for login errors to make it more user-friendly
+        const displayMessage = isAuthRequest && error.response?.status === 401
+          ? 'Invalid email or password. Please try again.'
+          : errorMessage;
+        showToast(displayMessage, 'error');
+      }
     } else {
       console.log('Suppressing error toast in dev session:', errorMessage);
     }

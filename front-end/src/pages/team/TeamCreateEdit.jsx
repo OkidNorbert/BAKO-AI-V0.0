@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { adminAPI } from '../../services/api';
-import { toast } from 'react-hot-toast';
+import { showToast } from '../../components/shared/Toast';
 import {
   Save,
   ArrowLeft,
@@ -84,7 +84,7 @@ const TeamCreateEdit = () => {
       // In real app, this would call the API
       // const response = await adminAPI.getTeam(teamId);
       // setTeamData(response.data);
-      
+
       // Mock data for editing
       const mockTeamData = {
         name: 'BAKO Warriors',
@@ -125,7 +125,7 @@ const TeamCreateEdit = () => {
           manager: 'Robert Brown'
         }
       };
-      
+
       setTeamData(mockTeamData);
       setLoading(false);
     } catch (error) {
@@ -205,18 +205,18 @@ const TeamCreateEdit = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     try {
       setLoading(true);
       setError('');
-      
+
       // Validation
       if (!teamData.name.trim()) {
         setError('Team name is required');
         setLoading(false);
         return;
       }
-      
+
       if (!teamData.abbreviation.trim() || teamData.abbreviation.length > 3) {
         setError('Team abbreviation is required (max 3 characters)');
         setLoading(false);
@@ -226,12 +226,12 @@ const TeamCreateEdit = () => {
       // In real app, this would call the API
       if (isEditing) {
         // await adminAPI.updateTeam(teamId, teamData);
-        toast.success('Team updated successfully!');
+        showToast('Team updated successfully!', 'success');
       } else {
         // await adminAPI.createTeam(teamData);
-        toast.success('Team created successfully!');
+        showToast('Team created successfully!', 'success');
       }
-      
+
       navigate('/team/settings');
     } catch (error) {
       console.error('Error saving team:', error);
@@ -243,8 +243,8 @@ const TeamCreateEdit = () => {
   if (loading && isEditing) {
     return (
       <div className={`flex items-center justify-center min-h-screen ${isDarkMode
-          ? 'bg-gradient-to-b from-gray-900 to-indigo-950'
-          : 'bg-gradient-to-b from-blue-50 to-indigo-100'
+        ? 'bg-gradient-to-b from-gray-900 to-indigo-950'
+        : 'bg-gradient-to-b from-blue-50 to-indigo-100'
         }`}>
         <div className="flex flex-col items-center">
           <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-orange-500"></div>
@@ -258,10 +258,10 @@ const TeamCreateEdit = () => {
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDarkMode
-        ? 'bg-gradient-to-b from-gray-900 to-purple-950'
-        : 'bg-gradient-to-b from-blue-50 to-purple-100'
+      ? 'bg-gradient-to-b from-gray-900 to-purple-950'
+      : 'bg-gradient-to-b from-blue-50 to-purple-100'
       }`}>
-      
+
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -272,7 +272,7 @@ const TeamCreateEdit = () => {
             <ArrowLeft size={20} />
             <span>Back to Settings</span>
           </button>
-          
+
           <h1 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
             {isEditing ? 'Edit Team' : 'Create New Team'}
           </h1>
@@ -288,14 +288,14 @@ const TeamCreateEdit = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-8">
-          
+
           {/* Basic Information */}
           <div className={`p-6 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white shadow-md'}`}>
             <h2 className={`text-xl font-semibold mb-4 flex items-center ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
               <Users className="mr-2" size={24} />
               Basic Information
             </h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -305,15 +305,15 @@ const TeamCreateEdit = () => {
                   type="text"
                   value={teamData.name}
                   onChange={(e) => handleInputChange(null, 'name', e.target.value)}
-                  className={`w-full px-3 py-2 rounded-lg border ${isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
-                      : 'bg-white border-gray-300 text-gray-900'
+                  className={`w-full px-3 py-2 rounded-lg border ${isDarkMode
+                    ? 'bg-gray-700 border-gray-600 text-white'
+                    : 'bg-white border-gray-300 text-gray-900'
                     } focus:outline-none focus:ring-2 focus:ring-orange-500`}
                   placeholder="Enter team name"
                   required
                 />
               </div>
-              
+
               <div>
                 <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   Abbreviation *
@@ -323,15 +323,15 @@ const TeamCreateEdit = () => {
                   value={teamData.abbreviation}
                   onChange={(e) => handleInputChange(null, 'abbreviation', e.target.value.toUpperCase())}
                   maxLength={3}
-                  className={`w-full px-3 py-2 rounded-lg border ${isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
-                      : 'bg-white border-gray-300 text-gray-900'
+                  className={`w-full px-3 py-2 rounded-lg border ${isDarkMode
+                    ? 'bg-gray-700 border-gray-600 text-white'
+                    : 'bg-white border-gray-300 text-gray-900'
                     } focus:outline-none focus:ring-2 focus:ring-orange-500`}
                   placeholder="e.g., BAK"
                   required
                 />
               </div>
-              
+
               <div>
                 <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   Home Court
@@ -340,14 +340,14 @@ const TeamCreateEdit = () => {
                   type="text"
                   value={teamData.homeCourt}
                   onChange={(e) => handleInputChange(null, 'homeCourt', e.target.value)}
-                  className={`w-full px-3 py-2 rounded-lg border ${isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
-                      : 'bg-white border-gray-300 text-gray-900'
+                  className={`w-full px-3 py-2 rounded-lg border ${isDarkMode
+                    ? 'bg-gray-700 border-gray-600 text-white'
+                    : 'bg-white border-gray-300 text-gray-900'
                     } focus:outline-none focus:ring-2 focus:ring-orange-500`}
                   placeholder="Enter home court name"
                 />
               </div>
-              
+
               <div>
                 <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   Founded Year
@@ -358,9 +358,9 @@ const TeamCreateEdit = () => {
                   onChange={(e) => handleInputChange(null, 'foundedYear', parseInt(e.target.value))}
                   min="1900"
                   max={new Date().getFullYear()}
-                  className={`w-full px-3 py-2 rounded-lg border ${isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
-                      : 'bg-white border-gray-300 text-gray-900'
+                  className={`w-full px-3 py-2 rounded-lg border ${isDarkMode
+                    ? 'bg-gray-700 border-gray-600 text-white'
+                    : 'bg-white border-gray-300 text-gray-900'
                     } focus:outline-none focus:ring-2 focus:ring-orange-500`}
                 />
               </div>
@@ -373,7 +373,7 @@ const TeamCreateEdit = () => {
               <MapPin className="mr-2" size={24} />
               Location
             </h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -383,14 +383,14 @@ const TeamCreateEdit = () => {
                   type="text"
                   value={teamData.city}
                   onChange={(e) => handleInputChange(null, 'city', e.target.value)}
-                  className={`w-full px-3 py-2 rounded-lg border ${isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
-                      : 'bg-white border-gray-300 text-gray-900'
+                  className={`w-full px-3 py-2 rounded-lg border ${isDarkMode
+                    ? 'bg-gray-700 border-gray-600 text-white'
+                    : 'bg-white border-gray-300 text-gray-900'
                     } focus:outline-none focus:ring-2 focus:ring-orange-500`}
                   placeholder="Enter city"
                 />
               </div>
-              
+
               <div>
                 <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   State/Province
@@ -399,14 +399,14 @@ const TeamCreateEdit = () => {
                   type="text"
                   value={teamData.state}
                   onChange={(e) => handleInputChange(null, 'state', e.target.value)}
-                  className={`w-full px-3 py-2 rounded-lg border ${isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
-                      : 'bg-white border-gray-300 text-gray-900'
+                  className={`w-full px-3 py-2 rounded-lg border ${isDarkMode
+                    ? 'bg-gray-700 border-gray-600 text-white'
+                    : 'bg-white border-gray-300 text-gray-900'
                     } focus:outline-none focus:ring-2 focus:ring-orange-500`}
                   placeholder="Enter state/province"
                 />
               </div>
-              
+
               <div>
                 <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   Country
@@ -415,9 +415,9 @@ const TeamCreateEdit = () => {
                   type="text"
                   value={teamData.country}
                   onChange={(e) => handleInputChange(null, 'country', e.target.value)}
-                  className={`w-full px-3 py-2 rounded-lg border ${isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
-                      : 'bg-white border-gray-300 text-gray-900'
+                  className={`w-full px-3 py-2 rounded-lg border ${isDarkMode
+                    ? 'bg-gray-700 border-gray-600 text-white'
+                    : 'bg-white border-gray-300 text-gray-900'
                     } focus:outline-none focus:ring-2 focus:ring-orange-500`}
                   placeholder="Enter country"
                 />
@@ -431,7 +431,7 @@ const TeamCreateEdit = () => {
               <Phone className="mr-2" size={24} />
               Contact Information
             </h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -441,14 +441,14 @@ const TeamCreateEdit = () => {
                   type="tel"
                   value={teamData.contactInfo.phone}
                   onChange={(e) => handleInputChange('contactInfo', 'phone', e.target.value)}
-                  className={`w-full px-3 py-2 rounded-lg border ${isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
-                      : 'bg-white border-gray-300 text-gray-900'
+                  className={`w-full px-3 py-2 rounded-lg border ${isDarkMode
+                    ? 'bg-gray-700 border-gray-600 text-white'
+                    : 'bg-white border-gray-300 text-gray-900'
                     } focus:outline-none focus:ring-2 focus:ring-orange-500`}
                   placeholder="+254 123 456 789"
                 />
               </div>
-              
+
               <div>
                 <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   Email
@@ -457,14 +457,14 @@ const TeamCreateEdit = () => {
                   type="email"
                   value={teamData.contactInfo.email}
                   onChange={(e) => handleInputChange('contactInfo', 'email', e.target.value)}
-                  className={`w-full px-3 py-2 rounded-lg border ${isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
-                      : 'bg-white border-gray-300 text-gray-900'
+                  className={`w-full px-3 py-2 rounded-lg border ${isDarkMode
+                    ? 'bg-gray-700 border-gray-600 text-white'
+                    : 'bg-white border-gray-300 text-gray-900'
                     } focus:outline-none focus:ring-2 focus:ring-orange-500`}
                   placeholder="info@team.com"
                 />
               </div>
-              
+
               <div>
                 <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   Website
@@ -473,9 +473,9 @@ const TeamCreateEdit = () => {
                   type="url"
                   value={teamData.contactInfo.website}
                   onChange={(e) => handleInputChange('contactInfo', 'website', e.target.value)}
-                  className={`w-full px-3 py-2 rounded-lg border ${isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
-                      : 'bg-white border-gray-300 text-gray-900'
+                  className={`w-full px-3 py-2 rounded-lg border ${isDarkMode
+                    ? 'bg-gray-700 border-gray-600 text-white'
+                    : 'bg-white border-gray-300 text-gray-900'
                     } focus:outline-none focus:ring-2 focus:ring-orange-500`}
                   placeholder="www.teamwebsite.com"
                 />
@@ -489,7 +489,7 @@ const TeamCreateEdit = () => {
               <Target className="mr-2" size={24} />
               Team Colors
             </h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -506,14 +506,14 @@ const TeamCreateEdit = () => {
                     type="text"
                     value={teamData.teamColors.primary}
                     onChange={(e) => handleInputChange('teamColors', 'primary', e.target.value)}
-                    className={`flex-1 px-3 py-2 rounded-lg border ${isDarkMode 
-                        ? 'bg-gray-700 border-gray-600 text-white' 
-                        : 'bg-white border-gray-300 text-gray-900'
+                    className={`flex-1 px-3 py-2 rounded-lg border ${isDarkMode
+                      ? 'bg-gray-700 border-gray-600 text-white'
+                      : 'bg-white border-gray-300 text-gray-900'
                       } focus:outline-none focus:ring-2 focus:ring-orange-500`}
                   />
                 </div>
               </div>
-              
+
               <div>
                 <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   Secondary Color
@@ -529,14 +529,14 @@ const TeamCreateEdit = () => {
                     type="text"
                     value={teamData.teamColors.secondary}
                     onChange={(e) => handleInputChange('teamColors', 'secondary', e.target.value)}
-                    className={`flex-1 px-3 py-2 rounded-lg border ${isDarkMode 
-                        ? 'bg-gray-700 border-gray-600 text-white' 
-                        : 'bg-white border-gray-300 text-gray-900'
+                    className={`flex-1 px-3 py-2 rounded-lg border ${isDarkMode
+                      ? 'bg-gray-700 border-gray-600 text-white'
+                      : 'bg-white border-gray-300 text-gray-900'
                       } focus:outline-none focus:ring-2 focus:ring-orange-500`}
                   />
                 </div>
               </div>
-              
+
               <div>
                 <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   Accent Color
@@ -552,9 +552,9 @@ const TeamCreateEdit = () => {
                     type="text"
                     value={teamData.teamColors.accent}
                     onChange={(e) => handleInputChange('teamColors', 'accent', e.target.value)}
-                    className={`flex-1 px-3 py-2 rounded-lg border ${isDarkMode 
-                        ? 'bg-gray-700 border-gray-600 text-white' 
-                        : 'bg-white border-gray-300 text-gray-900'
+                    className={`flex-1 px-3 py-2 rounded-lg border ${isDarkMode
+                      ? 'bg-gray-700 border-gray-600 text-white'
+                      : 'bg-white border-gray-300 text-gray-900'
                       } focus:outline-none focus:ring-2 focus:ring-orange-500`}
                   />
                 </div>
@@ -567,24 +567,23 @@ const TeamCreateEdit = () => {
             <button
               type="button"
               onClick={() => navigate('/team/settings')}
-              className={`px-6 py-3 rounded-lg font-medium transition-colors ${isDarkMode 
-                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              className={`px-6 py-3 rounded-lg font-medium transition-colors ${isDarkMode
+                ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
             >
               Cancel
             </button>
-            
+
             <button
               type="submit"
               disabled={loading}
-              className={`px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2 ${
-                loading 
-                  ? 'bg-gray-400 cursor-not-allowed' 
-                  : isDarkMode 
-                    ? 'bg-orange-600 hover:bg-orange-700 text-white' 
+              className={`px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2 ${loading
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : isDarkMode
+                    ? 'bg-orange-600 hover:bg-orange-700 text-white'
                     : 'bg-orange-500 hover:bg-orange-600 text-white'
-              }`}
+                }`}
             >
               <Save size={20} />
               <span>{loading ? 'Saving...' : (isEditing ? 'Update Team' : 'Create Team')}</span>

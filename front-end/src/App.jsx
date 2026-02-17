@@ -1,10 +1,9 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from '@/context/AuthContext';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { NotificationProvider } from '@/context/NotificationContext';
 import { ToastContainer } from 'react-toastify';
-import { Toaster } from 'react-hot-toast';
 import 'react-toastify/dist/ReactToastify.css';
 
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -42,6 +41,20 @@ import TrainingVideos from '@/pages/player/TrainingVideos';
 import Profile from '@/pages/shared/Profile';
 import Notifications from '@/pages/shared/Notifications';
 import Help from '@/pages/shared/Help';
+// Helper components for shared routes that need role-based layouts
+const ProfileRedirect = () => {
+  const { user } = useAuth();
+  if (user?.role === 'team') return <Navigate to="/team/profile" replace />;
+  if (user?.role === 'player') return <Navigate to="/player/profile" replace />;
+  return <Navigate to="/login" replace />;
+};
+
+const NotificationsRedirect = () => {
+  const { user } = useAuth();
+  if (user?.role === 'team') return <Navigate to="/team/notifications" replace />;
+  if (user?.role === 'player') return <Navigate to="/player/notifications" replace />;
+  return <Navigate to="/login" replace />;
+};
 
 function App() {
   return (
@@ -60,7 +73,6 @@ function App() {
             pauseOnHover
             theme="colored"
           />
-          <Toaster />
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Layout />}>
@@ -88,6 +100,8 @@ function App() {
                 <Route path="analytics" element={<TeamAnalytics />} />
                 <Route path="reports" element={<TeamAnalytics />} />
                 <Route path="settings" element={<TeamSettings />} />
+                <Route path="profile" element={<Profile />} />
+                <Route path="notifications" element={<Notifications />} />
               </Route>
             </Route>
 
@@ -103,17 +117,13 @@ function App() {
               </Route>
             </Route>
 
-            {/* Shared Routes */}
+            {/* Shared Routes Redirects */}
             <Route path="/profile" element={<ProtectedRoute allowedRoles={['team', 'player']} />}>
-              <Route element={<Layout />}>
-                <Route index element={<Profile />} />
-              </Route>
+              <Route index element={<ProfileRedirect />} />
             </Route>
 
             <Route path="/notifications" element={<ProtectedRoute allowedRoles={['team', 'player']} />}>
-              <Route element={<Layout />}>
-                <Route index element={<Notifications />} />
-              </Route>
+              <Route index element={<NotificationsRedirect />} />
             </Route>
 
             <Route path="/help" element={<Layout />}>
@@ -129,4 +139,4 @@ function App() {
   );
 }
 
-export default App; 
+export default App;

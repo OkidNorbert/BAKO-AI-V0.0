@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { videoAPI, analysisAPI } from '../../services/api'; // Import API services
-import { toast } from 'react-hot-toast';
+import { showToast } from '../../components/shared/Toast';
 import {
   Upload,
   Video as VideoIcon,
@@ -88,14 +88,14 @@ const MatchUpload = () => {
       // Validate file type
       const validTypes = ['video/mp4', 'video/avi', 'video/mov', 'video/wmv', 'video/flv', 'video/x-matroska'];
       if (!validTypes.includes(file.type) && !file.name.endsWith('.mkv')) {
-        toast.error('Please select a valid video file (MP4, AVI, MOV, WMV, FLV, MKV)');
+        showToast('Please select a valid video file (MP4, AVI, MOV, WMV, FLV, MKV)', 'error');
         return;
       }
 
       // Validate file size (max 500MB)
       const maxSize = 500 * 1024 * 1024; // 500MB
       if (file.size > maxSize) {
-        toast.error('Video file must be less than 500MB');
+        showToast('Video file must be less than 500MB', 'error');
         return;
       }
 
@@ -182,12 +182,12 @@ const MatchUpload = () => {
         });
 
         setIsUploading(false);
-        toast.success('Video uploaded and analyzed successfully!');
+        showToast('Video uploaded and analyzed successfully!', 'success');
         return; // Stop polling
       } else if (status === 'failed') {
         setUploadStage('error');
         setIsUploading(false);
-        toast.error(`Analysis failed: ${error_message}`);
+        showToast(`Analysis failed: ${error_message}`, 'error');
         return; // Stop polling
       } else {
         // Continue polling
@@ -197,7 +197,7 @@ const MatchUpload = () => {
       console.error("Polling error:", error);
       setUploadStage('error');
       setIsUploading(false);
-      toast.error('Error checking analysis status');
+      showToast('Error checking analysis status', 'error');
     }
   };
 
@@ -206,17 +206,17 @@ const MatchUpload = () => {
 
     // Validation
     if (!videoFile) {
-      toast.error('Please select a video file');
+      showToast('Please select a video file', 'error');
       return;
     }
 
     if (!uploadData.title.trim()) {
-      toast.error('Please enter a match title');
+      showToast('Please enter a match title', 'error');
       return;
     }
 
     if (!uploadData.matchDate) {
-      toast.error('Please select a match date');
+      showToast('Please select a match date', 'error');
       return;
     }
 
@@ -258,9 +258,9 @@ const MatchUpload = () => {
       setUploadStage('error');
       setIsUploading(false);
       if (error.response && error.response.data && error.response.data.detail) {
-        toast.error(`Error: ${error.response.data.detail}`);
+        showToast(`Error: ${error.response.data.detail}`, 'error');
       } else {
-        toast.error('An unexpected error occurred.');
+        showToast(error.message || 'An error occurred during upload.', 'error');
       }
     }
   };
@@ -341,8 +341,8 @@ const MatchUpload = () => {
                 <div
                   onClick={() => fileInputRef.current?.click()}
                   className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${isDarkMode
-                      ? 'border-gray-600 hover:border-gray-500 bg-gray-700'
-                      : 'border-gray-300 hover:border-gray-400 bg-gray-50'
+                    ? 'border-gray-600 hover:border-gray-500 bg-gray-700'
+                    : 'border-gray-300 hover:border-gray-400 bg-gray-50'
                     }`}
                 >
                   <Upload className={`mx-auto h-12 w-12 mb-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
@@ -502,10 +502,10 @@ const MatchUpload = () => {
                   type="submit"
                   disabled={isUploading || !videoFile}
                   className={`w-full py-3 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2 ${isUploading || !videoFile
-                      ? 'bg-gray-400 cursor-not-allowed text-gray-200'
-                      : isDarkMode
-                        ? 'bg-orange-600 hover:bg-orange-700 text-white'
-                        : 'bg-orange-500 hover:bg-orange-600 text-white'
+                    ? 'bg-gray-400 cursor-not-allowed text-gray-200'
+                    : isDarkMode
+                      ? 'bg-orange-600 hover:bg-orange-700 text-white'
+                      : 'bg-orange-500 hover:bg-orange-600 text-white'
                     }`}
                 >
                   {isUploading ? (
@@ -694,8 +694,8 @@ const MatchUpload = () => {
                   <button
                     onClick={() => navigate('/team/matches')}
                     className={`w-full py-2 rounded-lg font-medium transition-colors ${isDarkMode
-                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                        : 'bg-blue-500 hover:bg-blue-600 text-white'
+                      ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                      : 'bg-blue-500 hover:bg-blue-600 text-white'
                       }`}
                   >
                     View Full Analysis
