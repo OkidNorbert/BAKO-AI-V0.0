@@ -39,19 +39,6 @@ const Login = () => {
       const result = await login(email, password);
       if (!result.success) {
         setError(result.error || 'Failed to login');
-      } else {
-        // Force navigation based on role
-        const userRole = result.user?.role || 'user';
-        switch (userRole) {
-          case 'team':
-            navigate('/team');
-            break;
-          case 'player':
-            navigate('/player');
-            break;
-          default:
-            navigate('/');
-        }
       }
     } catch (err) {
       setError('An error occurred during login');

@@ -46,8 +46,8 @@ api.interceptors.request.use(
       try {
         const tokenPayload = JSON.parse(atob(token.split('.')[1]));
         console.log('Request interceptor: Token payload:', {
-          userId: tokenPayload.user?.id || tokenPayload.id,
-          role: tokenPayload.user?.role || tokenPayload.role,
+          userId: tokenPayload.user?.id || tokenPayload.id || tokenPayload.sub,
+          role: tokenPayload.user?.role || tokenPayload.role || tokenPayload.accountType || tokenPayload.account_type,
           exp: new Date(tokenPayload.exp * 1000).toISOString(),
           path: config.url
         });
@@ -132,8 +132,8 @@ api.interceptors.response.use(
           try {
             const tokenPayload = JSON.parse(atob(accessToken.split('.')[1]));
             console.log('Response interceptor: New token payload:', {
-              userId: tokenPayload.user?.id || tokenPayload.id,
-              role: tokenPayload.user?.role || tokenPayload.role,
+              userId: tokenPayload.user?.id || tokenPayload.id || tokenPayload.sub,
+              role: tokenPayload.user?.role || tokenPayload.role || tokenPayload.accountType || tokenPayload.account_type,
               exp: new Date(tokenPayload.exp * 1000).toISOString()
             });
           } catch (error) {

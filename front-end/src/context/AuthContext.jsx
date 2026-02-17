@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }) => {
         role: userRole,
         name: userName || 'User',
         id: userId,
-        organization_id: localStorage.getItem('organizationId')
+        organizationId: localStorage.getItem('organizationId')
       };
       console.log('AuthContext: Setting initial user state:', userData);
       setUser(userData);

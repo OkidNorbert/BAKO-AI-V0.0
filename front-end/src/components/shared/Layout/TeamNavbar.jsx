@@ -120,17 +120,17 @@ const TeamNavbar = ({ onSidebarToggle }) => {
 
   const notificationItems = Array.isArray(notifications)
     ? notifications.map(item => ({
-        ...item,
-        source: 'notification',
-        title: item.title || 'Notification',
-        date: item.createdAt
-      })).sort((a, b) => {
-        try {
-          return new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt);
-        } catch {
-          return 0;
-        }
-      })
+      ...item,
+      source: 'notification',
+      title: item.title || 'Notification',
+      date: item.createdAt
+    })).sort((a, b) => {
+      try {
+        return new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt);
+      } catch {
+        return 0;
+      }
+    })
     : [];
 
   const unreadCount = notificationItems.filter(item => !item.read).length;
@@ -156,7 +156,7 @@ const TeamNavbar = ({ onSidebarToggle }) => {
       setNotifications(prev =>
         prev.map(n => (n.id === item.id ? { ...n, read: true } : n))
       );
-      navigate('/team/notifications');
+      navigate('/notifications');
     } catch (error) {
       console.error('Error marking notification as read:', error);
     }
@@ -230,7 +230,7 @@ const TeamNavbar = ({ onSidebarToggle }) => {
                     <div className="flex justify-between items-center">
                       <h3 className="font-semibold">Notifications</h3>
                       <button
-                        onClick={() => navigate('/team/notifications')}
+                        onClick={() => navigate('/notifications')}
                         className={`text-sm ${isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-500'
                           }`}
                       >
@@ -331,7 +331,7 @@ const TeamNavbar = ({ onSidebarToggle }) => {
                       <Menu.Item>
                         {({ active }) => (
                           <button
-                            onClick={() => navigate('/team/profile')}
+                            onClick={() => navigate('/profile')}
                             className={`flex w-full items-center px-4 py-2 text-sm ${active
                               ? isDarkMode
                                 ? 'bg-gray-700 text-white'

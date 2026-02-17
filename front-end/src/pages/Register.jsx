@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme } from '@/context/ThemeContext';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -66,15 +66,7 @@ const Register = () => {
         account_type: accountTypeMapping[formData.accountType] || 'personal'
       });
 
-      if (result.success) {
-        // Explicitly navigate based on the role after successful registration
-        const role = formData.accountType;
-        if (role === 'team') {
-          navigate('/team');
-        } else {
-          navigate('/player');
-        }
-      } else {
+      if (!result.success) {
         setError(result.error || 'Failed to register');
       }
     } catch (err) {

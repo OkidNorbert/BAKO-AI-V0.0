@@ -129,7 +129,8 @@ async def login(
 
     # Apply a stricter rate limit on login to protect against brute force.
     limiter = _get_limiter(request)
-    limiter.limit("5/minute")(lambda *_args, **_kwargs: None)(request)
+    # The decorated function must accept a 'request' argument for slowapi inspection
+    limiter.limit("60/minute")(lambda request: None)(request)
     
     # Find user
     users = await supabase.select("users", filters={"email": credentials.email})

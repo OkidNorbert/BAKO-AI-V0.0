@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '@/utils/axiosConfig';
-import { useAuth } from './AuthContext';
+import { useAuth } from '@/context/AuthContext';
 
 const NotificationContext = createContext(null);
 
@@ -49,8 +49,10 @@ export const NotificationProvider = ({ children }) => {
 
       console.log(`Fetching notifications for role: ${role}`);
 
+      const apiPrefix = role === 'team' ? 'admin' : 'player';
+
       try {
-        const response = await api.get(`/${role}/notifications`);
+        const response = await api.get(`/${apiPrefix}/notifications`);
 
         if (response.data && Array.isArray(response.data)) {
           setNotifications(response.data);
@@ -133,9 +135,11 @@ export const NotificationProvider = ({ children }) => {
         return;
       }
 
+      const apiPrefix = role === 'team' ? 'admin' : 'player';
+
       // Attempt to update on the server
       try {
-        await api.put(`/${role}/notifications/${notificationId}/read`);
+        await api.put(`/${apiPrefix}/notifications/${notificationId}/read`);
       } catch (apiError) {
         console.warn('Error marking notification as read on server:', apiError);
         // Continue with local state update only
@@ -164,9 +168,11 @@ export const NotificationProvider = ({ children }) => {
         return;
       }
 
+      const apiPrefix = role === 'team' ? 'admin' : 'player';
+
       // Attempt to update on the server
       try {
-        await api.put(`/${role}/notifications/read-all`);
+        await api.put(`/${apiPrefix}/notifications/read-all`);
       } catch (apiError) {
         console.warn('Error marking all notifications as read on server:', apiError);
         // Continue with local state update only
@@ -195,9 +201,11 @@ export const NotificationProvider = ({ children }) => {
         return;
       }
 
+      const apiPrefix = role === 'team' ? 'admin' : 'player';
+
       // Attempt to update on the server
       try {
-        await api.delete(`/${role}/notifications/${notificationId}`);
+        await api.delete(`/${apiPrefix}/notifications/${notificationId}`);
       } catch (apiError) {
         console.warn('Error deleting notification on server:', apiError);
         // Continue with local state update only
