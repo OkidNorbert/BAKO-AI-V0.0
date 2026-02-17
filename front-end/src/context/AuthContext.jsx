@@ -48,40 +48,32 @@ export const AuthProvider = ({ children }) => {
       console.log('AuthContext: Login response:', response.data);
 
       if (response.data && response.data.accessToken) {
-        const { accessToken, refreshToken } = response.data;
-        // Extract user info from JWT token
-        const tokenPayload = JSON.parse(atob(accessToken.split('.')[1]));
-        const userRole = tokenPayload.user?.role || tokenPayload.role;
-        const userId = tokenPayload.user?.id || response.data.user?.id;
-        const userName = response.data.user?.name || 'User';
-        const organizationId = tokenPayload.organization_id || response.data.user?.organization_id;
+        const { accessToken, refreshToken, user: backendUser } = response.data;
 
-        console.log('AuthContext: Extracted user info:', {
-          userRole,
-          userName,
-          userId,
-          organizationId
-        });
+        // Extract info from token as fallback/sync
+        const tokenPayload = JSON.parse(atob(accessToken.split('.')[1]));
+
+        // Map backend user to frontend expectations
+        const userData = {
+          id: backendUser?.id || tokenPayload.sub,
+          email: backendUser?.email || tokenPayload.email,
+          role: (backendUser?.accountType || tokenPayload.accountType) === 'personal' ? 'player' : (backendUser?.accountType || tokenPayload.accountType),
+          name: backendUser?.fullName || 'User',
+          organizationId: backendUser?.organizationId || tokenPayload.organizationId,
+          teamId: backendUser?.teamId || backendUser?.team_id
+        };
+
+        console.log('AuthContext: Login successful, mapped user:', userData);
 
         localStorage.setItem('accessToken', accessToken);
         localStorage.setItem('refreshToken', refreshToken);
-        localStorage.setItem('userRole', userRole);
-        localStorage.setItem('userName', userName);
-        localStorage.setItem('userId', userId);
-        if (organizationId) {
-          localStorage.setItem('organizationId', organizationId);
+        localStorage.setItem('userRole', userData.role);
+        localStorage.setItem('userName', userData.name);
+        localStorage.setItem('userId', userData.id);
+        if (userData.organizationId) {
+          localStorage.setItem('organizationId', userData.organizationId);
         }
 
-        // Set user state immediately (teamId = team-created player account)
-        const userData = {
-          role: userRole,
-          name: userName,
-          id: userId,
-          email: response.data.user?.email,
-          organization_id: organizationId,
-          teamId: response.data.user?.teamId ?? response.data.user?.team_id
-        };
-        console.log('AuthContext: Setting user state after login:', userData);
         setUser(userData);
         setIsAuthenticated(true);
 
@@ -105,14 +97,27 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       setLoading(true);
+      console.log('AuthContext: Registering with data:', userData);
       const response = await api.post('/auth/register', userData);
-      const { accessToken, refreshToken, user } = response.data;
+      const { accessToken, refreshToken, user: backendUser } = response.data;
+
+      // Map backend fields to frontend expected ones
+      const user = {
+        ...backendUser,
+        role: backendUser.accountType === 'personal' ? 'player' : backendUser.accountType,
+        name: backendUser.fullName || 'User'
+      };
+
+      console.log('AuthContext: Registration successful, mapped user:', user);
 
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
-      localStorage.setItem('userRole', user.role || 'player');
-      localStorage.setItem('userName', user.name || 'User');
+      localStorage.setItem('userRole', user.role);
+      localStorage.setItem('userName', user.name);
       localStorage.setItem('userId', user.id);
+      if (user.organizationId) {
+        localStorage.setItem('organizationId', user.organizationId);
+      }
 
       setUser(user);
       setIsAuthenticated(true);

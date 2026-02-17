@@ -1,7 +1,7 @@
 """
 Authentication API endpoints.
 """
-from datetime import timedelta
+from datetime import datetime, timedelta
 from uuid import uuid4
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
@@ -99,10 +99,20 @@ async def register(
     access_token = create_access_token(token_data)
     refresh_token = create_refresh_token(user_id)
     
+    user = User(
+        id=user_id,
+        email=user_data.email,
+        account_type=user_data.account_type,
+        full_name=user_data.full_name,
+        organization_id=org_id,
+        created_at=datetime.now()
+    )
+    
     return TokenResponse(
         access_token=access_token,
         refresh_token=refresh_token,
         expires_in=settings.jwt_expiration_minutes * 60,
+        user=user
     )
 
 
@@ -160,6 +170,14 @@ async def login(
         access_token=access_token,
         refresh_token=refresh_token,
         expires_in=settings.jwt_expiration_minutes * 60,
+        user=User(
+            id=user["id"],
+            email=user["email"],
+            account_type=AccountType(user["account_type"]),
+            full_name=user.get("full_name"),
+            organization_id=org_id,
+            created_at=user.get("created_at") or datetime.now()
+        )
     )
 
 

@@ -59,9 +59,11 @@ class SupabaseService:
             return
             
         try:
+            # Prefer service key if available for administrative backend operations
+            key = self._settings.supabase_service_key or self._settings.supabase_key
             self._client = create_client(
                 self._settings.supabase_url,
-                self._settings.supabase_key
+                key
             )
             self._initialized = True
         except Exception as e:

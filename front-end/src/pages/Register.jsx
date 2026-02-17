@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 
 const Register = () => {
@@ -53,11 +53,17 @@ const Register = () => {
     setIsLoading(true);
 
     try {
+      // Map frontend role to backend account_type
+      const accountTypeMapping = {
+        'player': 'personal',
+        'team': 'team'
+      };
+
       const result = await register({
-        name: formData.name,
+        full_name: formData.name,
         email: formData.email,
         password: formData.password,
-        role: formData.accountType // Use selected account type
+        account_type: accountTypeMapping[formData.accountType] || 'personal'
       });
 
       if (result.success) {

@@ -142,6 +142,15 @@ def register_exception_handlers(app: FastAPI) -> None:
             },
         )
     
+    from fastapi.exceptions import RequestValidationError
+    @app.exception_handler(RequestValidationError)
+    async def validation_exception_handler(request: Request, exc: RequestValidationError):
+        print(f"Validation Error: {exc.errors()}")
+        return JSONResponse(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            content={"detail": exc.errors()},
+        )
+    
     @app.exception_handler(RateLimitExceeded)
     async def rate_limit_handler(
         request: Request, exc: RateLimitExceeded

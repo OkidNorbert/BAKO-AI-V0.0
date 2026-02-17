@@ -5,7 +5,8 @@ from enum import Enum
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from pydantic.alias_generators import to_camel
 
 
 class AccountType(str, Enum):
@@ -17,6 +18,12 @@ class AccountType(str, Enum):
 class UserBase(BaseModel):
     """Base user fields."""
     email: EmailStr
+    
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,
+        from_attributes=True
+    )
 
 
 class UserCreate(UserBase):
@@ -47,9 +54,6 @@ class User(UserBase):
     organization_id: Optional[UUID] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
-    
-    class Config:
-        from_attributes = True
 
 
 class UserInDB(User):
@@ -63,11 +67,22 @@ class TokenResponse(BaseModel):
     refresh_token: str
     token_type: str = "bearer"
     expires_in: int = Field(..., description="Token expiration in seconds")
+    user: Optional[User] = None
+
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True
+    )
 
 
 class RefreshTokenRequest(BaseModel):
     """Request schema for refreshing access tokens."""
     refresh_token: str
+    
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True
+    )
 
 
 class TokenPayload(BaseModel):
@@ -77,3 +92,8 @@ class TokenPayload(BaseModel):
     account_type: AccountType
     organization_id: Optional[str] = None
     exp: datetime
+
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True
+    )

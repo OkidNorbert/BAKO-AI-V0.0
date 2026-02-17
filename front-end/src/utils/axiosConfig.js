@@ -2,7 +2,7 @@ import axios from 'axios';
 import { toast } from 'react-hot-toast';
 // Create axios instance with default config
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api',  // Explicitly point to server port
+  baseURL: '/api',  // Use relative path to work with Vite proxy
   headers: {
     'Content-Type': 'application/json',
   },
@@ -120,7 +120,7 @@ api.interceptors.response.use(
 
         // Create a new axios instance for the refresh call to avoid interceptors loop
         const refreshResponse = await axios.post(
-          'http://localhost:5000/api/auth/refresh-token',
+          '/api/auth/refresh-token',
           { refreshToken },
           { headers: { 'Content-Type': 'application/json' } }
         );
