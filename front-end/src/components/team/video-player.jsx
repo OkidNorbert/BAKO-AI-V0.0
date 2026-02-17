@@ -20,7 +20,7 @@ const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate }) => {
   const { isDarkMode } = useTheme();
   const videoRef = useRef(null);
   const containerRef = useRef(null);
-  
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -31,23 +31,27 @@ const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate }) => {
   const [selectedOverlay, setSelectedOverlay] = useState('players');
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // Mock player positions for demonstration
-  const [playerPositions, setPlayerPositions] = useState([
-    { id: 1, x: 20, y: 30, number: 23, team: 'home' },
-    { id: 2, x: 40, y: 50, number: 30, team: 'home' },
-    { id: 3, x: 60, y: 40, number: 35, team: 'away' },
-    { id: 4, x: 80, y: 60, number: 11, team: 'away' },
-    { id: 5, x: 50, y: 70, number: 34, team: 'home' }
-  ]);
+  /* Mock data removed - using analysisData prop */
+  const [playerPositions, setPlayerPositions] = useState([]);
+  const [events, setEvents] = useState([]);
 
-  // Mock events timeline
-  const [events] = useState([
-    { time: 15, type: 'shot', player: 'Player 23', result: 'made' },
-    { time: 45, type: 'turnover', player: 'Player 30', result: 'lost' },
-    { time: 78, type: 'assist', player: 'Player 35', result: 'completed' },
-    { time: 120, type: 'block', player: 'Player 11', result: 'blocked' },
-    { time: 180, type: 'rebound', player: 'Player 34', result: 'defensive' }
-  ]);
+  useEffect(() => {
+    if (analysisData) {
+      // Map backend events to player format
+      if (analysisData.events && Array.isArray(analysisData.events)) {
+        setEvents(analysisData.events.map(e => ({
+          time: e.timestamp || e.frame / 30, // Fallback to frame count / 30fps
+          type: e.type || 'unknown',
+          player: e.player_id || 'Unknown',
+          result: e.description || e.result || 'completed'
+        })));
+      }
+
+      // If analysisData has tracks/positions, set them here
+      // For now, assuming standard analysis result doesn't include frame-by-frame track data
+      // setPlayerPositions([]); 
+    }
+  }, [analysisData]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -58,9 +62,9 @@ const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate }) => {
       if (onTimeUpdate) {
         onTimeUpdate(video.currentTime);
       }
-      
-      // Update player positions based on time (mock animation)
-      updatePlayerPositions(video.currentTime);
+
+      // Update player positions based on time if tracks available
+      // updatePlayerPositions(video.currentTime);
     };
 
     const handleLoadedMetadata = () => {
@@ -83,12 +87,8 @@ const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate }) => {
   }, [onTimeUpdate]);
 
   const updatePlayerPositions = (time) => {
-    // Simulate player movement based on time
-    setPlayerPositions(prev => prev.map(player => ({
-      ...player,
-      x: Math.max(10, Math.min(90, player.x + Math.sin(time / 10) * 5)),
-      y: Math.max(20, Math.min(80, player.y + Math.cos(time / 10) * 3))
-    })));
+    // Real implementation would interpolate positions from tracking data
+    // For now, no operation if no tracking data provided
   };
 
   const togglePlayPause = () => {
@@ -163,6 +163,7 @@ const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate }) => {
   };
 
   const formatTime = (seconds) => {
+    if (!seconds || isNaN(seconds)) return "0:00";
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
@@ -210,16 +211,14 @@ const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate }) => {
                       top: `${player.y}%`,
                     }}
                   >
-                    <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold ${
-                      player.team === 'home' 
-                        ? 'bg-blue-500 border-white text-white' 
+                    <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold ${player.team === 'home'
+                        ? 'bg-blue-500 border-white text-white'
                         : 'bg-red-500 border-white text-white'
-                    }`}>
+                      }`}>
                       {player.number}
                     </div>
-                    <div className={`text-xs mt-1 text-center font-medium ${
-                      player.team === 'home' ? 'text-blue-400' : 'text-red-400'
-                    }`}>
+                    <div className={`text-xs mt-1 text-center font-medium ${player.team === 'home' ? 'text-blue-400' : 'text-red-400'
+                      }`}>
                       P{player.id}
                     </div>
                   </div>
@@ -253,20 +252,18 @@ const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate }) => {
         {/* Current Event Overlay */}
         {getCurrentEvent() && (
           <div className="absolute top-4 left-4 right-4">
-            <div className={`p-3 rounded-lg backdrop-blur-sm ${
-              isDarkMode ? 'bg-gray-900/80 text-white' : 'bg-white/80 text-gray-900'
-            }`}>
+            <div className={`p-3 rounded-lg backdrop-blur-sm ${isDarkMode ? 'bg-gray-900/80 text-white' : 'bg-white/80 text-gray-900'
+              }`}>
               <div className="flex items-center space-x-2">
                 <Activity className="w-5 h-5 text-orange-500" />
                 <span className="font-medium">{getCurrentEvent().type.toUpperCase()}</span>
                 <span className="text-sm">by {getCurrentEvent().player}</span>
-                <span className={`text-sm px-2 py-1 rounded ${
-                  getCurrentEvent().result === 'made' || getCurrentEvent().result === 'completed'
+                <span className={`text-sm px-2 py-1 rounded ${getCurrentEvent().result === 'made' || getCurrentEvent().result === 'completed'
                     ? 'bg-green-500 text-white'
                     : getCurrentEvent().result === 'blocked' || getCurrentEvent().result === 'lost'
-                    ? 'bg-red-500 text-white'
-                    : 'bg-blue-500 text-white'
-                }`}>
+                      ? 'bg-red-500 text-white'
+                      : 'bg-blue-500 text-white'
+                  }`}>
                   {getCurrentEvent().result}
                 </span>
               </div>
@@ -301,7 +298,7 @@ const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate }) => {
               >
                 <SkipBack size={16} className="text-white" />
               </button>
-              
+
               <button
                 onClick={togglePlayPause}
                 className="p-3 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
@@ -312,7 +309,7 @@ const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate }) => {
                   <Play size={20} className="text-white" />
                 )}
               </button>
-              
+
               <button
                 onClick={skipForward}
                 className="p-2 rounded-full hover:bg-white/20 transition-colors"
@@ -348,9 +345,8 @@ const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate }) => {
               <select
                 value={playbackSpeed}
                 onChange={(e) => changePlaybackSpeed(parseFloat(e.target.value))}
-                className={`px-2 py-1 rounded text-sm ${
-                  isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-800 text-white'
-                }`}
+                className={`px-2 py-1 rounded text-sm ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-800 text-white'
+                  }`}
               >
                 <option value={0.5}>0.5x</option>
                 <option value={1}>1x</option>
@@ -362,20 +358,18 @@ const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate }) => {
               <div className="flex items-center space-x-2">
                 <button
                   onClick={() => setShowOverlays(!showOverlays)}
-                  className={`p-2 rounded-full transition-colors ${
-                    showOverlays ? 'bg-white/20' : 'bg-white/10'
-                  }`}
+                  className={`p-2 rounded-full transition-colors ${showOverlays ? 'bg-white/20' : 'bg-white/10'
+                    }`}
                 >
                   <Target size={16} className="text-white" />
                 </button>
-                
+
                 {showOverlays && (
                   <select
                     value={selectedOverlay}
                     onChange={(e) => setSelectedOverlay(e.target.value)}
-                    className={`px-2 py-1 rounded text-sm ${
-                      isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-800 text-white'
-                    }`}
+                    className={`px-2 py-1 rounded text-sm ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-800 text-white'
+                      }`}
                   >
                     <option value="players">Players</option>
                     <option value="heatmap">Heatmap</option>

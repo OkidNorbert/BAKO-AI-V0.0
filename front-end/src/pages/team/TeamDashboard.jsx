@@ -55,12 +55,12 @@ const TeamDashboard = () => {
         const recentActivities = notificationsResponse.data || [];
 
         setStats({
-          totalPlayers: statsData.totalPlayers || 0,
-          totalMatches: statsData.totalMatches || 0,
-          matchesAnalyzed: statsData.matchesAnalyzed || 0,
-          winRate: statsData.winRate || 0,
+          totalPlayers: statsData.total_players || 0,
+          totalMatches: statsData.total_matches || 0,
+          matchesAnalyzed: statsData.videos_analyzed || 0,
+          winRate: 0, // Not calculated in backend yet
           recentActivities: recentActivities.slice(0, 5), // Use notifications as proxy for activity for now
-          performanceData: statsData.performanceData || null,
+          performanceData: statsData.performance_data || null,
         });
 
         setLoading(false);

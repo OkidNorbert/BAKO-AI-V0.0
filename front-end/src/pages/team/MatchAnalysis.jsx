@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/context/ThemeContext';
-import { adminAPI } from '../../services/api';
+import { videoAPI, analysisAPI } from '../../services/api';
 import VideoPlayer from '../../components/team/video-player';
 import {
   Search,
@@ -44,16 +44,14 @@ const MatchAnalysis = () => {
   const [matchStats, setMatchStats] = useState({
     total: 0,
     byStatus: {
-      analyzed: 0,
+      completed: 0,
       processing: 0,
       pending: 0,
-      error: 0
+      failed: 0
     },
     byType: {
-      practice: 0,
-      league: 0,
-      scrimmage: 0,
-      other: 0
+      team: 0,
+      personal: 0
     }
   });
 
@@ -74,25 +72,23 @@ const MatchAnalysis = () => {
       const stats = {
         total: matches.length,
         byStatus: {
-          analyzed: 0,
+          completed: 0,
           processing: 0,
           pending: 0,
-          error: 0
+          failed: 0
         },
         byType: {
-          practice: 0,
-          league: 0,
-          scrimmage: 0,
-          other: 0
+          team: 0,
+          personal: 0
         }
       };
 
       matches.forEach(match => {
-        const type = match.type || 'other';
+        const type = match.analysis_mode || 'team';
         if (stats.byType[type] !== undefined) stats.byType[type]++;
-        else stats.byType.other++;
 
-        const status = match.analysisStatus || 'pending';
+        const status = match.status || 'pending';
+        // Map backend status to keys if needed, assuming direct mapping for now
         if (stats.byStatus[status] !== undefined) stats.byStatus[status]++;
         else stats.byStatus.pending++;
       });
@@ -106,16 +102,15 @@ const MatchAnalysis = () => {
       setLoading(true);
       setError('');
 
-      // Mock data logic removed to prepare for real backend integration
-
-      const response = await adminAPI.getMatches();
-      setMatches(response.data || []);
+      // Fetch uploaded videos instead of "matches"
+      const response = await videoAPI.list({ page_size: 100 });
+      setMatches(response.data.videos || []);
       setLoading(false);
 
     } catch (error) {
       console.error('Error in fetchData:', error);
       setLoading(false);
-      setError('Failed to fetch matches');
+      setError('Failed to fetch videos');
     }
   };
 
@@ -126,16 +121,16 @@ const MatchAnalysis = () => {
     const searchTermLower = searchTerm.toLowerCase();
 
     const matchesSearch = title.includes(searchTermLower);
-    const matchesType = filterType === 'all' || match.type === filterType;
+    const matchesType = filterType === 'all' || match.analysis_mode === filterType;
 
     return matchesSearch && matchesType;
   });
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'analyzed': return 'text-green-500';
+      case 'completed': return 'text-green-500';
       case 'processing': return 'text-blue-500';
-      case 'error': return 'text-red-500';
+      case 'failed': return 'text-red-500';
       default: return 'text-gray-500';
     }
   };
@@ -164,35 +159,28 @@ const MatchAnalysis = () => {
   };
 
   const handleUpdateMatch = async (e) => {
-    e.preventDefault();
-    try {
-      setUpdateLoading(true);
-      setUpdateError('');
-
-      const response = await adminAPI.updateMatch(editingMatch.id, formData);
-      const updatedMatch = response.data || { ...editingMatch, ...formData };
-
-      setMatches(matches.map(m => m.id === editingMatch.id ? updatedMatch : m));
-      setUpdateSuccess('Match updated successfully');
-
-      setTimeout(() => {
-        setShowEditModal(false);
-        setUpdateSuccess('');
-      }, 1000);
-    } catch (error) {
-      console.error('Error updating match:', error);
-      setUpdateError('Failed to update match');
-    } finally {
-      setUpdateLoading(false);
-    }
+    // Not implemented for videos in this simplified integration
+    // Would likely update video title/description
+    setShowEditModal(false);
   };
 
   const handleAddMatchClick = () => {
     navigate('/team/matches/upload');
   };
 
-  const handleViewMatch = (match) => {
-    setSelectedMatch(match);
+  const handleViewMatch = async (match) => {
+    // If completed, try to fetch analysis data
+    let analysisData = null;
+    if (match.status === 'completed') {
+      try {
+        const res = await analysisAPI.getLastResultByVideo(match.id);
+        analysisData = res.data;
+      } catch (e) {
+        console.error("Could not fetch analysis", e);
+      }
+    }
+
+    setSelectedMatch({ ...match, analysisData });
     setShowVideoPlayer(true);
     setAnalysisView('player');
   };
@@ -201,6 +189,18 @@ const MatchAnalysis = () => {
     setShowVideoPlayer(false);
     setSelectedMatch(null);
     setAnalysisView('list');
+  };
+
+  const handleDeleteMatch = async (id, e) => {
+    e.stopPropagation();
+    if (window.confirm("Are you sure you want to delete this video?")) {
+      try {
+        await videoAPI.delete(id);
+        setMatches(matches.filter(m => m.id !== id));
+      } catch (e) {
+        console.error("Delete failed", e);
+      }
+    }
   };
 
   const handleVideoTimeUpdate = (currentTime) => {
@@ -218,7 +218,7 @@ const MatchAnalysis = () => {
         }`}>
         <div className="flex flex-col items-center justify-center">
           <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-orange-500"></div>
-          <p className={`mt-4 text-lg ${isDarkMode ? 'text-white' : 'text-indigo-700'}`}>Loading match data...</p>
+          <p className={`mt-4 text-lg ${isDarkMode ? 'text-white' : 'text-indigo-700'}`}>Loading videos...</p>
         </div>
       </div>
     );
@@ -248,15 +248,17 @@ const MatchAnalysis = () => {
                   {selectedMatch.title}
                 </h1>
                 <p className={`mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  {selectedMatch.date} • {selectedMatch.duration} • {selectedMatch.type}
+                  {new Date(selectedMatch.created_at).toLocaleDateString()} • {selectedMatch.duration_seconds ? `${Math.round(selectedMatch.duration_seconds)}s` : 'Unknown duration'} • {selectedMatch.analysis_mode}
                 </p>
               </div>
 
               <div className="flex space-x-2 mt-4 md:mt-0">
-                <button className={`flex items-center px-3 py-2 rounded-lg ${isDarkMode
-                  ? 'bg-gray-700 hover:bg-gray-600 text-white'
-                  : 'bg-gray-200 hover:bg-gray-300 text-gray-900'
-                  }`}>
+                <button
+                  onClick={() => window.open(selectedMatch.download_url)}
+                  className={`flex items-center px-3 py-2 rounded-lg ${isDarkMode
+                    ? 'bg-gray-700 hover:bg-gray-600 text-white'
+                    : 'bg-gray-200 hover:bg-gray-300 text-gray-900'
+                    }`}>
                   <Download size={16} className="mr-2" />
                   Export
                 </button>
@@ -275,7 +277,7 @@ const MatchAnalysis = () => {
             {/* Video Player */}
             <div className="lg:col-span-2">
               <VideoPlayer
-                videoSrc={`/api/videos/${selectedMatch.id}`}
+                videoSrc={selectedMatch.download_url} // Use download URL
                 analysisData={selectedMatch.analysisData}
                 onTimeUpdate={handleVideoTimeUpdate}
               />
@@ -290,24 +292,28 @@ const MatchAnalysis = () => {
                   Match Statistics
                 </h3>
 
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Players Detected</span>
-                    <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>10</span>
+                {selectedMatch.analysisData ? (
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Players Detected</span>
+                      <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{selectedMatch.analysisData.players_detected}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Total Passes</span>
+                      <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{selectedMatch.analysisData.total_passes}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Team 1 Poss%</span>
+                      <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{selectedMatch.analysisData.team_1_possession_percent}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Shooting %</span>
+                      <span className={`font-bold ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>{selectedMatch.analysisData.overall_shooting_percentage ? selectedMatch.analysisData.overall_shooting_percentage.toFixed(1) : 0}%</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Total Plays</span>
-                    <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>45</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Possessions</span>
-                    <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>120</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Shooting %</span>
-                    <span className={`font-bold ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>48.5%</span>
-                  </div>
-                </div>
+                ) : (
+                  <p className="text-sm text-gray-500">Analysis data not available yet.</p>
+                )}
               </div>
 
               {/* Key Events */}
@@ -317,30 +323,31 @@ const MatchAnalysis = () => {
                   Key Events
                 </h3>
 
-                <div className="space-y-2">
-                  {[
-                    { time: '02:15', type: 'Turnover', player: 'PG #23' },
-                    { time: '05:30', type: '3-Pointer', player: 'SG #30' },
-                    { time: '08:45', type: 'Fast Break', player: 'SF #35' },
-                    { time: '12:20', type: 'Block', player: 'C #11' }
-                  ].map((event, index) => (
-                    <div
-                      key={index}
-                      className={`flex items-center justify-between p-2 rounded ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}
-                    >
-                      <div className="flex items-center space-x-2">
-                        <span className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                          {event.time}
-                        </span>
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {selectedMatch.analysisData && selectedMatch.analysisData.events && selectedMatch.analysisData.events.length > 0 ? (
+                    selectedMatch.analysisData.events.map((event, index) => (
+                      <div
+                        key={index}
+                        className={`flex items-center justify-between p-2 rounded ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}
+                      >
+                        <div className="flex items-center space-x-2">
+                          <span className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                            {event.timestamp ? new Date(event.timestamp * 1000).toISOString().substr(14, 5) : (event.frame ? (event.frame / 30).toFixed(2) : '-')}
+                          </span>
+                          <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                            {event.type}
+                          </span>
+                        </div>
                         <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                          {event.type}
+                          {event.player_id ? `Player ${event.player_id}` : 'Unknown'}
                         </span>
                       </div>
-                      <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                        {event.player}
-                      </span>
+                    ))
+                  ) : (
+                    <div className={`p-4 text-center text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                      No key events detected.
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
 
@@ -406,7 +413,7 @@ const MatchAnalysis = () => {
               }`}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className={`text-sm ${isDarkMode ? 'text-blue-300' : 'text-blue-700'}`}>Total Matches</p>
+                  <p className={`text-sm ${isDarkMode ? 'text-blue-300' : 'text-blue-700'}`}>Total Videos</p>
                   <p className={`text-3xl font-bold mt-1 ${isDarkMode ? 'text-white' : 'text-blue-900'}`}>
                     {matchStats.total}
                   </p>
@@ -425,7 +432,7 @@ const MatchAnalysis = () => {
                 <div>
                   <p className={`text-sm ${isDarkMode ? 'text-green-300' : 'text-green-700'}`}>Analyzed</p>
                   <div className={`text-3xl font-bold mt-1 ${isDarkMode ? 'text-white' : 'text-green-900'}`}>
-                    {matchStats.byStatus.analyzed}
+                    {matchStats.byStatus.completed}
                   </div>
                 </div>
                 <div className={`h-12 w-12 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-green-800' : 'bg-green-200'
@@ -457,14 +464,14 @@ const MatchAnalysis = () => {
               }`}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className={`text-sm ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>League Games</p>
+                  <p className={`text-sm ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>Failed</p>
                   <p className={`text-3xl font-bold mt-1 ${isDarkMode ? 'text-white' : 'text-purple-900'}`}>
-                    {matchStats.byType.league}
+                    {matchStats.byStatus.failed}
                   </p>
                 </div>
                 <div className={`h-12 w-12 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-purple-800' : 'bg-purple-200'
                   }`}>
-                  <Calendar className={`h-6 w-6 ${isDarkMode ? 'text-purple-300' : 'text-purple-600'}`} />
+                  <AlertTriangle className={`h-6 w-6 ${isDarkMode ? 'text-purple-300' : 'text-purple-600'}`} />
                 </div>
               </div>
             </div>
@@ -480,7 +487,7 @@ const MatchAnalysis = () => {
                     }`} />
                   <input
                     type="text"
-                    placeholder="Search matches..."
+                    placeholder="Search videos..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className={`w-full pl-10 pr-4 py-2.5 rounded-full ${isDarkMode
@@ -501,10 +508,9 @@ const MatchAnalysis = () => {
                     : 'bg-gray-50 text-gray-900 focus:ring-2 focus:ring-orange-500'
                     }`}
                 >
-                  <option value="all">All Types</option>
-                  <option value="league">League Game</option>
-                  <option value="practice">Practice</option>
-                  <option value="scrimmage">Scrimmage</option>
+                  <option value="all">All Mode</option>
+                  <option value="team">Team</option>
+                  <option value="personal">Personal</option>
                 </select>
               </div>
             </div>
@@ -519,13 +525,13 @@ const MatchAnalysis = () => {
                   }`}>
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                      Match Title
+                      Title
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
                       Date
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                      Type
+                      Mode
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
                       Status
@@ -554,26 +560,27 @@ const MatchAnalysis = () => {
                             <div className="ml-4">
                               <div className="font-medium">{match.title}</div>
                               <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                                {match.notes || 'No notes'}
+                                {match.description || 'No description'}
                               </div>
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          {match.date}
+                          {new Date(match.created_at).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm capitalize">
-                          {match.type}
+                          {match.analysis_mode}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <span className={`inline-flex items-center ${getStatusColor(match.analysisStatus)}`}>
-                            {match.analysisStatus === 'analyzed' && <CheckCircle className="w-4 h-4 mr-1" />}
-                            {match.analysisStatus === 'processing' && <Clock className="w-4 h-4 mr-1" />}
-                            {match.analysisStatus}
+                          <span className={`inline-flex items-center ${getStatusColor(match.status)}`}>
+                            {match.status === 'completed' && <CheckCircle className="w-4 h-4 mr-1" />}
+                            {match.status === 'processing' && <Clock className="w-4 h-4 mr-1" />}
+                            {match.status === 'failed' && <AlertTriangle className="w-4 h-4 mr-1" />}
+                            {match.status}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          {match.duration}
+                          {match.duration_seconds ? `${Math.round(match.duration_seconds)}s` : '-'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                           <div className="flex justify-end space-x-2">
@@ -587,6 +594,16 @@ const MatchAnalysis = () => {
                             >
                               <Info className="h-4 w-4" />
                             </button>
+                            <button
+                              onClick={(e) => handleDeleteMatch(match.id, e)}
+                              className={`p-1.5 rounded-full transition-colors ${isDarkMode
+                                ? 'bg-gray-700 text-red-400 hover:bg-gray-600'
+                                : 'bg-gray-100 text-red-600 hover:bg-gray-200'
+                                }`}
+                              title="Delete"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -596,7 +613,7 @@ const MatchAnalysis = () => {
                       <td colSpan="6" className="px-6 py-10 text-center">
                         <div className="flex flex-col items-center">
                           <Video className={`h-8 w-8 mb-2 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
-                          <p className="text-sm">No matches found matching your search criteria.</p>
+                          <p className="text-sm">No videos found matching your search criteria.</p>
                         </div>
                       </td>
                     </tr>
@@ -614,7 +631,7 @@ const MatchAnalysis = () => {
           <div className={`rounded-lg p-6 max-w-lg w-full ${isDarkMode ? 'bg-gray-800' : 'bg-white'
             }`}>
             <h3 className="text-xl font-bold mb-4">{editingMatch.title}</h3>
-            <p className="mb-4">Status: {editingMatch.analysisStatus}</p>
+            <p className="mb-4">Status: {editingMatch.status}</p>
             <button
               onClick={() => setShowEditModal(false)}
               className="bg-gray-500 text-white px-4 py-2 rounded"

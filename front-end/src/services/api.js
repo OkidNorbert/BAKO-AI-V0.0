@@ -197,4 +197,27 @@ export const playerAPI = {
   deleteNotification: (notificationId) => api.delete(`/player/notifications/${notificationId}`),
 };
 
+// Video API
+export const videoAPI = {
+  upload: (formData) => api.post('/videos/upload', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  }),
+  list: (params) => api.get('/videos', { params }),
+  getById: (videoId) => api.get(`/videos/${videoId}`),
+  getStatus: (videoId) => api.get(`/videos/${videoId}/status`),
+  download: (videoId) => api.get(`/videos/${videoId}/download`, { responseType: 'blob' }),
+  delete: (videoId) => api.delete(`/videos/${videoId}`),
+};
+
+// Analysis API
+export const analysisAPI = {
+  triggerTeamAnalysis: (videoId, options) => api.post('/analysis/team', { video_id: videoId, options }),
+  triggerPersonalAnalysis: (videoId, options) => api.post('/analysis/personal', { video_id: videoId, options }),
+  getResult: (analysisId) => api.get(`/analysis/${analysisId}`),
+  getLastResultByVideo: (videoId) => api.get(`/analysis/by-video/${videoId}`),
+  getDetections: (analysisId, params) => api.get(`/analysis/${analysisId}/detections`, { params }),
+};
+
 export default api;
