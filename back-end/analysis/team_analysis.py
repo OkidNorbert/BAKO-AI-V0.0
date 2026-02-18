@@ -86,6 +86,7 @@ async def run_team_analysis(video_path: str, options: Optional[Dict[str, Any]] =
     player_tracks = []
     ball_tracks = [{} for _ in range(total_frames)]
     hoop_detections = [None for _ in range(total_frames)]
+    shot_clock_detections = [None for _ in range(total_frames)]
 
     from ultralytics import YOLO
     import supervision as sv
@@ -153,6 +154,20 @@ async def run_team_analysis(video_path: str, options: Optional[Dict[str, Any]] =
                     "center": [float((best_hoop_bbox[0] + best_hoop_bbox[2]) / 2), float((best_hoop_bbox[1] + best_hoop_bbox[3]) / 2)],
                     "rim_y": float(best_hoop_bbox[1]),
                     "confidence": float(best_hoop_conf)
+                }
+
+            # 4. Process for Shot Clock
+            best_sc_conf = -1
+            best_sc_bbox = None
+            for bbox_tensor, conf, class_id in zip(res.boxes.xyxy, res.boxes.conf, res.boxes.cls):
+                if cls_names[int(class_id)].lower() == 'shot-clock' and conf > 0.3:
+                    if conf > best_sc_conf:
+                        best_sc_conf = float(conf)
+                        best_sc_bbox = bbox_tensor.tolist()
+            if best_sc_bbox:
+                shot_clock_detections[frame_idx] = {
+                    "bbox": [float(b) for b in best_sc_bbox],
+                    "confidence": float(best_sc_conf)
                 }
 
         if i % 50 == 0:
@@ -357,7 +372,7 @@ async def run_team_analysis(video_path: str, options: Optional[Dict[str, Any]] =
             
             detections.append({
                 "frame": int(frame_idx),
-                "object_type": "player",
+                "object_type": str(track.get("class", "player")),
                 "track_id": int(track_id),
                 "bbox": [float(b) for b in bbox] if bbox else None,
                 "confidence": float(track.get("confidence", 1.0)),
@@ -396,14 +411,26 @@ async def run_team_analysis(video_path: str, options: Optional[Dict[str, Any]] =
         # Hoops
         hoop = hoop_detections[frame_idx] if frame_idx < len(hoop_detections) else None
         if hoop and hoop.get("bbox"):
-            # Hoop is static but can have different tactical locations if court moves
-            # For now just use bbox
             detections.append({
                 "frame": int(frame_idx),
                 "object_type": "hoop",
                 "track_id": 0,
                 "bbox": [float(b) for b in hoop.get("bbox")] if hoop.get("bbox") else None,
                 "confidence": float(hoop.get("confidence", 1.0)),
+                "team_id": None,
+                "has_ball": False,
+                "keypoints": None,
+            })
+        
+        # Shot Clock
+        sc = shot_clock_detections[frame_idx] if frame_idx < len(shot_clock_detections) else None
+        if sc and sc.get("bbox"):
+            detections.append({
+                "frame": int(frame_idx),
+                "object_type": "shot-clock",
+                "track_id": 0,
+                "bbox": [float(b) for b in sc.get("bbox")] if sc.get("bbox") else None,
+                "confidence": float(sc.get("confidence", 1.0)),
                 "team_id": None,
                 "has_ball": False,
                 "keypoints": None,

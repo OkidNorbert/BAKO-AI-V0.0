@@ -32,8 +32,10 @@ const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate, onTacticalUpdate })
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const [playerPositions, setPlayerPositions] = useState([]);
+  const [refereePositions, setRefereePositions] = useState([]);
   const [ballPosition, setBallPosition] = useState(null);
   const [hoopPosition, setHoopPosition] = useState(null);
+  const [shotClockPosition, setShotClockPosition] = useState(null);
   const [events, setEvents] = useState([]);
   const [videoDimensions, setVideoDimensions] = useState({ width: 0, height: 0 });
 
@@ -103,10 +105,16 @@ const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate, onTacticalUpdate })
     );
 
     if (frameDetections.length > 0) {
+      // 0. Resolve Real Types
+      const detections = frameDetections.map(d => ({
+        ...d,
+        effective_type: d.keypoints?.real_type || d.object_type
+      }));
+
       // 1. Process Players
       const uniquePlayers = new Map();
-      frameDetections.forEach(d => {
-        if (d.object_type !== 'player') return;
+      detections.forEach(d => {
+        if (d.effective_type !== 'player') return;
         const currentBest = uniquePlayers.get(d.track_id);
         if (!currentBest || Math.abs(d.frame - frame) < Math.abs(currentBest.frame - frame)) {
           uniquePlayers.set(d.track_id, d);
@@ -129,9 +137,22 @@ const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate, onTacticalUpdate })
       });
       setPlayerPositions(mapped);
 
+      // 1.1 Process Referees
+      const mappedRefs = detections
+        .filter(d => d.effective_type === 'referee')
+        .map(d => {
+          const [x1, y1, x2, y2] = d.bbox;
+          return {
+            id: d.track_id,
+            x: ((x1 + x2) / 2) / videoDimensions.width * 100,
+            y: ((y1 + y2) / 2) / videoDimensions.height * 100,
+          };
+        });
+      setRefereePositions(mappedRefs);
+
       let ballData = null;
       // 2. Process Ball
-      const ballDet = frameDetections.find(d => d.object_type === 'ball');
+      const ballDet = detections.find(d => d.effective_type === 'ball' || d.effective_type === 'basketball');
       if (ballDet) {
         const [x1, y1, x2, y2] = ballDet.bbox;
         ballData = {
@@ -154,7 +175,7 @@ const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate, onTacticalUpdate })
       }
 
       // 3. Process Hoop
-      const hoopDet = frameDetections.find(d => d.object_type === 'hoop');
+      const hoopDet = detections.find(d => d.effective_type === 'hoop');
       if (hoopDet) {
         const [x1, y1, x2, y2] = hoopDet.bbox;
         setHoopPosition({
@@ -164,10 +185,24 @@ const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate, onTacticalUpdate })
       } else {
         setHoopPosition(null);
       }
+
+      // 4. Process Shot Clock
+      const scDet = detections.find(d => d.effective_type === 'shot-clock');
+      if (scDet) {
+        const [x1, y1, x2, y2] = scDet.bbox;
+        setShotClockPosition({
+          x: ((x1 + x2) / 2) / videoDimensions.width * 100,
+          y: ((y1 + y2) / 2) / videoDimensions.height * 100
+        });
+      } else {
+        setShotClockPosition(null);
+      }
     } else {
       setPlayerPositions([]);
+      setRefereePositions([]);
       setBallPosition(null);
       setHoopPosition(null);
+      setShotClockPosition(null);
     }
   };
 
@@ -306,6 +341,25 @@ const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate, onTacticalUpdate })
               </>
             )}
 
+            {showOverlays && refereePositions.length > 0 && (
+              <>
+                {refereePositions.map(ref => (
+                  <div
+                    key={`ref-${ref.id}`}
+                    className="absolute transform -translate-x-1/2 -translate-y-1/2"
+                    style={{
+                      left: `${ref.x}%`,
+                      top: `${ref.y}%`,
+                    }}
+                  >
+                    <div className="w-6 h-6 rounded-full border border-white bg-gray-500 flex items-center justify-center">
+                      <Users size={12} className="text-white" />
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+
             {selectedOverlay === 'heatmap' && (
               <div className="absolute inset-0 bg-gradient-to-t from-red-500/30 to-transparent" />
             )}
@@ -345,6 +399,17 @@ const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate, onTacticalUpdate })
               >
                 <div className="w-1 h-1 bg-red-500 rounded-full"></div>
                 <div className="absolute w-12 h-1 border-b border-red-500/50"></div>
+              </div>
+            )}
+
+            {/* Shot Clock Overlay */}
+            {shotClockPosition && (
+              <div
+                className="absolute p-1 bg-yellow-500/80 rounded border border-white flex items-center justify-center transform -translate-x-1/2"
+                style={{ left: `${shotClockPosition.x}%`, top: `${shotClockPosition.y - 5}%` }}
+              >
+                <Clock size={12} className="text-white mr-1" />
+                <span className="text-[10px] font-bold text-white">SC</span>
               </div>
             )}
           </div>

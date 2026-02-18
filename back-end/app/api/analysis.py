@@ -111,9 +111,9 @@ async def run_analysis_background(video_id: str, mode: str, supabase: SupabaseSe
         
         await supabase.insert("analysis_results", analysis_record)
 
-        # Persist detections for overlay playback (optional)
+        # Persist detections for overlay playback (always every frame for smoothness)
         store_detections = True
-        detections_stride = 5
+        detections_stride = 1
         max_detections = 200_000
         if options:
             store_detections = bool(options.get("store_detections", True))
@@ -140,16 +140,25 @@ async def run_analysis_background(video_id: str, mode: str, supabase: SupabaseSe
                 if not bbox or len(bbox) != 4:
                     continue
                 obj_type = d.get("object_type")
-                if obj_type not in ("player", "ball"):
-                    continue
+                # Map non-DB types to player/ball but keep real type in keypoints JSON
+                db_obj_type = "player"
+                if obj_type in ("ball", "basketball"):
+                    db_obj_type = "ball"
+                
+                # Store the original type in keypoints for the frontend
+                keypoints = d.get("keypoints") or {}
+                if not isinstance(keypoints, dict):
+                    keypoints = {"data": keypoints}
+                keypoints["real_type"] = obj_type
+
                 rows.append({
                     "video_id": video_id,
                     "frame": int(d.get("frame", 0)),
-                    "object_type": obj_type,
+                    "object_type": db_obj_type,
                     "track_id": int(d.get("track_id", 0)),
                     "bbox": bbox,
                     "confidence": float(d.get("confidence", 1.0)),
-                    "keypoints": d.get("keypoints"),
+                    "keypoints": keypoints,
                     "team_id": d.get("team_id"),
                     "has_ball": bool(d.get("has_ball", False)),
                 })

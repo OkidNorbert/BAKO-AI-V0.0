@@ -39,34 +39,38 @@ elif [ "$1" == "--test" ] || [ "$1" == "-t" ]; then
     echo -e "${BLUE}Running full system test...${NC}"
     python test_system.py
 elif [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
-    echo "Usage: ./run.sh [OPTION] [VIDEO_FILE]"
+    echo "Usage: ./run.sh [VIDEO_FILE] [OPTIONS]"
     echo ""
     echo "Options:"
-    echo "  -c, --check          Run system check only"
-    echo "  -t, --test           Run full system test"
-    echo "  -h, --help           Show this help message"
-    echo "  [VIDEO_FILE]         Analyze specific video file"
+    echo "  -c, --check                   Run system check only"
+    echo "  -t, --test                    Run full system test"
+    echo "  -h, --help                    Show this help message"
+    echo "  --our_team_jersey TEXT        Jersey description for your team (default: 'white jersey')"
+    echo "  --opponent_jersey TEXT        Jersey description for opponent (default: 'red jersey')"
+    echo "  --our_team_id 1|2             Which team ID is your team (default: 1)"
     echo ""
     echo "Examples:"
-    echo "  ./run.sh --check                          # Check system setup"
-    echo "  ./run.sh --test                           # Run test with sample video"
-    echo "  ./run.sh input_videos/video_1.mp4         # Analyze specific video"
-    echo "  ./run.sh input_videos/my_video.mp4        # Analyze your own video"
+    echo "  ./run.sh input_videos/video_1.mp4"
+    echo "  ./run.sh input_videos/video_1.mp4 --our_team_jersey 'white jersey' --opponent_jersey 'red jersey'"
+    echo "  ./run.sh input_videos/video_2.mp4 --our_team_jersey 'blue jersey' --opponent_jersey 'black jersey' --our_team_id 1"
 elif [ -n "$1" ]; then
     # Video file provided
-    if [ ! -f "$1" ]; then
-        echo -e "${RED}❌ Video file not found: $1${NC}"
+    VIDEO_FILE="$1"
+    shift  # Remove video file from args, pass the rest to python
+
+    if [ ! -f "$VIDEO_FILE" ]; then
+        echo -e "${RED}❌ Video file not found: $VIDEO_FILE${NC}"
         exit 1
     fi
     
-    VIDEO_NAME=$(basename "$1")
+    VIDEO_NAME=$(basename "$VIDEO_FILE")
     OUTPUT_FILE="output_videos/analyzed_${VIDEO_NAME%.*}.avi"
     
-    echo -e "${BLUE}Analyzing video: ${YELLOW}$1${NC}"
+    echo -e "${BLUE}Analyzing video: ${YELLOW}$VIDEO_FILE${NC}"
     echo -e "${BLUE}Output will be saved to: ${YELLOW}$OUTPUT_FILE${NC}"
     echo ""
     
-    python main.py "$1" --output_video "$OUTPUT_FILE"
+    python main.py "$VIDEO_FILE" --output_video "$OUTPUT_FILE" "$@"
     
     if [ $? -eq 0 ]; then
         echo ""
@@ -88,6 +92,9 @@ else
     echo ""
     echo -e "${BLUE}To analyze a video, use:${NC}"
     echo -e "  ${GREEN}./run.sh input_videos/video_1.mp4${NC}"
+    echo ""
+    echo -e "${BLUE}To specify your team jersey:${NC}"
+    echo -e "  ${GREEN}./run.sh input_videos/video_1.mp4 --our_team_jersey 'white jersey' --opponent_jersey 'red jersey'${NC}"
     echo ""
     echo -e "${BLUE}For more options, use:${NC}"
     echo -e "  ${GREEN}./run.sh --help${NC}"
