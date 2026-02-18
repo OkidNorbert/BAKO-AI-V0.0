@@ -58,6 +58,18 @@ class AnalysisResult(BaseModel):
     total_passes: Optional[int] = None
     total_interceptions: Optional[int] = None
     
+    # Shot analysis
+    shot_attempts: Optional[int] = 0
+    shots_made: Optional[int] = 0
+    shots_missed: Optional[int] = 0
+    shooting_percentage: Optional[float] = None
+    
+    # Team shooting
+    team_1_shot_attempts: Optional[int] = 0
+    team_1_shots_made: Optional[int] = 0
+    team_2_shot_attempts: Optional[int] = 0
+    team_2_shots_made: Optional[int] = 0
+    
     # Events
     events: List[AnalysisEvent] = Field(default_factory=list)
     

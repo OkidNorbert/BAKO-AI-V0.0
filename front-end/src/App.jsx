@@ -25,6 +25,7 @@ import FAQ from '@/pages/FAQ';
 import TeamDashboard from '@/pages/team/TeamDashboard';
 import TeamRoster from '@/pages/team/TeamRoster';
 import TeamCreateEdit from '@/pages/team/TeamCreateEdit';
+import PlayerCreateEdit from '@/pages/team/PlayerCreateEdit';
 import MatchAnalysis from '@/pages/team/MatchAnalysis';
 import MatchUpload from '@/pages/team/MatchUpload';
 import TeamAnalytics from '@/pages/team/TeamAnalytics';
@@ -92,8 +93,10 @@ function App() {
                 <Route index element={<TeamDashboard />} />
                 <Route path="dashboard" element={<TeamDashboard />} />
                 <Route path="roster" element={<TeamRoster />} />
-                <Route path="roster/new" element={<TeamCreateEdit />} />
-                <Route path="roster/edit/:teamId" element={<TeamCreateEdit />} />
+                <Route path="roster/new" element={<PlayerCreateEdit />} />
+                <Route path="players/:playerId/update" element={<PlayerCreateEdit />} />
+                <Route path="settings/team" element={<TeamCreateEdit />} />
+                <Route path="settings/team/edit/:teamId" element={<TeamCreateEdit />} />
                 <Route path="matches" element={<MatchAnalysis />} />
                 <Route path="matches/upload" element={<MatchUpload />} />
                 <Route path="schedule" element={<TeamSchedule />} />

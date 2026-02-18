@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from app.dependencies import require_team_account, get_supabase, get_current_user
 from app.services.supabase_client import SupabaseService
 from app.models.user import User
-from app.models.player import Player
+from app.models.player import Player, PlayerCreate, PlayerUpdate
 from app.models.schedule import Schedule, ScheduleCreate, ScheduleUpdate
 from app.models.match import Match, MatchCreate, MatchUpdate
 from app.models.notification import Notification, NotificationCreate, NotificationListResponse
@@ -64,6 +64,58 @@ async def get_users(
     # Get players in the org
     players = await supabase.select("players", filters={"organization_id": org_id})
     return players
+
+@router.post("/players")
+async def create_player(
+    player_data: PlayerCreate,
+    current_user: dict = Depends(require_team_account),
+    supabase: SupabaseService = Depends(get_supabase),
+):
+    """
+    Add a new player to the team roster.
+    """
+    orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
+    if not orgs:
+        raise HTTPException(status_code=400, detail="No organization found for this account")
+    
+    org_id = orgs[0]["id"]
+    player_dict = player_data.model_dump()
+    player_dict["organization_id"] = str(org_id)
+    player_dict["id"] = str(uuid4())
+    player_dict["created_at"] = datetime.now().isoformat()
+    
+    # Handle date_of_birth if present
+    if player_dict.get("date_of_birth"):
+        player_dict["date_of_birth"] = player_dict["date_of_birth"].isoformat()
+        
+    saved = await supabase.insert("players", player_dict)
+    return saved
+
+@router.put("/players/{player_id}")
+async def update_player(
+    player_id: str,
+    player_data: PlayerUpdate,
+    current_user: dict = Depends(require_team_account),
+    supabase: SupabaseService = Depends(get_supabase),
+):
+    """
+    Update a player's profile.
+    """
+    # Verify ownership
+    player = await supabase.select_one("players", player_id)
+    if not player:
+        raise HTTPException(status_code=404, detail="Player not found")
+        
+    orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
+    if not orgs or player.get("organization_id") != orgs[0]["id"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+        
+    update_dict = player_data.model_dump(exclude_unset=True)
+    if "date_of_birth" in update_dict and update_dict["date_of_birth"]:
+        update_dict["date_of_birth"] = update_dict["date_of_birth"].isoformat()
+        
+    updated = await supabase.update("players", player_id, update_dict)
+    return updated
 
 @router.get("/players")
 async def get_roster(
@@ -235,8 +287,21 @@ async def get_notifications(
     current_user: dict = Depends(get_current_user),
     supabase: SupabaseService = Depends(get_supabase),
 ):
-    notifs = await supabase.select("notifications", filters={"recipient_id": current_user["id"]}, order_by="created_at")
-    return notifs
+    try:
+        user_id = current_user["id"]
+        # Basic validation for UUID if using Postgres
+        import uuid
+        try:
+            uuid.UUID(str(user_id))
+        except ValueError:
+            # If not a UUID (like dev-id-...), return empty list instead of crashing Postgres
+            return []
+
+        notifs = await supabase.select("notifications", filters={"recipient_id": str(user_id)}, order_by="created_at")
+        return notifs
+    except Exception as e:
+        print(f"Error in get_notifications: {e}")
+        return [] # Return empty list on error to keep UI stable
 
 @router.post("/notifications")
 async def create_notification(

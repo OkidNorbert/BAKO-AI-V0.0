@@ -35,6 +35,7 @@ const TeamSchedule = () => {
     coachId: '',
     playerIds: [],
     days: [],
+    date: new Date().toISOString().split('T')[0],
     startTime: '09:00',
     endTime: '11:00',
     eventType: 'practice', // practice, match, workout, meeting
@@ -50,15 +51,6 @@ const TeamSchedule = () => {
   useEffect(() => {
     if (isAuthenticated) {
       fetchEvents();
-      // Mock data for now if API fails or is empty
-      if (events.length === 0) {
-        /*
-        setEvents([
-            { id: 1, title: 'Morning Shootaround', eventType: 'practice', date: new Date().toISOString(), startTime: '08:00', endTime: '09:30', location: 'Main Court', attendees: 12 },
-            { id: 2, title: 'Video Session', eventType: 'meeting', date: new Date().toISOString(), startTime: '10:00', endTime: '11:00', location: 'Film Room', attendees: 15 }
-        ]);
-        */
-      }
     }
   }, [isAuthenticated]);
 
@@ -107,7 +99,16 @@ const TeamSchedule = () => {
       setLoading(true);
       setError('');
 
-      const response = await adminAPI.createScheduleEvent(newEvent);
+      const eventData = {
+        title: newEvent.title,
+        type: newEvent.eventType,
+        start_time: `${newEvent.date}T${newEvent.startTime}:00`,
+        end_time: `${newEvent.date}T${newEvent.endTime}:00`,
+        location: newEvent.location,
+        description: newEvent.notes
+      };
+
+      const response = await adminAPI.createScheduleEvent(eventData);
       const createdEvent = response.data;
 
       // Update local state with the newly created event from server
@@ -117,6 +118,7 @@ const TeamSchedule = () => {
         coachId: '',
         playerIds: [],
         days: [],
+        date: new Date().toISOString().split('T')[0],
         startTime: '09:00',
         endTime: '11:00',
         eventType: 'practice',
@@ -310,13 +312,13 @@ const TeamSchedule = () => {
                   <div className="flex items-center space-x-3">
                     <CalendarIcon className="h-4 w-4 text-gray-400" />
                     <span className="text-sm">
-                      {new Date(event.date).toLocaleDateString()}
+                      {event.date ? new Date(event.date).toLocaleDateString() : (event.start_time ? new Date(event.start_time).toLocaleDateString() : 'N/A')}
                     </span>
                   </div>
                   <div className="flex items-center space-x-3">
                     <Clock className="h-4 w-4 text-gray-400" />
                     <span className="text-sm">
-                      {event.startTime} - {event.endTime}
+                      {event.startTime ? `${event.startTime} - ${event.endTime}` : (event.start_time ? `${new Date(event.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(event.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'N/A')}
                     </span>
                   </div>
                   <div className="flex items-center space-x-3">
@@ -418,6 +420,18 @@ const TeamSchedule = () => {
                       </option>
                     ))}
                   </select>
+                </div>
+
+                {/* Date Selection */}
+                <div>
+                  <label className="block text-sm font-medium mb-1">Event Date</label>
+                  <input
+                    type="date"
+                    value={newEvent.date}
+                    onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
+                    className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
+                    required
+                  />
                 </div>
 
                 {/* Days Selection */}
@@ -607,4 +621,4 @@ const TeamSchedule = () => {
   );
 };
 
-export default TeamSchedule; 
+export default TeamSchedule;

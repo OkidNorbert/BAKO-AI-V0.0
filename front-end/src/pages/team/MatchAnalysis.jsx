@@ -175,6 +175,16 @@ const MatchAnalysis = () => {
       try {
         const res = await analysisAPI.getLastResultByVideo(match.id);
         analysisData = res.data;
+
+        // Optionally fetch detections if available
+        try {
+          const detRes = await analysisAPI.getDetections(analysisData.id);
+          if (detRes.data && detRes.data.detections) {
+            analysisData.detections = detRes.data.detections;
+          }
+        } catch (detError) {
+          console.warn("Could not fetch detections", detError);
+        }
       } catch (e) {
         console.error("Could not fetch analysis", e);
       }
@@ -254,7 +264,7 @@ const MatchAnalysis = () => {
 
               <div className="flex space-x-2 mt-4 md:mt-0">
                 <button
-                  onClick={() => window.open(selectedMatch.download_url)}
+                  onClick={() => window.open(`${selectedMatch.download_url}${selectedMatch.download_url.includes('?') ? '&' : '?'}token=${localStorage.getItem('accessToken')}`)}
                   className={`flex items-center px-3 py-2 rounded-lg ${isDarkMode
                     ? 'bg-gray-700 hover:bg-gray-600 text-white'
                     : 'bg-gray-200 hover:bg-gray-300 text-gray-900'
@@ -277,7 +287,7 @@ const MatchAnalysis = () => {
             {/* Video Player */}
             <div className="lg:col-span-2">
               <VideoPlayer
-                videoSrc={selectedMatch.download_url} // Use download URL
+                videoSrc={selectedMatch.download_url ? `${selectedMatch.download_url}${selectedMatch.download_url.includes('?') ? '&' : '?'}token=${localStorage.getItem('accessToken')}` : ''}
                 analysisData={selectedMatch.analysisData}
                 onTimeUpdate={handleVideoTimeUpdate}
               />
@@ -303,12 +313,29 @@ const MatchAnalysis = () => {
                       <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{selectedMatch.analysisData.total_passes}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Team 1 Poss%</span>
-                      <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{selectedMatch.analysisData.team_1_possession_percent}%</span>
+                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Possession (T1/T2)</span>
+                      <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{selectedMatch.analysisData.team_1_possession_percent}% / {selectedMatch.analysisData.team_2_possession_percent}%</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Shooting %</span>
-                      <span className={`font-bold ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>{selectedMatch.analysisData.overall_shooting_percentage ? selectedMatch.analysisData.overall_shooting_percentage.toFixed(1) : 0}%</span>
+
+                    <div className="pt-2 border-t border-gray-700">
+                      <div className="flex justify-between">
+                        <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Total Shots</span>
+                        <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{selectedMatch.analysisData.shot_attempts || 0}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Shots Made</span>
+                        <span className={`font-bold text-green-500`}>{selectedMatch.analysisData.shots_made || 0}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Shots Missed</span>
+                        <span className={`font-bold text-red-500`}>{selectedMatch.analysisData.shots_missed || 0}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Shooting %</span>
+                        <span className={`font-bold ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>
+                          {selectedMatch.analysisData.shooting_percentage ? selectedMatch.analysisData.shooting_percentage.toFixed(1) : 0}%
+                        </span>
+                      </div>
                     </div>
                   </div>
                 ) : (
@@ -335,11 +362,13 @@ const MatchAnalysis = () => {
                             {event.timestamp ? new Date(event.timestamp * 1000).toISOString().substr(14, 5) : (event.frame ? (event.frame / 30).toFixed(2) : '-')}
                           </span>
                           <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                            {event.type}
+                            {event.event_type === 'shot'
+                              ? `${event.details?.outcome === 'made' ? '🏀 Made' : '❌ Missed'} ${event.details?.type || ''} Shot`
+                              : (event.event_type || event.type || 'unknown').charAt(0).toUpperCase() + (event.event_type || event.type || 'unknown').slice(1)}
                           </span>
                         </div>
-                        <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                          {event.player_id ? `Player ${event.player_id}` : 'Unknown'}
+                        <span className={`text-sm font-bold ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                          {event.details?.player ? `P${event.details.player}` : (event.player_id ? `P${event.player_id}` : '')}
                         </span>
                       </div>
                     ))

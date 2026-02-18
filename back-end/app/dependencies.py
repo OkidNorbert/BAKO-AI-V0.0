@@ -5,7 +5,7 @@ Provides common dependencies for authentication, authorization,
 and service access across all API endpoints.
 """
 from typing import Optional
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from app.config import get_settings, Settings
@@ -54,21 +54,29 @@ async def get_current_user_optional(
     }
 
 
+
+
 async def get_current_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    token_query: Optional[str] = Query(None, alias="token")
 ) -> dict:
     """
-    Get current authenticated user from JWT token.
+    Get current authenticated user from JWT token (Header or Query param).
     Raises HTTPException if not authenticated.
     """
-    if not credentials:
+    token = None
+    if credentials:
+        token = credentials.credentials
+    elif token_query:
+        token = token_query
+        
+    if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    token = credentials.credentials
     payload = decode_access_token(token)
     
     if not payload:

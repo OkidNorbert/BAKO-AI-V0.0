@@ -13,7 +13,7 @@ from typing import Dict, Any, List, Tuple, Optional
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-async def run_personal_analysis(video_path: str, options: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+async def run_personal_analysis(video_path: str, options: Optional[Dict[str, Any]] = None, video_id: Optional[str] = None) -> Dict[str, Any]:
     """
     Run personal analysis pipeline on a training video.
     

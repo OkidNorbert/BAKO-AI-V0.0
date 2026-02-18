@@ -31,25 +31,23 @@ const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate }) => {
   const [selectedOverlay, setSelectedOverlay] = useState('players');
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  /* Mock data removed - using analysisData prop */
   const [playerPositions, setPlayerPositions] = useState([]);
+  const [ballPosition, setBallPosition] = useState(null);
+  const [hoopPosition, setHoopPosition] = useState(null);
   const [events, setEvents] = useState([]);
+  const [videoDimensions, setVideoDimensions] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
     if (analysisData) {
       // Map backend events to player format
       if (analysisData.events && Array.isArray(analysisData.events)) {
         setEvents(analysisData.events.map(e => ({
-          time: e.timestamp || e.frame / 30, // Fallback to frame count / 30fps
-          type: e.type || 'unknown',
+          time: e.timestamp_seconds || e.frame / 30,
+          type: e.event_type || e.type || 'unknown',
           player: e.player_id || 'Unknown',
-          result: e.description || e.result || 'completed'
+          result: e.details?.result || e.result || 'completed'
         })));
       }
-
-      // If analysisData has tracks/positions, set them here
-      // For now, assuming standard analysis result doesn't include frame-by-frame track data
-      // setPlayerPositions([]); 
     }
   }, [analysisData]);
 
@@ -63,12 +61,17 @@ const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate }) => {
         onTimeUpdate(video.currentTime);
       }
 
-      // Update player positions based on time if tracks available
-      // updatePlayerPositions(video.currentTime);
+      if (analysisData?.detections) {
+        updatePlayerPositions(video.currentTime);
+      }
     };
 
     const handleLoadedMetadata = () => {
       setDuration(video.duration);
+      setVideoDimensions({
+        width: video.videoWidth,
+        height: video.videoHeight
+      });
     };
 
     const handleEnded = () => {
@@ -84,11 +87,74 @@ const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate }) => {
       video.removeEventListener('loadedmetadata', handleLoadedMetadata);
       video.removeEventListener('ended', handleEnded);
     };
-  }, [onTimeUpdate]);
+  }, [onTimeUpdate, analysisData, videoDimensions]);
 
   const updatePlayerPositions = (time) => {
-    // Real implementation would interpolate positions from tracking data
-    // For now, no operation if no tracking data provided
+    if (!analysisData?.detections || videoDimensions.width === 0) return;
+
+    // Most videos are 30fps or similar. 
+    // We look for detections within a small window of the current time
+    const frame = Math.round(time * 30);
+
+    // Find detections for this frame (or closest)
+    // For performance, we could pre-index this, but for short videos this is okay
+    const frameDetections = analysisData.detections.filter(d =>
+      d.frame === frame || (d.frame >= frame - 1 && d.frame <= frame + 1)
+    );
+
+    if (frameDetections.length > 0) {
+      // 1. Process Players
+      const uniquePlayers = new Map();
+      frameDetections.forEach(d => {
+        if (d.object_type !== 'player') return;
+        const currentBest = uniquePlayers.get(d.track_id);
+        if (!currentBest || Math.abs(d.frame - frame) < Math.abs(currentBest.frame - frame)) {
+          uniquePlayers.set(d.track_id, d);
+        }
+      });
+
+      const mapped = Array.from(uniquePlayers.values()).map(d => {
+        const [x1, y1, x2, y2] = d.bbox;
+        const centerX = ((x1 + x2) / 2) / videoDimensions.width * 100;
+        const centerY = ((y1 + y2) / 2) / videoDimensions.height * 100;
+        return {
+          id: d.track_id,
+          x: centerX,
+          y: centerY,
+          team: d.team_id === 1 ? 'home' : 'away',
+          number: d.track_id.toString().slice(-2)
+        };
+      });
+      setPlayerPositions(mapped);
+
+      // 2. Process Ball
+      const ballDet = frameDetections.find(d => d.object_type === 'ball');
+      if (ballDet) {
+        const [x1, y1, x2, y2] = ballDet.bbox;
+        setBallPosition({
+          x: ((x1 + x2) / 2) / videoDimensions.width * 100,
+          y: ((y1 + y2) / 2) / videoDimensions.height * 100
+        });
+      } else {
+        setBallPosition(null);
+      }
+
+      // 3. Process Hoop
+      const hoopDet = frameDetections.find(d => d.object_type === 'hoop');
+      if (hoopDet) {
+        const [x1, y1, x2, y2] = hoopDet.bbox;
+        setHoopPosition({
+          x: ((x1 + x2) / 2) / videoDimensions.width * 100,
+          y: ((y1 + y2) / 2) / videoDimensions.height * 100
+        });
+      } else {
+        setHoopPosition(null);
+      }
+    } else {
+      setPlayerPositions([]);
+      setBallPosition(null);
+      setHoopPosition(null);
+    }
   };
 
   const togglePlayPause = () => {
@@ -212,8 +278,8 @@ const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate }) => {
                     }}
                   >
                     <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold ${player.team === 'home'
-                        ? 'bg-blue-500 border-white text-white'
-                        : 'bg-red-500 border-white text-white'
+                      ? 'bg-blue-500 border-white text-white'
+                      : 'bg-red-500 border-white text-white'
                       }`}>
                       {player.number}
                     </div>
@@ -246,6 +312,27 @@ const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate }) => {
                 ))}
               </>
             )}
+
+            {/* Ball Overlay */}
+            {ballPosition && (
+              <div
+                className="absolute w-4 h-4 rounded-full border-2 border-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.8)] bg-orange-400/30 transform -translate-x-1/2 -translate-y-1/2"
+                style={{ left: `${ballPosition.x}%`, top: `${ballPosition.y}%` }}
+              >
+                <div className="absolute inset-0 animate-ping bg-orange-400 rounded-full opacity-40"></div>
+              </div>
+            )}
+
+            {/* Hoop Overlay */}
+            {hoopPosition && (
+              <div
+                className="absolute w-10 h-10 border-2 border-red-500 rounded-full flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2"
+                style={{ left: `${hoopPosition.x}%`, top: `${hoopPosition.y}%` }}
+              >
+                <div className="w-1 h-1 bg-red-500 rounded-full"></div>
+                <div className="absolute w-12 h-1 border-b border-red-500/50"></div>
+              </div>
+            )}
           </div>
         )}
 
@@ -259,10 +346,10 @@ const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate }) => {
                 <span className="font-medium">{getCurrentEvent().type.toUpperCase()}</span>
                 <span className="text-sm">by {getCurrentEvent().player}</span>
                 <span className={`text-sm px-2 py-1 rounded ${getCurrentEvent().result === 'made' || getCurrentEvent().result === 'completed'
-                    ? 'bg-green-500 text-white'
-                    : getCurrentEvent().result === 'blocked' || getCurrentEvent().result === 'lost'
-                      ? 'bg-red-500 text-white'
-                      : 'bg-blue-500 text-white'
+                  ? 'bg-green-500 text-white'
+                  : getCurrentEvent().result === 'blocked' || getCurrentEvent().result === 'lost'
+                    ? 'bg-red-500 text-white'
+                    : 'bg-blue-500 text-white'
                   }`}>
                   {getCurrentEvent().result}
                 </span>
@@ -390,7 +477,8 @@ const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate }) => {
         </div>
       </div>
 
-      <style jsx>{`
+      <style dangerouslySetInnerHTML={{
+        __html: `
         @keyframes pulse {
           0%, 100% {
             opacity: 1;
@@ -417,7 +505,7 @@ const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate }) => {
           cursor: pointer;
           border: none;
         }
-      `}</style>
+      `}} />
     </div>
   );
 };

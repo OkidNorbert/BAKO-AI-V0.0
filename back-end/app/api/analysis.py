@@ -27,11 +27,11 @@ from app.services.supabase_client import SupabaseService
 router = APIRouter()
 
 
-def _run_dispatch_in_thread(video_path: str, mode: AnalysisMode, options: dict | None):
+def _run_dispatch_in_thread(video_path: str, mode: AnalysisMode, video_id: str, options: dict | None):
     """Run async dispatch in a dedicated thread event loop."""
     try:
         from analysis.dispatcher import dispatch_analysis
-        return asyncio.run(dispatch_analysis(video_path, mode, options=options))
+        return asyncio.run(dispatch_analysis(video_path, mode, options=options, video_id=video_id))
     except ImportError:
         print("⚠️ Analysis dispatcher not available (heavy dependencies missing)")
         return {"status": "skipped", "reason": "heavy dependencies missing"}
@@ -60,6 +60,7 @@ async def run_analysis_background(video_id: str, mode: str, supabase: SupabaseSe
             _run_dispatch_in_thread,
             video["storage_path"],
             AnalysisMode(mode),
+            video_id,
             options or {},
         )
 
@@ -85,6 +86,13 @@ async def run_analysis_background(video_id: str, mode: str, supabase: SupabaseSe
             "total_passes",
             "total_interceptions",
             "shot_attempts",
+            "shots_made",
+            "shots_missed",
+            "shooting_percentage",
+            "team_1_shot_attempts",
+            "team_1_shots_made",
+            "team_2_shot_attempts",
+            "team_2_shots_made",
             "shot_form_consistency",
             "dribble_count",
             "dribble_frequency_per_minute",
@@ -139,7 +147,7 @@ async def run_analysis_background(video_id: str, mode: str, supabase: SupabaseSe
                 if not bbox or len(bbox) != 4:
                     continue
                 obj_type = d.get("object_type")
-                if obj_type not in ("player", "ball"):
+                if obj_type not in ("player", "ball", "hoop"):
                     continue
                 rows.append({
                     "video_id": video_id,

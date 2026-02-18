@@ -19,9 +19,9 @@ export const adminAPI = {
   // Schedule endpoints
   getSchedule: () => api.get('/admin/schedule'),
   getPlayers: () => api.get('/admin/users?role=player'),
-  getRoster: async () => {
-    return api.get('/admin/players');
-  },
+  getRoster: () => api.get('/admin/players'),
+  createPlayer: (playerData) => api.post('/admin/players', playerData),
+  updatePlayer: (playerId, playerData) => api.put(`/admin/players/${playerId}`, playerData),
   updatePlayerStatus: (playerId, status) => api.patch(`/admin/players/${playerId}/status`, { status }),
   createScheduleEvent: (eventData) => api.post('/admin/schedule', eventData),
   updateScheduleEvent: (eventId, eventData) => api.put(`/admin/schedule/${eventId}`, eventData),

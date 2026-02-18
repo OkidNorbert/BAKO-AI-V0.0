@@ -118,8 +118,8 @@ const TeamSettings = () => {
   }
 
   const inputClassName = `w-full p-2 rounded-md ${isDarkMode
-      ? 'bg-gray-700 text-white border border-gray-600 focus:border-orange-500'
-      : 'bg-white text-gray-900 border border-gray-300 focus:border-orange-500'
+    ? 'bg-gray-700 text-white border border-gray-600 focus:border-orange-500'
+    : 'bg-white text-gray-900 border border-gray-300 focus:border-orange-500'
     } focus:ring-1 focus:ring-orange-500 outline-none transition-colors`;
 
   const sectionClassName = `mb-6 p-6 rounded-lg shadow-sm ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`;
@@ -136,8 +136,8 @@ const TeamSettings = () => {
           <button
             onClick={handleSaveSettings}
             className={`flex items-center space-x-2 px-6 py-2.5 rounded-full font-medium shadow-lg transition-transform hover:scale-105 ${isDarkMode
-                ? 'bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white'
-                : 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white'
+              ? 'bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white'
+              : 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white'
               }`}
           >
             <Save className="h-4 w-4" />
@@ -164,20 +164,20 @@ const TeamSettings = () => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Link
-              to="/team/roster/new"
-              className={`flex items-center justify-center p-4 rounded-lg transition-colors ${isDarkMode 
-                  ? 'bg-orange-600 hover:bg-orange-700 text-white' 
-                  : 'bg-orange-500 hover:bg-orange-600 text-white'
+              to="/team/settings/team"
+              className={`flex items-center justify-center p-4 rounded-lg transition-colors ${isDarkMode
+                ? 'bg-orange-600 hover:bg-orange-700 text-white'
+                : 'bg-orange-500 hover:bg-orange-600 text-white'
                 }`}
             >
               <Plus className="mr-2" size={20} />
               Create New Team
             </Link>
             <Link
-              to="/team/roster/edit/current"
-              className={`flex items-center justify-center p-4 rounded-lg transition-colors ${isDarkMode 
-                  ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                  : 'bg-blue-500 hover:bg-blue-600 text-white'
+              to="/team/settings/team/edit/current"
+              className={`flex items-center justify-center p-4 rounded-lg transition-colors ${isDarkMode
+                ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                : 'bg-blue-500 hover:bg-blue-600 text-white'
                 }`}
             >
               <Settings className="mr-2" size={20} />

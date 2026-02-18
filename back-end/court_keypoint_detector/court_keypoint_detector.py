@@ -39,7 +39,7 @@ class CourtKeypointDetector:
             detections_batch = self.model.predict(
                 frames[i:i+batch_size],
                 conf=0.5,
-                imgsz=1080
+                imgsz=640
             )
             for detection in detections_batch:
                 court_keypoints.append(detection.keypoints)

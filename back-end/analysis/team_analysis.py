@@ -12,24 +12,9 @@ from typing import Dict, Any, List, Optional
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-async def run_team_analysis(video_path: str, options: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+async def run_team_analysis(video_path: str, options: Optional[Dict[str, Any]] = None, video_id: Optional[str] = None) -> Dict[str, Any]:
     """
     Run team analysis pipeline on a video.
-    
-    Uses existing template components:
-    - PlayerTracker (YOLO + ByteTrack)
-    - BallTracker (YOLO)
-    - BallAquisitionDetector
-    - TeamAssigner
-    - PassAndInterceptionDetector
-    - SpeedAndDistanceCalculator
-    - TacticalViewConverter
-    
-    Args:
-        video_path: Path to the video file
-        
-    Returns:
-        Dictionary containing analysis results
     """
     # Import template components
     from utils import read_video
@@ -45,43 +30,154 @@ async def run_team_analysis(video_path: str, options: Optional[Dict[str, Any]] =
         TEAM_MODEL_PATH,
         COURT_KEYPOINT_DETECTOR_PATH,
     )
+    from app.services.supabase_client import get_supabase_service
+    supabase = get_supabase_service()
 
-    
-    # Read video frames
+    async def update_progress(step: str, percent: int):
+        if video_id and supabase:
+            try:
+                await supabase.update("videos", video_id, {
+                    "current_step": step,
+                    "progress_percent": percent
+                })
+            except Exception as e:
+                print(f"Error updating progress: {e}")
+
+    await update_progress("Reading video", 5)
     video_frames = read_video(video_path)
     total_frames = len(video_frames)
     
     if total_frames == 0:
-        return {
-            "error": "Could not read video frames",
-            "total_frames": 0,
-        }
+        return {"error": "Could not read video frames", "total_frames": 0}
     
     # Initialize trackers
+    await update_progress("Initializing tracking models", 10)
     player_tracker = PlayerTracker(TEAM_MODEL_PATH)
+    # Reuse the same model instance to save massive RAM and avoid re-loading
     ball_tracker = BallTracker(TEAM_MODEL_PATH)
+    ball_tracker.model = player_tracker.model
+    
     court_keypoint_detector = CourtKeypointDetector(COURT_KEYPOINT_DETECTOR_PATH)
     
-    # Run detection (no stub caching for API use)
-    player_tracks = player_tracker.get_object_tracks(video_frames, read_from_stub=False, stub_path=None)
-    ball_tracks = ball_tracker.get_object_tracks(video_frames, read_from_stub=False, stub_path=None)
-    court_keypoints = court_keypoint_detector.get_court_keypoints(video_frames, read_from_stub=False, stub_path=None)
+    # Run Combined Detection Pass to save 3x processing time
+    await update_progress("Detecting players and ball", 15)
+    
+    # We'll run the player tracker's detection since it has slightly higher conf for players
+    # but we will extract basketballs and hoops in the same pass if possible.
+    # To keep it simple but fast, we run detecting_frames once and share the results.
+    batch_size = 10
+    all_detections = []
+    player_tracks = []
+    ball_tracks = [{} for _ in range(total_frames)]
+    hoop_detections = [None for _ in range(total_frames)]
+
+    from ultralytics import YOLO
+    import supervision as sv
+    import numpy as np
+
+    # Combined pass
+    for i in range(0, total_frames, batch_size):
+        batch = video_frames[i : i + batch_size]
+        results = player_tracker.model.predict(batch, conf=0.05, imgsz=1080)
+        
+        for j, res in enumerate(results):
+            frame_idx = i + j
+            cls_names = res.names 
+            detection_sv = sv.Detections.from_ultralytics(res)
+            
+            # 1. Process for Player Tracking (ByteTrack)
+            player_mask = []
+            for class_id, conf in zip(detection_sv.class_id, detection_sv.confidence):
+                name = cls_names[class_id].lower()
+                if name == 'player' and conf >= 0.1:
+                    player_mask.append(True)
+                elif name == 'referee' and conf >= 0.25:
+                    player_mask.append(True)
+                else:
+                    player_mask.append(False)
+            
+            player_dets = detection_sv[np.array(player_mask)]
+            tracks_batch = player_tracker.tracker.update_with_detections(player_dets)
+            
+            frame_player_tracks = {}
+            for frame_det in tracks_batch:
+                bbox = frame_det[0].tolist()
+                tid = frame_det[4]
+                frame_player_tracks[tid] = {
+                    "bbox": bbox,
+                    "confidence": float(frame_det[2]),
+                    "class": cls_names[frame_det[3]]
+                }
+            player_tracks.append(frame_player_tracks)
+
+            # 2. Process for Ball Tracking (One best ball)
+            max_ball_conf = -1
+            best_ball_bbox = None
+            for bbox, conf, class_id in zip(detection_sv.xyxy, detection_sv.confidence, detection_sv.class_id):
+                if cls_names[class_id].lower() == 'basketball':
+                    if conf > max_ball_conf:
+                        max_ball_conf = conf
+                        best_ball_bbox = bbox.tolist()
+            if best_ball_bbox:
+                ball_tracks[frame_idx][1] = {"bbox": best_ball_bbox, "confidence": float(max_ball_conf)}
+            
+            # 3. Process for Hoop Locations (Single best hoop with center and rim_y)
+            # Re-calculating from res.boxes to be sure about format
+            best_hoop_conf = -1
+            best_hoop_bbox = None
+            for bbox_tensor, conf, class_id in zip(res.boxes.xyxy, res.boxes.conf, res.boxes.cls):
+                if cls_names[int(class_id)].lower() == 'hoop' and conf > 0.2:
+                    if conf > best_hoop_conf:
+                        best_hoop_conf = float(conf)
+                        best_hoop_bbox = bbox_tensor.tolist()
+            
+            if best_hoop_bbox:
+                hoop_detections[frame_idx] = {
+                    "bbox": best_hoop_bbox,
+                    "center": ((best_hoop_bbox[0] + best_hoop_bbox[2]) / 2, (best_hoop_bbox[1] + best_hoop_bbox[3]) / 2),
+                    "rim_y": best_hoop_bbox[1],
+                    "confidence": float(best_hoop_conf)
+                }
+
+        if i % 50 == 0:
+            pct = 15 + int((i / total_frames) * 50)
+            await update_progress(f"Detection: Frame {i}/{total_frames}", pct)
+
+    await update_progress("Detecting court layout", 70)
+    # Optimization: Detect layout every 10 frames and fill gaps
+    # This speeds up this phase by 10x on CPU
+    step = 10
+    key_frames = video_frames[::step]
+    
+    # Check if detector has a way to change imgsz, or just rely on its internal default
+    # Looking at the class, it uses 1080 in the method. 
+    # I will patch the method call or the class if needed, but for now let's just use the every-10-frames logic.
+    
+    key_court_kpts = court_keypoint_detector.get_court_keypoints(key_frames, read_from_stub=False, stub_path=None)
+    
+    court_keypoints = []
+    for i in range(total_frames):
+        idx = min(i // step, len(key_court_kpts) - 1)
+        court_keypoints.append(key_court_kpts[idx])
     
     # Clean ball tracks
     ball_tracks = ball_tracker.remove_wrong_detections(ball_tracks)
     ball_tracks = ball_tracker.interpolate_ball_positions(ball_tracks)
     
     # Team assignment
+    await update_progress("Assigning players to teams", 80)
     team_assigner = TeamAssigner()
     player_assignment = team_assigner.get_player_teams_across_frames(
         video_frames, player_tracks, read_from_stub=False, stub_path=None
     )
     
     # Ball possession
+    await update_progress("Analyzing ball possession", 85)
     ball_aquisition_detector = BallAquisitionDetector()
     ball_possession = ball_aquisition_detector.detect_ball_possession(player_tracks, ball_tracks)
     
     # Pass and interception detection
+    await update_progress("Detecting passes and shots", 90)
     pass_detector = PassAndInterceptionDetector()
     passes = pass_detector.detect_passes(ball_possession, player_assignment)
     interceptions = pass_detector.detect_interceptions(ball_possession, player_assignment)
@@ -135,11 +231,8 @@ async def run_team_analysis(video_path: str, options: Optional[Dict[str, Any]] =
             success_time_window=15
         )
         
-        # Detect hoop locations
-        hoop_detections = shot_detector.detect_hoop_locations(
-            video_frames,
-            read_from_stub=False
-        )
+        # Use hoop detections from the combined pass
+        # hoop_detections already exists from Step 70
         
         # Get video FPS
         fps = 30  # Default
@@ -255,25 +348,53 @@ async def run_team_analysis(video_path: str, options: Optional[Dict[str, Any]] =
                 "has_ball": False,
                 "keypoints": None,
             })
+        
+        # Hoops
+        hoop = hoop_detections[frame_idx] if frame_idx < len(hoop_detections) else None
+        if hoop and hoop.get("bbox"):
+            detections.append({
+                "frame": frame_idx,
+                "object_type": "hoop",
+                "track_id": 0,
+                "bbox": hoop.get("bbox"),
+                "confidence": float(hoop.get("confidence", 1.0)),
+                "team_id": None,
+                "has_ball": False,
+                "keypoints": None,
+            })
     
     # Build events list
     events = []
-    for p in passes:
-        events.append({
-            "event_type": "pass",
-            "frame": p.get("frame", 0),
-            "timestamp_seconds": p.get("frame", 0) / 30,  # Assume 30fps
-            "player_id": p.get("from_player"),
-            "details": {"to_player": p.get("to_player")}
-        })
+    for frame_num, team_id in enumerate(passes):
+        if team_id != -1:
+            events.append({
+                "event_type": "pass",
+                "frame": frame_num,
+                "timestamp_seconds": frame_num / fps,
+                "details": {"team": team_id}
+            })
     
-    for i in interceptions:
+    for frame_num, team_id in enumerate(interceptions):
+        if team_id != -1:
+            events.append({
+                "event_type": "interception",
+                "frame": frame_num,
+                "timestamp_seconds": frame_num / fps,
+                "details": {"team": team_id}
+            })
+    
+    # Add shots to events
+    for shot in shots:
         events.append({
-            "event_type": "interception",
-            "frame": i.get("frame", 0),
-            "timestamp_seconds": i.get("frame", 0) / 30,
-            "player_id": i.get("player"),
-            "details": {}
+            "event_type": "shot",
+            "frame": shot['start_frame'],
+            "timestamp_seconds": shot['start_frame'] / fps,
+            "details": {
+                "outcome": shot['outcome'],
+                "team": shot.get('team_id'),
+                "player": shot.get('player_id'),
+                "type": shot.get('shot_type')
+            }
         })
     
     # Get video duration
@@ -324,27 +445,23 @@ async def run_team_analysis(video_path: str, options: Optional[Dict[str, Any]] =
         "players_detected": len(unique_players),
         "team_1_possession_percent": round(team_1_pct, 1),
         "team_2_possession_percent": round(team_2_pct, 1),
-        "total_passes": len(passes),
-        "total_interceptions": len(interceptions),
+        "total_passes": len([p for p in passes if p != -1]),
+        "total_interceptions": len([i for i in interceptions if i != -1]),
         
         # Shot statistics
-        "total_shot_attempts": shot_stats['total_attempts'],
-        "total_shots_made": shot_stats['total_made'],
-        "total_shots_missed": shot_stats['total_missed'],
-        "overall_shooting_percentage": shot_stats['overall_percentage'],
+        "shot_attempts": shot_stats['total_attempts'],
+        "shots_made": shot_stats['total_made'],
+        "shots_missed": shot_stats['total_missed'],
+        "shooting_percentage": shot_stats['overall_percentage'],
         "shot_breakdown_by_type": shot_stats['by_type'],
         
         # Team 1 shooting
         "team_1_shot_attempts": team_1_shot_stats['total_attempts'],
         "team_1_shots_made": team_1_shot_stats['total_made'],
-        "team_1_shooting_percentage": team_1_shot_stats['overall_percentage'],
-        "team_1_shot_breakdown": team_1_shot_stats['by_type'],
         
         # Team 2 shooting
         "team_2_shot_attempts": team_2_shot_stats['total_attempts'],
         "team_2_shots_made": team_2_shot_stats['total_made'],
-        "team_2_shooting_percentage": team_2_shot_stats['overall_percentage'],
-        "team_2_shot_breakdown": team_2_shot_stats['by_type'],
         
         "events": events,
         "detections": detections,

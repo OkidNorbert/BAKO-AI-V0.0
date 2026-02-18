@@ -66,7 +66,9 @@ const MatchUpload = () => {
       // Logic to fetch organization ID would go here.
       // For now, if the user object has teamId, we use it.
       // Or we could fetch it from an endpoint.
-      if (user?.teamId) {
+      if (user?.organizationId) {
+        setOrganizationId(user.organizationId);
+      } else if (user?.teamId) {
         setOrganizationId(user.teamId);
       }
       // If needed, we could call an API to get the user's organization
@@ -232,13 +234,8 @@ const MatchUpload = () => {
       formData.append('title', uploadData.title);
       formData.append('description', uploadData.notes);
       formData.append('analysis_mode', 'team'); // Hardcoded for team dashboard
-      if (organizationId) {
-        formData.append('organization_id', organizationId);
-      } else {
-        // If we don't have org ID, try to send a dummy one or handle it. 
-        // In a real app, we'd ensure the user has an org.
-        // For now, let's assume the backend handles it or we send a placeholder if acceptable
-        formData.append('organization_id', 'org_placeholder');
+      if (user?.organizationId || organizationId) {
+        formData.append('organization_id', user?.organizationId || organizationId);
       }
 
       const uploadResponse = await videoAPI.upload(formData);

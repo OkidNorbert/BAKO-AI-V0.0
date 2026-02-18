@@ -16,13 +16,14 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.models.video import AnalysisMode
 
 
-async def dispatch_analysis(video_path: str, mode: AnalysisMode, options: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+async def dispatch_analysis(video_path: str, mode: AnalysisMode, options: Optional[Dict[str, Any]] = None, video_id: Optional[str] = None) -> Dict[str, Any]:
     """
     Dispatch video analysis to the appropriate pipeline.
     
     Args:
         video_path: Path to the video file
         mode: Analysis mode (TEAM or PERSONAL)
+        video_id: UUID of the video for status updates
         
     Returns:
         Dictionary containing analysis results
@@ -31,10 +32,10 @@ async def dispatch_analysis(video_path: str, mode: AnalysisMode, options: Option
     
     if mode == AnalysisMode.TEAM:
         from analysis.team_analysis import run_team_analysis
-        result = await run_team_analysis(video_path, options=options)
+        result = await run_team_analysis(video_path, options=options, video_id=video_id)
     else:
         from analysis.personal_analysis import run_personal_analysis
-        result = await run_personal_analysis(video_path, options=options)
+        result = await run_personal_analysis(video_path, options=options, video_id=video_id)
     
     processing_time = time.time() - start_time
     
