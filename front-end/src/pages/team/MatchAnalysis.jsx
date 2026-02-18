@@ -24,8 +24,10 @@ import {
   Users,
   Activity,
   TrendingUp,
-  ArrowLeft
+  ArrowLeft,
+  Layout
 } from 'lucide-react';
+import TacticalBoard from '../../components/team/tactical-board';
 
 const MatchAnalysis = () => {
   const navigate = useNavigate();
@@ -40,6 +42,7 @@ const MatchAnalysis = () => {
   const [selectedMatch, setSelectedMatch] = useState(null);
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
   const [analysisView, setAnalysisView] = useState('list'); // list, player, detailed
+  const [liveTacticalData, setLiveTacticalData] = useState({ players: [], ball: null });
 
   const [matchStats, setMatchStats] = useState({
     total: 0,
@@ -285,12 +288,26 @@ const MatchAnalysis = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Video Player */}
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 space-y-6">
               <VideoPlayer
                 videoSrc={selectedMatch.download_url ? `${selectedMatch.download_url}${selectedMatch.download_url.includes('?') ? '&' : '?'}token=${localStorage.getItem('accessToken')}` : ''}
                 analysisData={selectedMatch.analysisData}
                 onTimeUpdate={handleVideoTimeUpdate}
+                onTacticalUpdate={setLiveTacticalData}
               />
+
+              {/* Tactical View Section (under video) */}
+              <div className={`p-6 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white shadow-md'}`}>
+                <h3 className={`text-lg font-semibold mb-4 flex items-center ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  <Layout className="mr-2" size={20} />
+                  Live Tactical Board (2D View)
+                </h3>
+                <TacticalBoard
+                  players={liveTacticalData.players}
+                  ball={liveTacticalData.ball}
+                  isDarkMode={isDarkMode}
+                />
+              </div>
             </div>
 
             {/* Analysis Sidebar */}
@@ -302,43 +319,53 @@ const MatchAnalysis = () => {
                   Match Statistics
                 </h3>
 
-                {selectedMatch.analysisData ? (
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Players Detected</span>
-                      <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{selectedMatch.analysisData.players_detected}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Total Passes</span>
-                      <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{selectedMatch.analysisData.total_passes}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Possession (T1/T2)</span>
-                      <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{selectedMatch.analysisData.team_1_possession_percent}% / {selectedMatch.analysisData.team_2_possession_percent}%</span>
-                    </div>
+                {selectedMatch.analysisData ? (() => {
+                  const data = selectedMatch.analysisData;
+                  const events = data.events || [];
+                  const shots = events.filter(e => e.event_type === 'shot');
+                  const madeCount = data.shots_made || shots.filter(s => s.details?.outcome === 'made').length;
+                  const missedCount = data.shots_missed || shots.filter(s => s.details?.outcome === 'missed').length;
+                  const totalCount = data.shot_attempts || shots.length;
+                  const percentage = data.shooting_percentage || (totalCount > 0 ? (madeCount / totalCount * 100) : 0);
 
-                    <div className="pt-2 border-t border-gray-700">
+                  return (
+                    <div className="space-y-3">
                       <div className="flex justify-between">
-                        <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Total Shots</span>
-                        <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{selectedMatch.analysisData.shot_attempts || 0}</span>
+                        <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Players Detected</span>
+                        <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{data.players_detected}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Shots Made</span>
-                        <span className={`font-bold text-green-500`}>{selectedMatch.analysisData.shots_made || 0}</span>
+                        <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Total Passes</span>
+                        <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{data.total_passes}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Shots Missed</span>
-                        <span className={`font-bold text-red-500`}>{selectedMatch.analysisData.shots_missed || 0}</span>
+                        <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Possession (T1/T2)</span>
+                        <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{data.team_1_possession_percent}% / {data.team_2_possession_percent}%</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Shooting %</span>
-                        <span className={`font-bold ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>
-                          {selectedMatch.analysisData.shooting_percentage ? selectedMatch.analysisData.shooting_percentage.toFixed(1) : 0}%
-                        </span>
+
+                      <div className="pt-2 border-t border-gray-700">
+                        <div className="flex justify-between">
+                          <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Total Shots</span>
+                          <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{totalCount}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Shots Made</span>
+                          <span className={`font-bold text-green-500`}>{madeCount}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Shots Missed</span>
+                          <span className={`font-bold text-red-500`}>{missedCount}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Shooting %</span>
+                          <span className={`font-bold ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>
+                            {typeof percentage === 'number' ? percentage.toFixed(1) : percentage}%
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ) : (
+                  );
+                })() : (
                   <p className="text-sm text-gray-500">Analysis data not available yet.</p>
                 )}
               </div>

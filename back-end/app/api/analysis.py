@@ -86,13 +86,6 @@ async def run_analysis_background(video_id: str, mode: str, supabase: SupabaseSe
             "total_passes",
             "total_interceptions",
             "shot_attempts",
-            "shots_made",
-            "shots_missed",
-            "shooting_percentage",
-            "team_1_shot_attempts",
-            "team_1_shots_made",
-            "team_2_shot_attempts",
-            "team_2_shots_made",
             "shot_form_consistency",
             "dribble_count",
             "dribble_frequency_per_minute",
@@ -147,7 +140,7 @@ async def run_analysis_background(video_id: str, mode: str, supabase: SupabaseSe
                 if not bbox or len(bbox) != 4:
                     continue
                 obj_type = d.get("object_type")
-                if obj_type not in ("player", "ball", "hoop"):
+                if obj_type not in ("player", "ball"):
                     continue
                 rows.append({
                     "video_id": video_id,

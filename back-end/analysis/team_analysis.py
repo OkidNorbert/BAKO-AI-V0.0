@@ -66,6 +66,22 @@ async def run_team_analysis(video_path: str, options: Optional[Dict[str, Any]] =
     # but we will extract basketballs and hoops in the same pass if possible.
     # To keep it simple but fast, we run detecting_frames once and share the results.
     batch_size = 10
+    # Analysis state defaults
+    shots = []
+    shot_stats = {
+        'total_attempts': 0, 'total_made': 0, 'total_missed': 0,
+        'overall_percentage': 0.0, 'by_type': {}, 'shots': []
+    }
+    team_1_shot_stats = shot_stats.copy()
+    team_2_shot_stats = shot_stats.copy()
+    passes = []
+    interceptions = []
+    ball_possession = []
+    player_assignment = []
+    tactical_positions = []
+    tactical_ball_positions = []
+    court_keypoints = []
+
     all_detections = []
     player_tracks = []
     ball_tracks = [{} for _ in range(total_frames)]
@@ -133,9 +149,9 @@ async def run_team_analysis(video_path: str, options: Optional[Dict[str, Any]] =
             
             if best_hoop_bbox:
                 hoop_detections[frame_idx] = {
-                    "bbox": best_hoop_bbox,
-                    "center": ((best_hoop_bbox[0] + best_hoop_bbox[2]) / 2, (best_hoop_bbox[1] + best_hoop_bbox[3]) / 2),
-                    "rim_y": best_hoop_bbox[1],
+                    "bbox": [float(b) for b in best_hoop_bbox],
+                    "center": [float((best_hoop_bbox[0] + best_hoop_bbox[2]) / 2), float((best_hoop_bbox[1] + best_hoop_bbox[3]) / 2)],
+                    "rim_y": float(best_hoop_bbox[1]),
                     "confidence": float(best_hoop_conf)
                 }
 
@@ -156,9 +172,13 @@ async def run_team_analysis(video_path: str, options: Optional[Dict[str, Any]] =
     key_court_kpts = court_keypoint_detector.get_court_keypoints(key_frames, read_from_stub=False, stub_path=None)
     
     court_keypoints = []
-    for i in range(total_frames):
-        idx = min(i // step, len(key_court_kpts) - 1)
-        court_keypoints.append(key_court_kpts[idx])
+    if len(key_court_kpts) > 0:
+        for i in range(total_frames):
+            idx = min(i // step, len(key_court_kpts) - 1)
+            court_keypoints.append(key_court_kpts[idx])
+    else:
+        # Fallback to empty keypoints per frame
+        court_keypoints = [None] * total_frames
     
     # Clean ball tracks
     ball_tracks = ball_tracker.remove_wrong_detections(ball_tracks)
@@ -190,6 +210,17 @@ async def run_team_analysis(video_path: str, options: Optional[Dict[str, Any]] =
     tactical_positions = tactical_converter.transform_players_to_tactical_view(
         court_keypoints, player_tracks
     )
+    
+    # Transform ball to tactical view
+    ball_xy_frames = []
+    for f_tracks in ball_tracks:
+        f_ball = {}
+        for b_id, b_data in f_tracks.items():
+            bbox = b_data["bbox"]
+            f_ball[b_id] = [(bbox[0]+bbox[2])/2, bbox[3]] # Use bottom of ball for tactical
+        ball_xy_frames.append(f_ball)
+    
+    tactical_ball_positions = tactical_converter.transform_points_to_tactical(court_keypoints, ball_xy_frames)
     
     speed_calculator = SpeedAndDistanceCalculator(
         tactical_converter.width,
@@ -263,17 +294,19 @@ async def run_team_analysis(video_path: str, options: Optional[Dict[str, Any]] =
         team_2_shots = []
         
         for shot in shots:
-            start_frame = shot['start_frame']
+            start_frame = int(shot['start_frame'])
             if start_frame < len(ball_possession) and start_frame < len(player_assignment):
                 player_with_ball = ball_possession[start_frame]
                 if player_with_ball != -1 and player_with_ball in player_assignment[start_frame]:
                     team = player_assignment[start_frame][player_with_ball]
-                    shot_with_team = {**shot, 'team': team, 'player_id': player_with_ball}
+                    # Update the shot in the main list so it's attribution stays for events
+                    shot['team_id'] = int(team)
+                    shot['player_id'] = int(player_with_ball)
                     
                     if team == 1:
-                        team_1_shots.append(shot_with_team)
+                        team_1_shots.append(shot)
                     elif team == 2:
-                        team_2_shots.append(shot_with_team)
+                        team_2_shots.append(shot)
         
         team_1_shot_stats = shot_detector.calculate_shot_statistics(team_1_shots)
         team_2_shot_stats = shot_detector.calculate_shot_statistics(team_2_shots)
@@ -318,14 +351,20 @@ async def run_team_analysis(video_path: str, options: Optional[Dict[str, Any]] =
             bbox = track.get("bbox")
             if not bbox:
                 continue
+            # Get tactical position for this player in this frame
+            current_tactical = tactical_positions[frame_idx] if frame_idx < len(tactical_positions) else {}
+            player_tactical = current_tactical.get(track_id)
+            
             detections.append({
-                "frame": frame_idx,
+                "frame": int(frame_idx),
                 "object_type": "player",
                 "track_id": int(track_id),
-                "bbox": bbox,
+                "bbox": [float(b) for b in bbox] if bbox else None,
                 "confidence": float(track.get("confidence", 1.0)),
-                "team_id": assignment.get(track_id),
-                "has_ball": possession_player == track_id,
+                "team_id": int(assignment.get(track_id)) if assignment.get(track_id) is not None else None,
+                "has_ball": bool(possession_player == track_id),
+                "tactical_x": float(player_tactical[0]) if player_tactical else None,
+                "tactical_y": float(player_tactical[1]) if player_tactical else None,
                 "keypoints": None,
             })
             if len(detections) >= max_detections:
@@ -338,25 +377,32 @@ async def run_team_analysis(video_path: str, options: Optional[Dict[str, Any]] =
         current_ball_tracks = ball_tracks[frame_idx] if frame_idx < len(ball_tracks) else []
         ball = (current_ball_tracks or {}).get(1)
         if ball and ball.get("bbox"):
+            # Get tactical ball position
+            current_ball_tactical = tactical_ball_positions[frame_idx] if frame_idx < len(tactical_ball_positions) else {}
+            ball_tactical = current_ball_tactical.get(1)
+            
             detections.append({
-                "frame": frame_idx,
+                "frame": int(frame_idx),
                 "object_type": "ball",
                 "track_id": 1,
-                "bbox": ball.get("bbox"),
+                "bbox": [float(b) for b in ball.get("bbox")] if ball.get("bbox") else None,
                 "confidence": float(ball.get("confidence", 1.0)),
                 "team_id": None,
                 "has_ball": False,
+                "tactical_x": float(ball_tactical[0]) if ball_tactical else None,
+                "tactical_y": float(ball_tactical[1]) if ball_tactical else None,
                 "keypoints": None,
             })
-        
         # Hoops
         hoop = hoop_detections[frame_idx] if frame_idx < len(hoop_detections) else None
         if hoop and hoop.get("bbox"):
+            # Hoop is static but can have different tactical locations if court moves
+            # For now just use bbox
             detections.append({
-                "frame": frame_idx,
+                "frame": int(frame_idx),
                 "object_type": "hoop",
                 "track_id": 0,
-                "bbox": hoop.get("bbox"),
+                "bbox": [float(b) for b in hoop.get("bbox")] if hoop.get("bbox") else None,
                 "confidence": float(hoop.get("confidence", 1.0)),
                 "team_id": None,
                 "has_ball": False,
@@ -387,13 +433,13 @@ async def run_team_analysis(video_path: str, options: Optional[Dict[str, Any]] =
     for shot in shots:
         events.append({
             "event_type": "shot",
-            "frame": shot['start_frame'],
-            "timestamp_seconds": shot['start_frame'] / fps,
+            "frame": int(shot['start_frame']),
+            "timestamp_seconds": float(shot['start_frame'] / fps),
             "details": {
-                "outcome": shot['outcome'],
-                "team": shot.get('team_id'),
-                "player": shot.get('player_id'),
-                "type": shot.get('shot_type')
+                "outcome": str(shot['outcome']),
+                "team": int(shot.get('team_id')) if shot.get('team_id') is not None else None,
+                "player": int(shot.get('player_id')) if shot.get('player_id') is not None else None,
+                "type": str(shot.get('shot_type', 'unknown'))
             }
         })
     
@@ -440,28 +486,28 @@ async def run_team_analysis(video_path: str, options: Optional[Dict[str, Any]] =
     
     # Build result dictionary
     result = {
-        "total_frames": total_frames,
-        "duration_seconds": duration_seconds,
-        "players_detected": len(unique_players),
-        "team_1_possession_percent": round(team_1_pct, 1),
-        "team_2_possession_percent": round(team_2_pct, 1),
-        "total_passes": len([p for p in passes if p != -1]),
-        "total_interceptions": len([i for i in interceptions if i != -1]),
+        "total_frames": int(total_frames),
+        "duration_seconds": float(duration_seconds),
+        "players_detected": int(len(unique_players)),
+        "team_1_possession_percent": float(round(team_1_pct, 1)),
+        "team_2_possession_percent": float(round(team_2_pct, 1)),
+        "total_passes": int(len([p for p in passes if p != -1])),
+        "total_interceptions": int(len([i for i in interceptions if i != -1])),
         
         # Shot statistics
-        "shot_attempts": shot_stats['total_attempts'],
-        "shots_made": shot_stats['total_made'],
-        "shots_missed": shot_stats['total_missed'],
-        "shooting_percentage": shot_stats['overall_percentage'],
+        "shot_attempts": int(shot_stats['total_attempts']),
+        "shots_made": int(shot_stats['total_made']),
+        "shots_missed": int(shot_stats['total_missed']),
+        "shooting_percentage": float(shot_stats['overall_percentage']),
         "shot_breakdown_by_type": shot_stats['by_type'],
         
         # Team 1 shooting
-        "team_1_shot_attempts": team_1_shot_stats['total_attempts'],
-        "team_1_shots_made": team_1_shot_stats['total_made'],
+        "team_1_shot_attempts": int(team_1_shot_stats['total_attempts']),
+        "team_1_shots_made": int(team_1_shot_stats['total_made']),
         
         # Team 2 shooting
-        "team_2_shot_attempts": team_2_shot_stats['total_attempts'],
-        "team_2_shots_made": team_2_shot_stats['total_made'],
+        "team_2_shot_attempts": int(team_2_shot_stats['total_attempts']),
+        "team_2_shots_made": int(team_2_shot_stats['total_made']),
         
         "events": events,
         "detections": detections,

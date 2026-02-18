@@ -16,7 +16,7 @@ import {
   RotateCcw
 } from 'lucide-react';
 
-const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate }) => {
+const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate, onTacticalUpdate }) => {
   const { isDarkMode } = useTheme();
   const videoRef = useRef(null);
   const containerRef = useRef(null);
@@ -121,22 +121,36 @@ const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate }) => {
           id: d.track_id,
           x: centerX,
           y: centerY,
+          tactical_x: d.tactical_x,
+          tactical_y: d.tactical_y,
           team: d.team_id === 1 ? 'home' : 'away',
           number: d.track_id.toString().slice(-2)
         };
       });
       setPlayerPositions(mapped);
 
+      let ballData = null;
       // 2. Process Ball
       const ballDet = frameDetections.find(d => d.object_type === 'ball');
       if (ballDet) {
         const [x1, y1, x2, y2] = ballDet.bbox;
-        setBallPosition({
+        ballData = {
           x: ((x1 + x2) / 2) / videoDimensions.width * 100,
-          y: ((y1 + y2) / 2) / videoDimensions.height * 100
-        });
+          y: ((y1 + y2) / 2) / videoDimensions.height * 100,
+          tactical_x: ballDet.tactical_x,
+          tactical_y: ballDet.tactical_y
+        };
+        setBallPosition(ballData);
       } else {
         setBallPosition(null);
+      }
+
+      // Call tactical update if provided
+      if (onTacticalUpdate) {
+        onTacticalUpdate({
+          players: mapped,
+          ball: ballData
+        });
       }
 
       // 3. Process Hoop

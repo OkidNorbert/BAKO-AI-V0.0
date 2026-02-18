@@ -67,6 +67,9 @@ class TacticalViewConverter:
         keypoints_list = deepcopy(keypoints_list)
 
         for frame_idx, frame_keypoints in enumerate(keypoints_list):
+            if frame_keypoints is None or not hasattr(frame_keypoints, 'xy'):
+                continue
+                
             # Check if there are any detections in the frame
             kp_list = frame_keypoints.xy.tolist()
             if not kp_list:
@@ -119,61 +122,54 @@ class TacticalViewConverter:
             
         return keypoints_list
 
-    def transform_players_to_tactical_view(self, keypoints_list, player_tracks):
+    def transform_points_to_tactical(self, keypoints_list, detections_xy):
         """
-        Transform player positions from video frame coordinates to tactical view coordinates.
-        
-        Args:
-            keypoints_list (list): List of detected court keypoints for each frame.
-            player_tracks (list): List of dictionaries containing player tracking information for each frame,
-                where each dictionary maps player IDs to their bounding box coordinates.
-        
-        Returns:
-            list: List of dictionaries where each dictionary maps player IDs to their (x, y) positions
-                in the tactical view coordinate system. The list index corresponds to the frame number.
+        Transform any list of (x, y) points to tactical view.
+        detections_xy: List[Dict[track_id, [x, y]]]
         """
-        tactical_player_positions = []
+        tactical_output = []
         last_homography = None
         
-        for frame_idx, (frame_keypoints, frame_tracks) in enumerate(zip(keypoints_list, player_tracks)):
+        for frame_idx, (frame_keypoints, frame_points) in enumerate(zip(keypoints_list, detections_xy)):
             tactical_positions = {}
-
-            # Handle keypoints for current frame
             kp_list = frame_keypoints.xy.tolist() if hasattr(frame_keypoints, 'xy') else []
             current_homography = None
 
             if kp_list and len(kp_list) > 0:
                 detected_keypoints = kp_list[0]
                 valid_indices = [i for i, kp in enumerate(detected_keypoints) if kp[0] > 0 and kp[1] > 0]
-                
                 if len(valid_indices) >= 4:
                     source_points = np.array([detected_keypoints[i] for i in valid_indices], dtype=np.float32)
                     target_points = np.array([self.key_points[i] for i in valid_indices], dtype=np.float32)
                     try:
                         current_homography = Homography(source_points, target_points)
                         last_homography = current_homography
-                    except:
-                        pass
+                    except: pass
 
-            # Use last good homography if current frame failed
             transformer = current_homography or last_homography
-
             if transformer:
-                for player_id, player_data in frame_tracks.items():
-                    # SKIP REFEREES for the tactical map
-                    if player_data.get('class', '').lower() == 'referee':
-                        continue
-
-                    bbox = player_data["bbox"]
-                    player_position = np.array([get_foot_position(bbox)])
-                    tactical_position = transformer.transform_points(player_position)
-
-                    if 0 <= tactical_position[0][0] <= self.width and 0 <= tactical_position[0][1] <= self.height:
-                        tactical_positions[player_id] = tactical_position[0].tolist()
+                for obj_id, pos in frame_points.items():
+                    obj_pos = np.array([pos])
+                    tactical_pos = transformer.transform_points(obj_pos)
+                    if 0 <= tactical_pos[0][0] <= self.width and 0 <= tactical_pos[0][1] <= self.height:
+                        tactical_positions[obj_id] = tactical_pos[0].tolist()
             
-            tactical_player_positions.append(tactical_positions)
-        
-        return tactical_player_positions
+            tactical_output.append(tactical_positions)
+        return tactical_output
+
+    def transform_players_to_tactical_view(self, keypoints_list, player_tracks):
+        """
+        Extract foot positions and transform players.
+        """
+        player_points = []
+        for frame_tracks in player_tracks:
+            frame_points = {}
+            for pid, pdata in frame_tracks.items():
+                if pdata.get('class', '').lower() == 'referee': continue
+                frame_points[pid] = get_foot_position(pdata["bbox"])
+            player_points.append(frame_points)
+            
+        return self.transform_points_to_tactical(keypoints_list, player_points)
         
         return tactical_player_positions
 
