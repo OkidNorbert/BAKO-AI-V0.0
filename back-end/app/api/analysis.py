@@ -145,17 +145,22 @@ async def run_analysis_background(video_id: str, mode: str, supabase: SupabaseSe
                 if obj_type in ("ball", "basketball"):
                     db_obj_type = "ball"
                 
-                # Store the original type in keypoints for the frontend
+                # Store the original type and tactical coordinates in keypoints for the frontend
                 keypoints = d.get("keypoints") or {}
                 if not isinstance(keypoints, dict):
                     keypoints = {"data": keypoints}
                 keypoints["real_type"] = obj_type
+                
+                # Store tactical coordinates if available
+                if "tactical_x" in d:
+                    keypoints["tactical_x"] = d["tactical_x"]
+                    keypoints["tactical_y"] = d["tactical_y"]
 
                 rows.append({
                     "video_id": video_id,
                     "frame": int(d.get("frame", 0)),
                     "object_type": db_obj_type,
-                    "track_id": int(d.get("track_id", 0)),
+                    "track_id": int(d.get("track_id", 0)) if isinstance(d.get("track_id"), (int, float)) else int(str(d.get("track_id", 0)).split('-')[0] if '-' in str(d.get("track_id", "")) else 0),
                     "bbox": bbox,
                     "confidence": float(d.get("confidence", 1.0)),
                     "keypoints": keypoints,

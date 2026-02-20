@@ -1,7 +1,7 @@
 STUBS_DEFAULT_PATH = 'stubs'
 
-# Team Analysis Models (v3)
-TEAM_MODEL_PATH = 'models/nbl_v3_combined.pt'
+# Team Analysis Models (v4)
+TEAM_MODEL_PATH = 'models/nbl_v4_combined.pt'
 
 # Personal Analysis Models (v2)
 PERSONAL_MODEL_PATH = 'models/nbl_v2_combined.pt'

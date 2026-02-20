@@ -40,6 +40,10 @@ from app.services.supabase_client import SupabaseService
 
 router = APIRouter()
 
+def _annotated_video_path(video_id: str) -> str:
+    # Produced by analysis pipelines (e.g. analysis/team_analysis.py)
+    return os.path.join("output_videos", "annotated", f"{video_id}.mp4")
+
 
 def _get_limiter(request: Request) -> Limiter:
     return request.app.state.limiter
@@ -225,6 +229,8 @@ async def upload_video(
         **video_record,
         created_at=datetime.utcnow(),
         download_url=f"/api/videos/{video_id}/download",
+        annotated_download_url=f"/api/videos/{video_id}/annotated",
+        has_annotated=os.path.exists(_annotated_video_path(video_id)),
     )
 
 
@@ -268,7 +274,12 @@ async def list_videos(
     
     return VideoListResponse(
         videos=[
-            Video(**v, download_url=f"/api/videos/{v.get('id')}/download")
+            Video(
+                **v,
+                download_url=f"/api/videos/{v.get('id')}/download",
+                annotated_download_url=f"/api/videos/{v.get('id')}/annotated",
+                has_annotated=os.path.exists(_annotated_video_path(str(v.get('id')))),
+            )
             for v in paginated
         ],
         total=total,
@@ -301,7 +312,12 @@ async def get_video(
             detail="You don't have access to this video"
         )
     
-    return Video(**video, download_url=f"/api/videos/{video_id}/download")
+    return Video(
+        **video,
+        download_url=f"/api/videos/{video_id}/download",
+        annotated_download_url=f"/api/videos/{video_id}/annotated",
+        has_annotated=os.path.exists(_annotated_video_path(video_id)),
+    )
 
 
 @router.get("/{video_id}/download")
@@ -333,6 +349,35 @@ async def download_video(
     return FileResponse(
         path=storage_path,
         filename=f"{safe_name}{ext}",
+        media_type="application/octet-stream",
+    )
+
+
+@router.get("/{video_id}/annotated")
+async def download_annotated_video(
+    video_id: str,
+    current_user: dict = Depends(get_current_user),
+    supabase: SupabaseService = Depends(get_supabase),
+):
+    """
+    Download the annotated output video (if available).
+    Ownership-checked via the uploaded video record.
+    """
+    video = await supabase.select_one("videos", video_id)
+    if not video:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Video not found")
+    if video.get("uploader_id") != current_user["id"]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You don't have access to this video")
+
+    annotated_path = _annotated_video_path(video_id)
+    if not os.path.exists(annotated_path):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Annotated video not available yet")
+
+    original_title = (video.get("title") or f"{video_id}").strip()
+    safe_name = quote(original_title.replace("/", "_").replace("\\", "_"))
+    return FileResponse(
+        path=annotated_path,
+        filename=f"{safe_name}-annotated.mp4",
         media_type="application/octet-stream",
     )
 

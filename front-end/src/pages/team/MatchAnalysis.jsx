@@ -267,7 +267,13 @@ const MatchAnalysis = () => {
 
               <div className="flex space-x-2 mt-4 md:mt-0">
                 <button
-                  onClick={() => window.open(`${selectedMatch.download_url}${selectedMatch.download_url.includes('?') ? '&' : '?'}token=${localStorage.getItem('accessToken')}`)}
+                  onClick={() => {
+                    const url = (selectedMatch.has_annotated && selectedMatch.annotated_download_url)
+                      ? selectedMatch.annotated_download_url
+                      : selectedMatch.download_url;
+                    if (!url) return;
+                    window.open(`${url}${url.includes('?') ? '&' : '?'}token=${localStorage.getItem('accessToken')}`);
+                  }}
                   className={`flex items-center px-3 py-2 rounded-lg ${isDarkMode
                     ? 'bg-gray-700 hover:bg-gray-600 text-white'
                     : 'bg-gray-200 hover:bg-gray-300 text-gray-900'
@@ -290,7 +296,12 @@ const MatchAnalysis = () => {
             {/* Video Player */}
             <div className="lg:col-span-2 space-y-6">
               <VideoPlayer
-                videoSrc={selectedMatch.download_url ? `${selectedMatch.download_url}${selectedMatch.download_url.includes('?') ? '&' : '?'}token=${localStorage.getItem('accessToken')}` : ''}
+                videoSrc={(() => {
+                  const url = (selectedMatch.has_annotated && selectedMatch.annotated_download_url)
+                    ? selectedMatch.annotated_download_url
+                    : selectedMatch.download_url;
+                  return url ? `${url}${url.includes('?') ? '&' : '?'}token=${localStorage.getItem('accessToken')}` : '';
+                })()}
                 analysisData={selectedMatch.analysisData}
                 onTimeUpdate={handleVideoTimeUpdate}
                 onTacticalUpdate={setLiveTacticalData}

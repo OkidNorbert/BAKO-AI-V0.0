@@ -37,8 +37,30 @@ const MatchUpload = () => {
     matchDate: new Date().toISOString().split('T')[0],
     matchType: 'league',
     venue: '',
-    notes: ''
+    notes: '',
+    // Team identity (used by backend to assign teams + focus highlights)
+    ourTeamJersey: 'white jersey',
+    opponentJersey: 'dark blue jersey',
+    ourTeamId: '1',
+    // Safety: enforce basketball constraint (<=10 players on court)
+    maxPlayersOnCourt: '10',
+    // Additional options
+    clearStubs: true,
+    readFromStub: false,
   });
+
+  // Jersey color presets
+  const jerseyColorPresets = [
+    { name: 'White', description: 'white jersey', hex: '#F5F5F5' },
+    { name: 'Black', description: 'black jersey', hex: '#1F2937' },
+    { name: 'Red', description: 'red jersey', hex: '#DC2626' },
+    { name: 'Blue', description: 'blue jersey', hex: '#2563EB' },
+    { name: 'Dark Blue', description: 'dark blue jersey', hex: '#1E40AF' },
+    { name: 'Yellow', description: 'yellow jersey', hex: '#FBBF24' },
+    { name: 'Green', description: 'green jersey', hex: '#10B981' },
+    { name: 'Purple', description: 'purple jersey', hex: '#A855F7' },
+    { name: 'Orange', description: 'orange jersey', hex: '#F97316' },
+  ];
 
   const [videoFile, setVideoFile] = useState(null);
   const [videoPreview, setVideoPreview] = useState(null);
@@ -245,7 +267,16 @@ const MatchUpload = () => {
       setUploadStage('processing');
       setCurrentStep('Queuing analysis...');
 
-      await analysisAPI.triggerTeamAnalysis(videoId);
+      const analysisOptions = {
+        our_team_jersey: uploadData.ourTeamJersey,
+        opponent_jersey: uploadData.opponentJersey,
+        our_team_id: parseInt(uploadData.ourTeamId || '1', 10),
+        max_players_on_court: parseInt(uploadData.maxPlayersOnCourt || '10', 10),
+        read_from_stub: uploadData.readFromStub,
+        clear_stubs_after: uploadData.clearStubs,
+      };
+
+      await analysisAPI.triggerTeamAnalysis(videoId, analysisOptions);
 
       // 3. Poll Status
       pollStatus(videoId);
@@ -271,7 +302,13 @@ const MatchUpload = () => {
       matchDate: new Date().toISOString().split('T')[0],
       matchType: 'league',
       venue: '',
-      notes: ''
+      notes: '',
+      ourTeamJersey: 'white jersey',
+      opponentJersey: 'dark blue jersey',
+      ourTeamId: '1',
+      maxPlayersOnCourt: '10',
+      clearStubs: true,
+      readFromStub: false,
     });
     setUploadProgress(0);
     setUploadStage('idle');
@@ -423,6 +460,140 @@ const MatchUpload = () => {
                       } focus:outline-none focus:ring-2 focus:ring-orange-500`}
                     placeholder="e.g., Lakers"
                   />
+                </div>
+
+                <div className={`p-4 rounded-lg border ${isDarkMode ? 'border-gray-700 bg-gray-900/30' : 'border-gray-200 bg-gray-50'}`}>
+                  <h3 className={`text-sm font-semibold mb-4 flex items-center ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    <Users className="mr-2" size={16} />
+                    Team Identity & Colors
+                  </h3>
+
+                  {/* Our Team Jersey Color */}
+                  <div className="mb-4">
+                    <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                      Your Team Jersey Color
+                    </label>
+                    <div className="grid grid-cols-5 gap-2 mb-2">
+                      {jerseyColorPresets.map((preset) => (
+                        <button
+                          key={preset.description}
+                          type="button"
+                          onClick={() => handleInputChange('ourTeamJersey', preset.description)}
+                          className={`p-3 rounded-lg transition-all border-2 flex flex-col items-center justify-center ${
+                            uploadData.ourTeamJersey === preset.description
+                              ? isDarkMode ? 'border-orange-400' : 'border-orange-500'
+                              : isDarkMode ? 'border-gray-600' : 'border-gray-300'
+                          }`}
+                          title={preset.name}
+                        >
+                          <div
+                            className="w-6 h-6 rounded-full mb-1 border border-gray-400"
+                            style={{ backgroundColor: preset.hex }}
+                          />
+                          <span className={`text-xs text-center ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                            {preset.name}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Opponent Team Jersey Color */}
+                  <div className="mb-4">
+                    <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                      Opponent Jersey Color
+                    </label>
+                    <div className="grid grid-cols-5 gap-2 mb-2">
+                      {jerseyColorPresets.map((preset) => (
+                        <button
+                          key={preset.description}
+                          type="button"
+                          onClick={() => handleInputChange('opponentJersey', preset.description)}
+                          className={`p-3 rounded-lg transition-all border-2 flex flex-col items-center justify-center ${
+                            uploadData.opponentJersey === preset.description
+                              ? isDarkMode ? 'border-blue-400' : 'border-blue-500'
+                              : isDarkMode ? 'border-gray-600' : 'border-gray-300'
+                          }`}
+                          title={preset.name}
+                        >
+                          <div
+                            className="w-6 h-6 rounded-full mb-1 border border-gray-400"
+                            style={{ backgroundColor: preset.hex }}
+                          />
+                          <span className={`text-xs text-center ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                            {preset.name}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                        Which team is ours?
+                      </label>
+                      <select
+                        value={uploadData.ourTeamId}
+                        onChange={(e) => handleInputChange('ourTeamId', e.target.value)}
+                        className={`w-full px-3 py-2 rounded-lg border ${isDarkMode
+                          ? 'bg-gray-700 border-gray-600 text-white'
+                          : 'bg-white border-gray-300 text-gray-900'
+                          } focus:outline-none focus:ring-2 focus:ring-orange-500`}
+                      >
+                        <option value="1">Team 1 (highlight as ours)</option>
+                        <option value="2">Team 2 (highlight as ours)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                        Max players on court
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="10"
+                        value={uploadData.maxPlayersOnCourt}
+                        onChange={(e) => handleInputChange('maxPlayersOnCourt', e.target.value)}
+                        className={`w-full px-3 py-2 rounded-lg border ${isDarkMode
+                          ? 'bg-gray-700 border-gray-600 text-white'
+                          : 'bg-white border-gray-300 text-gray-900'
+                          } focus:outline-none focus:ring-2 focus:ring-orange-500`}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Analysis Options */}
+                  <div className="mt-4 pt-4 border-t border-gray-400/20">
+                    <h4 className={`text-xs font-semibold mb-3 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      ANALYSIS OPTIONS
+                    </h4>
+                    <div className="space-y-2">
+                      <label className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={uploadData.clearStubs}
+                          onChange={(e) => handleInputChange('clearStubs', e.target.checked)}
+                          className="rounded"
+                        />
+                        <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                          Clear cached data before analysis (ensures fresh detection)
+                        </span>
+                      </label>
+                      <label className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={uploadData.readFromStub}
+                          onChange={(e) => handleInputChange('readFromStub', e.target.checked)}
+                          className="rounded"
+                        />
+                        <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                          Use cached detections (faster but may be less accurate)
+                        </span>
+                      </label>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">

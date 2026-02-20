@@ -44,6 +44,8 @@ class Video(VideoBase):
     uploader_id: UUID
     # Do not expose local filesystem paths to clients
     download_url: Optional[str] = None
+    annotated_download_url: Optional[str] = None
+    has_annotated: Optional[bool] = None
     duration_seconds: Optional[float] = None
     frame_count: Optional[int] = None
     fps: Optional[float] = None

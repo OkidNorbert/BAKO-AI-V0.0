@@ -108,7 +108,9 @@ const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate, onTacticalUpdate })
       // 0. Resolve Real Types
       const detections = frameDetections.map(d => ({
         ...d,
-        effective_type: d.keypoints?.real_type || d.object_type
+        effective_type: d.keypoints?.real_type || d.object_type,
+        tactical_x: d.keypoints?.tactical_x || d.tactical_x,
+        tactical_y: d.keypoints?.tactical_y || d.tactical_y,
       }));
 
       // 1. Process Players
