@@ -25,26 +25,26 @@ const TacticalBoard = ({ players, ball, isDarkMode }) => {
 
                 {/* LEFT BASKET AREA */}
                 {/* Key/Paint (5.79m x 4.88m from baseline) */}
-                <rect x="0" y={(height - 48.8) / 2}" width="57.9" height="48.8" fill="none" stroke={isDarkMode ? '#666' : '#8B4513'} strokeWidth="1.5" />
+                <rect x="0" y={(height - 48.8) / 2} width="57.9" height="48.8" fill="none" stroke={isDarkMode ? '#666' : '#8B4513'} strokeWidth="1.5" />
                 
                 {/* Free throw circle (top) */}
-                <circle cx="57.9" cy={(height - 48.8) / 2}" r="18" fill="none" stroke={isDarkMode ? '#666' : '#8B4513'} strokeWidth="1" />
+                <circle cx="57.9" cy={(height - 48.8) / 2} r="18" fill="none" stroke={isDarkMode ? '#666' : '#8B4513'} strokeWidth="1" />
                 
                 {/* Free throw circle (bottom) */}
-                <circle cx="57.9" cy={(height + 48.8) / 2}" r="18" fill="none" stroke={isDarkMode ? '#666' : '#8B4513'} strokeWidth="1" />
+                <circle cx="57.9" cy={(height + 48.8) / 2} r="18" fill="none" stroke={isDarkMode ? '#666' : '#8B4513'} strokeWidth="1" />
                 
                 {/* Three-point line - left */}
                 <path d={`M 0 14 Q 40 ${height / 2} 0 ${height - 14}`} fill="none" stroke={isDarkMode ? '#666' : '#8B4513'} strokeWidth="1" />
 
                 {/* RIGHT BASKET AREA (mirror) */}
                 {/* Key/Paint */}
-                <rect x={width - 57.9} y={(height - 48.8) / 2)} width="57.9" height="48.8" fill="none" stroke={isDarkMode ? '#666' : '#8B4513'} strokeWidth="1.5" />
+                <rect x={width - 57.9} y={(height - 48.8) / 2} width="57.9" height="48.8" fill="none" stroke={isDarkMode ? '#666' : '#8B4513'} strokeWidth="1.5" />
                 
                 {/* Free throw circle (top) */}
-                <circle cx={width - 57.9} cy={(height - 48.8) / 2)} r="18" fill="none" stroke={isDarkMode ? '#666' : '#8B4513'} strokeWidth="1" />
+                <circle cx={width - 57.9} cy={(height - 48.8) / 2} r="18" fill="none" stroke={isDarkMode ? '#666' : '#8B4513'} strokeWidth="1" />
                 
                 {/* Free throw circle (bottom) */}
-                <circle cx={width - 57.9} cy={(height + 48.8) / 2)} r="18" fill="none" stroke={isDarkMode ? '#666' : '#8B4513'} strokeWidth="1" />
+                <circle cx={width - 57.9} cy={(height + 48.8) / 2} r="18" fill="none" stroke={isDarkMode ? '#666' : '#8B4513'} strokeWidth="1" />
                 
                 {/* Three-point line - right */}
                 <path d={`M ${width} 14 Q ${width - 40} ${height / 2} ${width} ${height - 14}`} fill="none" stroke={isDarkMode ? '#666' : '#8B4513'} strokeWidth="1" />

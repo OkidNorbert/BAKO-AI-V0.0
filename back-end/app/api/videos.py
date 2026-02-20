@@ -378,7 +378,7 @@ async def download_annotated_video(
     return FileResponse(
         path=annotated_path,
         filename=f"{safe_name}-annotated.mp4",
-        media_type="application/octet-stream",
+        media_type="video/mp4",
     )
 
 
