@@ -102,7 +102,7 @@ function App() {
                 <Route path="analytics" element={<TeamAnalytics />} />
                 <Route path="reports" element={<TeamAnalytics />} />
                 <Route path="settings" element={<TeamSettings />} />
-                <Route path="profile" element={<Profile />} />
+                <Route path="profile" element={<TeamSettings />} />
                 <Route path="notifications" element={<Notifications />} />
                 <Route path="announcements" element={<Announcements />} />
               </Route>

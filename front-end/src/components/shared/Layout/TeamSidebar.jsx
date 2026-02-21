@@ -27,10 +27,10 @@ const AdminSidebar = ({ isOpen }) => {
     { path: '/team/roster', icon: Users, label: 'Team Roster', color: 'from-purple-500 to-violet-600', show: isLinked },
     { path: '/team/staff', icon: Shield, label: 'Coaching Staff', color: 'from-indigo-500 to-blue-600', show: isOwner && isLinked },
     { path: '/team/announcements', icon: MessageSquare, label: 'Announcements', color: 'from-green-500 to-emerald-600', show: isLinked },
-    { path: '/team/matches', icon: Video, label: 'Match Analysis', color: 'from-orange-400 to-pink-500', show: isLinked },
+    { path: '/team/matches', icon: Video, label: 'Match Analysis', color: 'from-orange-400 to-pink-500', show: isCoach && isLinked },
     { path: '/team/schedule', icon: Calendar, label: 'Schedule', color: 'from-yellow-400 to-amber-600', show: isLinked },
     { path: '/team/reports', icon: BarChart2, label: 'Reports & Analytics', color: 'from-gray-500 to-gray-600', show: isLinked },
-    { path: '/team/settings', icon: Settings, label: 'Settings', color: 'from-purple-500 to-indigo-700', show: isOwner || !isLinked }
+    { path: '/team/settings', icon: Settings, label: 'Team Profile', color: 'from-purple-500 to-indigo-700', show: isOwner || !isLinked }
   ].filter(item => item.show);
   return (
     <aside className={`fixed top-0 left-0 z-40 h-screen transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'

@@ -135,6 +135,12 @@ def create_app() -> FastAPI:
     if settings.debug and settings.serve_uploads_in_debug and os.path.exists(settings.upload_dir):
         app.mount("/uploads", StaticFiles(directory=settings.upload_dir), name="uploads")
     
+    # Serve generated clips (highlights)
+    # Note: In production, consider signed URLs or authenticated proxies.
+    clips_dir = os.path.join(os.getcwd(), "output_videos", "clips")
+    os.makedirs(clips_dir, exist_ok=True)
+    app.mount("/clips", StaticFiles(directory=clips_dir), name="clips")
+    
     return app
 
 

@@ -108,4 +108,12 @@ export const analysisAPI = {
   getDetections: (analysisId, params) => api.get(`/analysis/${analysisId}/detections`, { params }),
 };
 
+// Advanced Analytics API
+export const advancedAnalyticsAPI = {
+  getClips: (videoId) => api.get(`/analytics/advanced/clips/${videoId}`),
+  getTeamSummary: (videoId) => api.get(`/analytics/advanced/team-summary/${videoId}`),
+  getPlayerAnalysis: (videoId, trackId) => api.get(`/analytics/advanced/player/${videoId}/${trackId}`),
+  getLineups: (videoId) => api.get(`/analytics/advanced/lineups/${videoId}`),
+};
+
 export default api;

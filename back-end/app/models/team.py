@@ -15,6 +15,14 @@ class OrganizationCreate(BaseModel):
     primary_color: Optional[str] = Field("#FF5733", pattern="^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$")
     secondary_color: Optional[str] = Field("#333333", pattern="^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$")
     jersey_style: Optional[str] = Field("Solid", max_length=50)
+    home_court: Optional[str] = None
+    website: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    twitter_handle: Optional[str] = None
+    instagram_handle: Optional[str] = None
+    competition_settings: Optional[dict] = None
+    roster_settings: Optional[dict] = None
 
 
 class OrganizationUpdate(BaseModel):
@@ -25,6 +33,14 @@ class OrganizationUpdate(BaseModel):
     primary_color: Optional[str] = Field(None, pattern="^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$")
     secondary_color: Optional[str] = Field(None, pattern="^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$")
     jersey_style: Optional[str] = Field(None, max_length=50)
+    home_court: Optional[str] = None
+    website: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    twitter_handle: Optional[str] = None
+    instagram_handle: Optional[str] = None
+    competition_settings: Optional[dict] = None
+    roster_settings: Optional[dict] = None
 
 
 class Organization(BaseModel):
@@ -36,6 +52,14 @@ class Organization(BaseModel):
     primary_color: str = "#FF5733"
     secondary_color: str = "#333333"
     jersey_style: str = "Solid"
+    home_court: Optional[str] = None
+    website: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    twitter_handle: Optional[str] = None
+    instagram_handle: Optional[str] = None
+    competition_settings: Optional[dict] = None
+    roster_settings: Optional[dict] = None
     owner_id: UUID
     created_at: datetime
     updated_at: Optional[datetime] = None

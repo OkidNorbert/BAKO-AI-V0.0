@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
-import api from '../../utils/axiosConfig';
+import { adminAPI } from '../../services/api';
 import {
   Save,
   Settings,
@@ -11,66 +10,67 @@ import {
   Instagram,
   Users,
   Timer,
-  Shuffle,
-  Plus
+  Palette,
+  Shirt,
+  Image as ImageIcon,
+  Loader2
 } from 'lucide-react';
+import { showToast } from '../../components/shared/Toast';
 
 const TeamSettings = () => {
   const [settings, setSettings] = useState({
-    teamName: '',
-    homeCourt: '',
+    name: '',
+    description: '',
+    logo_url: '',
+    primary_color: '#FF5733',
+    secondary_color: '#333333',
+    jersey_style: 'Solid',
+    home_court: '',
     phone: '',
     email: '',
     website: '',
-    social: {
-      twitter: '',
-      instagram: ''
-    },
-    competitionSettings: {
-      quarterDuration: 12, // minutes
+    twitter_handle: '',
+    instagram_handle: '',
+    competition_settings: {
+      quarterDuration: 12,
       maxTimeouts: 7,
       maxFouls: 6
     },
-    rosterSettings: {
+    roster_settings: {
       maxPlayers: 15,
       maxCoaches: 5,
       allowGuestPlayers: true
     }
   });
+
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+  const [saving, setSaving] = useState(false);
   const { isDarkMode } = useTheme();
 
   useEffect(() => {
-    const fetchSettings = async () => {
+    const fetchTeamData = async () => {
       try {
         setLoading(true);
-        setError('');
-        // Mock fetch or existing endpoint
-        // const response = await api.get('/team/settings');
-        // setSettings(response.data || settings);
-
-        // Mock data for now since backend might not match
-        setTimeout(() => {
+        const response = await adminAPI.getProfile();
+        if (response.data && response.data.organization) {
+          const org = response.data.organization;
           setSettings(prev => ({
             ...prev,
-            teamName: 'BAKO Analytics Demo Team',
-            homeCourt: 'Downtown Arena',
-            phone: '555-0123',
-            email: 'coach@bako-analytics.com'
+            ...org,
+            // Ensure nested objects are handled
+            competition_settings: org.competition_settings || prev.competition_settings,
+            roster_settings: org.roster_settings || prev.roster_settings
           }));
-          setLoading(false);
-        }, 500);
-
+        }
       } catch (error) {
-        console.error('Error fetching settings:', error);
-        setError('Failed to fetch team settings. Please try again later.');
+        console.error('Error fetching team profile:', error);
+        showToast('Failed to fetch team data', 'error');
+      } finally {
         setLoading(false);
       }
     };
 
-    fetchSettings();
+    fetchTeamData();
   }, []);
 
   const handleSettingChange = (field, value) => {
@@ -92,246 +92,306 @@ const TeamSettings = () => {
 
   const handleSaveSettings = async () => {
     try {
-      setLoading(true);
-      setError('');
-      setSuccessMessage('');
-
-      // Mock save
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      // await api.put('/team/settings', settings);
-
-      setSuccessMessage('Team settings saved successfully!');
+      setSaving(true);
+      // We send the data under "organization" key as expected by backend update_profile
+      await adminAPI.updateProfile({
+        organization: {
+          ...settings,
+          // Backend expects snake_case for most but let's be careful
+          // Values like twitter_handle are already snake_case in our state
+        }
+      });
+      showToast('Team profile updated successfully!', 'success');
     } catch (error) {
       console.error('Error saving settings:', error);
-      setError('Failed to save settings. Please try again later.');
+      showToast('Failed to save team profile', 'error');
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
   if (loading) {
     return (
       <div className={`flex items-center justify-center min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+        <Loader2 className="animate-spin h-12 w-12 text-orange-500" />
       </div>
     );
   }
 
-  const inputClassName = `w-full p-2 rounded-md ${isDarkMode
-    ? 'bg-gray-700 text-white border border-gray-600 focus:border-orange-500'
-    : 'bg-white text-gray-900 border border-gray-300 focus:border-orange-500'
-    } focus:ring-1 focus:ring-orange-500 outline-none transition-colors`;
+  const inputClassName = `w-full p-2.5 rounded-lg border transition-all outline-none focus:ring-2 focus:ring-orange-500/20 ${isDarkMode
+      ? 'bg-gray-700/50 border-gray-600 text-white focus:border-orange-500'
+      : 'bg-white border-gray-300 text-gray-900 focus:border-orange-500 shadow-sm'
+    }`;
 
-  const sectionClassName = `mb-6 p-6 rounded-lg shadow-sm ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`;
-  const headerClassName = "flex items-center space-x-2 mb-4 text-lg font-semibold";
+  const sectionClassName = `mb-8 p-6 rounded-2xl border ${isDarkMode
+      ? 'bg-gray-800/50 border-gray-700 shadow-xl'
+      : 'bg-white border-gray-100 shadow-md'
+    }`;
+
+  const labelClassName = `block text-sm font-semibold mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`;
 
   return (
-    <div className={`min-h-screen p-6 ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
-      <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
+    <div className={`min-h-screen p-4 md:p-8 ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
+      <div className="max-w-5xl mx-auto">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
-            <h1 className="text-2xl font-bold">Team Settings</h1>
-            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Manage your team details and preferences</p>
+            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-500 to-red-600">
+              Team Profile
+            </h1>
+            <p className={`mt-1 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              Manage your team's public identity and competition rules
+            </p>
           </div>
           <button
             onClick={handleSaveSettings}
-            className={`flex items-center space-x-2 px-6 py-2.5 rounded-full font-medium shadow-lg transition-transform hover:scale-105 ${isDarkMode
-              ? 'bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white'
-              : 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white'
+            disabled={saving}
+            className={`flex items-center space-x-2 px-8 py-3 rounded-xl font-bold transition-all transform active:scale-95 disabled:opacity-50 shadow-lg ${isDarkMode
+                ? 'bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white'
+                : 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white'
               }`}
           >
-            <Save className="h-4 w-4" />
-            <span>Save Changes</span>
+            {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
+            <span>{saving ? 'Saving...' : 'Save Profile'}</span>
           </button>
         </div>
 
-        {error && (
-          <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg border border-red-200">
-            {error}
-          </div>
-        )}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column: Core Identity */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Identity Section */}
+            <div className={sectionClassName}>
+              <div className="flex items-center space-x-2 mb-6">
+                <Settings className="h-6 w-6 text-orange-500" />
+                <h2 className="text-xl font-bold">General Information</h2>
+              </div>
 
-        {successMessage && (
-          <div className="mb-4 p-4 bg-green-100 text-green-700 rounded-lg border border-green-200">
-            {successMessage}
-          </div>
-        )}
+              <div className="space-y-6">
+                <div>
+                  <label className={labelClassName}>Team Name</label>
+                  <input
+                    type="text"
+                    value={settings.name}
+                    onChange={(e) => handleSettingChange('name', e.target.value)}
+                    className={inputClassName}
+                    placeholder="e.g. BAKO Analytics Pro"
+                  />
+                </div>
 
-        {/* Team Management Note */}
-        <div className={`p-6 rounded-lg mb-6 border-l-4 border-orange-500 ${isDarkMode ? 'bg-gray-800' : 'bg-white shadow-md'}`}>
-          <h2 className={`text-xl font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-            Account Management
-          </h2>
-          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            Your account is linked to your primary team organization. To personalize your team's visual identity (colors, logo, jerseys), please visit the <Link to="/team/profile" className="text-orange-500 hover:underline">Team Profile</Link>.
-          </p>
-        </div>
-        {/* Basic Information */}
-        <div className={sectionClassName}>
-          <div className={headerClassName}>
-            <Settings className="h-5 w-5 text-orange-500" />
-            <h2>Team Identity</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="col-span-2">
-              <label className="block text-sm font-medium mb-2">Team Name</label>
-              <input
-                type="text"
-                value={settings.teamName}
-                onChange={(e) => handleSettingChange('teamName', e.target.value)}
-                className={inputClassName}
-                placeholder="e.g. Golden State Warriors"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2 flex items-center">
-                <MapPin size={16} className="mr-1 text-gray-400" /> Home Court / Arena
-              </label>
-              <input
-                type="text"
-                value={settings.homeCourt}
-                onChange={(e) => handleSettingChange('homeCourt', e.target.value)}
-                className={inputClassName}
-                placeholder="e.g. Chase Center"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2 flex items-center">
-                <Globe size={16} className="mr-1 text-gray-400" /> Website
-              </label>
-              <input
-                type="url"
-                value={settings.website}
-                onChange={(e) => handleSettingChange('website', e.target.value)}
-                className={inputClassName}
-                placeholder="https://..."
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Official Email</label>
-              <input
-                type="email"
-                value={settings.email}
-                onChange={(e) => handleSettingChange('email', e.target.value)}
-                className={inputClassName}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Contact Phone</label>
-              <input
-                type="tel"
-                value={settings.phone}
-                onChange={(e) => handleSettingChange('phone', e.target.value)}
-                className={inputClassName}
-              />
-            </div>
-          </div>
-        </div>
+                <div>
+                  <label className={labelClassName}>Team Description</label>
+                  <textarea
+                    value={settings.description}
+                    onChange={(e) => handleSettingChange('description', e.target.value)}
+                    rows={3}
+                    className={inputClassName}
+                    placeholder="Tell the world about your team..."
+                  />
+                </div>
 
-        {/* Social Media */}
-        <div className={sectionClassName}>
-          <div className={headerClassName}>
-            <Globe className="h-5 w-5 text-blue-400" />
-            <h2>Social Presence</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium mb-2 flex items-center">
-                <Twitter size={16} className="mr-1 text-blue-400" /> Twitter Handle
-              </label>
-              <input
-                type="text"
-                value={settings.social.twitter}
-                onChange={(e) => handleNestedChange('social', 'twitter', e.target.value)}
-                className={inputClassName}
-                placeholder="@teamhandle"
-              />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className={labelClassName}>
+                      <MapPin size={16} className="inline mr-1 text-orange-500" /> Home Court
+                    </label>
+                    <input
+                      type="text"
+                      value={settings.home_court || ''}
+                      onChange={(e) => handleSettingChange('home_court', e.target.value)}
+                      className={inputClassName}
+                      placeholder="e.g. Madison Square Garden"
+                    />
+                  </div>
+                  <div>
+                    <label className={labelClassName}>
+                      <Globe size={16} className="inline mr-1 text-blue-500" /> Website
+                    </label>
+                    <input
+                      type="url"
+                      value={settings.website || ''}
+                      onChange={(e) => handleSettingChange('website', e.target.value)}
+                      className={inputClassName}
+                      placeholder="https://team-site.com"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-2 flex items-center">
-                <Instagram size={16} className="mr-1 text-pink-500" /> Instagram Handle
-              </label>
-              <input
-                type="text"
-                value={settings.social.instagram}
-                onChange={(e) => handleNestedChange('social', 'instagram', e.target.value)}
-                className={inputClassName}
-                placeholder="@teamhandle"
-              />
-            </div>
-          </div>
-        </div>
 
-        {/* Competition Settings */}
-        <div className={sectionClassName}>
-          <div className={headerClassName}>
-            <Timer className="h-5 w-5 text-red-500" />
-            <h2>Competition Rules</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <label className="block text-sm font-medium mb-2">Quarter Duration (mins)</label>
-              <input
-                type="number"
-                value={settings.competitionSettings.quarterDuration}
-                onChange={(e) => handleNestedChange('competitionSettings', 'quarterDuration', parseInt(e.target.value))}
-                className={inputClassName}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Max Timeouts</label>
-              <input
-                type="number"
-                value={settings.competitionSettings.maxTimeouts}
-                onChange={(e) => handleNestedChange('competitionSettings', 'maxTimeouts', parseInt(e.target.value))}
-                className={inputClassName}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Fouls Limit</label>
-              <input
-                type="number"
-                value={settings.competitionSettings.maxFouls}
-                onChange={(e) => handleNestedChange('competitionSettings', 'maxFouls', parseInt(e.target.value))}
-                className={inputClassName}
-              />
-            </div>
-          </div>
-        </div>
+            {/* Visual Identity Section */}
+            <div className={sectionClassName}>
+              <div className="flex items-center space-x-2 mb-6">
+                <Palette className="h-6 w-6 text-purple-500" />
+                <h2 className="text-xl font-bold">Visual Identity</h2>
+              </div>
 
-        {/* Roster Settings */}
-        <div className={sectionClassName}>
-          <div className={headerClassName}>
-            <Users className="h-5 w-5 text-green-500" />
-            <h2>Roster Limits</h2>
+              <div className="space-y-6">
+                <div>
+                  <label className={labelClassName}>
+                    <ImageIcon size={16} className="inline mr-1 text-gray-400" /> Logo URL
+                  </label>
+                  <input
+                    type="url"
+                    value={settings.logo_url || ''}
+                    onChange={(e) => handleSettingChange('logo_url', e.target.value)}
+                    className={inputClassName}
+                    placeholder="https://..."
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
+                    <label className={labelClassName}>Primary Color</label>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="color"
+                        value={settings.primary_color || '#FF5733'}
+                        onChange={(e) => handleSettingChange('primary_color', e.target.value)}
+                        className="h-10 w-full rounded-lg cursor-pointer border-none p-1 bg-transparent"
+                      />
+                      <span className="text-xs font-mono">{settings.primary_color}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className={labelClassName}>Secondary Color</label>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="color"
+                        value={settings.secondary_color || '#333333'}
+                        onChange={(e) => handleSettingChange('secondary_color', e.target.value)}
+                        className="h-10 w-full rounded-lg cursor-pointer border-none p-1 bg-transparent"
+                      />
+                      <span className="text-xs font-mono">{settings.secondary_color}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className={labelClassName}>
+                      <Shirt size={16} className="inline mr-1 text-indigo-500" /> Jersey Style
+                    </label>
+                    <select
+                      value={settings.jersey_style || 'Solid'}
+                      onChange={(e) => handleSettingChange('jersey_style', e.target.value)}
+                      className={inputClassName}
+                    >
+                      <option value="Solid">Solid</option>
+                      <option value="Striped">Striped</option>
+                      <option value="Gradient">Gradient</option>
+                      <option value="Minimal">Minimalist</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Contact & Social Section */}
+            <div className={sectionClassName}>
+              <div className="flex items-center space-x-2 mb-6">
+                <Globe className="h-6 w-6 text-green-500" />
+                <h2 className="text-xl font-bold">Connect</h2>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className={labelClassName}>Official Email</label>
+                  <input
+                    type="email"
+                    value={settings.email || ''}
+                    onChange={(e) => handleSettingChange('email', e.target.value)}
+                    className={inputClassName}
+                  />
+                </div>
+                <div>
+                  <label className={labelClassName}>Contact Phone</label>
+                  <input
+                    type="tel"
+                    value={settings.phone || ''}
+                    onChange={(e) => handleSettingChange('phone', e.target.value)}
+                    className={inputClassName}
+                  />
+                </div>
+                <div>
+                  <label className={labelClassName}>
+                    <Twitter size={16} className="inline mr-1 text-blue-400" /> Twitter Handle
+                  </label>
+                  <input
+                    type="text"
+                    value={settings.twitter_handle || ''}
+                    onChange={(e) => handleSettingChange('twitter_handle', e.target.value)}
+                    className={inputClassName}
+                    placeholder="@teamhandle"
+                  />
+                </div>
+                <div>
+                  <label className={labelClassName}>
+                    <Instagram size={16} className="inline mr-1 text-pink-500" /> Instagram Handle
+                  </label>
+                  <input
+                    type="text"
+                    value={settings.instagram_handle || ''}
+                    onChange={(e) => handleSettingChange('instagram_handle', e.target.value)}
+                    className={inputClassName}
+                    placeholder="@teamhandle"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <label className="block text-sm font-medium mb-2">Max Players</label>
-              <input
-                type="number"
-                value={settings.rosterSettings.maxPlayers}
-                onChange={(e) => handleNestedChange('rosterSettings', 'maxPlayers', parseInt(e.target.value))}
-                className={inputClassName}
-              />
+
+          {/* Right Column: Rules & Limits */}
+          <div className="space-y-8">
+            <div className={sectionClassName}>
+              <div className="flex items-center space-x-2 mb-6">
+                <Timer className="h-6 w-6 text-red-500" />
+                <h2 className="text-xl font-bold">Matches</h2>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className={labelClassName}>Quarter Duration (mins)</label>
+                  <input
+                    type="number"
+                    value={settings.competition_settings.quarterDuration}
+                    onChange={(e) => handleNestedChange('competition_settings', 'quarterDuration', parseInt(e.target.value))}
+                    className={inputClassName}
+                  />
+                </div>
+                <div>
+                  <label className={labelClassName}>Max Timeouts</label>
+                  <input
+                    type="number"
+                    value={settings.competition_settings.maxTimeouts}
+                    onChange={(e) => handleNestedChange('competition_settings', 'maxTimeouts', parseInt(e.target.value))}
+                    className={inputClassName}
+                  />
+                </div>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Max Coaches</label>
-              <input
-                type="number"
-                value={settings.rosterSettings.maxCoaches}
-                onChange={(e) => handleNestedChange('rosterSettings', 'maxCoaches', parseInt(e.target.value))}
-                className={inputClassName}
-              />
-            </div>
-            <div className="flex items-center justify-between p-2">
-              <label className="block text-sm font-medium">Allow Guest Players</label>
-              <input
-                type="checkbox"
-                checked={settings.rosterSettings.allowGuestPlayers}
-                onChange={(e) => handleNestedChange('rosterSettings', 'allowGuestPlayers', e.target.checked)}
-                className="h-5 w-5 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
-              />
+
+            <div className={sectionClassName}>
+              <div className="flex items-center space-x-2 mb-6">
+                <Users className="h-6 w-6 text-indigo-500" />
+                <h2 className="text-xl font-bold">Roster</h2>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className={labelClassName}>Max Players</label>
+                  <input
+                    type="number"
+                    value={settings.roster_settings.maxPlayers}
+                    onChange={(e) => handleNestedChange('roster_settings', 'maxPlayers', parseInt(e.target.value))}
+                    className={inputClassName}
+                  />
+                </div>
+                <div className="flex items-center justify-between pt-2">
+                  <span className="font-medium">Allow Guest Players</span>
+                  <button
+                    onClick={() => handleNestedChange('roster_settings', 'allowGuestPlayers', !settings.roster_settings.allowGuestPlayers)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${settings.roster_settings.allowGuestPlayers ? 'bg-orange-500' : 'bg-gray-400'
+                      }`}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings.roster_settings.allowGuestPlayers ? 'translate-x-6' : 'translate-x-1'
+                      }`} />
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -340,4 +400,4 @@ const TeamSettings = () => {
   );
 };
 
-export default TeamSettings; 
+export default TeamSettings;
