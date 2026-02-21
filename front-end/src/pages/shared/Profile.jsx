@@ -18,8 +18,10 @@ import {
   Bell,
   Globe,
   Lock,
-  ChevronRight
+  ChevronRight,
+  CheckCircle
 } from 'lucide-react';
+import { showToast } from '@/components/shared/Toast';
 
 const Profile = () => {
   const { user, updateUser } = useAuth();
@@ -42,6 +44,13 @@ const Profile = () => {
       language: 'en',
       timezone: 'UTC',
       privacy: 'public'
+    },
+    team: {
+      name: '',
+      logoUrl: '',
+      primaryColor: '#FF5733',
+      secondaryColor: '#333333',
+      jerseyStyle: 'Solid'
     }
   });
 
@@ -60,6 +69,13 @@ const Profile = () => {
           language: 'en',
           timezone: 'UTC',
           privacy: 'public'
+        },
+        team: user.team || {
+          name: user.full_name || '',
+          logoUrl: '',
+          primaryColor: '#FF5733',
+          secondaryColor: '#333333',
+          jerseyStyle: 'Solid'
         }
       });
     }
@@ -82,19 +98,32 @@ const Profile = () => {
     }));
   };
 
+  const handleTeamChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      team: {
+        ...prev.team,
+        [field]: value
+      }
+    }));
+  };
+
   const handleSave = async () => {
     try {
       setLoading(true);
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Update user and organization via context
+      const result = await updateUser(formData);
 
-      // Update user context
-      await updateUser(formData);
-
-      setIsEditing(false);
+      if (result.success) {
+        showToast('Profile and organization updated successfully!', 'success');
+        setIsEditing(false);
+      } else {
+        showToast(result.error || 'Failed to update profile', 'error');
+      }
     } catch (error) {
       console.error('Error updating profile:', error);
+      showToast('An unexpected error occurred', 'error');
     } finally {
       setLoading(false);
     }
@@ -115,6 +144,13 @@ const Profile = () => {
           language: 'en',
           timezone: 'UTC',
           privacy: 'public'
+        },
+        team: user.team || {
+          name: user.full_name || '',
+          logoUrl: '',
+          primaryColor: '#FF5733',
+          secondaryColor: '#333333',
+          jerseyStyle: 'Solid'
         }
       });
     }
@@ -130,21 +166,21 @@ const Profile = () => {
   };
 
   const getRoleSpecificContent = () => {
-    if (user?.role === 'team') {
+    if (user?.role === 'team' || user?.role === 'coach') {
       return {
-        title: 'Team Profile',
-        subtitle: 'Manage your team organization and settings',
+        title: user?.role === 'coach' ? 'Coach Profile' : 'Team Profile',
+        subtitle: user?.role === 'coach' ? 'Manage your personal coach details' : 'Manage your team organization and settings',
         additionalInfo: (
           <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
-            <h3 className={`font-semibold mb-3 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Team Statistics</h3>
+            <h3 className={`font-semibold mb-3 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{user?.role === 'coach' ? 'Coaching Roles' : 'Team Statistics'}</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Team Members</p>
-                <p className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{user.teamMembers || 12}</p>
+                <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{user?.role === 'coach' ? 'Current Team' : 'Team Members'}</p>
+                <p className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{user?.role === 'coach' ? (user.team?.name || 'Linked Team') : (user.teamMembers || 12)}</p>
               </div>
               <div>
-                <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Active Players</p>
-                <p className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{user.activePlayers || 10}</p>
+                <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{user?.role === 'coach' ? 'Specialization' : 'Active Players'}</p>
+                <p className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{user?.role === 'coach' ? 'Head Coach' : (user.activePlayers || 10)}</p>
               </div>
             </div>
           </div>
@@ -229,6 +265,11 @@ const Profile = () => {
                     }`}>
                     Team Account
                   </span>
+                ) : user?.role === 'coach' ? (
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${isDarkMode ? 'bg-orange-900 text-orange-300' : 'bg-orange-100 text-orange-700'
+                    }`}>
+                    Coach Account
+                  </span>
                 ) : (
                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${isDarkMode ? 'bg-green-900 text-green-300' : 'bg-green-100 text-green-700'
                     }`}>
@@ -237,7 +278,7 @@ const Profile = () => {
                 )}
               </div>
               <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                {user?.role === 'team' ? 'Team Manager' : 'Basketball Player'}
+                {user?.role === 'team' ? 'Team Manager' : user?.role === 'coach' ? 'Team Coach' : 'Basketball Player'}
               </p>
             </div>
 
@@ -247,8 +288,8 @@ const Profile = () => {
                 <button
                   onClick={() => setIsEditing(true)}
                   className={`flex items-center px-4 py-2 rounded-lg ${isDarkMode
-                      ? 'bg-orange-600 hover:bg-orange-700 text-white'
-                      : 'bg-orange-500 hover:bg-orange-600 text-white'
+                    ? 'bg-orange-600 hover:bg-orange-700 text-white'
+                    : 'bg-orange-500 hover:bg-orange-600 text-white'
                     } transition-colors`}
                 >
                   <Edit className="w-4 h-4 mr-2" />
@@ -260,10 +301,10 @@ const Profile = () => {
                     onClick={handleSave}
                     disabled={loading}
                     className={`flex items-center px-4 py-2 rounded-lg ${loading
-                        ? 'bg-gray-400 cursor-not-allowed'
-                        : isDarkMode
-                          ? 'bg-green-600 hover:bg-green-700 text-white'
-                          : 'bg-green-500 hover:bg-green-600 text-white'
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : isDarkMode
+                        ? 'bg-green-600 hover:bg-green-700 text-white'
+                        : 'bg-green-500 hover:bg-green-600 text-white'
                       } transition-colors`}
                   >
                     <Save className="w-4 h-4 mr-2" />
@@ -272,8 +313,8 @@ const Profile = () => {
                   <button
                     onClick={handleCancel}
                     className={`flex items-center px-4 py-2 rounded-lg ${isDarkMode
-                        ? 'bg-gray-600 hover:bg-gray-700 text-white'
-                        : 'bg-gray-500 hover:bg-gray-600 text-white'
+                      ? 'bg-gray-600 hover:bg-gray-700 text-white'
+                      : 'bg-gray-500 hover:bg-gray-600 text-white'
                       } transition-colors`}
                   >
                     <X className="w-4 h-4 mr-2" />
@@ -288,20 +329,20 @@ const Profile = () => {
         {/* Tabs */}
         <div className="mb-6">
           <div className="flex space-x-1 border-b border-gray-200">
-            {['personal', 'preferences', 'security'].map((tab) => (
+            {['personal', (user?.role === 'team' || (user?.role === 'coach' && user.organizationId)) ? 'team' : null, 'preferences', 'security'].filter(Boolean).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`px-4 py-2 font-medium transition-colors ${activeTab === tab
-                    ? isDarkMode
-                      ? 'text-orange-400 border-b-2 border-orange-400'
-                      : 'text-orange-600 border-b-2 border-orange-600'
-                    : isDarkMode
-                      ? 'text-gray-400 hover:text-gray-300'
-                      : 'text-gray-600 hover:text-gray-800'
+                  ? isDarkMode
+                    ? 'text-orange-400 border-b-2 border-orange-400'
+                    : 'text-orange-600 border-b-2 border-orange-600'
+                  : isDarkMode
+                    ? 'text-gray-400 hover:text-gray-300'
+                    : 'text-gray-600 hover:text-gray-800'
                   }`}
               >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                {tab === 'team' ? 'Team Identity' : tab.charAt(0).toUpperCase() + tab.slice(1)}
               </button>
             ))}
           </div>
@@ -309,6 +350,99 @@ const Profile = () => {
 
         {/* Tab Content */}
         <div className={`rounded-xl shadow-lg p-6 mb-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+          {activeTab === 'team' && (user?.role === 'team' || user?.role === 'coach') && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="md:col-span-2">
+                <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Organization / Team Name
+                </label>
+                <input
+                  type="text"
+                  value={formData.team.name}
+                  onChange={(e) => handleTeamChange('name', e.target.value)}
+                  disabled={!isEditing}
+                  className={`w-full px-3 py-2 rounded-lg border ${isDarkMode
+                    ? 'bg-gray-700 border-gray-600 text-white'
+                    : 'bg-white border-gray-300 text-gray-900'
+                    } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Primary Team Color
+                </label>
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="color"
+                    value={formData.team.primaryColor}
+                    onChange={(e) => handleTeamChange('primaryColor', e.target.value)}
+                    disabled={!isEditing}
+                    className={`h-10 w-20 p-1 rounded border ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'} ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  />
+                  <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{formData.team.primaryColor}</span>
+                </div>
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Secondary Team Color
+                </label>
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="color"
+                    value={formData.team.secondaryColor}
+                    onChange={(e) => handleTeamChange('secondaryColor', e.target.value)}
+                    disabled={!isEditing}
+                    className={`h-10 w-20 p-1 rounded border ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'} ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  />
+                  <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{formData.team.secondaryColor}</span>
+                </div>
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Jersey Style
+                </label>
+                <select
+                  value={formData.team.jerseyStyle}
+                  onChange={(e) => handleTeamChange('jerseyStyle', e.target.value)}
+                  disabled={!isEditing}
+                  className={`w-full px-3 py-2 rounded-lg border ${isDarkMode
+                    ? 'bg-gray-700 border-gray-600 text-white'
+                    : 'bg-white border-gray-300 text-gray-900'
+                    } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <option value="Solid">Solid</option>
+                  <option value="Striped">Striped</option>
+                  <option value="Gradient">Gradient</option>
+                  <option value="Camo">Camouflage</option>
+                  <option value="Minimal">Minimalist</option>
+                </select>
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Team Logo URL
+                </label>
+                <div className="relative">
+                  <Globe className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                  <input
+                    type="url"
+                    value={formData.team.logoUrl}
+                    onChange={(e) => handleTeamChange('logoUrl', e.target.value)}
+                    disabled={!isEditing}
+                    placeholder="https://example.com/logo.png"
+                    className={`w-full pl-10 pr-3 py-2 rounded-lg border ${isDarkMode
+                      ? 'bg-gray-700 border-gray-600 text-white'
+                      : 'bg-white border-gray-300 text-gray-900'
+                      } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
           {activeTab === 'personal' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -321,8 +455,8 @@ const Profile = () => {
                   onChange={(e) => handleInputChange('firstName', e.target.value)}
                   disabled={!isEditing}
                   className={`w-full px-3 py-2 rounded-lg border ${isDarkMode
-                      ? 'bg-gray-700 border-gray-600 text-white'
-                      : 'bg-white border-gray-300 text-gray-900'
+                    ? 'bg-gray-700 border-gray-600 text-white'
+                    : 'bg-white border-gray-300 text-gray-900'
                     } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
                 />
               </div>
@@ -337,8 +471,8 @@ const Profile = () => {
                   onChange={(e) => handleInputChange('lastName', e.target.value)}
                   disabled={!isEditing}
                   className={`w-full px-3 py-2 rounded-lg border ${isDarkMode
-                      ? 'bg-gray-700 border-gray-600 text-white'
-                      : 'bg-white border-gray-300 text-gray-900'
+                    ? 'bg-gray-700 border-gray-600 text-white'
+                    : 'bg-white border-gray-300 text-gray-900'
                     } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
                 />
               </div>
@@ -355,8 +489,8 @@ const Profile = () => {
                     onChange={(e) => handleInputChange('email', e.target.value)}
                     disabled={!isEditing}
                     className={`w-full pl-10 pr-3 py-2 rounded-lg border ${isDarkMode
-                        ? 'bg-gray-700 border-gray-600 text-white'
-                        : 'bg-white border-gray-300 text-gray-900'
+                      ? 'bg-gray-700 border-gray-600 text-white'
+                      : 'bg-white border-gray-300 text-gray-900'
                       } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
                   />
                 </div>
@@ -374,8 +508,8 @@ const Profile = () => {
                     onChange={(e) => handleInputChange('phone', e.target.value)}
                     disabled={!isEditing}
                     className={`w-full pl-10 pr-3 py-2 rounded-lg border ${isDarkMode
-                        ? 'bg-gray-700 border-gray-600 text-white'
-                        : 'bg-white border-gray-300 text-gray-900'
+                      ? 'bg-gray-700 border-gray-600 text-white'
+                      : 'bg-white border-gray-300 text-gray-900'
                       } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
                   />
                 </div>
@@ -393,8 +527,8 @@ const Profile = () => {
                     onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
                     disabled={!isEditing}
                     className={`w-full pl-10 pr-3 py-2 rounded-lg border ${isDarkMode
-                        ? 'bg-gray-700 border-gray-600 text-white'
-                        : 'bg-white border-gray-300 text-gray-900'
+                      ? 'bg-gray-700 border-gray-600 text-white'
+                      : 'bg-white border-gray-300 text-gray-900'
                       } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
                   />
                 </div>
@@ -413,8 +547,8 @@ const Profile = () => {
                     disabled={!isEditing}
                     placeholder="City, Country"
                     className={`w-full pl-10 pr-3 py-2 rounded-lg border ${isDarkMode
-                        ? 'bg-gray-700 border-gray-600 text-white'
-                        : 'bg-white border-gray-300 text-gray-900'
+                      ? 'bg-gray-700 border-gray-600 text-white'
+                      : 'bg-white border-gray-300 text-gray-900'
                       } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
                   />
                 </div>
@@ -431,8 +565,8 @@ const Profile = () => {
                   rows={3}
                   placeholder="Tell us about yourself..."
                   className={`w-full px-3 py-2 rounded-lg border ${isDarkMode
-                      ? 'bg-gray-700 border-gray-600 text-white'
-                      : 'bg-white border-gray-300 text-gray-900'
+                    ? 'bg-gray-700 border-gray-600 text-white'
+                    : 'bg-white border-gray-300 text-gray-900'
                     } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
                 />
               </div>
@@ -449,8 +583,8 @@ const Profile = () => {
                 <button
                   onClick={() => handlePreferenceChange('notifications', !formData.preferences.notifications)}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.preferences.notifications
-                      ? 'bg-orange-500'
-                      : 'bg-gray-300'
+                    ? 'bg-orange-500'
+                    : 'bg-gray-300'
                     }`}
                 >
                   <span
@@ -468,8 +602,8 @@ const Profile = () => {
                   value={formData.preferences.language}
                   onChange={(e) => handlePreferenceChange('language', e.target.value)}
                   className={`w-full px-3 py-2 rounded-lg border ${isDarkMode
-                      ? 'bg-gray-700 border-gray-600 text-white'
-                      : 'bg-white border-gray-300 text-gray-900'
+                    ? 'bg-gray-700 border-gray-600 text-white'
+                    : 'bg-white border-gray-300 text-gray-900'
                     }`}
                 >
                   <option value="en">English</option>
@@ -487,8 +621,8 @@ const Profile = () => {
                   value={formData.preferences.timezone}
                   onChange={(e) => handlePreferenceChange('timezone', e.target.value)}
                   className={`w-full px-3 py-2 rounded-lg border ${isDarkMode
-                      ? 'bg-gray-700 border-gray-600 text-white'
-                      : 'bg-white border-gray-300 text-gray-900'
+                    ? 'bg-gray-700 border-gray-600 text-white'
+                    : 'bg-white border-gray-300 text-gray-900'
                     }`}
                 >
                   <option value="UTC">UTC</option>
@@ -506,8 +640,8 @@ const Profile = () => {
                   value={formData.preferences.privacy}
                   onChange={(e) => handlePreferenceChange('privacy', e.target.value)}
                   className={`w-full px-3 py-2 rounded-lg border ${isDarkMode
-                      ? 'bg-gray-700 border-gray-600 text-white'
-                      : 'bg-white border-gray-300 text-gray-900'
+                    ? 'bg-gray-700 border-gray-600 text-white'
+                    : 'bg-white border-gray-300 text-gray-900'
                     }`}
                 >
                   <option value="public">Public</option>
@@ -530,8 +664,8 @@ const Profile = () => {
                     type="password"
                     placeholder="Enter current password"
                     className={`w-full pl-10 pr-3 py-2 rounded-lg border ${isDarkMode
-                        ? 'bg-gray-700 border-gray-600 text-white'
-                        : 'bg-white border-gray-300 text-gray-900'
+                      ? 'bg-gray-700 border-gray-600 text-white'
+                      : 'bg-white border-gray-300 text-gray-900'
                       }`}
                   />
                 </div>
@@ -547,8 +681,8 @@ const Profile = () => {
                     type="password"
                     placeholder="Enter new password"
                     className={`w-full pl-10 pr-3 py-2 rounded-lg border ${isDarkMode
-                        ? 'bg-gray-700 border-gray-600 text-white'
-                        : 'bg-white border-gray-300 text-gray-900'
+                      ? 'bg-gray-700 border-gray-600 text-white'
+                      : 'bg-white border-gray-300 text-gray-900'
                       }`}
                   />
                 </div>
@@ -564,16 +698,16 @@ const Profile = () => {
                     type="password"
                     placeholder="Confirm new password"
                     className={`w-full pl-10 pr-3 py-2 rounded-lg border ${isDarkMode
-                        ? 'bg-gray-700 border-gray-600 text-white'
-                        : 'bg-white border-gray-300 text-gray-900'
+                      ? 'bg-gray-700 border-gray-600 text-white'
+                      : 'bg-white border-gray-300 text-gray-900'
                       }`}
                   />
                 </div>
               </div>
 
               <button className={`flex items-center px-4 py-2 rounded-lg ${isDarkMode
-                  ? 'bg-orange-600 hover:bg-orange-700 text-white'
-                  : 'bg-orange-500 hover:bg-orange-600 text-white'
+                ? 'bg-orange-600 hover:bg-orange-700 text-white'
+                : 'bg-orange-500 hover:bg-orange-600 text-white'
                 } transition-colors`}>
                 <Shield className="w-4 h-4 mr-2" />
                 Update Password

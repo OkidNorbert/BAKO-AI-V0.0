@@ -157,35 +157,15 @@ const TeamSettings = () => {
           </div>
         )}
 
-        {/* Team Management Actions */}
-        <div className={`p-6 rounded-lg mb-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white shadow-md'}`}>
-          <h2 className={`text-xl font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-            Team Management
+        {/* Team Management Note */}
+        <div className={`p-6 rounded-lg mb-6 border-l-4 border-orange-500 ${isDarkMode ? 'bg-gray-800' : 'bg-white shadow-md'}`}>
+          <h2 className={`text-xl font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            Account Management
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Link
-              to="/team/settings/team"
-              className={`flex items-center justify-center p-4 rounded-lg transition-colors ${isDarkMode
-                ? 'bg-orange-600 hover:bg-orange-700 text-white'
-                : 'bg-orange-500 hover:bg-orange-600 text-white'
-                }`}
-            >
-              <Plus className="mr-2" size={20} />
-              Create New Team
-            </Link>
-            <Link
-              to="/team/settings/team/edit/current"
-              className={`flex items-center justify-center p-4 rounded-lg transition-colors ${isDarkMode
-                ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                : 'bg-blue-500 hover:bg-blue-600 text-white'
-                }`}
-            >
-              <Settings className="mr-2" size={20} />
-              Edit Current Team
-            </Link>
-          </div>
+          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            Your account is linked to your primary team organization. To personalize your team's visual identity (colors, logo, jerseys), please visit the <Link to="/team/profile" className="text-orange-500 hover:underline">Team Profile</Link>.
+          </p>
         </div>
-
         {/* Basic Information */}
         <div className={sectionClassName}>
           <div className={headerClassName}>

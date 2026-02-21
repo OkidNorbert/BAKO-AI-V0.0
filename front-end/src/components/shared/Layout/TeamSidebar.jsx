@@ -9,22 +9,29 @@ import {
   Settings,
   BarChart2,
   Shield,
-  Trophy
+  Trophy,
+  MessageSquare
 } from 'lucide-react';
-
+import { useAuth } from '../../../context/AuthContext';
 
 const AdminSidebar = ({ isOpen }) => {
   const { isDarkMode } = useTheme();
+  const { user } = useAuth();
+
+  const isCoach = user?.role === 'coach';
+  const isOwner = user?.role === 'team';
+  const isLinked = !!user?.organizationId;
 
   const menuItems = [
-    { path: '/team/dashboard', icon: Home, label: 'Dashboard', color: 'from-blue-500 to-indigo-600' },
-    { path: '/team/roster', icon: Users, label: 'Team Roster', color: 'from-purple-500 to-violet-600' },
-    { path: '/team/matches', icon: Video, label: 'Match Analysis', color: 'from-orange-400 to-pink-500' },
-    { path: '/team/schedule', icon: Calendar, label: 'Schedule', color: 'from-yellow-400 to-amber-600' },
-    { path: '/team/reports', icon: BarChart2, label: 'Reports & Analytics', color: 'from-gray-500 to-gray-600' },
-    { path: '/team/settings', icon: Settings, label: 'Settings', color: 'from-purple-500 to-indigo-700' }
-  ];
-
+    { path: '/team/dashboard', icon: Home, label: 'Dashboard', color: 'from-blue-500 to-indigo-600', show: true },
+    { path: '/team/roster', icon: Users, label: 'Team Roster', color: 'from-purple-500 to-violet-600', show: isLinked },
+    { path: '/team/staff', icon: Shield, label: 'Coaching Staff', color: 'from-indigo-500 to-blue-600', show: isOwner && isLinked },
+    { path: '/team/announcements', icon: MessageSquare, label: 'Announcements', color: 'from-green-500 to-emerald-600', show: isLinked },
+    { path: '/team/matches', icon: Video, label: 'Match Analysis', color: 'from-orange-400 to-pink-500', show: isLinked },
+    { path: '/team/schedule', icon: Calendar, label: 'Schedule', color: 'from-yellow-400 to-amber-600', show: isLinked },
+    { path: '/team/reports', icon: BarChart2, label: 'Reports & Analytics', color: 'from-gray-500 to-gray-600', show: isLinked },
+    { path: '/team/settings', icon: Settings, label: 'Settings', color: 'from-purple-500 to-indigo-700', show: isOwner || !isLinked }
+  ].filter(item => item.show);
   return (
     <aside className={`fixed top-0 left-0 z-40 h-screen transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'
       } w-64 ${isDarkMode

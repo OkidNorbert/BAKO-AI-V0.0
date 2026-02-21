@@ -158,31 +158,40 @@ async def upload_video(
     
     # Validate team analysis requirements
     if analysis_mode == AnalysisMode.TEAM:
-        if current_user.get("account_type") != "team":
+        allowed_types = [AccountType.TEAM.value, AccountType.COACH.value]
+        if current_user.get("account_type") not in allowed_types:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Team analysis requires a TEAM account"
+                detail="Team analysis requires a TEAM or COACH account"
             )
+        
+        # Determine the user's organization context
+        user_org_id = current_user.get("organization_id")
+        
+        # If the user is a team manager but organization_id isn't in token (unlikely but safe check)
+        if not user_org_id and current_user.get("account_type") == AccountType.TEAM.value:
+            orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
+            if orgs:
+                user_org_id = str(orgs[0]["id"])
+
+        if not organization_id:
+            organization_id = user_org_id
+
         if not organization_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="organization_id is required for TEAM analysis"
+                detail="organization_id is required and you are not linked to any organization"
             )
-        # Verify org ownership
-        import uuid
-        try:
-            uuid.UUID(str(organization_id))
-        except ValueError:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid organization_id format"
-            )
-        org = await supabase.select_one("organizations", str(organization_id))
-        if not org or org.get("owner_id") != current_user["id"]:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have access to this organization"
-            )
+            
+        # Verify org access
+        if str(organization_id) != str(user_org_id):
+            # For robustness, if it's a team account, double check org ownership if the ID doesn't match token
+            if current_user.get("account_type") == AccountType.TEAM.value:
+                org = await supabase.select_one("organizations", str(organization_id))
+                if not org or org.get("owner_id") != current_user["id"]:
+                    raise HTTPException(status_code= status.HTTP_403_FORBIDDEN, detail="Access denied to this organization")
+            else:
+                 raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You can only upload to your linked organization")
     
     # Generate unique filename and save. We never trust the original name for paths.
     video_id = str(uuid4())

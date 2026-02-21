@@ -6,15 +6,46 @@ from datetime import datetime
 from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from app.dependencies import require_team_account, get_supabase, get_current_user
+from app.dependencies import (
+    get_supabase, 
+    get_current_user,
+    require_team_account, 
+    require_organization_admin,
+    require_staff_member,
+    require_linked_account
+)
 from app.services.supabase_client import SupabaseService
 from app.models.user import User
 from app.models.player import Player, PlayerCreate, PlayerUpdate
 from app.models.schedule import Schedule, ScheduleCreate, ScheduleUpdate
 from app.models.match import Match, MatchCreate, MatchUpdate
 from app.models.notification import Notification, NotificationCreate, NotificationListResponse
+from app.models.team import Organization, OrganizationUpdate
 
 router = APIRouter()
+
+@router.put("/organization", response_model=Organization)
+async def update_organization(
+    org_data: OrganizationUpdate,
+    current_user: dict = Depends(require_organization_admin),
+    supabase: SupabaseService = Depends(get_supabase),
+):
+    """
+    Update details of the current user's organization.
+    """
+    # Find organization owned by current user
+    orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
+    if not orgs:
+        raise HTTPException(status_code=404, detail="Organization not found")
+    
+    org_id = orgs[0]["id"]
+    update_dict = org_data.model_dump(exclude_unset=True)
+    
+    if not update_dict:
+        raise HTTPException(status_code=400, detail="No fields to update")
+        
+    updated = await supabase.update("organizations", org_id, update_dict)
+    return updated
 
 # ============================================
 # USERS & PLAYERS MANAGEMENT
@@ -54,12 +85,13 @@ async def get_users(
     """
     Get users (players) managed by the admin/team owner.
     """
-    # Verify org ownership (assuming one org per team owner for simplicity)
-    orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
-    if not orgs:
-        return []
-
-    org_id = orgs[0]["id"]
+    # Determine organization_id
+    org_id = current_user.get("organization_id")
+    if not org_id:
+        orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
+        if not orgs:
+            return []
+        org_id = orgs[0]["id"]
     
     # Get players in the org
     players = await supabase.select("players", filters={"organization_id": org_id})
@@ -68,17 +100,18 @@ async def get_users(
 @router.post("/players")
 async def create_player(
     player_data: PlayerCreate,
-    current_user: dict = Depends(require_team_account),
+    current_user: dict = Depends(require_organization_admin),
     supabase: SupabaseService = Depends(get_supabase),
 ):
     """
     Add a new player to the team roster.
     """
-    orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
-    if not orgs:
-        raise HTTPException(status_code=400, detail="No organization found for this account")
-    
-    org_id = orgs[0]["id"]
+    org_id = current_user.get("organization_id")
+    if not org_id:
+        orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
+        if not orgs:
+            raise HTTPException(status_code=400, detail="No organization found for this account")
+        org_id = orgs[0]["id"]
     player_dict = player_data.model_dump()
     player_dict["organization_id"] = str(org_id)
     player_dict["id"] = str(uuid4())
@@ -131,7 +164,7 @@ async def get_roster(
 async def update_player_status(
     player_id: str,
     status_data: dict,
-    current_user: dict = Depends(require_team_account),
+    current_user: dict = Depends(require_organization_admin),
     supabase: SupabaseService = Depends(get_supabase),
 ):
     """
@@ -147,18 +180,243 @@ async def update_player_status(
     if not orgs or player.get("organization_id") != orgs[0]["id"]:
         raise HTTPException(status_code=403, detail="Access denied")
 
-    # Assuming 'status' helps extend the player model or just updating metadata
-    # If status column doesn't exist, this might fail unless we add it to schema or use a JSON field.
-    # For now, we'll try to update it, but it might need schema update.
-    # Let's assume it's part of a JSON 'metadata' or we add a column.
-    # Safe fallback: do nothing if column missing? No, that's bad.
-    # We'll just update and let Supabase error if column missing, unless we use metadata.
     try:
         updated = await supabase.update("players", player_id, {"status": status_data.get("status")})
         return updated
     except Exception:
-        # Fallback: ignore constraints for now or assume success
         return player
+
+
+@router.delete("/players/{player_id}")
+async def delete_player(
+    player_id: str,
+    current_user: dict = Depends(require_organization_admin),
+    supabase: SupabaseService = Depends(get_supabase),
+):
+    """
+    Remove a player from the organization's roster.
+    This deletes the roster entry and unlinks the user account if linked.
+    """
+    # 1. Get player
+    player = await supabase.select_one("players", player_id)
+    if not player:
+        raise HTTPException(status_code=404, detail="Player not found")
+        
+    # 2. Get organization id
+    org_id = current_user.get("organization_id")
+    if not org_id:
+        orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
+        if not orgs:
+             raise HTTPException(status_code=404, detail="Organization not found")
+        org_id = orgs[0]["id"]
+        
+    # 3. Verify ownership
+    if player.get("organization_id") != org_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    # 4. Unlink user if associated
+    linked_user_id = player.get("user_id")
+    if linked_user_id:
+        try:
+            await supabase.update("users", str(linked_user_id), {"organization_id": None})
+        except Exception as e:
+            print(f"Warning: Failed to unlink user {linked_user_id}: {e}")
+
+    # 5. Delete roster entry
+    await supabase.delete("players", player_id)
+    
+    return {"message": "Player removed from roster and unlinked successfully"}
+
+@router.post("/players/{player_id}/link")
+async def link_player_account(
+    player_id: str,
+    link_data: dict,
+    current_user: dict = Depends(require_organization_admin),
+    supabase: SupabaseService = Depends(get_supabase),
+):
+    """
+    Link a roster player to an actual user account by email.
+    If player_id is "new", it will search for the user and create a roster entry.
+    """
+    email = link_data.get("email")
+    if not email:
+        raise HTTPException(status_code=400, detail="Email is required")
+
+    # 1. Get organization
+    orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
+    if not orgs:
+        raise HTTPException(status_code=404, detail="Organization not found")
+    
+    org_id = orgs[0]["id"]
+
+    # 2. Search for user by email
+    users = await supabase.select("users", filters={"email": email})
+    if not users:
+        raise HTTPException(status_code=404, detail=f"No account found with email {email}. The player must sign up first.")
+    
+    target_user = users[0]
+    
+    if target_user.get("organization_id") and target_user.get("organization_id") != org_id:
+        raise HTTPException(status_code=400, detail="This user is already linked to another organization")
+
+    # 3. Handle player roster entry
+    if player_id == "new":
+        # Check if already in roster
+        existing_roster = await supabase.select("players", filters={
+            "organization_id": org_id,
+            "user_id": target_user["id"]
+        })
+        if existing_roster:
+            raise HTTPException(status_code=400, detail="This player is already in your roster")
+        
+        # Create new roster entry
+        new_player_id = str(uuid4())
+        await supabase.insert("players", {
+            "id": new_player_id,
+            "organization_id": org_id,
+            "user_id": target_user["id"],
+            "name": target_user.get("full_name", "New Player"),
+            "status": "active"
+        })
+        player_id = new_player_id
+    else:
+        # Verify existing player belongs to owner's org
+        player = await supabase.select_one("players", player_id)
+        if not player:
+            raise HTTPException(status_code=404, detail="Player not found")
+        if player.get("organization_id") != org_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        
+        # Update player profile with user_id
+        await supabase.update("players", player_id, {"user_id": target_user["id"]})
+    
+    # 4. Update user profile with organization_id
+    await supabase.update("users", target_user["id"], {"organization_id": org_id})
+    
+    # 5. Create a notification
+    try:
+        await supabase.insert("notifications", {
+            "id": str(uuid4()),
+            "recipient_id": target_user["id"],
+            "title": "Team Link",
+            "message": f"You have been added to the team roster of {orgs[0].get('name', 'a team')}.",
+            "type": "team_invite",
+            "read": False,
+            "created_at": datetime.now().isoformat()
+        })
+    except Exception:
+        pass
+
+    return {"message": "Account linked successfully", "user": {"id": target_user["id"], "name": target_user.get("full_name")}}
+
+@router.get("/staff")
+async def get_staff(
+    current_user: dict = Depends(require_organization_admin),
+    supabase: SupabaseService = Depends(get_supabase),
+):
+    """
+    Get coaching staff linked to the organization.
+    """
+    org_id = current_user.get("organization_id")
+    if not org_id:
+        orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
+        if not orgs:
+             return []
+        org_id = orgs[0]["id"]
+        
+    staff = await supabase.select("users", filters={
+        "organization_id": org_id,
+        "account_type": "coach"
+    })
+    return staff
+
+
+
+@router.post("/staff/link")
+async def link_staff_member(
+    link_data: dict, # email, role
+    current_user: dict = Depends(require_organization_admin),
+    supabase: SupabaseService = Depends(get_supabase),
+):
+    """
+    Link a coach account to the organization and assign a role.
+    """
+    email = link_data.get("email")
+    role = link_data.get("role", "Coach")
+    if not email:
+        raise HTTPException(status_code=400, detail="Email is required")
+
+    # 1. Get organization
+    org_id = current_user.get("organization_id")
+    if not org_id:
+        orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
+        if not orgs:
+             raise HTTPException(status_code=404, detail="Organization not found")
+        org_id = orgs[0]["id"]
+    
+    # 2. Search for user by email
+    users = await supabase.select("users", filters={"email": email})
+    if not users:
+        raise HTTPException(status_code=404, detail=f"No account found with email {email}. The coach must sign up first.")
+    
+    target_user = users[0]
+    
+    if target_user["account_type"] != "coach":
+         raise HTTPException(status_code=400, detail="This account is not a Coach account.")
+
+    if target_user.get("organization_id") and target_user.get("organization_id") != org_id:
+        raise HTTPException(status_code=400, detail="This coach is already linked to another organization")
+
+    # 3. Update user profile
+    await supabase.update("users", target_user["id"], {
+        "organization_id": org_id,
+        "staff_role": role
+    })
+    
+    # 4. Create notification
+    try:
+        await supabase.insert("notifications", {
+            "id": str(uuid4()),
+            "recipient_id": target_user["id"],
+            "title": "Staff Invitation",
+            "message": f"You have been added as a {role} to the organization.",
+            "type": "team_invite",
+            "read": False,
+            "created_at": datetime.now().isoformat()
+        })
+    except Exception:
+        pass
+
+    return {"message": "Staff member linked successfully", "user": {"id": target_user["id"], "role": role}}
+
+@router.delete("/staff/{user_id}")
+async def remove_staff_member(
+    user_id: str,
+    current_user: dict = Depends(require_organization_admin),
+    supabase: SupabaseService = Depends(get_supabase),
+):
+    """
+    Remove a staff member from the organization.
+    """
+    org_id = current_user.get("organization_id")
+    if not org_id:
+        orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
+        if not orgs:
+             raise HTTPException(status_code=404, detail="Organization not found")
+        org_id = orgs[0]["id"]
+
+    # Verify user belongs to org
+    target_user = await supabase.select_one("users", user_id)
+    if not target_user or target_user.get("organization_id") != org_id:
+        raise HTTPException(status_code=403, detail="Access denied or user not found")
+
+    # Unlink
+    await supabase.update("users", user_id, {
+        "organization_id": None,
+        "staff_role": None
+    })
+    
+    return {"message": "Staff member removed successfully"}
 
 # ============================================
 # SCHEDULE MANAGEMENT
@@ -170,30 +428,32 @@ async def get_schedule(
     supabase: SupabaseService = Depends(get_supabase),
 ):
     """Get team schedule."""
-    orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
-    if not orgs:
-        return []
+    org_id = current_user.get("organization_id")
+    if not org_id:
+        orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
+        if not orgs:
+            return []
+        org_id = orgs[0]["id"]
         
-    schedules = await supabase.select("schedules", filters={"organization_id": orgs[0]["id"]})
+    schedules = await supabase.select("schedules", filters={"organization_id": org_id})
     return schedules
 
 @router.post("/schedule")
 async def create_schedule_event(
     event_data: ScheduleCreate,
-    current_user: dict = Depends(require_team_account),
+    current_user: dict = Depends(require_staff_member),
     supabase: SupabaseService = Depends(get_supabase),
 ):
-    """Create a schedule event."""
-    orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
-    if not orgs:
-        raise HTTPException(status_code=400, detail="No organization found")
+    """Create a schedule event (Coach only)."""
+    org_id = current_user.get("organization_id")
+    if not org_id:
+        raise HTTPException(status_code=403, detail="You must be linked to an organization")
         
     event_dict = event_data.model_dump()
-    event_dict["organization_id"] = str(orgs[0]["id"])
+    event_dict["organization_id"] = str(org_id)
     event_dict["created_by"] = current_user["id"]
     event_dict["id"] = str(uuid4())
     
-    # Convert datetimes to str for JSON serialization if needed, but Supabase client might handle it.
     event_dict["start_time"] = event_dict["start_time"].isoformat()
     event_dict["end_time"] = event_dict["end_time"].isoformat()
     
@@ -204,9 +464,15 @@ async def create_schedule_event(
 async def update_schedule_event(
     event_id: str,
     event_data: ScheduleUpdate,
-    current_user: dict = Depends(require_team_account),
+    current_user: dict = Depends(require_staff_member),
     supabase: SupabaseService = Depends(get_supabase),
 ):
+    """Update a schedule event (Coach only)."""
+    # Verify owner's org match
+    event = await supabase.select_one("schedules", event_id)
+    if not event or event.get("organization_id") != current_user.get("organization_id"):
+        raise HTTPException(status_code=403, detail="Access denied")
+
     update_dict = event_data.model_dump(exclude_unset=True)
     if not update_dict:
         raise HTTPException(status_code=400, detail="No fields to update")
@@ -222,12 +488,16 @@ async def update_schedule_event(
 @router.delete("/schedule/{event_id}")
 async def delete_schedule_event(
     event_id: str,
-    current_user: dict = Depends(require_team_account),
+    current_user: dict = Depends(require_staff_member),
     supabase: SupabaseService = Depends(get_supabase),
 ):
+    """Delete a schedule event (Coach only)."""
+    event = await supabase.select_one("schedules", event_id)
+    if not event or event.get("organization_id") != current_user.get("organization_id"):
+        raise HTTPException(status_code=403, detail="Access denied")
+
     await supabase.delete("schedules", event_id)
     return {"message": "Event deleted"}
-
 # ============================================
 # MATCH MANAGEMENT
 # ============================================
@@ -237,31 +507,48 @@ async def get_matches(
     current_user: dict = Depends(require_team_account),
     supabase: SupabaseService = Depends(get_supabase),
 ):
-    orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
-    if not orgs:
-        return []
+    """Get matches for the current user's organization (Owner or Staff)."""
+    org_id = current_user.get("organization_id")
+    if not org_id:
+        orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
+        if not orgs:
+            return []
+        org_id = orgs[0]["id"]
         
-    matches = await supabase.select("matches", filters={"organization_id": orgs[0]["id"]})
+    matches = await supabase.select("matches", filters={"organization_id": org_id})
     return matches
 
-@router.get("/matches/{match_id}")
-async def get_match(
-    match_id: str,
-    current_user: dict = Depends(require_team_account),
+@router.post("/matches")
+async def create_match(
+    match_data: MatchCreate,
+    current_user: dict = Depends(require_staff_member),
     supabase: SupabaseService = Depends(get_supabase),
 ):
-    match = await supabase.select_one("matches", match_id)
-    if not match:
-        raise HTTPException(status_code=404, detail="Match not found")
-    return match
+    """Create a match (Coach only)."""
+    org_id = current_user.get("organization_id")
+    if not org_id:
+        raise HTTPException(status_code=403, detail="You must be linked to an organization")
+        
+    match_dict = match_data.model_dump()
+    match_dict["id"] = str(uuid4())
+    match_dict["organization_id"] = str(org_id)
+    match_dict["date"] = match_dict["date"].isoformat()
+    
+    saved = await supabase.insert("matches", match_dict)
+    return saved
 
 @router.put("/matches/{match_id}")
 async def update_match(
     match_id: str,
     match_data: MatchUpdate,
-    current_user: dict = Depends(require_team_account),
+    current_user: dict = Depends(require_staff_member),
     supabase: SupabaseService = Depends(get_supabase),
 ):
+    """Update a match (Coach only)."""
+    match = await supabase.select_one("matches", match_id)
+    if not match or match.get("organization_id") != current_user.get("organization_id"):
+        raise HTTPException(status_code=403, detail="Access denied")
+
     update_dict = match_data.model_dump(exclude_unset=True)
     if "date" in update_dict:
         update_dict["date"] = update_dict["date"].isoformat()
@@ -272,12 +559,16 @@ async def update_match(
 @router.delete("/matches/{match_id}")
 async def delete_match(
     match_id: str,
-    current_user: dict = Depends(require_team_account),
+    current_user: dict = Depends(require_staff_member),
     supabase: SupabaseService = Depends(get_supabase),
 ):
+    """Delete a match (Coach only)."""
+    match = await supabase.select_one("matches", match_id)
+    if not match or match.get("organization_id") != current_user.get("organization_id"):
+        raise HTTPException(status_code=403, detail="Access denied")
+
     await supabase.delete("matches", match_id)
     return {"message": "Match deleted"}
-
 # ============================================
 # NOTIFICATIONS & STATS
 # ============================================
@@ -350,11 +641,12 @@ async def get_stats(
     supabase: SupabaseService = Depends(get_supabase),
 ):
     # Mock aggregation or real counts
-    orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
-    if not orgs:
-        return {"players": 0, "matches": 0, "wins": 0}
-        
-    org_id = orgs[0]["id"]
+    org_id = current_user.get("organization_id")
+    if not org_id:
+        orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
+        if not orgs:
+            return {"players": 0, "matches": 0, "wins": 0}
+        org_id = orgs[0]["id"]
     players = await supabase.select("players", filters={"organization_id": org_id})
     matches = await supabase.select("matches", filters={"organization_id": org_id})
     videos = await supabase.select("videos", filters={"organization_id": org_id})

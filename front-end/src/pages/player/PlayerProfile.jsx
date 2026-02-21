@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/utils/axiosConfig';
@@ -21,6 +22,7 @@ import {
 } from 'lucide-react';
 
 const PlayerProfile = () => {
+  const { playerId } = useParams();
   const [profile, setProfile] = useState({
     firstName: '',
     lastName: '',
@@ -44,19 +46,46 @@ const PlayerProfile = () => {
   const { isDarkMode } = useTheme();
   const { user } = useAuth();
 
+  // If we have a playerId, we're likely in a team context viewing a player
+  // If not, we're a player viewing our own profile
+  const isOwnProfile = !playerId || (user && user.playerId === playerId);
+
   useEffect(() => {
     fetchProfile();
-  }, []);
+  }, [playerId]);
 
   const fetchProfile = async () => {
     try {
       setLoading(true);
       setError('');
 
-      // Mock data logic removed to prepare for real backend integration
+      const endpoint = playerId ? `/players/${playerId}` : '/player/profile';
+      const response = await api.get(endpoint);
 
-      const response = await api.get('/player/profile');
-      setProfile(response.data);
+      // Handle the different data structures between the two endpoints
+      if (playerId) {
+        // Response from /players/{id}
+        const data = response.data;
+        setProfile({
+          firstName: data.name?.split(' ')[0] || '',
+          lastName: data.name?.split(' ').slice(1).join(' ') || '',
+          email: data.email || '',
+          phone: data.phone || '',
+          address: data.address || '',
+          dateOfBirth: data.date_of_birth || '',
+          position: data.position || '',
+          jerseyNumber: data.jersey_number || '',
+          experience: data.experience_years || '',
+          height: data.height_cm || '',
+          weight: data.weight_kg || '',
+          bio: data.bio || '',
+          profileImage: data.image_url || null,
+          createdAt: data.created_at
+        });
+      } else {
+        // Response from /player/profile
+        setProfile(response.data);
+      }
     } catch (err) {
       console.error('Error fetching profile:', err);
       setError('Failed to fetch profile. Please try again later.');
@@ -64,7 +93,6 @@ const PlayerProfile = () => {
       setLoading(false);
     }
   };
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setProfile(prev => ({ ...prev, [name]: value }));
@@ -160,10 +188,12 @@ const PlayerProfile = () => {
                 </div>
               )}
             </div>
-            <label className="absolute bottom-2 right-2 p-2 rounded-full cursor-pointer bg-orange-400 hover:bg-orange-300 text-gray-900 shadow-lg transition-all duration-200 transform hover:scale-110">
-              <Camera className="h-5 w-5" />
-              <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
-            </label>
+            {isOwnProfile && (
+              <label className="absolute bottom-2 right-2 p-2 rounded-full cursor-pointer bg-orange-400 hover:bg-orange-300 text-gray-900 shadow-lg transition-all duration-200 transform hover:scale-110">
+                <Camera className="h-5 w-5" />
+                <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+              </label>
+            )}
           </div>
 
           <div className="text-center md:text-left md:flex-1">
@@ -186,13 +216,15 @@ const PlayerProfile = () => {
             </div>
           </div>
 
-          <button
-            onClick={() => setIsEditing(!isEditing)}
-            className={`${isDarkMode ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-orange-400 hover:bg-orange-500 text-gray-900'} px-6 py-3 rounded-lg font-medium flex items-center shadow-lg transition-all duration-200 transform hover:scale-105`}
-          >
-            <Edit className="h-5 w-5 mr-2" />
-            {isEditing ? 'Cancel Edit' : 'Edit Profile'}
-          </button>
+          {isOwnProfile && (
+            <button
+              onClick={() => setIsEditing(!isEditing)}
+              className={`${isDarkMode ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-orange-400 hover:bg-orange-500 text-gray-900'} px-6 py-3 rounded-lg font-medium flex items-center shadow-lg transition-all duration-200 transform hover:scale-105`}
+            >
+              <Edit className="h-5 w-5 mr-2" />
+              {isEditing ? 'Cancel Edit' : 'Edit Profile'}
+            </button>
+          )}
         </div>
       </div>
 

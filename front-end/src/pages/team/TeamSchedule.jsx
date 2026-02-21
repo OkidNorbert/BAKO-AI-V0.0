@@ -23,13 +23,15 @@ const TeamSchedule = () => {
   const [error, setError] = useState('');
   const [filterType, setFilterType] = useState('all');
   const { isDarkMode } = useTheme();
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
   const [coaches, setCoaches] = useState([]);
   const [players, setPlayers] = useState([]);
 
+  const isCoach = user?.role === 'coach';
+  const isOwner = user?.role === 'team';
   // New Event State
   const [newEvent, setNewEvent] = useState({
     coachId: '',
@@ -222,16 +224,18 @@ const TeamSchedule = () => {
               Manage practices, matches, and team events
             </p>
           </div>
-          <button
-            onClick={handleAddEventClick}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-full shadow-md transition-all duration-200 hover:shadow-lg hover:scale-105 ${isDarkMode
-              ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white'
-              : 'bg-gradient-to-r from-orange-500 to-red-500 text-white'
-              }`}
-          >
-            <Plus className="h-4 w-4" />
-            <span>Add Event</span>
-          </button>
+          {isCoach && (
+            <button
+              onClick={handleAddEventClick}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-full shadow-md transition-all duration-200 hover:shadow-lg hover:scale-105 ${isDarkMode
+                ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white'
+                : 'bg-gradient-to-r from-orange-500 to-red-500 text-white'
+                }`}
+            >
+              <Plus className="h-4 w-4" />
+              <span>Add Event</span>
+            </button>
+          )}
         </div>
 
         {/* Filter */}
@@ -284,26 +288,28 @@ const TeamSchedule = () => {
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => handleEditClick(event)}
-                      className={`p-1 rounded-md ${isDarkMode
-                        ? 'hover:bg-gray-700'
-                        : 'hover:bg-gray-100'
-                        }`}
-                    >
-                      <Edit className="h-4 w-4 text-blue-500" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteEvent(event.id)}
-                      className={`p-1 rounded-md ${isDarkMode
-                        ? 'hover:bg-gray-700'
-                        : 'hover:bg-gray-100'
-                        }`}
-                    >
-                      <Trash className="h-4 w-4 text-red-500" />
-                    </button>
-                  </div>
+                  {isCoach && (
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handleEditClick(event)}
+                        className={`p-1 rounded-md ${isDarkMode
+                          ? 'hover:bg-gray-700'
+                          : 'hover:bg-gray-100'
+                          }`}
+                      >
+                        <Edit className="h-4 w-4 text-blue-500" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteEvent(event.id)}
+                        className={`p-1 rounded-md ${isDarkMode
+                          ? 'hover:bg-gray-700'
+                          : 'hover:bg-gray-100'
+                          }`}
+                      >
+                        <Trash className="h-4 w-4 text-red-500" />
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 line-clamp-2">{event.notes || event.description}</p>

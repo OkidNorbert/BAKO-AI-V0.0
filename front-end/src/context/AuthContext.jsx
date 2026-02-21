@@ -17,12 +17,14 @@ export const AuthProvider = ({ children }) => {
     const userRole = localStorage.getItem('userRole');
     const userName = localStorage.getItem('userName');
     const userId = localStorage.getItem('userId');
+    const staffRole = localStorage.getItem('staffRole');
 
     console.log('AuthContext: Initial state from localStorage:', {
       userRole,
       userName,
       userId,
-      organizationId: localStorage.getItem('organizationId')
+      organizationId: localStorage.getItem('organizationId'),
+      staffRole
     });
 
     if (accessToken && userRole) {
@@ -30,7 +32,8 @@ export const AuthProvider = ({ children }) => {
         role: userRole,
         name: userName || 'User',
         id: userId,
-        organizationId: localStorage.getItem('organizationId')
+        organizationId: localStorage.getItem('organizationId'),
+        staffRole
       };
       console.log('AuthContext: Setting initial user state:', userData);
       setUser(userData);
@@ -60,6 +63,7 @@ export const AuthProvider = ({ children }) => {
           role: (backendUser?.accountType || tokenPayload.accountType) === 'personal' ? 'player' : (backendUser?.accountType || tokenPayload.accountType),
           name: backendUser?.fullName || 'User',
           organizationId: backendUser?.organizationId || tokenPayload.organizationId,
+          staffRole: backendUser?.staffRole || backendUser?.staff_role || tokenPayload.staffRole || tokenPayload.staff_role, // Added
           teamId: backendUser?.teamId || backendUser?.team_id
         };
 
@@ -72,6 +76,9 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('userId', userData.id);
         if (userData.organizationId) {
           localStorage.setItem('organizationId', userData.organizationId);
+        }
+        if (userData.staffRole) { // Added
+          localStorage.setItem('staffRole', userData.staffRole); // Added
         }
 
         setUser(userData);
@@ -105,7 +112,8 @@ export const AuthProvider = ({ children }) => {
       const user = {
         ...backendUser,
         role: backendUser.accountType === 'personal' ? 'player' : backendUser.accountType,
-        name: backendUser.fullName || 'User'
+        name: backendUser.fullName || 'User',
+        staffRole: backendUser.staffRole || backendUser.staff_role // Added
       };
 
       console.log('AuthContext: Registration successful, mapped user:', user);
@@ -117,6 +125,9 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('userId', user.id);
       if (user.organizationId) {
         localStorage.setItem('organizationId', user.organizationId);
+      }
+      if (user.staffRole) { // Added
+        localStorage.setItem('staffRole', user.staffRole); // Added
       }
 
       setUser(user);
@@ -184,6 +195,43 @@ export const AuthProvider = ({ children }) => {
     return { success: true, user: mockUser };
   };
 
+  const updateUser = async (updateData) => {
+    try {
+      setLoading(true);
+      console.log('AuthContext: Updating user with data:', updateData);
+
+      const response = await api.put('/auth/me', updateData);
+
+      // If team data is present and we are a team, also update organization
+      if (updateData.team && user.role === 'team') {
+        const teamData = {
+          name: updateData.team.name,
+          logo_url: updateData.team.logoUrl,
+          primary_color: updateData.team.primaryColor,
+          secondary_color: updateData.team.secondaryColor,
+          jersey_style: updateData.team.jerseyStyle
+        };
+        await api.put('/admin/organization', teamData);
+      }
+
+      const updatedUser = {
+        ...user,
+        ...response.data,
+        name: response.data.full_name || user.name
+      };
+
+      setUser(updatedUser);
+      localStorage.setItem('userName', updatedUser.name);
+
+      return { success: true, user: updatedUser };
+    } catch (error) {
+      console.error('AuthContext: Update user error:', error);
+      return { success: false, error: error.response?.data?.message || 'Update failed' };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const value = {
     user,
     loading,
@@ -193,7 +241,8 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
-    bypassLogin
+    bypassLogin,
+    updateUser
   };
 
   return (

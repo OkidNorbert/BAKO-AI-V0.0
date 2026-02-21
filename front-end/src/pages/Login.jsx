@@ -19,6 +19,7 @@ const Login = () => {
       // Redirect based on user role if already logged in
       switch (user.role) {
         case 'team':
+        case 'coach':
           navigate('/team');
           break;
         case 'player':
@@ -194,6 +195,14 @@ const Login = () => {
                     : 'bg-white border-gray-200 text-orange-600 hover:bg-gray-50 hover:border-orange-300'}`}
                 >
                   Team Login
+                </button>
+                <button
+                  onClick={() => bypassLogin('coach')}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all border ${isDarkMode
+                    ? 'bg-gray-800/50 border-gray-700 text-purple-400 hover:bg-gray-800 hover:border-purple-500/50'
+                    : 'bg-white border-gray-200 text-purple-600 hover:bg-gray-50 hover:border-purple-300'}`}
+                >
+                  Coach Login
                 </button>
                 <button
                   onClick={() => bypassLogin('player')}

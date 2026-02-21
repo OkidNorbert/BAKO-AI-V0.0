@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { useTheme } from '@/context/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
 import api from '@/utils/axiosConfig';
 import {
   BarChart2,
@@ -12,6 +14,7 @@ import {
 import { format } from 'date-fns';
 
 const SkillAnalytics = () => {
+  const { playerId } = useParams();
   const [skills, setSkills] = useState([]);
   const [summary, setSummary] = useState({});
   const [loading, setLoading] = useState(true);
@@ -21,28 +24,47 @@ const SkillAnalytics = () => {
     end: new Date().toISOString().split('T')[0]
   });
   const { isDarkMode } = useTheme();
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchSkills();
-  }, [dateRange]);
+  }, [dateRange, playerId]);
 
   const fetchSkills = async () => {
     try {
       setLoading(true);
       setError('');
 
-      // Mock data logic removed to prepare for real backend integration
+      if (playerId) {
+        // Use generic analytics endpoint if viewing specific player
+        const response = await api.get(`/analytics/player/${playerId}`, {
+          params: { period_days: 30 }
+        });
+        const data = response.data;
 
-      const response = await api.get('/player/skills', {
-        params: { startDate: dateRange.start, endDate: dateRange.end }
-      });
-      const data = response.data?.data ?? response.data;
-      if (data) {
-        setSkills(Array.isArray(data.skills) ? data.skills : []);
-        setSummary(data.summary && typeof data.summary === 'object' ? data.summary : {});
+        // Map PlayerAnalyticsSummary to the UI's expected format
+        setSkills([]); // The generic endpoint doesn't return a list of individual skills yet
+        setSummary({
+          overall: data.avg_shot_form_consistency ? Math.round(data.avg_shot_form_consistency) : '—',
+          shooting: data.avg_shot_form_consistency ? Math.round(data.avg_shot_form_consistency) : '—',
+          defense: '—', // Metric not currently in generic summary
+          training_sessions: data.total_training_sessions,
+          training_minutes: Math.round(data.total_training_minutes || 0),
+          distance: data.total_distance_km?.toFixed(2)
+        });
       } else {
-        setSkills([]);
-        setSummary({});
+        // Fallback or default for personal account
+        const response = await api.get('/player/skills', {
+          params: { startDate: dateRange.start, endDate: dateRange.end }
+        });
+        const data = response.data?.data ?? response.data;
+        if (data) {
+          setSkills(Array.isArray(data.skills) ? data.skills : []);
+          setSummary(data.summary && typeof data.summary === 'object' ? data.summary : {});
+        } else {
+          setSkills([]);
+          setSummary({});
+        }
       }
     } catch (err) {
       console.error('Error fetching skills:', err);
@@ -51,7 +73,6 @@ const SkillAnalytics = () => {
       setLoading(false);
     }
   };
-
   const formatDate = (dateString) => {
     try {
       const d = new Date(dateString);

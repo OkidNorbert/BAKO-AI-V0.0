@@ -77,16 +77,16 @@ const TeamDashboard = () => {
 
   const quickActions = [
     {
-      name: 'Add Player',
+      name: 'Link Player',
       icon: <UserPlus size={20} />,
-      link: '/team/roster/add',
-      description: 'Add new player to roster'
+      link: '/team/roster',
+      description: 'Link player account to roster'
     },
     {
-      name: 'Create Team',
-      icon: <PlusCircle size={20} />,
-      link: '/team/roster/new',
-      description: 'Create new team profile'
+      name: 'Match History',
+      icon: <Clock size={20} />,
+      link: '/team/matches',
+      description: 'View past match analysis'
     },
     {
       name: 'Upload Match',
@@ -298,11 +298,11 @@ const TeamDashboard = () => {
               </div>
 
               <Link
-                to="/team/roster/add"
-                className={`block w-full text-center p-3 rounded-lg transition-colors ${isDarkMode ? 'bg-orange-600 hover:bg-orange-700 text-white' : 'bg-orange-500 hover:bg-orange-600 text-white'}`}
+                to="/team/roster"
+                className={`block w-full text-center p-3 rounded-lg transition-colors ${isDarkMode ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-indigo-500 hover:bg-indigo-600 text-white'}`}
               >
                 <UserPlus className="inline h-4 w-4 mr-2" />
-                Add New Player
+                Link Player Account
               </Link>
             </div>
           </div>

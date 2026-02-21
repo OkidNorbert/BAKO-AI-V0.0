@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
-import { Bell, Calendar, User, Home, FileText, Trophy, Sun, Moon, ChevronDown, LogOut, Video, TrendingUp } from 'lucide-react';
+import { Bell, Calendar, User, Home, FileText, Trophy, Sun, Moon, ChevronDown, LogOut, Video, TrendingUp, MessageSquare } from 'lucide-react';
 
 
 const Navbar = ({ role }) => {
@@ -36,19 +36,22 @@ const Navbar = ({ role }) => {
     switch (role) {
       case 'admin':
       case 'team':
+      case 'coach':
         return [
           { to: '/team', icon: <Home className="h-5 w-5" />, label: 'Dashboard' },
           { to: '/team/profile', icon: <User className="h-5 w-5" />, label: 'Profile' },
           { to: '/team/notifications', icon: <Bell className="h-5 w-5" />, label: 'Notifications' }
         ];
       case 'player': {
+        const isLinked = !!user?.organizationId;
         const base = [
           { to: '/player', icon: <Home className="h-5 w-5" />, label: 'Dashboard' },
           { to: '/player/profile', icon: <User className="h-5 w-5" />, label: 'Profile' },
           { to: '/player/training', icon: <Video className="h-5 w-5" />, label: 'Training Videos' },
           { to: '/player/skills', icon: <TrendingUp className="h-5 w-5" />, label: 'Skill Analytics' }
         ];
-        if (user?.teamId) {
+        if (isLinked) {
+          base.push({ to: '/player/announcements', icon: <MessageSquare className="h-5 w-5" />, label: 'Team Announcements' });
           base.push({ to: '/player/notifications', icon: <Bell className="h-5 w-5" />, label: 'Notifications' });
         }
         return base;

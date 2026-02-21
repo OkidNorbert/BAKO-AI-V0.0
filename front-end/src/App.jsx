@@ -24,8 +24,7 @@ import FAQ from '@/pages/FAQ';
 // Team / Organization Pages
 import TeamDashboard from '@/pages/team/TeamDashboard';
 import TeamRoster from '@/pages/team/TeamRoster';
-import TeamCreateEdit from '@/pages/team/TeamCreateEdit';
-import PlayerCreateEdit from '@/pages/team/PlayerCreateEdit';
+import CoachingStaff from '@/pages/team/CoachingStaff';
 import MatchAnalysis from '@/pages/team/MatchAnalysis';
 import MatchUpload from '@/pages/team/MatchUpload';
 import TeamAnalytics from '@/pages/team/TeamAnalytics';
@@ -41,18 +40,19 @@ import TrainingVideos from '@/pages/player/TrainingVideos';
 // Shared Pages
 import Profile from '@/pages/shared/Profile';
 import Notifications from '@/pages/shared/Notifications';
+import Announcements from '@/pages/shared/Announcements';
 import Help from '@/pages/shared/Help';
 // Helper components for shared routes that need role-based layouts
 const ProfileRedirect = () => {
   const { user } = useAuth();
-  if (user?.role === 'team') return <Navigate to="/team/profile" replace />;
+  if (user?.role === 'team' || user?.role === 'coach') return <Navigate to="/team/profile" replace />;
   if (user?.role === 'player') return <Navigate to="/player/profile" replace />;
   return <Navigate to="/login" replace />;
 };
 
 const NotificationsRedirect = () => {
   const { user } = useAuth();
-  if (user?.role === 'team') return <Navigate to="/team/notifications" replace />;
+  if (user?.role === 'team' || user?.role === 'coach') return <Navigate to="/team/notifications" replace />;
   if (user?.role === 'player') return <Navigate to="/player/notifications" replace />;
   return <Navigate to="/login" replace />;
 };
@@ -88,15 +88,14 @@ function App() {
             </Route>
 
             {/* Team / Organization Routes */}
-            <Route path="/team" element={<ProtectedRoute allowedRoles={['team']} />}>
+            <Route path="/team" element={<ProtectedRoute allowedRoles={['team', 'coach']} />}>
               <Route element={<TeamLayout />}>
                 <Route index element={<TeamDashboard />} />
                 <Route path="dashboard" element={<TeamDashboard />} />
                 <Route path="roster" element={<TeamRoster />} />
-                <Route path="roster/new" element={<PlayerCreateEdit />} />
-                <Route path="players/:playerId/update" element={<PlayerCreateEdit />} />
-                <Route path="settings/team" element={<TeamCreateEdit />} />
-                <Route path="settings/team/edit/:teamId" element={<TeamCreateEdit />} />
+                <Route path="staff" element={<CoachingStaff />} />
+                <Route path="players/:playerId" element={<PlayerProfile />} />
+                <Route path="players/:playerId/performance" element={<SkillAnalytics />} />
                 <Route path="matches" element={<MatchAnalysis />} />
                 <Route path="matches/upload" element={<MatchUpload />} />
                 <Route path="schedule" element={<TeamSchedule />} />
@@ -105,6 +104,7 @@ function App() {
                 <Route path="settings" element={<TeamSettings />} />
                 <Route path="profile" element={<Profile />} />
                 <Route path="notifications" element={<Notifications />} />
+                <Route path="announcements" element={<Announcements />} />
               </Route>
             </Route>
 
@@ -117,6 +117,7 @@ function App() {
                 <Route path="skills" element={<SkillAnalytics />} />
                 <Route path="training" element={<TrainingVideos />} />
                 <Route path="notifications" element={<Notifications />} />
+                <Route path="announcements" element={<Announcements />} />
               </Route>
             </Route>
 
