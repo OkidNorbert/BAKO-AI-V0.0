@@ -3,9 +3,12 @@ import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { videoAPI, analysisAPI } from '@/services/api';
 import { showToast } from '@/components/shared/Toast';
+import VideoPlayer from '@/components/team/video-player';
+import TacticalBoard from '@/components/team/tactical-board';
 import {
     Upload, Video as VideoIcon, Activity, CheckCircle,
-    AlertTriangle, Play, Pause, X, Users, Loader2
+    AlertTriangle, Play, Pause, X, Users, Loader2, Clock,
+    ArrowRight, ChevronRight
 } from 'lucide-react';
 
 const JERSEY_PRESETS = [
@@ -53,6 +56,7 @@ const CoachMatchAnalysis = () => {
     const [progress, setProgress] = useState(0);
     const [currentStep, setCurrentStep] = useState('');
     const [results, setResults] = useState(null);
+    const [liveTacticalData, setLiveTacticalData] = useState({ players: [], ball: null });
 
     const [form, setForm] = useState({
         title: '',
@@ -62,6 +66,25 @@ const CoachMatchAnalysis = () => {
         ourTeamId: '1',
         matchDate: new Date().toISOString().split('T')[0],
     });
+
+    const [pastMatches, setPastMatches] = useState([]);
+    const [historyLoading, setHistoryLoading] = useState(false);
+
+    const fetchHistory = async () => {
+        setHistoryLoading(true);
+        try {
+            const res = await videoAPI.list({ page_size: 10 });
+            setPastMatches(res.data.videos || []);
+        } catch (err) {
+            console.error('Failed to fetch history:', err);
+        } finally {
+            setHistoryLoading(false);
+        }
+    };
+
+    React.useEffect(() => {
+        fetchHistory();
+    }, []);
 
     const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
@@ -93,8 +116,34 @@ const CoachMatchAnalysis = () => {
             setCurrentStep(current_step || 'Processing…');
             if (status === 'completed') {
                 setStage('completed'); setProgress(100);
-                const r = (await analysisAPI.getLastResultByVideo(videoId)).data;
+
+                // Fetch both results and video metadata (to get annotated URL)
+                const [rRes, vRes] = await Promise.all([
+                    analysisAPI.getLastResultByVideo(videoId),
+                    videoAPI.getById(videoId)
+                ]);
+
+                const r = rRes.data;
+                const videoData = vRes.data;
+
+                // Fetch detections for overlay
+                try {
+                    const detRes = await analysisAPI.getDetections(r.id);
+                    if (detRes.data?.detections) {
+                        r.detections = detRes.data.detections;
+                    }
+                } catch (detErr) {
+                    console.warn('Failed to fetch detections:', detErr);
+                }
+
                 setResults(r);
+
+                // Select best video source
+                const url = (videoData.has_annotated && videoData.annotated_download_url)
+                    ? videoData.annotated_download_url
+                    : videoData.download_url;
+                setVideoPreview(url);
+
                 showToast('Analysis complete!', 'success');
             } else if (status === 'failed') {
                 setStage('error');
@@ -138,6 +187,43 @@ const CoachMatchAnalysis = () => {
         } catch (err) {
             setStage('error');
             showToast(err.response?.data?.detail || 'Upload failed', 'error');
+        } finally {
+            fetchHistory(); // Refresh history list
+        }
+    };
+
+    const viewPastAnalysis = async (video) => {
+        if (video.status !== 'completed') {
+            showToast('This video is still processing', 'info');
+            return;
+        }
+        setStage('processing');
+        try {
+            const { data } = await analysisAPI.getLastResultByVideo(video.id);
+
+            // Fetch detections for overlay
+            try {
+                const detRes = await analysisAPI.getDetections(data.id);
+                if (detRes.data?.detections) {
+                    data.detections = detRes.data.detections;
+                }
+            } catch (detErr) {
+                console.warn('Failed to fetch detections:', detErr);
+            }
+
+            setResults(data);
+            setStage('completed');
+
+            // Prefer annotated video source
+            const url = (video.has_annotated && video.annotated_download_url)
+                ? video.annotated_download_url
+                : video.download_url;
+            setVideoPreview(url);
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch (err) {
+            setStage('error');
+            showToast('Failed to fetch analysis result', 'error');
         }
     };
 
@@ -200,8 +286,25 @@ const CoachMatchAnalysis = () => {
                                 </div>
                             )}
                             {videoPreview && (
-                                <div className="mt-4 relative">
-                                    <video ref={videoRef} src={videoPreview} className="w-full rounded-xl" controls />
+                                <div className="mt-4 space-y-4">
+                                    <VideoPlayer
+                                        videoSrc={`${videoPreview}${videoPreview.includes('?') ? '&' : '?'}token=${localStorage.getItem('accessToken')}`}
+                                        analysisData={results}
+                                        onTacticalUpdate={setLiveTacticalData}
+                                    />
+
+                                    {results?.detections && (
+                                        <div className={`p-4 rounded-xl border ${dark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
+                                            <h3 className={`text-sm font-semibold mb-3 flex items-center gap-2 ${dark ? 'text-white' : 'text-gray-900'}`}>
+                                                2D Tactical View
+                                            </h3>
+                                            <TacticalBoard
+                                                players={liveTacticalData.players}
+                                                ball={liveTacticalData.ball}
+                                                isDarkMode={dark}
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -307,6 +410,53 @@ const CoachMatchAnalysis = () => {
                             </div>
                         )}
                     </div>
+                </div>
+
+                {/* Match History Section */}
+                <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                        <Clock size={20} className="text-orange-500" />
+                        <h2 className={`text-xl font-bold ${dark ? 'text-white' : 'text-gray-900'}`}>Recent Analyses</h2>
+                    </div>
+
+                    {historyLoading && pastMatches.length === 0 ? (
+                        <div className="flex items-center justify-center py-12">
+                            <Loader2 className="animate-spin text-orange-500" size={32} />
+                        </div>
+                    ) : pastMatches.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {pastMatches.map((m) => (
+                                <div
+                                    key={m.id}
+                                    className={`${card} hover:border-orange-500/30 transition-all cursor-pointer group`}
+                                    onClick={() => viewPastAnalysis(m)}
+                                >
+                                    <div className="flex justify-between items-start mb-3">
+                                        <div className={`p-2 rounded-lg ${dark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                                            <VideoIcon size={18} className="text-orange-500" />
+                                        </div>
+                                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${m.status === 'completed' ? 'bg-green-500/10 text-green-500' :
+                                            m.status === 'failed' ? 'bg-red-500/10 text-red-500' :
+                                                'bg-orange-500/10 text-orange-500'
+                                            }`}>
+                                            {m.status}
+                                        </span>
+                                    </div>
+                                    <h3 className={`font-bold text-sm mb-1 truncate ${dark ? 'text-white' : 'text-gray-900'}`}>{m.title}</h3>
+                                    <p className="text-xs text-gray-400 mb-4">{new Date(m.created_at).toLocaleDateString()}</p>
+
+                                    <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-100 dark:border-gray-700">
+                                        <span className="text-[11px] font-medium text-gray-500">View Insights</span>
+                                        <ChevronRight size={14} className="text-gray-400 group-hover:text-orange-500 transition-colors" />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className={`${card} text-center py-12`}>
+                            <p className="text-sm text-gray-400">No past analyses found. Start by uploading a match video above.</p>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

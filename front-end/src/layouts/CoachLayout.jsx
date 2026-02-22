@@ -63,15 +63,20 @@ const CoachLayout = () => {
                     ))}
                 </nav>
 
-                {/* Sign Out */}
-                <div className={`px-2 pb-4 border-t pt-3 ${dark ? 'border-gray-800' : 'border-gray-100'}`}>
+                {/* Sign Out - Moved up slightly and given more contrast */}
+                <div className={`mt-auto px-2 pb-4 border-t pt-3 ${dark ? 'border-gray-800' : 'border-gray-100'}`}>
                     <button
-                        onClick={logout}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${dark ? 'text-gray-400 hover:bg-gray-800 hover:text-red-400' : 'text-gray-500 hover:bg-red-50 hover:text-red-600'
+                        onClick={() => {
+                            console.log('CoachLayout: Sign out clicked');
+                            logout();
+                        }}
+                        className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-bold transition-all ${dark
+                                ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20'
+                                : 'bg-red-50 text-red-600 hover:bg-red-100 shadow-sm'
                             }`}
                         title="Sign out"
                     >
-                        <LogOut size={18} className="flex-shrink-0" />
+                        <LogOut size={20} className="flex-shrink-0" />
                         {!collapsed && <span>Sign Out</span>}
                     </button>
                 </div>
