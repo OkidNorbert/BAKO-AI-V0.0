@@ -680,11 +680,29 @@ async def update_profile(
 ):
     # Update user or org
     if "user" in profile_data:
-        await supabase.update("users", current_user["id"], profile_data["user"])
+        user_payload = {}
+        for k, v in profile_data["user"].items():
+            if k in ["id", "created_at", "updated_at", "email", "account_type"]:
+                continue
+            user_payload[k] = v
+        if user_payload:
+            await supabase.update("users", current_user["id"], user_payload)
     if "organization" in profile_data:
         orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
         if orgs:
-            await supabase.update("organizations", orgs[0]["id"], profile_data["organization"])
+            # Avoid sending nested objects (which might not map to DB columns)
+            org_payload = {}
+            for k, v in (profile_data["organization"] or {}).items():
+                # Only include primitive values; skip nested dicts/lists to prevent PostgREST column errors
+                if isinstance(v, (dict, list)):
+                    continue
+                # Do not try to update primary key or generated fields
+                if k in ["id", "owner_id", "created_at", "updated_at"]:
+                    continue
+                org_payload[k] = v
+
+            if org_payload:
+                await supabase.update("organizations", orgs[0]["id"], org_payload)
             
     return {"message": "Profile updated"}
 

@@ -94,13 +94,16 @@ const TeamSettings = () => {
     try {
       setSaving(true);
       // We send the data under "organization" key as expected by backend update_profile
-      await adminAPI.updateProfile({
-        organization: {
-          ...settings,
-          // Backend expects snake_case for most but let's be careful
-          // Values like twitter_handle are already snake_case in our state
-        }
+      const orgPayload = {};
+      Object.entries(settings).forEach(([k, v]) => {
+        // Only include primitive values; skip nested objects/arrays which the backend
+        // may not have columns for (e.g., competition_settings)
+        if (v === null || v === undefined) return;
+        if (typeof v === 'object') return;
+        orgPayload[k] = v;
       });
+
+      await adminAPI.updateProfile({ organization: orgPayload });
       showToast('Team profile updated successfully!', 'success');
     } catch (error) {
       console.error('Error saving settings:', error);
@@ -180,7 +183,7 @@ const TeamSettings = () => {
                 <div>
                   <label className={labelClassName}>Team Description</label>
                   <textarea
-                    value={settings.description}
+                    value={settings.description ?? ''}
                     onChange={(e) => handleSettingChange('description', e.target.value)}
                     rows={3}
                     className={inputClassName}

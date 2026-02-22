@@ -1,4 +1,4 @@
-import asyncio
+import anyio
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
@@ -11,7 +11,8 @@ class TimeoutMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next) -> Response:
         try:
-            return await asyncio.wait_for(call_next(request), timeout=self.timeout_seconds)
+            with anyio.fail_after(self.timeout_seconds):
+                return await call_next(request)
         except TimeoutError:
             return JSONResponse(
                 status_code=504,
