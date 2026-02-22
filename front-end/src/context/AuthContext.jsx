@@ -242,7 +242,33 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     bypassLogin,
-    updateUser
+    updateUser,
+    deleteAccount: async () => {
+      try {
+        setLoading(true);
+        await api.delete('/auth/account');
+
+        // Cleanup local state
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userName');
+        localStorage.removeItem('userId');
+        localStorage.removeItem('isDevSession');
+
+        setUser(null);
+        setIsAuthenticated(false);
+        return { success: true };
+      } catch (error) {
+        console.error('AuthContext: Delete account error:', error);
+        return {
+          success: false,
+          error: error.response?.data?.detail || 'Failed to delete account'
+        };
+      } finally {
+        setLoading(false);
+      }
+    }
   };
 
   return (

@@ -13,8 +13,11 @@ import {
   Palette,
   Shirt,
   Image as ImageIcon,
-  Loader2
+  Loader2,
+  AlertTriangle,
+  Trash2
 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import { showToast } from '../../components/shared/Toast';
 
 const TeamSettings = () => {
@@ -46,6 +49,10 @@ const TeamSettings = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const { isDarkMode } = useTheme();
+  const { deleteAccount } = useAuth();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmPhrase, setDeleteConfirmPhrase] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const fetchTeamData = async () => {
@@ -113,6 +120,28 @@ const TeamSettings = () => {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmPhrase !== 'DELETE MY ACCOUNT') {
+      showToast('Please type the confirmation phrase exactly', 'error');
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      const result = await deleteAccount();
+      if (result.success) {
+        showToast('Account deleted successfully', 'success');
+      } else {
+        showToast(result.error || 'Failed to delete account', 'error');
+      }
+    } catch (error) {
+      showToast('An error occurred during account deletion', 'error');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteModal(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className={`flex items-center justify-center min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
@@ -122,13 +151,13 @@ const TeamSettings = () => {
   }
 
   const inputClassName = `w-full p-2.5 rounded-lg border transition-all outline-none focus:ring-2 focus:ring-orange-500/20 ${isDarkMode
-      ? 'bg-gray-700/50 border-gray-600 text-white focus:border-orange-500'
-      : 'bg-white border-gray-300 text-gray-900 focus:border-orange-500 shadow-sm'
+    ? 'bg-gray-700/50 border-gray-600 text-white focus:border-orange-500'
+    : 'bg-white border-gray-300 text-gray-900 focus:border-orange-500 shadow-sm'
     }`;
 
   const sectionClassName = `mb-8 p-6 rounded-2xl border ${isDarkMode
-      ? 'bg-gray-800/50 border-gray-700 shadow-xl'
-      : 'bg-white border-gray-100 shadow-md'
+    ? 'bg-gray-800/50 border-gray-700 shadow-xl'
+    : 'bg-white border-gray-100 shadow-md'
     }`;
 
   const labelClassName = `block text-sm font-semibold mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`;
@@ -149,8 +178,8 @@ const TeamSettings = () => {
             onClick={handleSaveSettings}
             disabled={saving}
             className={`flex items-center space-x-2 px-8 py-3 rounded-xl font-bold transition-all transform active:scale-95 disabled:opacity-50 shadow-lg ${isDarkMode
-                ? 'bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white'
-                : 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white'
+              ? 'bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white'
+              : 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white'
               }`}
           >
             {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
@@ -396,9 +425,79 @@ const TeamSettings = () => {
                 </div>
               </div>
             </div>
+
+            {/* Danger Zone */}
+            <div className={`mt-8 p-6 rounded-2xl border-2 transition-all ${isDarkMode ? 'bg-red-950/20 border-red-900/30' : 'bg-red-50 border-red-100'}`}>
+              <h3 className={`text-lg font-bold mb-2 flex items-center gap-2 ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>
+                <AlertTriangle size={20} />
+                Danger Zone
+              </h3>
+              <p className={`text-sm mb-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Permanently delete this organization, all related staff, players, and match analysis data. This action is irreversible.
+              </p>
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                className="flex items-center gap-2 py-2.5 px-6 rounded-xl font-bold bg-red-600 text-white hover:bg-red-700 transition shadow-lg shadow-red-900/20"
+              >
+                <Trash2 size={16} />
+                Delete Everything
+              </button>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className={`w-full max-w-md p-6 rounded-2xl shadow-2xl ${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white text-gray-900'}`}>
+            <div className="flex items-center gap-3 mb-4 text-red-500">
+              <AlertTriangle size={32} />
+              <h2 className="text-xl font-bold">Absolute Confirmation</h2>
+            </div>
+
+            <p className={`mb-6 text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              Deleting your organization account will permanently remove all coaching staff access, player profiles, and season data.
+            </p>
+
+            <div className="mb-6">
+              <label className={`block text-xs font-bold mb-2 uppercase tracking-widest ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                Type <span className="text-red-600 underline">DELETE MY ACCOUNT</span> to confirm
+              </label>
+              <input
+                type="text"
+                value={deleteConfirmPhrase}
+                onChange={(e) => setDeleteConfirmPhrase(e.target.value)}
+                placeholder="Type here..."
+                className={`w-full px-4 py-3 rounded-xl border-2 transition outline-none ${isDarkMode
+                    ? 'bg-gray-900 border-gray-700 text-white focus:border-red-500'
+                    : 'bg-white border-gray-200 text-gray-900 focus:border-red-500'
+                  }`}
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setShowDeleteModal(false); setDeleteConfirmPhrase(''); }}
+                className={`flex-1 py-3 rounded-xl font-semibold transition ${isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200'
+                  }`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleteConfirmPhrase !== 'DELETE MY ACCOUNT' || isDeleting}
+                className={`flex-1 py-3 rounded-xl font-bold text-white transition ${deleteConfirmPhrase === 'DELETE MY ACCOUNT'
+                    ? 'bg-red-600 hover:bg-red-700'
+                    : 'bg-gray-400 cursor-not-allowed grayscale'
+                  }`}
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Permanently'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

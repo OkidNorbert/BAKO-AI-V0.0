@@ -8,6 +8,7 @@ export const authAPI = {
   register: (userData) => api.post('/auth/register', userData),
   getCurrentUser: () => api.get('/auth/me'),
   refreshToken: (refreshToken) => api.post('/auth/refresh-token', { refreshToken }),
+  deleteAccount: () => api.delete('/auth/account'),
 };
 
 // Admin API

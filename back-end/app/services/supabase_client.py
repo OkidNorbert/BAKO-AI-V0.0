@@ -129,6 +129,22 @@ class SupabaseService:
         
         response = await self._run_sync(lambda: self.client.auth.get_user(token))
         return response.user if response else None
+
+    async def delete_user_auth(self, user_id: str) -> bool:
+        """
+        Delete a user from Supabase Auth.
+        Requires high-privilege service role or admin access.
+        """
+        if not self.is_connected:
+            return True
+            
+        try:
+            # We use the admin API to delete the user
+            await self._run_sync(lambda: self.client.auth.admin.delete_user(user_id))
+            return True
+        except Exception as e:
+            print(f"Error deleting user from auth: {e}")
+            return False
     
     # ==================== Database Operations ====================
     

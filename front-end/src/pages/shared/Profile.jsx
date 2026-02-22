@@ -19,17 +19,22 @@ import {
   Globe,
   Lock,
   ChevronRight,
-  CheckCircle
+  CheckCircle,
+  AlertTriangle,
+  Trash2
 } from 'lucide-react';
 import { showToast } from '@/components/shared/Toast';
 
 const Profile = () => {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, deleteAccount } = useAuth();
   const { isDarkMode } = useTheme();
   const navigate = useNavigate();
 
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmPhrase, setDeleteConfirmPhrase] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
   const [activeTab, setActiveTab] = useState('personal');
   const [formData, setFormData] = useState({
     firstName: '',
@@ -162,6 +167,29 @@ const Profile = () => {
     if (file) {
       // Handle avatar upload
       console.log('Avatar upload:', file);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmPhrase !== 'DELETE MY ACCOUNT') {
+      showToast('Please type the confirmation phrase exactly', 'error');
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      const result = await deleteAccount();
+      if (result.success) {
+        showToast('Account deleted successfully', 'success');
+        navigate('/');
+      } else {
+        showToast(result.error || 'Failed to delete account', 'error');
+      }
+    } catch (error) {
+      showToast('An error occurred during account deletion', 'error');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteModal(false);
     }
   };
 
@@ -712,9 +740,84 @@ const Profile = () => {
                 <Shield className="w-4 h-4 mr-2" />
                 Update Password
               </button>
+
+              {/* Danger Zone */}
+              <div className={`mt-12 p-6 rounded-xl border-2 ${isDarkMode ? 'border-red-900/50 bg-red-950/20' : 'border-red-100 bg-red-50'}`}>
+                <h3 className={`text-lg font-bold mb-2 flex items-center gap-2 ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>
+                  <AlertTriangle className="w-5 h-5" />
+                  Danger Zone
+                </h3>
+                <p className={`text-sm mb-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  Permanently delete your account and all associated data. This action cannot be undone.
+                </p>
+                <button
+                  onClick={() => setShowDeleteModal(true)}
+                  className="flex items-center px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors text-sm font-semibold"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete My Account
+                </button>
+              </div>
             </div>
           )}
         </div>
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div className={`w-full max-w-md p-6 rounded-2xl shadow-2xl ${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white'}`}>
+              <div className="flex items-center gap-3 mb-4 text-red-500">
+                <AlertTriangle className="w-8 h-8" />
+                <h2 className="text-xl font-bold">Delete Account?</h2>
+              </div>
+
+              <p className={`mb-6 text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                This will permanently delete your profile, videos, and analysis results. There is no way to recover your data once deleted.
+              </p>
+
+              <div className="mb-6">
+                <label className={`block text-xs font-semibold mb-2 uppercase tracking-wider ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  Type <span className="font-bold text-red-500 underline">DELETE MY ACCOUNT</span> to confirm
+                </label>
+                <input
+                  type="text"
+                  value={deleteConfirmPhrase}
+                  onChange={(e) => setDeleteConfirmPhrase(e.target.value)}
+                  placeholder="Type here..."
+                  className={`w-full px-4 py-3 rounded-xl border-2 transition-all ${isDarkMode
+                      ? 'bg-gray-900 border-gray-700 text-white focus:border-red-500'
+                      : 'bg-white border-gray-200 text-gray-900 focus:border-red-500'
+                    }`}
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setDeleteConfirmPhrase('');
+                  }}
+                  className={`flex-1 px-4 py-3 rounded-xl font-semibold transition-colors ${isDarkMode
+                      ? 'bg-gray-700 hover:bg-gray-600 text-white'
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                    }`}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteAccount}
+                  disabled={deleteConfirmPhrase !== 'DELETE MY ACCOUNT' || isDeleting}
+                  className={`flex-1 px-4 py-3 rounded-xl font-bold text-white transition-all ${deleteConfirmPhrase === 'DELETE MY ACCOUNT'
+                      ? 'bg-red-600 hover:bg-red-700 shadow-lg shadow-red-900/20'
+                      : 'bg-gray-400 cursor-not-allowed grayscale'
+                    }`}
+                >
+                  {isDeleting ? 'Deleting...' : 'Delete Permanently'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Role-Specific Additional Info */}
         {roleContent.additionalInfo}

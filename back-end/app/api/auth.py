@@ -2,6 +2,7 @@
 Authentication API endpoints.
 """
 from datetime import datetime, timedelta
+import os
 from uuid import uuid4
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
@@ -311,3 +312,69 @@ async def logout():
     Since we use stateless JWT, this is primarily for client-side cleanup.
     """
     return {"message": "Successfully logged out"}
+
+
+@router.delete("/account", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_current_user_account(
+    current_user: dict = Depends(get_current_user),
+    supabase: SupabaseService = Depends(get_supabase),
+):
+    """
+    Permanently delete the current user's account and all associated data.
+    """
+    user_id = current_user["id"]
+    
+    # 1. Cleanup Videos and physical files
+    # Get all videos uploaded by this user
+    videos = await supabase.select("videos", filters={"uploader_id": user_id})
+    
+    for video in videos:
+        video_id = str(video.get("id"))
+        storage_path = video.get("storage_path")
+        
+        # Delete physical file
+        if storage_path and os.path.exists(storage_path):
+            try:
+                os.remove(storage_path)
+            except Exception as e:
+                print(f"Error removing file {storage_path}: {e}")
+                
+        # Also check for annotated video
+        annotated_path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+            "output_videos", "annotated", f"{video_id}.mp4"
+        )
+        if os.path.exists(annotated_path):
+            try:
+                os.remove(annotated_path)
+            except Exception:
+                pass
+
+        # Cleanup related DB records (best effort)
+        for table in ["analysis_results", "detections", "analytics", "clips"]:
+            try:
+                await supabase.delete_where(table, {"video_id": video_id})
+            except Exception:
+                pass
+                
+        # Delete video record
+        await supabase.delete("videos", video_id)
+
+    # 2. Cleanup Organization if Owner
+    if current_user.get("account_type") == AccountType.TEAM.value:
+        orgs = await supabase.select("organizations", filters={"owner_id": user_id})
+        for org in orgs:
+            org_id = str(org.get("id"))
+            # Unlink staff/players or delete them? 
+            # For now, let's just delete the organization. 
+            await supabase.delete("organizations", org_id)
+
+    # 3. Delete Profile (from users table)
+    await supabase.delete("users", user_id)
+    
+    # 4. Delete from Supabase Auth
+    success = await supabase.delete_user_auth(user_id)
+    if not success:
+        print(f"CRITICAL: Failed to delete user {user_id} from Supabase Auth")
+
+    return None
