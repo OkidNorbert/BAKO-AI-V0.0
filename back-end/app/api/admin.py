@@ -4,7 +4,7 @@ Admin API endpoints (Team/Organization Management).
 from uuid import uuid4
 from datetime import datetime
 from typing import Optional, List
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, UploadFile, File, BackgroundTasks
 
 from app.dependencies import (
     get_supabase, 
@@ -21,6 +21,9 @@ from app.models.schedule import Schedule, ScheduleCreate, ScheduleUpdate
 from app.models.match import Match, MatchCreate, MatchUpdate
 from app.models.notification import Notification, NotificationCreate, NotificationListResponse
 from app.models.team import Organization, OrganizationUpdate
+from app.models.stats import MatchStatUploadResponse, StatsConfirmRequest
+from app.services.stats_extraction_service import extract_stats_from_file_background
+from app.services.player_linking_service import auto_link_players_to_roster
 
 router = APIRouter()
 
@@ -569,6 +572,45 @@ async def delete_match(
 
     await supabase.delete("matches", match_id)
     return {"message": "Match deleted"}
+
+
+@router.get("/matches/{match_id}/player-stats")
+async def get_match_player_stats(
+    match_id: str,
+    current_user: dict = Depends(require_team_account),
+    supabase: SupabaseService = Depends(get_supabase),
+):
+    """Get all player stats for a specific match, enriched with player name/jersey info."""
+    # Verify org access
+    org_id = current_user.get("organization_id")
+    if not org_id:
+        orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
+        if not orgs:
+            return []
+        org_id = orgs[0]["id"]
+
+    stats = await supabase.select("match_player_stats", filters={
+        "match_id": match_id,
+        "organization_id": org_id
+    })
+
+    # Enrich each stat row with player name/jersey from the players table
+    player_ids = list({s["player_profile_id"] for s in stats if s.get("player_profile_id")})
+    players = []
+    if player_ids:
+        players = await supabase.select_in("players", "id", player_ids)
+    player_map = {p["id"]: p for p in players}
+
+    for s in stats:
+        pid = s.get("player_profile_id")
+        p = player_map.get(pid, {})
+        s["player_name"] = p.get("name", "Unknown")
+        s["player_jersey"] = p.get("jersey_number")
+        s["player_position"] = p.get("position")
+
+    match = await supabase.select_one("matches", match_id)
+    return {"match": match, "stats": stats}
+
 # ============================================
 # NOTIFICATIONS & STATS
 # ============================================
@@ -722,3 +764,160 @@ async def get_security_logs(current_user: dict = Depends(get_current_user)):
     return [
         {"id": 1, "action": "Login", "ip": "127.0.0.1", "timestamp": datetime.now().isoformat()},
     ]
+
+# ============================================
+# OFFICIAL STATS IMPORT
+# ============================================
+
+@router.post("/matches/{match_id}/stats-upload")
+async def upload_match_stats(
+    match_id: str,
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    current_user: dict = Depends(require_staff_member),
+    supabase: SupabaseService = Depends(get_supabase),
+):
+    """Upload a box score PDF or image, save to storage, schedule extraction."""
+    # 1. Verify match ownership
+    match = await supabase.select_one("matches", match_id)
+    if not match or match.get("organization_id") != current_user.get("organization_id"):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    org_id = match["organization_id"]
+    upload_id = str(uuid4())
+    
+    # 2. Upload file to storage
+    file_bytes = await file.read()
+    is_pdf = file.content_type == "application/pdf"
+    file_ext = "pdf" if is_pdf else "jpg"
+    storage_path = f"org_{org_id}/match_{match_id}/{upload_id}.{file_ext}"
+    
+    try:
+        url = await supabase.upload_file("match-stats", storage_path, file_bytes, file.content_type)
+    except Exception as e:
+        print(f"Warning: file upload skip or error: {e}")
+        url = f"/local/{storage_path}"
+        
+    # 3. Create upload record
+    upload_data = {
+        "id": upload_id,
+        "match_id": match_id,
+        "organization_id": org_id,
+        "uploaded_by": current_user["id"],
+        "storage_path": storage_path,
+        "file_type": "pdf" if is_pdf else "image",
+        "extract_status": "queued",
+        "created_at": datetime.now().isoformat(),
+        "updated_at": datetime.now().isoformat()
+    }
+    await supabase.insert("match_stat_uploads", upload_data)
+    
+    # 4. Trigger extraction job
+    background_tasks.add_task(extract_stats_from_file_background, upload_id, org_id)
+    
+    return {"upload_id": upload_id, "status": "queued"}
+
+@router.get("/stats-upload/{upload_id}", response_model=MatchStatUploadResponse)
+async def get_stats_upload(
+    upload_id: str,
+    current_user: dict = Depends(require_staff_member),
+    supabase: SupabaseService = Depends(get_supabase),
+):
+    """Poll for extraction status and JSON preview."""
+    upload = await supabase.select_one("match_stat_uploads", upload_id)
+    if not upload or upload.get("organization_id") != current_user.get("organization_id"):
+        raise HTTPException(status_code=404, detail="Upload not found")
+        
+    return upload
+
+@router.post("/stats-upload/{upload_id}/confirm")
+async def confirm_stats_upload(
+    upload_id: str,
+    confirm_data: StatsConfirmRequest,
+    current_user: dict = Depends(require_staff_member),
+    supabase: SupabaseService = Depends(get_supabase),
+):
+    """Confirm mapping and persist stats."""
+    upload = await supabase.select_one("match_stat_uploads", upload_id)
+    if not upload or upload.get("organization_id") != current_user.get("organization_id"):
+        raise HTTPException(status_code=404, detail="Upload not found")
+        
+    org_id = upload["organization_id"]
+    match_id = upload["match_id"]
+    
+    confirmed_json = confirm_data.extracted_json
+    
+    # Update match score
+    if confirmed_json.final_score_for is not None:
+        await supabase.update("matches", match_id, {
+            "score_us": confirmed_json.final_score_for,
+            "score_them": confirmed_json.final_score_against
+        })
+    
+    # Persist the rows
+    stats_to_insert = []
+    for player_row in confirmed_json.players:
+        if not player_row.linked_player_profile_id:
+            continue
+            
+        stats_to_insert.append({
+            "id": str(uuid4()),
+            "match_id": match_id,
+            "organization_id": org_id,
+            "player_profile_id": str(player_row.linked_player_profile_id),
+            "source": "official_upload",
+            "mins": player_row.mins,
+            "pts": player_row.pts,
+            "fgm": int(player_row.fg.split('-')[0]) if player_row.fg and '-' in player_row.fg else 0,
+            "fga": int(player_row.fg.split('-')[1]) if player_row.fg and '-' in player_row.fg else 0,
+            "tp_m": int(player_row.tp.split('-')[0]) if player_row.tp and '-' in player_row.tp else 0,
+            "tp_a": int(player_row.tp.split('-')[1]) if player_row.tp and '-' in player_row.tp else 0,
+            "thp_m": int(player_row.thp.split('-')[0]) if player_row.thp and '-' in player_row.thp else 0,
+            "thp_a": int(player_row.thp.split('-')[1]) if player_row.thp and '-' in player_row.thp else 0,
+            "ft_m": int(player_row.ft.split('-')[0]) if player_row.ft and '-' in player_row.ft else 0,
+            "ft_a": int(player_row.ft.split('-')[1]) if player_row.ft and '-' in player_row.ft else 0,
+            "off_reb": player_row.off,
+            "def_reb": player_row.def_reb,
+            "reb": player_row.reb,
+            "ast": player_row.ast,
+            "to_cnt": player_row.to,
+            "stl": player_row.stl,
+            "blk": player_row.blk,
+            "pf": player_row.pf,
+            "plus_minus": player_row.plus_minus,
+            "index_rating": player_row.index,
+            "row_confidence": player_row.row_confidence,
+            "created_at": datetime.now().isoformat()
+        })
+        
+    # Bulk insert stats
+    for stat in stats_to_insert:
+        try:
+            await supabase.insert("match_player_stats", stat)
+        except Exception:
+            pass
+            
+    # Mark upload as confirmed
+    await supabase.update("match_stat_uploads", upload_id, {
+        "extract_status": "confirmed",
+        "extracted_json": confirmed_json.model_dump(by_alias=True)
+    })
+    
+    return {"message": "Stats confirmed and saved"}
+
+@router.post("/stats-upload/{upload_id}/retry")
+async def retry_stats_upload(
+    upload_id: str,
+    background_tasks: BackgroundTasks,
+    current_user: dict = Depends(require_staff_member),
+    supabase: SupabaseService = Depends(get_supabase),
+):
+    """Re-run extraction."""
+    upload = await supabase.select_one("match_stat_uploads", upload_id)
+    if not upload or upload.get("organization_id") != current_user.get("organization_id"):
+        raise HTTPException(status_code=404, detail="Upload not found")
+        
+    await supabase.update("match_stat_uploads", upload_id, {"extract_status": "queued"})
+    background_tasks.add_task(extract_stats_from_file_background, upload_id, upload["organization_id"])
+    
+    return {"message": "Retry queued"}

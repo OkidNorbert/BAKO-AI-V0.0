@@ -35,8 +35,22 @@ export const adminAPI = {
   // Match endpoints
   getMatches: () => api.get('/admin/matches'),
   getMatchById: (matchId) => api.get(`/admin/matches/${matchId}`),
+  createMatch: (data) => api.post('/admin/matches', data),
   updateMatch: (matchId, data) => api.put(`/admin/matches/${matchId}`, data),
   deleteMatch: (matchId) => api.delete(`/admin/matches/${matchId}`),
+
+  // Match Stats Import endpoints
+  uploadMatchStats: (matchId, formData) =>
+    api.post(`/admin/matches/${matchId}/stats-upload`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  getStatUpload: (uploadId) => api.get(`/admin/stats-upload/${uploadId}`),
+  confirmStatUpload: (uploadId, extractedJson) =>
+    api.post(`/admin/stats-upload/${uploadId}/confirm`, { extracted_json: extractedJson }),
+  retryStatUpload: (uploadId) => api.post(`/admin/stats-upload/${uploadId}/retry`),
+
+  // Get player stats for a specific match
+  getMatchPlayerStats: (matchId) => api.get(`/admin/matches/${matchId}/player-stats`),
 
   // Security endpoints
   getSecuritySettings: () => api.get('/admin/security/settings'),

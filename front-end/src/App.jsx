@@ -30,6 +30,12 @@ import MatchUpload from '@/pages/team/MatchUpload';
 import TeamAnalytics from '@/pages/team/TeamAnalytics';
 import TeamSettings from '@/pages/team/TeamSettings';
 import TeamSchedule from '@/pages/team/TeamSchedule';
+import TeamReports from '@/pages/team/TeamReports';
+
+// Coach (unlinked) Pages
+import CoachLayout from '@/layouts/CoachLayout';
+import CoachMatchAnalysis from '@/pages/coach/CoachMatchAnalysis';
+import CoachProfile from '@/pages/coach/CoachProfile';
 
 // Personal Player Pages
 import PlayerDashboard from '@/pages/player/PlayerDashboard';
@@ -100,11 +106,20 @@ function App() {
                 <Route path="matches/upload" element={<MatchUpload />} />
                 <Route path="schedule" element={<TeamSchedule />} />
                 <Route path="analytics" element={<TeamAnalytics />} />
-                <Route path="reports" element={<TeamAnalytics />} />
+                <Route path="reports" element={<TeamReports />} />
                 <Route path="settings" element={<TeamSettings />} />
                 <Route path="profile" element={<TeamSettings />} />
                 <Route path="notifications" element={<Notifications />} />
                 <Route path="announcements" element={<Announcements />} />
+              </Route>
+            </Route>
+
+            {/* Coach Routes (unlinked individual coach – personal space only) */}
+            <Route path="/coach" element={<ProtectedRoute allowedRoles={['coach']} />}>
+              <Route element={<CoachLayout />}>
+                <Route index element={<CoachMatchAnalysis />} />
+                <Route path="analysis" element={<CoachMatchAnalysis />} />
+                <Route path="profile" element={<CoachProfile />} />
               </Route>
             </Route>
 

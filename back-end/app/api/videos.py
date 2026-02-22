@@ -158,8 +158,10 @@ async def upload_video(
     
     # Validate team analysis requirements
     if analysis_mode == AnalysisMode.TEAM:
+        print(f"DEBUG: upload_video - current_user: {current_user}")
         allowed_types = [AccountType.TEAM.value, AccountType.COACH.value]
         if current_user.get("account_type") not in allowed_types:
+            print(f"DEBUG: upload_video - account_type mismatch: {current_user.get('account_type')} not in {allowed_types}")
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Team analysis requires a TEAM or COACH account"
@@ -177,20 +179,27 @@ async def upload_video(
         if not organization_id:
             organization_id = user_org_id
 
-        if not organization_id:
+        # Determine if we should allow null organization_id
+        # We allow it for individual coaches who aren't linked yet.
+        is_coach = current_user.get("account_type") == AccountType.COACH.value
+        
+        if not organization_id and not is_coach:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="organization_id is required and you are not linked to any organization"
             )
             
-        # Verify org access
-        if str(organization_id) != str(user_org_id):
+        # Verify org access if an organization_id is provided or found
+        print(f"DEBUG: upload_video - organization_id: {organization_id}, user_org_id: {user_org_id}")
+        if organization_id and str(organization_id) != str(user_org_id):
             # For robustness, if it's a team account, double check org ownership if the ID doesn't match token
             if current_user.get("account_type") == AccountType.TEAM.value:
                 org = await supabase.select_one("organizations", str(organization_id))
                 if not org or org.get("owner_id") != current_user["id"]:
+                    print(f"DEBUG: upload_video - org access denied for team manager")
                     raise HTTPException(status_code= status.HTTP_403_FORBIDDEN, detail="Access denied to this organization")
             else:
+                 print(f"DEBUG: upload_video - org access denied for coach (unlinked?)")
                  raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You can only upload to your linked organization")
     
     # Generate unique filename and save. We never trust the original name for paths.

@@ -161,13 +161,18 @@ async def require_staff_member(
     current_user: dict = Depends(require_team_account),
 ) -> dict:
     """
-    Dependency that requires the user to be a COACH.
-    Used for features delegated to coaching staff (match upload, scheduling).
+    Dependency that requires the user to be a COACH who is linked to an organization.
+    Used for features delegated to coaching staff (match upload, scheduling, stats).
     """
     if current_user.get("account_type") != AccountType.COACH.value:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="This feature is managed by the Coaching Staff",
+        )
+    if not current_user.get("organization_id"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your coach account has not been linked to a team yet. Ask your organization owner to add you via the Coaching Staff page.",
         )
     return current_user
 
