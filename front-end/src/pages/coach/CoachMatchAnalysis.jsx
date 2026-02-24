@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { videoAPI, analysisAPI } from '@/services/api';
@@ -54,6 +54,20 @@ const CoachMatchAnalysis = () => {
     const [currentStep, setCurrentStep] = useState('');
     const [results, setResults] = useState(null);
     const [processedVideoId, setProcessedVideoId] = useState(null);
+
+    const [history, setHistory] = useState([]);
+
+    useEffect(() => {
+        const fetchHistory = async () => {
+            try {
+                const res = await videoAPI.list({ page_size: 10 });
+                setHistory((res.data.videos || res.data || []).slice(0, 10));
+            } catch (err) {
+                console.error("Failed to fetch history", err);
+            }
+        };
+        fetchHistory();
+    }, [stage]);
 
     const [form, setForm] = useState({
         title: '',
@@ -297,17 +311,22 @@ const CoachMatchAnalysis = () => {
                                     <div className={`mt-4 p-4 rounded-xl border ${dark ? 'border-gray-600 bg-gray-700/40' : 'border-blue-100 bg-blue-50/50'}`}>
                                         <h3 className={`font-semibold mb-2 ${dark ? 'text-white' : 'text-gray-900'}`}>Annotated Video Output</h3>
                                         <p className="text-xs text-gray-400 mb-3">Download or view the AI-annotated video with tactical overlays.</p>
+                                        <video
+                                            controls
+                                            src={`http://localhost:8000/api/videos/${processedVideoId}/annotated?token=${localStorage.getItem('accessToken')}`}
+                                            className="w-full rounded-lg mb-3 bg-black"
+                                        />
                                         <a
                                             href={`http://localhost:8000/api/videos/${processedVideoId}/annotated?token=${localStorage.getItem('accessToken')}`}
                                             target="_blank" rel="noreferrer"
                                             className={`w-full py-2.5 rounded-lg text-sm font-medium flex items-center justify-center transition-colors ${dark ? 'bg-orange-600 hover:bg-orange-700 text-white' : 'bg-orange-500 hover:bg-orange-600 text-white'}`}
                                         >
                                             <VideoIcon size={16} className="mr-2" />
-                                            View / Download Annotated Video
+                                            Download Annotated Video
                                         </a>
                                     </div>
                                 )}
-                                <button onClick={reset} className={`mt-5 w-full py-2.5 rounded-xl tex-sm font-medium transition border ${dark ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                                <button onClick={reset} className={`mt-5 w-full py-2.5 rounded-xl text-sm font-medium transition border ${dark ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                                     }`}>
                                     Analyse Another Match
                                 </button>
@@ -315,12 +334,47 @@ const CoachMatchAnalysis = () => {
                         )}
 
                         {stage === 'idle' && !results && (
-                            <div className={`rounded-2xl border p-8 text-center ${dark ? 'bg-gray-800/40 border-gray-700' : 'bg-white border-gray-100'}`}>
-                                <Activity size={40} className="mx-auto mb-4 text-gray-300" />
-                                <p className={`text-sm ${dark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                    Upload a match video to see AI-powered insights here.
-                                </p>
-                            </div>
+                            <>
+                                <div className={`rounded-2xl border p-8 text-center ${dark ? 'bg-gray-800/40 border-gray-700' : 'bg-white border-gray-100'}`}>
+                                    <Activity size={40} className="mx-auto mb-4 text-gray-300" />
+                                    <p className={`text-sm ${dark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                        Upload a match video to see AI-powered insights here.
+                                    </p>
+                                </div>
+                                {history.length > 0 && (
+                                    <div className={`rounded-2xl border p-6 mt-6 ${dark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-sm'}`}>
+                                        <h2 className={`font-semibold mb-4 ${dark ? 'text-white' : 'text-gray-900'}`}>History of Analysis</h2>
+                                        <div className="space-y-4">
+                                            {history.map(item => (
+                                                <div key={item.id} className={`flex flex-col p-4 rounded-lg border ${dark ? 'border-gray-700 bg-gray-750' : 'border-gray-100 bg-gray-50'}`}>
+                                                    <div className="flex items-center justify-between mb-3">
+                                                        <div>
+                                                            <p className={`text-sm font-medium ${dark ? 'text-gray-200' : 'text-gray-800'}`}>{item.title}</p>
+                                                            <p className="text-xs text-gray-400">{new Date(item.created_at).toLocaleDateString()}</p>
+                                                        </div>
+                                                        <span className={`text-xs px-2 py-1 rounded-full ${item.status === 'completed' ? 'bg-green-100 text-green-700' : item.status === 'failed' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
+                                                            {item.status}
+                                                        </span>
+                                                    </div>
+                                                    {item.status === 'completed' && (
+                                                        <div className="mt-2 text-center">
+                                                            <video
+                                                                controls
+                                                                src={`http://localhost:8000/api/videos/${item.id}/annotated?token=${localStorage.getItem('accessToken')}`}
+                                                                className="w-full h-auto rounded-lg bg-black"
+                                                            />
+                                                            <div className="mt-2 text-xs text-gray-400 flex justify-between items-center px-2">
+                                                                <span>Annotated Video Player</span>
+                                                                <a href={`http://localhost:8000/api/videos/${item.id}/annotated?token=${localStorage.getItem('accessToken')}`} target="_blank" rel="noreferrer" className="text-orange-500 hover:text-orange-400">Download</a>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
                 </div>
