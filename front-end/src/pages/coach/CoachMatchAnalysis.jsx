@@ -53,6 +53,7 @@ const CoachMatchAnalysis = () => {
     const [progress, setProgress] = useState(0);
     const [currentStep, setCurrentStep] = useState('');
     const [results, setResults] = useState(null);
+    const [processedVideoId, setProcessedVideoId] = useState(null);
 
     const [form, setForm] = useState({
         title: '',
@@ -93,6 +94,7 @@ const CoachMatchAnalysis = () => {
             setCurrentStep(current_step || 'Processing…');
             if (status === 'completed') {
                 setStage('completed'); setProgress(100);
+                setProcessedVideoId(videoId);
                 const r = (await analysisAPI.getLastResultByVideo(videoId)).data;
                 setResults(r);
                 showToast('Analysis complete!', 'success');
@@ -143,7 +145,7 @@ const CoachMatchAnalysis = () => {
 
     const reset = () => {
         setVideoFile(null); setVideoPreview(null); setStage('idle');
-        setProgress(0); setResults(null); setCurrentStep('');
+        setProgress(0); setResults(null); setCurrentStep(''); setProcessedVideoId(null);
         if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
@@ -291,6 +293,20 @@ const CoachMatchAnalysis = () => {
                                         </div>
                                     ))}
                                 </div>
+                                {processedVideoId && (
+                                    <div className={`mt-4 p-4 rounded-xl border ${dark ? 'border-gray-600 bg-gray-700/40' : 'border-blue-100 bg-blue-50/50'}`}>
+                                        <h3 className={`font-semibold mb-2 ${dark ? 'text-white' : 'text-gray-900'}`}>Annotated Video Output</h3>
+                                        <p className="text-xs text-gray-400 mb-3">Download or view the AI-annotated video with tactical overlays.</p>
+                                        <a
+                                            href={`http://localhost:8000/api/videos/${processedVideoId}/annotated?token=${localStorage.getItem('accessToken')}`}
+                                            target="_blank" rel="noreferrer"
+                                            className={`w-full py-2.5 rounded-lg text-sm font-medium flex items-center justify-center transition-colors ${dark ? 'bg-orange-600 hover:bg-orange-700 text-white' : 'bg-orange-500 hover:bg-orange-600 text-white'}`}
+                                        >
+                                            <VideoIcon size={16} className="mr-2" />
+                                            View / Download Annotated Video
+                                        </a>
+                                    </div>
+                                )}
                                 <button onClick={reset} className={`mt-5 w-full py-2.5 rounded-xl tex-sm font-medium transition border ${dark ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                                     }`}>
                                     Analyse Another Match
