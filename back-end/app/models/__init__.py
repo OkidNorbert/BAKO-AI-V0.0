@@ -49,6 +49,11 @@ from app.models.analytics import (
     ProgressData,
     ProgressReport,
 )
+from app.models.communication import (
+    AnnouncementCreate,
+    Announcement,
+    AnnouncementListResponse,
+)
 
 __all__ = [
     # User models
@@ -93,4 +98,8 @@ __all__ = [
     "SkillSummary",
     "ProgressData",
     "ProgressReport",
+    # Communication models
+    "AnnouncementCreate",
+    "Announcement",
+    "AnnouncementListResponse",
 ]

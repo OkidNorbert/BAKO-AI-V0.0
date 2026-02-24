@@ -97,6 +97,7 @@ async def run_analysis_background(video_id: str, mode: str, supabase: SupabaseSe
             "avg_elbow_angle_shooting",
             "training_load_score",
             "events",
+            "advanced_analytics", # Persist advanced insights and clips
             "processing_time_seconds",
         }
 

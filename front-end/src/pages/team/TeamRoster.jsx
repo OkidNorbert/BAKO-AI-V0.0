@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { adminAPI } from '../../services/api';
 import { useTheme } from '@/context/ThemeContext';
 import {
@@ -18,7 +18,8 @@ import {
   Shield,
   FileText,
   ArrowUpDown,
-  Trash
+  Trash,
+  Link2
 } from 'lucide-react';
 import { showToast } from '@/components/shared/Toast';
 
@@ -31,6 +32,7 @@ const TeamRoster = () => {
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
   const { isDarkMode } = useTheme();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchPlayers();
@@ -73,11 +75,66 @@ const TeamRoster = () => {
   };
 
   const handleViewSchedule = (playerId) => {
-    window.location.href = `/team/players/${playerId}/schedule`;
+    navigate(`/team/players/${playerId}/schedule`);
   };
 
   const handleViewPerformance = (playerId) => {
-    window.location.href = `/team/players/${playerId}/performance`;
+    navigate(`/team/players/${playerId}/performance`);
+  };
+
+  const handleLinkAccount = async (player) => {
+    const email = window.prompt(`Enter account email for ${player.name} to link their profile:`);
+    if (!email || !email.trim()) return;
+
+    try {
+      showToast('Linking account...', 'info');
+      await adminAPI.linkPlayerAccount(player.id, email.trim());
+      showToast(`Account successfully linked to ${player.name}`, 'success');
+      fetchPlayers(); // Refresh to show linked status
+    } catch (error) {
+      console.error('Error linking account:', error);
+      const detail = error.response?.data?.detail || 'Failed to link account';
+      showToast(detail, 'error');
+    }
+  };
+
+  const handleLinkNewAccount = async () => {
+    const email = window.prompt(`Enter the player's account email to link them to your roster:`);
+    if (!email || !email.trim()) return;
+
+    try {
+      showToast('Searching for account...', 'info');
+      // We need a specific endpoint or just reuse existing link with a flag to create roster entry
+      // For now, let's assume the coach might need to create a roster name first or we handle it in one go
+      // If the backend link_player_account could search by email and create a roster entry if none exists, that would be ideal.
+      // Since I can't easily change the backend logic to handle 'new' players in that endpoint without more work, 
+      // I'll call a hypothetical 'link-new' or just tell them to add to roster first (but user said only signup).
+      // Actually, I'll just keep the existing table link and remove the 'Plus' button.
+      // Wait, if they sign up, they exist in 'users' but not 'players'.
+      // I should implement a 'Link New' that creates the 'players' entry too.
+      await adminAPI.linkPlayerAccount('new', email.trim());
+      showToast(`Account successfully linked and added to roster`, 'success');
+      fetchPlayers();
+    } catch (error) {
+      console.error('Error linking account:', error);
+      const detail = error.response?.data?.detail || 'Failed to link account';
+      showToast(detail, 'error');
+    }
+  };
+
+  const handleDeletePlayer = async (playerId, playerName) => {
+    if (!window.confirm(`Are you sure you want to remove ${playerName} from the roster? This will also unlink their account.`)) {
+      return;
+    }
+
+    try {
+      await adminAPI.deletePlayer(playerId);
+      setPlayers(players.filter(p => p.id !== playerId));
+      showToast('Player removed from roster successfully', 'success');
+    } catch (error) {
+      console.error('Error deleting player:', error);
+      showToast('Failed to remove player from roster', 'error');
+    }
   };
 
   const sortData = (data) => {
@@ -142,7 +199,7 @@ const TeamRoster = () => {
             <div>
               <h1 className="text-2xl font-bold">Team Roster</h1>
               <p className={`mt-1 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                Manage players, positions, and availability
+                Manage your roster by linking player accounts
               </p>
             </div>
             <div className="flex gap-3">
@@ -156,16 +213,16 @@ const TeamRoster = () => {
                 <RefreshCw size={16} className="mr-2" />
                 Refresh
               </button>
-              <Link
-                to="/team/roster/new"
+              <button
+                onClick={handleLinkNewAccount}
                 className={`flex items-center px-3 py-2 rounded-lg transition ${isDarkMode
                   ? 'bg-orange-600 hover:bg-orange-700 text-white'
                   : 'bg-orange-500 hover:bg-orange-600 text-white'
                   }`}
               >
-                <Plus size={16} className="mr-2" />
-                Add Player
-              </Link>
+                <Link2 size={16} className="mr-2" />
+                Link Account
+              </button>
               <Link
                 to="/team/reports"
                 className={`flex items-center px-3 py-2 rounded-lg transition ${isDarkMode
@@ -433,16 +490,6 @@ const TeamRoster = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex space-x-1">
-                            <Link
-                              to={`/team/players/${player.id}/update`}
-                              className={`p-1 rounded-md ${isDarkMode
-                                ? 'text-blue-400 hover:bg-gray-700'
-                                : 'text-blue-600 hover:bg-blue-100'
-                                }`}
-                              title="Edit Player"
-                            >
-                              <Edit size={18} />
-                            </Link>
                             <button
                               onClick={() => handleViewPerformance(player.id)}
                               className={`p-1 rounded-md ${isDarkMode
@@ -463,6 +510,28 @@ const TeamRoster = () => {
                             >
                               <Eye size={18} />
                             </Link>
+                            <button
+                              onClick={() => handleLinkAccount(player)}
+                              className={`p-1 rounded-md ${player.user_id
+                                ? 'text-blue-500 hover:bg-blue-100'
+                                : isDarkMode
+                                  ? 'text-gray-400 hover:bg-gray-700'
+                                  : 'text-gray-600 hover:bg-gray-100'
+                                }`}
+                              title={player.user_id ? "Account Linked" : "Link User Account"}
+                            >
+                              <Link2 size={18} className={player.user_id ? 'text-green-500' : ''} />
+                            </button>
+                            <button
+                              onClick={() => handleDeletePlayer(player.id, player.name)}
+                              className={`p-1 rounded-md ${isDarkMode
+                                ? 'text-red-400 hover:bg-gray-700'
+                                : 'text-red-600 hover:bg-red-100'
+                                }`}
+                              title="Delete Player"
+                            >
+                              <Trash size={18} />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -485,16 +554,16 @@ const TeamRoster = () => {
                             </p>
                           </div>
                           {players.length === 0 && (
-                            <Link
-                              to="/team/roster/new"
+                            <button
+                              onClick={handleLinkNewAccount}
                               className={`inline-flex items-center px-4 py-2 rounded-lg font-medium ${isDarkMode
                                 ? 'bg-orange-600 hover:bg-orange-700 text-white'
                                 : 'bg-orange-500 hover:bg-orange-600 text-white'
                                 }`}
                             >
-                              <Plus size={18} className="mr-2" />
-                              Add Player
-                            </Link>
+                              <Link2 size={18} className="mr-2" />
+                              Link Player Account
+                            </button>
                           )}
                         </div>
                       </td>

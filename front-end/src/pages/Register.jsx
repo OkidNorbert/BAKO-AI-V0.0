@@ -22,6 +22,7 @@ const Register = () => {
       // Redirect based on user role
       switch (user.role) {
         case 'team':
+        case 'coach':
           navigate('/team');
           break;
         case 'player':
@@ -56,7 +57,8 @@ const Register = () => {
       // Map frontend role to backend account_type
       const accountTypeMapping = {
         'player': 'personal',
-        'team': 'team'
+        'team': 'team',
+        'coach': 'coach'
       };
 
       const result = await register({
@@ -121,6 +123,7 @@ const Register = () => {
                   }`}
               >
                 <option value="player">Personal Player</option>
+                <option value="coach">Team Coach</option>
                 <option value="team">Team Organization</option>
               </select>
             </div>

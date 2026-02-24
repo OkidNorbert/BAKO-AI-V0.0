@@ -150,11 +150,14 @@ async def login(
         )
     
     # Fetch organization_id if applicable
-    org_id = None
-    if user["account_type"] == AccountType.TEAM.value:
+    org_id = user.get("organization_id")
+    if not org_id and user["account_type"] == AccountType.TEAM.value:
         orgs = await supabase.select("organizations", filters={"owner_id": user["id"]})
         if orgs:
             org_id = orgs[0]["id"]
+    elif not org_id and user["account_type"] == AccountType.COACH.value:
+        # For coaches, we expect organization_id to be set in users table already via linking
+        pass
             
     # Create tokens
     token_data = {
@@ -251,11 +254,13 @@ async def get_current_user_profile(
         )
 
     # Fetch org info
-    org_id = None
-    if user["account_type"] == AccountType.TEAM.value:
+    org_id = user.get("organization_id")
+    if not org_id and user["account_type"] == AccountType.TEAM.value:
         orgs = await supabase.select("organizations", filters={"owner_id": user["id"]})
         if orgs:
             org_id = orgs[0]["id"]
+    elif not org_id and user["account_type"] == AccountType.COACH.value:
+        pass
             
     return User(
         id=user["id"],

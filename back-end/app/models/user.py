@@ -12,6 +12,7 @@ from pydantic.alias_generators import to_camel
 class AccountType(str, Enum):
     """User account type determining access level."""
     TEAM = "team"
+    COACH = "coach"
     PERSONAL = "personal"
 
 
@@ -43,6 +44,7 @@ class UserUpdate(BaseModel):
     """Request schema for updating user profile."""
     full_name: Optional[str] = Field(None, max_length=100)
     avatar_url: Optional[str] = None
+    staff_role: Optional[str] = None
 
 
 class User(UserBase):
@@ -52,6 +54,7 @@ class User(UserBase):
     full_name: Optional[str] = None
     avatar_url: Optional[str] = None
     organization_id: Optional[UUID] = None
+    staff_role: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
 

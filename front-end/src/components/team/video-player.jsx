@@ -16,7 +16,7 @@ import {
   RotateCcw
 } from 'lucide-react';
 
-const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate, onTacticalUpdate }) => {
+const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate, onTacticalUpdate, seekTo = null }) => {
   const { isDarkMode } = useTheme();
   const videoRef = useRef(null);
   const containerRef = useRef(null);
@@ -38,6 +38,17 @@ const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate, onTacticalUpdate })
   const [shotClockPosition, setShotClockPosition] = useState(null);
   const [events, setEvents] = useState([]);
   const [videoDimensions, setVideoDimensions] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    if (seekTo !== null && videoRef.current) {
+      videoRef.current.currentTime = seekTo;
+      setCurrentTime(seekTo);
+      if (!isPlaying) {
+        videoRef.current.play().catch(e => console.warn("Auto-play blocked", e));
+        setIsPlaying(true);
+      }
+    }
+  }, [seekTo]);
 
   useEffect(() => {
     if (analysisData) {
@@ -133,6 +144,7 @@ const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate, onTacticalUpdate })
           y: centerY,
           tactical_x: d.tactical_x,
           tactical_y: d.tactical_y,
+          keypoints: d.keypoints,
           team: d.team_id === 1 ? 'home' : 'away',
           number: d.track_id.toString().slice(-2)
         };
@@ -320,29 +332,66 @@ const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate, onTacticalUpdate })
             {selectedOverlay === 'players' && (
               <>
                 {playerPositions.map(player => (
-                  <div
-                    key={player.id}
-                    className="absolute transform -translate-x-1/2 -translate-y-1/2"
-                    style={{
-                      left: `${player.x}%`,
-                      top: `${player.y}%`,
-                    }}
-                  >
-                    <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold ${player.team === 'home'
-                      ? 'bg-blue-500 border-white text-white'
-                      : 'bg-red-500 border-white text-white'
-                      }`}>
-                      {player.number}
+                  <React.Fragment key={player.id}>
+                    {/* Render Skeleton if keypoints available */}
+                    {player.keypoints && Array.isArray(player.keypoints) && (
+                      <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ position: 'fixed', top: 0, left: 0 }}>
+                        {(() => {
+                          const kp = player.keypoints;
+                          const pairs = [
+                            [5, 6], [5, 7], [7, 9], [6, 8], [8, 10], // arms
+                            [5, 11], [6, 12], [11, 12], // torso
+                            [11, 13], [13, 15], [12, 14], [14, 16] // legs
+                          ];
+                          return pairs.map(([i, j], idx) => {
+                            if (kp[i] && kp[j] && kp[i][0] !== 0 && kp[j][0] !== 0) {
+                              const x1 = (kp[i][0] / videoDimensions.width) * 100;
+                              const y1 = (kp[i][1] / videoDimensions.height) * 100;
+                              const x2 = (kp[j][0] / videoDimensions.width) * 100;
+                              const y2 = (kp[j][1] / videoDimensions.height) * 100;
+                              return (
+                                <line
+                                  key={idx}
+                                  x1={`${x1}%`}
+                                  y1={`${y1}%`}
+                                  x2={`${x2}%`}
+                                  y2={`${y2}%`}
+                                  stroke={player.team === 'home' ? '#60a5fa' : '#f87171'}
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  opacity="0.7"
+                                />
+                              );
+                            }
+                            return null;
+                          });
+                        })()}
+                      </svg>
+                    )}
+
+                    <div
+                      className="absolute transform -translate-x-1/2 -translate-y-1/2"
+                      style={{
+                        left: `${player.x}%`,
+                        top: `${player.y}%`,
+                      }}
+                    >
+                      <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold ${player.team === 'home'
+                        ? 'bg-blue-500 border-white text-white'
+                        : 'bg-red-500 border-white text-white'
+                        }`}>
+                        {player.number}
+                      </div>
+                      <div className={`text-xs mt-1 text-center font-medium ${player.team === 'home' ? 'text-blue-400' : 'text-red-400'
+                        }`}>
+                        P{player.id}
+                      </div>
                     </div>
-                    <div className={`text-xs mt-1 text-center font-medium ${player.team === 'home' ? 'text-blue-400' : 'text-red-400'
-                      }`}>
-                      P{player.id}
-                    </div>
-                  </div>
+                  </React.Fragment>
                 ))}
               </>
             )}
-
+            
             {showOverlays && refereePositions.length > 0 && (
               <>
                 {refereePositions.map(ref => (

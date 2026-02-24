@@ -31,6 +31,39 @@ const MatchUpload = () => {
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
 
+  const isCoach = user?.role === 'coach';
+  const isLinked = !!user?.organizationId;
+
+  if (user?.role === 'team') {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center">
+        <Shield size={64} className="text-orange-500 mb-6" />
+        <h1 className={`text-2xl font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Operational Access Restricted</h1>
+        <p className={`max-w-md mb-8 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+          Match analysis and operational management are delegated to the Coaching Staff.
+          Please ensure you have linked a Coach to your organization to perform these tasks.
+        </p>
+        <button
+          onClick={() => navigate('/team/staff')}
+          className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+        >
+          Manage Coaching Staff
+        </button>
+      </div>
+    );
+  }
+
+  if (!isCoach || !isLinked) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center">
+        <AlertTriangle size={64} className="text-yellow-500 mb-6" />
+        <h1 className={`text-2xl font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Access Required</h1>
+        <p className={`max-w-md ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+          {!isCoach ? "This feature is reserved for the Coaching Staff." : "You must be linked to an organization to upload match videos."}
+        </p>
+      </div>
+    );
+  }
   const [uploadData, setUploadData] = useState({
     title: '',
     opponent: '',
@@ -479,11 +512,10 @@ const MatchUpload = () => {
                           key={preset.description}
                           type="button"
                           onClick={() => handleInputChange('ourTeamJersey', preset.description)}
-                          className={`p-3 rounded-lg transition-all border-2 flex flex-col items-center justify-center ${
-                            uploadData.ourTeamJersey === preset.description
+                          className={`p-3 rounded-lg transition-all border-2 flex flex-col items-center justify-center ${uploadData.ourTeamJersey === preset.description
                               ? isDarkMode ? 'border-orange-400' : 'border-orange-500'
                               : isDarkMode ? 'border-gray-600' : 'border-gray-300'
-                          }`}
+                            }`}
                           title={preset.name}
                         >
                           <div
@@ -509,11 +541,10 @@ const MatchUpload = () => {
                           key={preset.description}
                           type="button"
                           onClick={() => handleInputChange('opponentJersey', preset.description)}
-                          className={`p-3 rounded-lg transition-all border-2 flex flex-col items-center justify-center ${
-                            uploadData.opponentJersey === preset.description
+                          className={`p-3 rounded-lg transition-all border-2 flex flex-col items-center justify-center ${uploadData.opponentJersey === preset.description
                               ? isDarkMode ? 'border-blue-400' : 'border-blue-500'
                               : isDarkMode ? 'border-gray-600' : 'border-gray-300'
-                          }`}
+                            }`}
                           title={preset.name}
                         >
                           <div

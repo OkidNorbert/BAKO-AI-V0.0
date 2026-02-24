@@ -11,9 +11,11 @@ CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     email TEXT UNIQUE NOT NULL,
     hashed_password TEXT NOT NULL,
-    account_type TEXT NOT NULL CHECK (account_type IN ('team', 'personal')),
+    account_type TEXT NOT NULL CHECK (account_type IN ('team', 'personal', 'coach')),
     full_name TEXT,
     avatar_url TEXT,
+    organization_id UUID, -- Explicitly added for linking to orgs
+    staff_role TEXT, -- e.g., 'Main Coach', 'Assistant Coach'
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -29,6 +31,17 @@ CREATE TABLE IF NOT EXISTS organizations (
     name TEXT NOT NULL,
     description TEXT,
     logo_url TEXT,
+    primary_color TEXT DEFAULT '#FF5733',
+    secondary_color TEXT DEFAULT '#333333',
+    jersey_style TEXT DEFAULT 'Solid',
+    home_court TEXT,
+    website TEXT,
+    phone TEXT,
+    email TEXT,
+    twitter_handle TEXT,
+    instagram_handle TEXT,
+    competition_settings JSONB DEFAULT '{}',
+    roster_settings JSONB DEFAULT '{}',
     owner_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -270,6 +283,16 @@ CREATE TABLE IF NOT EXISTS schedules (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Announcements Table
+CREATE TABLE IF NOT EXISTS announcements (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    author_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
 CREATE INDEX idx_schedules_org ON schedules(organization_id);
 
 -- ============================================
@@ -314,43 +337,74 @@ CREATE INDEX idx_notifications_recipient ON notifications(recipient_id);
 ALTER TABLE schedules ENABLE ROW LEVEL SECURITY;
 ALTER TABLE matches ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE announcements ENABLE ROW LEVEL SECURITY;
 
--- Schedules: viewable by org members, editable by owners
 -- Schedules: viewable by org members (including owners)
 CREATE POLICY "Users can view schedules" ON schedules
     FOR SELECT USING (
         organization_id IN (
             SELECT id FROM organizations WHERE owner_id::text = (SELECT auth.uid())::text
             UNION
-            SELECT organization_id FROM players WHERE user_id::text = (SELECT auth.uid())::text
-        )
-    );
-
-CREATE POLICY "Owners can manage schedules" ON schedules
-    FOR INSERT, UPDATE, DELETE WITH CHECK (
-        organization_id IN (SELECT id FROM organizations WHERE owner_id::text = (SELECT auth.uid())::text)
-    );
-
--- Matches: similar to schedules
--- Matches: viewable by org members (including owners)
-CREATE POLICY "Users can view matches" ON matches
-    FOR SELECT USING (
-        organization_id IN (
-            SELECT id FROM organizations WHERE owner_id::text = (SELECT auth.uid())::text
+            SELECT organization_id FROM users WHERE id::text = (SELECT auth.uid())::text
             UNION
             SELECT organization_id FROM players WHERE user_id::text = (SELECT auth.uid())::text
         )
     );
 
-CREATE POLICY "Owners can manage matches" ON matches
-    FOR INSERT, UPDATE, DELETE WITH CHECK (
-        organization_id IN (SELECT id FROM organizations WHERE owner_id::text = (SELECT auth.uid())::text)
+CREATE POLICY "Owners and Staff can manage schedules" ON schedules
+    FOR ALL WITH CHECK (
+        organization_id IN (
+            SELECT id FROM organizations WHERE owner_id::text = (SELECT auth.uid())::text
+            UNION
+            SELECT organization_id FROM users WHERE id::text = (SELECT auth.uid())::text AND (account_type = 'team' OR account_type = 'coach')
+        )
+    );
+
+-- Matches: similar to schedules
+CREATE POLICY "Users can view matches" ON matches
+    FOR SELECT USING (
+        organization_id IN (
+            SELECT id FROM organizations WHERE owner_id::text = (SELECT auth.uid())::text
+            UNION
+            SELECT organization_id FROM users WHERE id::text = (SELECT auth.uid())::text
+            UNION
+            SELECT organization_id FROM players WHERE user_id::text = (SELECT auth.uid())::text
+        )
+    );
+
+CREATE POLICY "Owners and Staff can manage matches" ON matches
+    FOR ALL WITH CHECK (
+        organization_id IN (
+            SELECT id FROM organizations WHERE owner_id::text = (SELECT auth.uid())::text
+            UNION
+            SELECT organization_id FROM users WHERE id::text = (SELECT auth.uid())::text AND (account_type = 'team' OR account_type = 'coach')
+        )
+    );
+
+-- Announcements: viewable by org members
+CREATE POLICY "Users can view announcements" ON announcements
+    FOR SELECT USING (
+        organization_id IN (
+            SELECT id FROM organizations WHERE owner_id::text = (SELECT auth.uid())::text
+            UNION
+            SELECT organization_id FROM users WHERE id::text = (SELECT auth.uid())::text
+            UNION
+            SELECT organization_id FROM players WHERE user_id::text = (SELECT auth.uid())::text
+        )
+    );
+
+CREATE POLICY "Owners and Staff can manage announcements" ON announcements
+    FOR ALL WITH CHECK (
+        organization_id IN (
+            SELECT id FROM organizations WHERE owner_id::text = (SELECT auth.uid())::text
+            UNION
+            SELECT organization_id FROM users WHERE id::text = (SELECT auth.uid())::text AND (account_type = 'team' OR account_type = 'coach')
+        )
     );
 
 -- Notifications: generic
 CREATE POLICY "Users can manage own notifications" ON notifications
     FOR ALL USING (recipient_id::text = (SELECT auth.uid())::text);
-
 -- Triggers
 CREATE TRIGGER update_schedules_updated_at
     BEFORE UPDATE ON schedules

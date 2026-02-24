@@ -19,10 +19,15 @@ export const adminAPI = {
   // Schedule endpoints
   getSchedule: () => api.get('/admin/schedule'),
   getPlayers: () => api.get('/admin/users?role=player'),
+  getStaff: () => api.get('/admin/staff'),
   getRoster: () => api.get('/admin/players'),
   createPlayer: (playerData) => api.post('/admin/players', playerData),
   updatePlayer: (playerId, playerData) => api.put(`/admin/players/${playerId}`, playerData),
   updatePlayerStatus: (playerId, status) => api.patch(`/admin/players/${playerId}/status`, { status }),
+  deletePlayer: (playerId) => api.delete(`/admin/players/${playerId}`),
+  linkPlayerAccount: (playerId, email) => api.post(`/admin/players/${playerId}/link`, { email }),
+  linkStaffMember: (email, role) => api.post('/admin/staff/link', { email, role }),
+  removeStaffMember: (userId) => api.delete(`/admin/staff/${userId}`),
   createScheduleEvent: (eventData) => api.post('/admin/schedule', eventData),
   updateScheduleEvent: (eventId, eventData) => api.put(`/admin/schedule/${eventId}`, eventData),
   deleteScheduleEvent: (eventId) => api.delete(`/admin/schedule/${eventId}`),
@@ -30,8 +35,22 @@ export const adminAPI = {
   // Match endpoints
   getMatches: () => api.get('/admin/matches'),
   getMatchById: (matchId) => api.get(`/admin/matches/${matchId}`),
+  createMatch: (data) => api.post('/admin/matches', data),
   updateMatch: (matchId, data) => api.put(`/admin/matches/${matchId}`, data),
   deleteMatch: (matchId) => api.delete(`/admin/matches/${matchId}`),
+
+  // Match Stats Import endpoints
+  uploadMatchStats: (matchId, formData) =>
+    api.post(`/admin/matches/${matchId}/stats-upload`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  getStatUpload: (uploadId) => api.get(`/admin/stats-upload/${uploadId}`),
+  confirmStatUpload: (uploadId, extractedJson) =>
+    api.post(`/admin/stats-upload/${uploadId}/confirm`, { extracted_json: extractedJson }),
+  retryStatUpload: (uploadId) => api.post(`/admin/stats-upload/${uploadId}/retry`),
+
+  // Get player stats for a specific match
+  getMatchPlayerStats: (matchId) => api.get(`/admin/matches/${matchId}/player-stats`),
 
   // Security endpoints
   getSecuritySettings: () => api.get('/admin/security/settings'),
@@ -101,6 +120,14 @@ export const analysisAPI = {
   getResult: (analysisId) => api.get(`/analysis/${analysisId}`),
   getLastResultByVideo: (videoId) => api.get(`/analysis/by-video/${videoId}`),
   getDetections: (analysisId, params) => api.get(`/analysis/${analysisId}/detections`, { params }),
+};
+
+// Advanced Analytics API
+export const advancedAnalyticsAPI = {
+  getClips: (videoId) => api.get(`/analytics/advanced/clips/${videoId}`),
+  getTeamSummary: (videoId) => api.get(`/analytics/advanced/team-summary/${videoId}`),
+  getPlayerAnalysis: (videoId, trackId) => api.get(`/analytics/advanced/player/${videoId}/${trackId}`),
+  getLineups: (videoId) => api.get(`/analytics/advanced/lineups/${videoId}`),
 };
 
 export default api;

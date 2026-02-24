@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { useTheme } from '@/context/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
 import api from '@/utils/axiosConfig';
 import {
   BarChart2,
@@ -10,8 +12,11 @@ import {
   Zap
 } from 'lucide-react';
 import { format } from 'date-fns';
+import VideoPlayer from '../../components/team/video-player';
+import AICoachFeedback from '../../components/player/AICoachFeedback';
 
 const SkillAnalytics = () => {
+  const { playerId } = useParams();
   const [skills, setSkills] = useState([]);
   const [summary, setSummary] = useState({});
   const [loading, setLoading] = useState(true);
@@ -21,28 +26,47 @@ const SkillAnalytics = () => {
     end: new Date().toISOString().split('T')[0]
   });
   const { isDarkMode } = useTheme();
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchSkills();
-  }, [dateRange]);
+  }, [dateRange, playerId]);
 
   const fetchSkills = async () => {
     try {
       setLoading(true);
       setError('');
 
-      // Mock data logic removed to prepare for real backend integration
+      if (playerId) {
+        // Use generic analytics endpoint if viewing specific player
+        const response = await api.get(`/analytics/player/${playerId}`, {
+          params: { period_days: 30 }
+        });
+        const data = response.data;
 
-      const response = await api.get('/player/skills', {
-        params: { startDate: dateRange.start, endDate: dateRange.end }
-      });
-      const data = response.data?.data ?? response.data;
-      if (data) {
-        setSkills(Array.isArray(data.skills) ? data.skills : []);
-        setSummary(data.summary && typeof data.summary === 'object' ? data.summary : {});
+        // Map PlayerAnalyticsSummary to the UI's expected format
+        setSkills([]); // The generic endpoint doesn't return a list of individual skills yet
+        setSummary({
+          overall: data.avg_shot_form_consistency ? Math.round(data.avg_shot_form_consistency) : '—',
+          shooting: data.avg_shot_form_consistency ? Math.round(data.avg_shot_form_consistency) : '—',
+          defense: '—', // Metric not currently in generic summary
+          training_sessions: data.total_training_sessions,
+          training_minutes: Math.round(data.total_training_minutes || 0),
+          distance: data.total_distance_km?.toFixed(2)
+        });
       } else {
-        setSkills([]);
-        setSummary({});
+        // Fallback or default for personal account
+        const response = await api.get('/player/skills', {
+          params: { startDate: dateRange.start, endDate: dateRange.end }
+        });
+        const data = response.data?.data ?? response.data;
+        if (data) {
+          setSkills(Array.isArray(data.skills) ? data.skills : []);
+          setSummary(data.summary && typeof data.summary === 'object' ? data.summary : {});
+        } else {
+          setSkills([]);
+          setSummary({});
+        }
       }
     } catch (err) {
       console.error('Error fetching skills:', err);
@@ -51,7 +75,6 @@ const SkillAnalytics = () => {
       setLoading(false);
     }
   };
-
   const formatDate = (dateString) => {
     try {
       const d = new Date(dateString);
@@ -94,75 +117,93 @@ const SkillAnalytics = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className={`rounded-xl p-6 shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-            <div className="flex items-center justify-between">
-              <span className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Overall Score</span>
-              <Target className="h-8 w-8 text-orange-500" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          {/* Main Analytics Content */}
+          <div className="lg:col-span-2 space-y-6">
+            <div className={`rounded-xl p-6 shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+              <h2 className="text-xl font-bold mb-4 flex items-center">
+                <Target className="mr-2 text-orange-500" />
+                Performance Overview
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="p-4 rounded-lg bg-orange-500/10 border border-orange-500/20">
+                  <span className={`text-xs uppercase font-bold ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Overall Score</span>
+                  <p className="text-3xl font-bold text-orange-500">{summary.overall || '—'}</p>
+                </div>
+                <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                  <span className={`text-xs uppercase font-bold ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Shooting</span>
+                  <p className="text-3xl font-bold text-yellow-500">{summary.shooting || '—'}</p>
+                </div>
+                <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+                  <span className={`text-xs uppercase font-bold ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Defense</span>
+                  <p className="text-3xl font-bold text-green-500">{summary.defense || '—'}</p>
+                </div>
+              </div>
             </div>
-            <p className="text-3xl font-bold mt-2">{summary.overall != null && summary.overall !== '' ? summary.overall : '—'}</p>
-            <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Based on recent sessions</p>
-          </div>
-          <div className={`rounded-xl p-6 shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-            <div className="flex items-center justify-between">
-              <span className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Shooting</span>
-              <Zap className="h-8 w-8 text-yellow-500" />
-            </div>
-            <p className="text-3xl font-bold mt-2">{summary.shooting != null && summary.shooting !== '' ? summary.shooting : '—'}</p>
-          </div>
-          <div className={`rounded-xl p-6 shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-            <div className="flex items-center justify-between">
-              <span className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Defense</span>
-              <Activity className="h-8 w-8 text-green-500" />
-            </div>
-            <p className="text-3xl font-bold mt-2">{summary.defense != null && summary.defense !== '' ? summary.defense : '—'}</p>
-          </div>
-        </div>
 
-        <div className={`rounded-xl shadow-lg overflow-hidden ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className={`px-6 py-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-            <h2 className="text-lg font-semibold flex items-center">
-              <TrendingUp className="h-5 w-5 mr-2 text-orange-500" />
-              Skill breakdown
-            </h2>
+            {/* Video Analysis Section (if a session is selected) */}
+            <div className={`rounded-xl shadow-lg overflow-hidden ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+              <div className={`px-6 py-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'} flex justify-between items-center`}>
+                <h2 className="text-lg font-semibold flex items-center">
+                  <Zap className="h-5 w-5 mr-2 text-yellow-500" />
+                  Session Feedback
+                </h2>
+              </div>
+              <div className="p-6">
+{skills.length > 0 && skills[0].videoUrl && ( 
+ <VideoPlayer 
+ videoSrc={skills[0].videoUrl} 
+ analysisData={skills[0].analysisData} 
+ /> 
+ )}
+                <AICoachFeedback analysisData={skills.length > 0 ? skills[0].analysisData : null} />
+              </div>
+            </div>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className={isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}>
-                <tr>
-                  <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Skill</th>
-                  <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Category</th>
-                  <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Score</th>
-                  <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Last updated</th>
-                </tr>
-              </thead>
-              <tbody className={`divide-y ${isDarkMode ? 'divide-gray-700' : 'divide-gray-200'}`}>
-                {skills.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className={`px-6 py-12 text-center ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                      No skill data for this period. Complete training sessions to see analytics here.
-                    </td>
-                  </tr>
-                ) : (
-                  skills.map((skill) => (
-                    <tr key={skill.id}>
-                      <td className="px-6 py-4 font-medium">{skill.name}</td>
-                      <td className={`px-6 py-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{skill.category}</td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium ${isDarkMode ? 'bg-orange-900/50 text-orange-300' : 'bg-orange-100 text-orange-800'}`}>
-                          {skill.score}
-                        </span>
-                      </td>
-                      <td className={`px-6 py-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{formatDate(skill.lastUpdated)}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+
+          {/* Sidebar: Recent Sessions / Skill Breakdown */}
+          <div className="space-y-6">
+            <div className={`rounded-xl p-6 shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+              <h3 className="text-lg font-bold mb-4">Training Stats</h3>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Sessions</span>
+                  <span className="font-bold">{summary.training_sessions || 0}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Minutes</span>
+                  <span className="font-bold">{summary.training_minutes || 0}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Distance</span>
+                  <span className="font-bold">{summary.distance || '0.00'} km</span>
+                </div>
+              </div>
+            </div>
+
+            <div className={`rounded-xl shadow-lg overflow-hidden ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+              <div className={`px-6 py-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+                <h3 className="font-semibold capitalize">Skill progress</h3>
+              </div>
+              <div className="p-4 space-y-3">
+                {skills.map((skill, idx) => (
+                  <div key={idx} className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span>{skill.name}</span>
+                      <span className="font-bold text-orange-500">{skill.score}</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                      <div className="h-full bg-orange-500" style={{ width: `${skill.score}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
+
   );
 };
 

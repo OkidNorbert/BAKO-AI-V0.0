@@ -50,7 +50,8 @@ async def get_current_user_optional(
     return {
         "id": payload.get("sub"),
         "email": payload.get("email"),
-        "account_type": payload.get("account_type")
+        "account_type": payload.get("account_type"),
+        "organization_id": payload.get("organization_id")
     }
 
 
@@ -89,7 +90,8 @@ async def get_current_user(
     return {
         "id": payload.get("sub"),
         "email": payload.get("email"),
-        "account_type": payload.get("account_type")
+        "account_type": payload.get("account_type"),
+        "organization_id": payload.get("organization_id")
     }
 
 
@@ -97,16 +99,31 @@ async def require_team_account(
     current_user: dict = Depends(get_current_user),
 ) -> dict:
     """
-    Dependency that requires a TEAM account type.
+    Dependency that requires a TEAM or COACH account type.
     Use for team-only endpoints.
+    """
+    allowed_types = [AccountType.TEAM.value, AccountType.COACH.value]
+    if current_user.get("account_type") not in allowed_types:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This endpoint requires a TEAM or COACH account",
+        )
+    return current_user
+
+
+async def require_organization_admin(
+    current_user: dict = Depends(get_current_user),
+) -> dict:
+    """
+    Dependency that requires a TEAM account type (Organization Owner).
+    Use for critical administrative tasks like staff linking and settings.
     """
     if current_user.get("account_type") != AccountType.TEAM.value:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="This endpoint requires a TEAM account",
+            detail="This operation requires organization owner administrative privileges",
         )
     return current_user
-
 
 async def require_personal_account(
     current_user: dict = Depends(get_current_user),
@@ -122,6 +139,42 @@ async def require_personal_account(
         )
     return current_user
 
+
+async def require_linked_account(
+    current_user: dict = Depends(get_current_user),
+) -> dict:
+    """
+    Dependency that requires the user to be linked to an organization.
+    """
+    if not current_user.get("organization_id"):
+        # For TEAM accounts, they might not have organization_id in token yet if just created,
+        # but for players/coaches, they MUST be linked.
+        if current_user.get("account_type") != AccountType.TEAM.value:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You must be linked to a team to access this feature",
+            )
+    return current_user
+
+
+async def require_staff_member(
+    current_user: dict = Depends(require_team_account),
+) -> dict:
+    """
+    Dependency that requires the user to be a COACH who is linked to an organization.
+    Used for features delegated to coaching staff (match upload, scheduling, stats).
+    """
+    if current_user.get("account_type") != AccountType.COACH.value:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This feature is managed by the Coaching Staff",
+        )
+    if not current_user.get("organization_id"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your coach account has not been linked to a team yet. Ask your organization owner to add you via the Coaching Staff page.",
+        )
+    return current_user
 
 def require_owner_or_admin(resource_owner_id: str):
     """

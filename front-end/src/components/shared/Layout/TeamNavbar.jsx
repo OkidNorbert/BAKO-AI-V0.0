@@ -24,6 +24,8 @@ const TeamNavbar = ({ onSidebarToggle }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [orgName, setOrgName] = useState('');
+  const [orgLogo, setOrgLogo] = useState('');
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const userMenuRef = useRef(null);
   const notificationsRef = useRef(null);
@@ -60,7 +62,22 @@ const TeamNavbar = ({ onSidebarToggle }) => {
       }
     };
 
+    const fetchOrgData = async () => {
+      if (user?.role === 'team' || user?.role === 'coach') {
+        try {
+          const response = await adminAPI.getProfile();
+          if (response.data?.organization) {
+            setOrgName(response.data.organization.name);
+            setOrgLogo(response.data.organization.logo_url);
+          }
+        } catch (error) {
+          console.error('Error fetching organization data for navbar:', error);
+        }
+      }
+    };
+
     fetchNotifications();
+    fetchOrgData();
 
     // Set up interval to check for new notifications every minute
     const interval = setInterval(fetchNotifications, 60000);
@@ -287,23 +304,23 @@ const TeamNavbar = ({ onSidebarToggle }) => {
                     }`}>
                     <div className={`h-8 w-8 rounded-full overflow-hidden border-2 ${isDarkMode ? 'border-yellow-400' : 'border-white'
                       }`}>
-                      {user?.profileImage ? (
+                      {orgLogo || user?.profileImage ? (
                         <img
-                          src={user.profileImage}
-                          alt={user?.name || 'Admin User'}
+                          src={orgLogo || user.profileImage}
+                          alt={orgName || user?.name || 'User'}
                           className="w-full h-full object-cover"
                         />
                       ) : (
                         <div className={`w-full h-full flex items-center justify-center ${isDarkMode ? 'bg-gray-800 text-yellow-400' : 'bg-indigo-700 text-white'
                           }`}>
                           <span className="text-lg font-bold">
-                            {user?.firstName ? user.firstName.charAt(0) : (user?.name ? user.name.charAt(0) : 'A')}
+                            {(orgName || user?.name || 'A').charAt(0)}
                           </span>
                         </div>
                       )}
                     </div>
                     <span className="text-white font-medium hidden sm:block">
-                      {user?.name || (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : 'Admin')}
+                      {orgName || user?.name || 'User'}
                     </span>
                     <ChevronDown className={`h-4 w-4 text-white`} />
                   </Menu.Button>
@@ -341,26 +358,8 @@ const TeamNavbar = ({ onSidebarToggle }) => {
                                 : 'text-gray-700'
                               }`}
                           >
-                            <User className="mr-3 h-5 w-5" />
-                            Profile
-                          </button>
-                        )}
-                      </Menu.Item>
-                      <Menu.Item>
-                        {({ active }) => (
-                          <button
-                            onClick={() => navigate('/team/settings')}
-                            className={`flex w-full items-center px-4 py-2 text-sm ${active
-                              ? isDarkMode
-                                ? 'bg-gray-700 text-white'
-                                : 'bg-gray-100 text-gray-900'
-                              : isDarkMode
-                                ? 'text-gray-300'
-                                : 'text-gray-700'
-                              }`}
-                          >
                             <Settings className="mr-3 h-5 w-5" />
-                            Settings
+                            Team Profile
                           </button>
                         )}
                       </Menu.Item>

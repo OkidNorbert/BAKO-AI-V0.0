@@ -18,6 +18,13 @@ const Login = () => {
     if (user) {
       // Redirect based on user role if already logged in
       switch (user.role) {
+        case 'coach':
+          if (user.organizationId) {
+            navigate('/team');
+          } else {
+            navigate('/coach');
+          }
+          break;
         case 'team':
           navigate('/team');
           break;
@@ -182,29 +189,6 @@ const Login = () => {
               </Link>
             </p>
 
-            <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
-              <span className={`block text-xs font-bold uppercase tracking-[0.2em] mb-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                Developer Access
-              </span>
-              <div className="flex flex-wrap items-center justify-center gap-3">
-                <button
-                  onClick={() => bypassLogin('team')}
-                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all border ${isDarkMode
-                    ? 'bg-gray-800/50 border-gray-700 text-orange-400 hover:bg-gray-800 hover:border-orange-500/50'
-                    : 'bg-white border-gray-200 text-orange-600 hover:bg-gray-50 hover:border-orange-300'}`}
-                >
-                  Team Login
-                </button>
-                <button
-                  onClick={() => bypassLogin('player')}
-                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all border ${isDarkMode
-                    ? 'bg-gray-800/50 border-gray-700 text-indigo-400 hover:bg-gray-800 hover:border-indigo-500/50'
-                    : 'bg-white border-gray-200 text-indigo-600 hover:bg-gray-50 hover:border-indigo-300'}`}
-                >
-                  Player Login
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       </div>

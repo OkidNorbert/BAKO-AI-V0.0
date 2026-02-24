@@ -144,6 +144,41 @@ async def run_team_analysis(
             # Wait for analysis to complete
             result = await anyio.to_thread.run_sync(run_sync)
         
+        # Run advanced analytics if requested
+        if result.get("status") == "completed" and options.get("enable_advanced_analytics", False):
+            try:
+                sync_progress_callback("Running advanced analytics", 95)
+                from analytics_engine import AnalyticsCoordinator
+                from utils import read_video
+                
+                # Re-read frames for advanced analytics (coordinator needs them for some modules)
+                video_frames = await anyio.to_thread.run_sync(read_video, video_path)
+                
+                coordinator = AnalyticsCoordinator()
+                # Run the coordination pipeline
+                # Note: We pass empty lists for tracks as the coordinator expects them in a specific format
+                # that we'll ideally improve later, but for now it will use events to generate clips.
+                advanced_results = await anyio.to_thread.run_sync(
+                    coordinator.process_all,
+                    video_frames,
+                    [], # player_tracks
+                    [], # ball_tracks
+                    [], # tactical_positions
+                    [], # player_assignment
+                    [], # ball_possession
+                    result.get("events", []),
+                    [], # shots
+                    [], # court_keypoints
+                    [], # speeds
+                    video_path,
+                    result.get("fps", 30.0)
+                )
+                
+                result["advanced_analytics"] = advanced_results
+                sync_progress_callback("Advanced analytics complete", 98)
+            except Exception as e:
+                print(f"⚠️  Advanced analytics failed: {e}")
+        
         # Final progress update
         if video_id and supabase:
             await supabase.update("videos", video_id, {
