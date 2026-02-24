@@ -21,6 +21,7 @@ const JERSEY_PRESETS = [
     { name: 'Green', desc: 'green jersey', hex: '#10B981' },
     { name: 'Purple', desc: 'purple jersey', hex: '#A855F7' },
     { name: 'Orange', desc: 'orange jersey', hex: '#F97316' },
+    { name: 'Grey', desc: 'grey jersey', hex: '#9CA3AF' },
 ];
 
 const ColorPicker = ({ value, onChange, label, accentClass }) => (
@@ -64,6 +65,9 @@ const CoachMatchAnalysis = () => {
         ourJersey: 'white jersey',
         opponentJersey: 'dark blue jersey',
         ourTeamId: '1',
+        maxPlayers: 10,
+        clearCache: true,
+        useCache: false,
         matchDate: new Date().toISOString().split('T')[0],
     });
 
@@ -180,7 +184,9 @@ const CoachMatchAnalysis = () => {
                 our_team_jersey: form.ourJersey,
                 opponent_jersey: form.opponentJersey,
                 our_team_id: parseInt(form.ourTeamId, 10),
-                max_players_on_court: 10,
+                max_players_on_court: parseInt(form.maxPlayers, 10),
+                read_from_stub: form.useCache,
+                clear_stubs_after: form.clearCache,
             });
 
             poll(videoId);
@@ -334,12 +340,75 @@ const CoachMatchAnalysis = () => {
                                     <ColorPicker label="Opponent Jersey" value={form.opponentJersey} onChange={v => set('opponentJersey', v)} accentClass="border-blue-500" />
 
                                     <div>
-                                        <label className="text-xs font-semibold uppercase tracking-widest mb-1.5 text-gray-400 block">Which team should be highlighted?</label>
-                                        <select className={inp} value={form.ourTeamId} onChange={e => set('ourTeamId', e.target.value)}>
-                                            <option value="1">Team 1 (left side)</option>
-                                            <option value="2">Team 2 (right side)</option>
-                                        </select>
+                                        <label className="text-xs font-semibold uppercase tracking-widest mb-1.5 text-gray-400 block">Which team is ours?</label>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {[
+                                                { id: '1', label: 'Team 1 (our team)' },
+                                                { id: '2', label: 'Team 2' },
+                                            ].map(t => (
+                                                <button
+                                                    key={t.id}
+                                                    type="button"
+                                                    onClick={() => set('ourTeamId', t.id)}
+                                                    className={`py-2 px-3 rounded-xl border text-sm font-medium transition-all ${form.ourTeamId === t.id
+                                                        ? 'bg-orange-500 border-orange-500 text-white shadow-md'
+                                                        : `${dark ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`
+                                                        }`}
+                                                >
+                                                    {t.label}
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
+
+                                    <div>
+                                        <label className="text-xs font-semibold uppercase tracking-widest mb-1.5 text-gray-400 block">Max players on court</label>
+                                        <input
+                                            type="number"
+                                            className={inp}
+                                            value={form.maxPlayers}
+                                            onChange={e => set('maxPlayers', e.target.value)}
+                                            min="1"
+                                            max="20"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Analysis Options */}
+                                <div className={`p-4 rounded-xl border space-y-4 ${dark ? 'border-gray-700 bg-gray-900/10' : 'border-gray-100 bg-blue-50/30'}`}>
+                                    <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400">Analysis Options</h3>
+
+                                    <label className="flex items-center gap-3 cursor-pointer group">
+                                        <div className="relative flex items-center">
+                                            <input
+                                                type="checkbox"
+                                                className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-gray-300 checked:bg-orange-500 checked:border-orange-500 transition-all"
+                                                checked={form.clearCache}
+                                                onChange={e => set('clearCache', e.target.checked)}
+                                            />
+                                            <CheckCircle className="absolute h-3.5 w-3.5 text-white opacity-0 peer-checked:opacity-100 left-0.5 pointer-events-none" />
+                                        </div>
+                                        <div>
+                                            <p className={`text-sm font-medium ${dark ? 'text-gray-200' : 'text-gray-700'}`}>Clear cached data before analysis</p>
+                                            <p className="text-[10px] text-gray-500 italic">Ensures fresh detection results</p>
+                                        </div>
+                                    </label>
+
+                                    <label className="flex items-center gap-3 cursor-pointer group border-t pt-3 border-gray-200/50 dark:border-gray-700/50">
+                                        <div className="relative flex items-center">
+                                            <input
+                                                type="checkbox"
+                                                className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-gray-300 checked:bg-blue-500 checked:border-blue-500 transition-all"
+                                                checked={form.useCache}
+                                                onChange={e => set('useCache', e.target.checked)}
+                                            />
+                                            <CheckCircle className="absolute h-3.5 w-3.5 text-white opacity-0 peer-checked:opacity-100 left-0.5 pointer-events-none" />
+                                        </div>
+                                        <div>
+                                            <p className={`text-sm font-medium ${dark ? 'text-gray-200' : 'text-gray-700'}`}>Use cached detections</p>
+                                            <p className="text-[10px] text-gray-500 italic">Faster analysis (skips tracking if possible)</p>
+                                        </div>
+                                    </label>
                                 </div>
 
                                 <button
@@ -380,22 +449,163 @@ const CoachMatchAnalysis = () => {
 
                         {results && (
                             <div className={card}>
-                                <h2 className={`font-semibold mb-5 ${dark ? 'text-white' : 'text-gray-900'}`}>Analysis Results</h2>
-                                <div className="grid grid-cols-2 gap-4">
-                                    {[
-                                        { label: 'Players Detected', value: results.players_detected ?? '–' },
-                                        { label: 'Shooting %', value: results.overall_shooting_percentage ? `${parseFloat(results.overall_shooting_percentage).toFixed(1)}%` : '–' },
-                                        { label: 'Total Passes', value: results.total_passes ?? '–' },
-                                        { label: 'Interceptions', value: results.total_interceptions ?? '–' },
-                                    ].map(s => (
-                                        <div key={s.label} className={`rounded-xl p-4 ${dark ? 'bg-gray-700/60' : 'bg-gray-50'}`}>
-                                            <p className="text-xs text-gray-400 mb-1">{s.label}</p>
-                                            <p className={`text-2xl font-bold ${dark ? 'text-white' : 'text-gray-900'}`}>{s.value}</p>
+                                <h2 className={`font-semibold mb-5 ${dark ? 'text-white' : 'text-gray-900'}`}>📊 Complete Analysis Results</h2>
+
+                                {/* Team Info with Colors */}
+                                <div className="grid grid-cols-2 gap-4 mb-6">
+                                    <div className={`p-4 rounded-xl border-2 ${dark ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
+                                        <p className="text-xs text-gray-400 mb-2 uppercase tracking-wide font-semibold">Our Team</p>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-full" style={{
+                                                backgroundColor: JERSEY_PRESETS.find(p => p.desc === form.ourJersey)?.hex || '#F5F5F5'
+                                            }} />
+                                            <div>
+                                                <p className={`font-semibold ${dark ? 'text-white' : 'text-gray-900'}`}>
+                                                    {JERSEY_PRESETS.find(p => p.desc === form.ourJersey)?.name || 'Team'}
+                                                </p>
+                                                <p className="text-xs text-gray-400">Jersey</p>
+                                            </div>
                                         </div>
-                                    ))}
+                                    </div>
+
+                                    <div className={`p-4 rounded-xl border-2 ${dark ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
+                                        <p className="text-xs text-gray-400 mb-2 uppercase tracking-wide font-semibold">Opponent</p>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-full" style={{
+                                                backgroundColor: JERSEY_PRESETS.find(p => p.desc === form.opponentJersey)?.hex || '#1F2937'
+                                            }} />
+                                            <div>
+                                                <p className={`font-semibold ${dark ? 'text-white' : 'text-gray-900'}`}>
+                                                    {JERSEY_PRESETS.find(p => p.desc === form.opponentJersey)?.name || 'Opponent'}
+                                                </p>
+                                                <p className="text-xs text-gray-400">Jersey</p>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <button onClick={reset} className={`mt-5 w-full py-2.5 rounded-xl tex-sm font-medium transition border ${dark ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50'
-                                    }`}>
+
+                                {/* Match Stats Grid */}
+                                <div className="space-y-6">
+                                    {/* Detection & Players */}
+                                    <div>
+                                        <h3 className="text-xs font-semibold uppercase tracking-wide mb-3 text-gray-400">Match Dynamics</h3>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className={`rounded-lg p-4 ${dark ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                                                <p className="text-xs text-gray-400 mb-1">Players Detected</p>
+                                                <p className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-400">
+                                                    {results.players_detected ?? '–'}
+                                                </p>
+                                            </div>
+                                            <div className={`rounded-lg p-4 ${dark ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                                                <p className="text-xs text-gray-400 mb-1">Total Frames</p>
+                                                <p className="text-3xl font-bold">{results.total_frames ?? '–'}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Possession */}
+                                    <div>
+                                        <h3 className="text-xs font-semibold uppercase tracking-wide mb-3 text-gray-400">Ball Possession %</h3>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className={`rounded-lg p-4 border-l-4 ${dark ? 'bg-gray-700/40 border-blue-500' : 'bg-blue-50 border-blue-400'}`}>
+                                                <p className="text-xs text-gray-400 mb-2">Team 1</p>
+                                                <p className="text-2xl font-bold text-blue-500">
+                                                    {results.team_1_possession_percent !== null ? `${parseFloat(results.team_1_possession_percent).toFixed(1)}%` : '–'}
+                                                </p>
+                                            </div>
+                                            <div className={`rounded-lg p-4 border-l-4 ${dark ? 'bg-gray-700/40 border-purple-500' : 'bg-purple-50 border-purple-400'}`}>
+                                                <p className="text-xs text-gray-400 mb-2">Team 2</p>
+                                                <p className="text-2xl font-bold text-purple-500">
+                                                    {results.team_2_possession_percent !== null ? `${parseFloat(results.team_2_possession_percent).toFixed(1)}%` : '–'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Offensive Stats */}
+                                    <div>
+                                        <h3 className="text-xs font-semibold uppercase tracking-wide mb-3 text-gray-400">Offensive Analysis</h3>
+                                        <div className="grid grid-cols-3 gap-3">
+                                            <div className={`rounded-lg p-4 ${dark ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                                                <p className="text-xs text-gray-400 mb-1">Total Passes</p>
+                                                <p className="text-2xl font-bold text-green-500">{results.total_passes ?? '–'}</p>
+                                            </div>
+                                            <div className={`rounded-lg p-4 ${dark ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                                                <p className="text-xs text-gray-400 mb-1">Shots Attempted</p>
+                                                <p className="text-2xl font-bold text-orange-500">{results.shot_attempts ?? '–'}</p>
+                                            </div>
+                                            <div className={`rounded-lg p-4 ${dark ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                                                <p className="text-xs text-gray-400 mb-1">Shooting %</p>
+                                                <p className="text-2xl font-bold text-red-500">
+                                                    {results.overall_shooting_percentage ? `${parseFloat(results.overall_shooting_percentage).toFixed(1)}%` : '–'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Defensive Stats */}
+                                    <div>
+                                        <h3 className="text-xs font-semibold uppercase tracking-wide mb-3 text-gray-400">Defensive Analysis</h3>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className={`rounded-lg p-4 ${dark ? 'bg-gray-700/50' : 'bg-red-50'}`}>
+                                                <p className="text-xs text-gray-400 mb-1">Interceptions</p>
+                                                <p className="text-2xl font-bold text-red-500">{results.total_interceptions ?? '–'}</p>
+                                            </div>
+                                            <div className={`rounded-lg p-4 ${dark ? 'bg-gray-700/50' : 'bg-indigo-50'}`}>
+                                                <p className="text-xs text-gray-400 mb-1">Defensive Actions</p>
+                                                <p className="text-2xl font-bold text-indigo-500">{results.defensive_actions ?? '–'}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Movement & Load */}
+                                    {(results.total_distance_meters || results.avg_speed_kmh || results.max_speed_kmh) && (
+                                        <div>
+                                            <h3 className="text-xs font-semibold uppercase tracking-wide mb-3 text-gray-400">Movement & Load</h3>
+                                            <div className="grid grid-cols-3 gap-3">
+                                                <div className={`rounded-lg p-4 ${dark ? 'bg-gray-700/50' : 'bg-emerald-50'}`}>
+                                                    <p className="text-xs text-gray-400 mb-1">Total Distance (m)</p>
+                                                    <p className="text-2xl font-bold text-emerald-500">
+                                                        {results.total_distance_meters ? `${parseFloat(results.total_distance_meters).toFixed(0)}` : '–'}
+                                                    </p>
+                                                </div>
+                                                <div className={`rounded-lg p-4 ${dark ? 'bg-gray-700/50' : 'bg-sky-50'}`}>
+                                                    <p className="text-xs text-gray-400 mb-1">Avg Speed (km/h)</p>
+                                                    <p className="text-2xl font-bold text-sky-500">
+                                                        {results.avg_speed_kmh ? `${parseFloat(results.avg_speed_kmh).toFixed(1)}` : '–'}
+                                                    </p>
+                                                </div>
+                                                <div className={`rounded-lg p-4 ${dark ? 'bg-gray-700/50' : 'bg-fuchsia-50'}`}>
+                                                    <p className="text-xs text-gray-400 mb-1">Max Speed (km/h)</p>
+                                                    <p className="text-2xl font-bold text-fuchsia-500">
+                                                        {results.max_speed_kmh ? `${parseFloat(results.max_speed_kmh).toFixed(1)}` : '–'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Duration */}
+                                    <div className={`border-t ${dark ? 'border-gray-600' : 'border-gray-200'} pt-4`}>
+                                        <div className="flex justify-between items-center">
+                                            <p className="text-sm text-gray-400">Analysis Duration</p>
+                                            <p className={`text-lg font-semibold ${dark ? 'text-white' : 'text-gray-900'}`}>
+                                                {results.duration_seconds ? `${parseFloat(results.duration_seconds).toFixed(1)}s` : '–'}
+                                            </p>
+                                        </div>
+                                        {results.processing_time_seconds && (
+                                            <p className="text-xs text-gray-500 mt-2">
+                                                Processing took {parseFloat(results.processing_time_seconds).toFixed(1)}s
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={reset}
+                                    className={`mt-6 w-full py-2.5 rounded-xl text-sm font-medium transition border ${dark ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                                        }`}
+                                >
                                     Analyse Another Match
                                 </button>
                             </div>

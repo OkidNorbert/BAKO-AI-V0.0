@@ -53,11 +53,12 @@ class Settings(BaseSettings):
     cuda_device: int = 0
     
     # Model paths (relative to backend root)
-    team_model_path: str = "models/nbl_v3_combined.pt"
+    team_model_path: str = "models/nbl_v4_combined.pt"
     personal_model_path: str = "models/nbl_v2_combined.pt"
     
-    player_detector_path: str = "models/nbl_v3_combined.pt"
-    ball_detector_path: str = "models/nbl_v3_combined.pt"
+    # Independent detector models trained on NBL dataset
+    player_detector_path: str = "models/player_detector_v1.pt"
+    ball_detector_path: str = "models/ball_detector_v1.pt"
     court_keypoint_detector_path: str = "models/court_keypoint_detector.pt"
     pose_model_path: str = "models/yolov8n-pose.pt"
     

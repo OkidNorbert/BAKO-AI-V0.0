@@ -96,10 +96,15 @@ async def run_team_analysis(
                 break
     
     try:
-        # Parse options with defaults
+        # Parse options with defaults - MUST come from user input (web form)
         options = options or {}
-        our_team_jersey = str(options.get("our_team_jersey") or "white jersey")
-        opponent_jersey = str(options.get("opponent_jersey") or "dark blue jersey")
+        
+        # Jersey colors MUST be provided by user
+        our_team_jersey = str(options.get("our_team_jersey") or "").strip()
+        opponent_jersey = str(options.get("opponent_jersey") or "").strip()
+        
+        if not our_team_jersey or not opponent_jersey:
+            raise ValueError("Jersey colors are required - user must select team colors in the web form")
         
         try:
             our_team_id = int(options.get("our_team_id") or 1)
@@ -109,6 +114,20 @@ async def run_team_analysis(
         
         read_from_stub = bool(options.get("read_from_stub", False))
         clear_stubs_after = bool(options.get("clear_stubs_after", True))
+        save_annotated_video = bool(options.get("save_annotated_video", True))
+        
+        # Detection parameters (from user selections)
+        player_confidence = float(options.get("player_confidence", 0.5))
+        ball_confidence = float(options.get("ball_confidence", 0.15))
+        detection_batch_size = int(options.get("detection_batch_size", 10))
+        image_size = int(options.get("image_size", 1080))
+        max_players_on_court = int(options.get("max_players_on_court", 10))
+        
+        # Display parameters (from user preferences)
+        render_speed_text = bool(options.get("render_speed_text", True))
+        render_distance_text = bool(options.get("render_distance_text", True))
+        render_tactical_view = bool(options.get("render_tactical_view", True))
+        render_court_keypoints = bool(options.get("render_court_keypoints", True))
         
         # Output paths (use absolute paths to avoid working directory issues)
         from configs import STUBS_DEFAULT_PATH
@@ -137,8 +156,17 @@ async def run_team_analysis(
                     our_team_id=our_team_id,
                     read_from_stub=read_from_stub,
                     clear_stubs_after=clear_stubs_after,
-                    save_annotated_video=True,
+                    save_annotated_video=save_annotated_video,
                     progress_callback=sync_progress_callback,
+                    player_confidence=player_confidence,
+                    ball_confidence=ball_confidence,
+                    detection_batch_size=detection_batch_size,
+                    image_size=image_size,
+                    max_players_on_court=max_players_on_court,
+                    render_speed_text=render_speed_text,
+                    render_distance_text=render_distance_text,
+                    render_tactical_view=render_tactical_view,
+                    render_court_keypoints=render_court_keypoints,
                 )
             
             # Wait for analysis to complete
@@ -186,6 +214,28 @@ async def run_team_analysis(
                 "progress_percent": 100,
                 "status": result.get("status", "completed")
             })
+        
+        # Ensure all required fields are present (never null)
+        if result.get("status") == "completed":
+            required_fields = {
+                "total_frames": lambda r: r.get("total_frames") or 0,
+                "duration_seconds": lambda r: r.get("duration_seconds") or 0.0,
+                "players_detected": lambda r: r.get("players_detected") or 0,
+                "team_1_possession_percent": lambda r: r.get("team_1_possession_percent") or 50.0,
+                "team_2_possession_percent": lambda r: r.get("team_2_possession_percent") or 50.0,
+                "total_passes": lambda r: r.get("total_passes") or 0,
+                "total_interceptions": lambda r: r.get("total_interceptions") or 0,
+                "defensive_actions": lambda r: r.get("defensive_actions") or 0,
+                "overall_shooting_percentage": lambda r: r.get("overall_shooting_percentage") or 0.0,
+                "total_distance_meters": lambda r: r.get("total_distance_meters") or 0.0,
+                "avg_speed_kmh": lambda r: r.get("avg_speed_kmh") or 0.0,
+                "max_speed_kmh": lambda r: r.get("max_speed_kmh") or 0.0,
+                "processing_time_seconds": lambda r: r.get("processing_time_seconds") or 0.0,
+                "annotated_video_path": lambda r: r.get("annotated_video_path") or "",
+            }
+            for field, getter in required_fields.items():
+                if field not in result or result[field] is None:
+                    result[field] = getter(result)
         
         return result
         

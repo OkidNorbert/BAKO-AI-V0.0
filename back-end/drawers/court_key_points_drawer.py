@@ -1,4 +1,5 @@
 import supervision as sv
+import numpy as np
 
 class CourtKeypointDrawer:
     """
@@ -13,6 +14,7 @@ class CourtKeypointDrawer:
     def draw(self, frames, court_keypoints):
         """
         Draws court keypoints on a given list of frames.
+        Safely handles None/empty keypoints for frames where detection failed.
 
         Args:
             frames (list): A list of frames (as NumPy arrays or image objects) on which to draw.
@@ -34,20 +36,31 @@ class CourtKeypointDrawer:
         )
         
         output_frames = []
-        for index,frame in enumerate(frames):
+        for index, frame in enumerate(frames):
             annotated_frame = frame.copy()
 
             keypoints = court_keypoints[index]
-            # Draw dots
-            annotated_frame = vertex_annotator.annotate(
-                scene=annotated_frame,
-                key_points=keypoints)
-            # Draw labels
-            # Convert PyTorch tensor to numpy array
-            keypoints_numpy = keypoints.cpu().numpy()
-            annotated_frame = vertex_label_annotator.annotate(
-                scene=annotated_frame,
-                key_points=keypoints_numpy)
+            
+            # Only draw if keypoints exist and are not None
+            if keypoints is not None:
+                try:
+                    # Draw dots
+                    annotated_frame = vertex_annotator.annotate(
+                        scene=annotated_frame,
+                        key_points=keypoints)
+                    
+                    # Draw labels - Convert PyTorch tensor to numpy array if needed
+                    if hasattr(keypoints, 'cpu'):
+                        keypoints_numpy = keypoints.cpu().numpy()
+                    else:
+                        keypoints_numpy = np.array(keypoints)
+                    
+                    annotated_frame = vertex_label_annotator.annotate(
+                        scene=annotated_frame,
+                        key_points=keypoints_numpy)
+                except:
+                    # If drawing fails, just use the frame as-is
+                    pass
 
             output_frames.append(annotated_frame)
 

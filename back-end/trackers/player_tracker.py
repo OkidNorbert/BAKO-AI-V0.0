@@ -13,21 +13,24 @@ class PlayerTracker:
     Handles player and referee detection and tracking using YOLO + ByteTrack.
     Enforces the basketball rule of max 10 players on court at a time.
     """
-    def __init__(self, model_path):
-        self.model = YOLO(model_path) 
+    def __init__(self, model_path, confidence=0.5, batch_size=10, image_size=1080, max_players=10):
+        self.model = YOLO(model_path)
+        self.confidence = confidence
+        self.batch_size = batch_size
+        self.image_size = image_size
+        self.max_players = max_players
         # ByteTrack: 
         # - track_activation_threshold=0.3: require moderate confidence to start a new track
         # - lost_track_buffer=60: remember occluded players for ~2 seconds at 30fps
         self.tracker = sv.ByteTrack(track_activation_threshold=0.3, lost_track_buffer=60)
 
     def detect_frames(self, frames):
-        batch_size = 10
         detections = [] 
-        for i in range(0, len(frames), batch_size):
+        for i in range(0, len(frames), self.batch_size):
             detections_batch = self.model.predict(
-                frames[i:i+batch_size], 
-                conf=0.3,   # Firm confidence - avoids ghost detections
-                imgsz=1080
+                frames[i:i+self.batch_size], 
+                conf=self.confidence,
+                imgsz=self.image_size
             )
             detections += detections_batch
         return detections
@@ -61,9 +64,9 @@ class PlayerTracker:
                 elif class_name == 'referee' and confidence >= 0.3:
                     referee_detections.append((bbox, confidence, class_id))
 
-            # ENFORCE MAX 10 PLAYERS: Keep only top-10 by confidence
+            # ENFORCE MAX PLAYERS: Keep only top-N by confidence
             player_detections.sort(key=lambda x: x[1], reverse=True)
-            player_detections = player_detections[:MAX_PLAYERS_ON_COURT]
+            player_detections = player_detections[:self.max_players]
 
             # Combine back into a supervision Detections object for tracking
             all_bboxes = [d[0] for d in player_detections + referee_detections]

@@ -85,7 +85,9 @@ async def run_analysis_background(video_id: str, mode: str, supabase: SupabaseSe
             "team_2_possession_percent",
             "total_passes",
             "total_interceptions",
+            "defensive_actions",
             "shot_attempts",
+            "overall_shooting_percentage",
             "shot_form_consistency",
             "dribble_count",
             "dribble_frequency_per_minute",
@@ -103,6 +105,26 @@ async def run_analysis_background(video_id: str, mode: str, supabase: SupabaseSe
 
         analysis_id = str(uuid4())
         analysis_payload = {k: v for k, v in result.items() if k in allowed_fields}
+        
+        # Ensure required fields have values (not null)
+        required_fields = {
+            "total_frames": 0,
+            "duration_seconds": 0.0,
+            "players_detected": 0,
+            "team_1_possession_percent": 50.0,
+            "team_2_possession_percent": 50.0,
+            "total_passes": 0,
+            "total_interceptions": 0,
+            "defensive_actions": 0,
+            "shot_attempts": 0,
+            "overall_shooting_percentage": 0.0,
+            "processing_time_seconds": 0.0,
+        }
+        
+        for field, default_val in required_fields.items():
+            if field not in analysis_payload or analysis_payload[field] is None:
+                analysis_payload[field] = default_val
+        
         analysis_record = {
             "id": analysis_id,
             "video_id": video_id,
@@ -283,13 +305,42 @@ async def trigger_team_analysis(
             detail="Video is already being processed"
         )
     
+    # Build comprehensive options dict from request
+    options = request.options or {}
+    
+    # Add all detection and display parameters to options
+    if request.our_team_jersey:
+        options["our_team_jersey"] = request.our_team_jersey
+    if request.opponent_jersey:
+        options["opponent_jersey"] = request.opponent_jersey
+    if request.our_team_id:
+        options["our_team_id"] = request.our_team_id
+    
+    # Detection parameters
+    options["player_confidence"] = request.player_confidence or 0.5
+    options["ball_confidence"] = request.ball_confidence or 0.15
+    options["detection_batch_size"] = request.detection_batch_size or 10
+    options["image_size"] = request.image_size or 1080
+    options["max_players_on_court"] = request.max_players_on_court or 5
+    
+    # Analysis options
+    options["use_cached_detections"] = request.use_cached_detections or False
+    options["clear_cache_after"] = request.clear_cache_after if request.clear_cache_after is not None else True
+    options["save_annotated_video"] = request.save_annotated_video if request.save_annotated_video is not None else True
+    
+    # Display options
+    options["render_speed_text"] = request.render_speed_text if request.render_speed_text is not None else True
+    options["render_distance_text"] = request.render_distance_text if request.render_distance_text is not None else True
+    options["render_tactical_view"] = request.render_tactical_view if request.render_tactical_view is not None else True
+    options["render_court_keypoints"] = request.render_court_keypoints if request.render_court_keypoints is not None else True
+    
     # Queue analysis
     background_tasks.add_task(
         run_analysis_background,
         str(request.video_id),
         AnalysisMode.TEAM.value,
         supabase,
-        request.options or {},
+        options,
     )
     
     return {

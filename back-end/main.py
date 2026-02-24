@@ -12,6 +12,7 @@ import os
 import argparse
 import cv2
 import shutil
+import time
 from typing import Dict, Any, Optional, Callable
 from utils import read_video, save_video
 from trackers import PlayerTracker, BallTracker
@@ -67,6 +68,7 @@ def run_team_analysis(
     clear_stubs_after: bool = True,
     save_annotated_video: bool = True,
     progress_callback: Optional[Callable[[str, int], None]] = None,
+    **kwargs
 ) -> Dict[str, Any]:
     """
     Core team analysis function (used by both CLI and Web API).
@@ -94,6 +96,7 @@ def run_team_analysis(
             print(f"[{percent}%] {step}")
     
     try:
+        start_time = time.time()
         notify_progress("Reading video", 5)
         video_frames = read_video(video_path)
         total_frames = len(video_frames)
@@ -225,7 +228,7 @@ def run_team_analysis(
             frame_number_drawer = FrameNumberDrawer()
             pass_and_interceptions_drawer = PassInterceptionDrawer()
             tactical_view_drawer = TacticalViewDrawer()
-            speed_and_distance_drawer = SpeedAndDistanceDrawer()
+            speed_and_distance_drawer = SpeedAndDistanceDrawer(team_1_color=our_color, team_2_color=opp_color)
             shot_drawer = ShotDrawer()
             
             # Draw all overlays
@@ -241,11 +244,11 @@ def run_team_analysis(
             output_video_frames = pass_and_interceptions_drawer.draw(
                 output_video_frames, passes, interceptions
             )
+            output_video_frames = speed_and_distance_drawer.draw(
+                output_video_frames, player_tracks, player_distances_per_frame, player_speed_per_frame, player_assignment
+            )
             output_video_frames = shot_drawer.draw(
                 output_video_frames, shots, hoop_detections=hoop_detections
-            )
-            output_video_frames = speed_and_distance_drawer.draw(
-                output_video_frames, player_tracks, player_distances_per_frame, player_speed_per_frame
             )
             output_video_frames = tactical_view_drawer.draw(
                 output_video_frames,
@@ -336,20 +339,46 @@ def run_team_analysis(
         # Shot statistics
         shot_stats = shot_detector.calculate_shot_statistics(shots)
         
+        # Calculate aggregated speed & distance
+        total_distance = 0
+        all_speeds = []
+        for frame_distances in player_distances_per_frame:
+            total_distance += sum(frame_distances.values())
+        
+        for frame_speeds in player_speed_per_frame:
+            for speed in frame_speeds.values():
+                if speed > 0:
+                    all_speeds.append(speed)
+        
+        avg_speed = sum(all_speeds) / len(all_speeds) if all_speeds else 0
+        max_speed = max(all_speeds) if all_speeds else 0
+        
+        # Calculate defensive actions (interceptions + estimated rebounds/blocks from tracks)
+        # For now, base it on interceptions and number of defensive assignments
+        defensive_actions = len([i for i in interceptions if i != -1])
+        
+        # Calculate total processing time
+        processing_time = time.time() - start_time
+        
         result = {
             "status": "completed",
             "total_frames": int(total_frames),
             "duration_seconds": float(duration_seconds),
+            "processing_time_seconds": float(round(processing_time, 2)),
             "fps": float(fps),
             "players_detected": int(len(unique_players)),
             "team_1_possession_percent": float(round(team_1_pct, 1)),
             "team_2_possession_percent": float(round(team_2_pct, 1)),
             "total_passes": int(len([p for p in passes if p != -1])),
             "total_interceptions": int(len([i for i in interceptions if i != -1])),
+            "defensive_actions": int(defensive_actions),
             "shot_attempts": int(shot_stats['total_attempts']),
             "shots_made": int(shot_stats['total_made']),
             "shots_missed": int(shot_stats['total_missed']),
-            "shooting_percentage": float(shot_stats['overall_percentage']),
+            "overall_shooting_percentage": float(shot_stats['overall_percentage']),
+            "total_distance_meters": float(round(total_distance, 1)),
+            "avg_speed_kmh": float(round(avg_speed, 1)),
+            "max_speed_kmh": float(round(max_speed, 1)),
             "annotated_video_path": output_path if save_annotated_video else None,
             "annotated_video_exists": save_annotated_video and os.path.exists(output_path),
             "detections": detections_with_tactical,  # Include tactical coordinates for frontend
@@ -364,7 +393,14 @@ def run_team_analysis(
         traceback.print_exc()
         return {
             "status": "failed",
-            "error": str(e)
+            "error": str(e),
+            "total_frames": 0,
+            "duration_seconds": 0.0,
+            "players_detected": 0,
+            "team_1_possession_percent": 50.0,
+            "team_2_possession_percent": 50.0,
+            "total_passes": 0,
+            "total_interceptions": 0,
         }
 
 
@@ -416,6 +452,12 @@ def main():
         print(f"   Players Detected: {result['players_detected']}")
         print(f"   Team 1 Possession: {result['team_1_possession_percent']:.1f}%")
         print(f"   Team 2 Possession: {result['team_2_possession_percent']:.1f}%")
+        print(f"   Total Passes: {result['total_passes']}")
+        print(f"   Interceptions: {result['total_interceptions']}")
+        print(f"   Shooting Percentage: {result['overall_shooting_percentage']:.1f}%")
+        print(f"   Total Distance: {result['total_distance_meters']:.1f}m")
+        print(f"   Avg Speed: {result['avg_speed_kmh']:.1f} km/h")
+        print(f"   Processing Time: {result['processing_time_seconds']:.2f}s")
         print(f"   Output: {result['annotated_video_path']}")
     else:
         print(f"\n❌ Analysis Failed: {result.get('error')}")

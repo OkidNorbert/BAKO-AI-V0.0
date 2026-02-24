@@ -32,6 +32,29 @@ class AnalysisRequest(BaseModel):
     """Request schema for triggering analysis."""
     video_id: UUID
     options: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    
+    # Basic match setup
+    our_team_jersey: Optional[str] = None
+    opponent_jersey: Optional[str] = None
+    our_team_id: Optional[int] = None
+    
+    # Detection parameters (HIGH PRIORITY)
+    player_confidence: Optional[float] = Field(default=0.5, ge=0.1, le=0.9, description="Player detection confidence threshold")
+    ball_confidence: Optional[float] = Field(default=0.15, ge=0.05, le=0.9, description="Ball detection confidence threshold")
+    detection_batch_size: Optional[int] = Field(default=10, ge=5, le=20, description="Batch size for detection processing")
+    image_size: Optional[int] = Field(default=1080, description="Input image size for detection model")
+    max_players_on_court: Optional[int] = Field(default=5, ge=5, le=12, description="Max players per team")
+    
+    # Analysis options (MEDIUM PRIORITY)
+    use_cached_detections: Optional[bool] = Field(default=False, description="Use cached detections if available")
+    clear_cache_after: Optional[bool] = Field(default=True, description="Clear cache after analysis")
+    save_annotated_video: Optional[bool] = Field(default=True, description="Save output video with annotations")
+    
+    # Display options (LOW PRIORITY)
+    render_speed_text: Optional[bool] = Field(default=True, description="Show speed overlay on video")
+    render_distance_text: Optional[bool] = Field(default=True, description="Show distance overlay on video")
+    render_tactical_view: Optional[bool] = Field(default=True, description="Show tactical view")
+    render_court_keypoints: Optional[bool] = Field(default=True, description="Show court keypoint detections")
 
 
 class AnalysisEvent(BaseModel):
@@ -62,7 +85,15 @@ class AnalysisResult(BaseModel):
     shot_attempts: Optional[int] = 0
     shots_made: Optional[int] = 0
     shots_missed: Optional[int] = 0
-    shooting_percentage: Optional[float] = None
+    overall_shooting_percentage: Optional[float] = None
+    
+    # Defensive analysis
+    defensive_actions: Optional[int] = 0
+    
+    # Movement metrics
+    total_distance_meters: Optional[float] = None
+    avg_speed_kmh: Optional[float] = None
+    max_speed_kmh: Optional[float] = None
     
     # Team shooting
     team_1_shot_attempts: Optional[int] = 0

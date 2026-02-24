@@ -14,17 +14,19 @@ class BallTracker:
     interpolates short gaps (occlusion by players) and removes
     impossible jumps (false positives).
     """
-    def __init__(self, model_path):
-        self.model = YOLO(model_path) 
+    def __init__(self, model_path, confidence=0.15, batch_size=10, image_size=1080):
+        self.model = YOLO(model_path)
+        self.confidence = confidence
+        self.batch_size = batch_size
+        self.image_size = image_size
 
     def detect_frames(self, frames):
-        batch_size = 10 
         detections = [] 
-        for i in range(0, len(frames), batch_size):
+        for i in range(0, len(frames), self.batch_size):
             detections_batch = self.model.predict(
-                frames[i:i+batch_size],
-                conf=0.15,   # Sensitive enough to catch the ball in motion/occlusion
-                imgsz=1080
+                frames[i:i+self.batch_size],
+                conf=self.confidence,
+                imgsz=self.image_size
             )
             detections += detections_batch
         return detections
