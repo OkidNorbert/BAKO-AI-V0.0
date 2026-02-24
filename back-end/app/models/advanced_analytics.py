@@ -232,8 +232,8 @@ class LineupComparison(BaseModel):
     video_id: UUID
     team_1_lineups: List[LineupMetric]
     team_2_lineups: List[LineupMetric]
-    best_overall_lineup: LineupMetric
-    worst_overall_lineup: LineupMetric
+    best_overall_lineup: Optional[LineupMetric] = None
+    worst_overall_lineup: Optional[LineupMetric] = None
 
 
 class ClipCatalog(BaseModel):

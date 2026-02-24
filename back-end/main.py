@@ -280,6 +280,7 @@ def run_team_analysis(
         
         # ── Build Detections with Tactical Coordinates ────────────────────────────────────
         # Prepare detections list for frontend with tactical coordinates included
+        notify_progress("Building tactical detections", 92)
         detections_with_tactical = []
         for frame_idx, (frame_tracks, frame_assignment) in enumerate(zip(player_tracks, player_assignment)):
             if frame_tracks is None:
@@ -314,7 +315,7 @@ def run_team_analysis(
                 detections_with_tactical.append(det_entry)
         
         # ── Build Results ──────────────────────────────────────────────────────────
-        notify_progress("Finalizing results", 99)
+        notify_progress("Calculating match statistics", 94)
         
         # Count unique players
         unique_players = set()
@@ -337,6 +338,7 @@ def run_team_analysis(
         team_2_pct = (team_2_possession / total_possession * 100) if total_possession > 0 else 50
         
         # Shot statistics
+        notify_progress("Analyzing shot performance", 96)
         shot_stats = shot_detector.calculate_shot_statistics(shots)
         
         # Calculate aggregated speed & distance
@@ -358,6 +360,7 @@ def run_team_analysis(
         defensive_actions = len([i for i in interceptions if i != -1])
         
         # Calculate total processing time
+        notify_progress("Preparing final report", 98)
         processing_time = time.time() - start_time
         
         result = {
@@ -381,8 +384,52 @@ def run_team_analysis(
             "max_speed_kmh": float(round(max_speed, 1)),
             "annotated_video_path": output_path if save_annotated_video else None,
             "annotated_video_exists": save_annotated_video and os.path.exists(output_path),
-            "detections": detections_with_tactical,  # Include tactical coordinates for frontend
+            "detections": detections_with_tactical,
+            "events": [], # To be populated below
         }
+
+        # Populate events for the timeline
+        events_list = []
+        
+        # Add shots
+        for shot in shots:
+            events_list.append({
+                "event_type": "shot",
+                "frame": shot["frame"],
+                "timestamp_seconds": shot["frame"] / fps if fps > 0 else 0,
+                "player_id": shot.get("player_id"),
+                "details": {
+                    "outcome": shot.get("outcome"),
+                    "type": shot.get("type"),
+                    "player": shot.get("player_id")
+                }
+            })
+            
+        # Add passes
+        for frame_idx, receiver_id in enumerate(passes):
+            if receiver_id != -1:
+                events_list.append({
+                    "event_type": "pass",
+                    "frame": frame_idx,
+                    "timestamp_seconds": frame_idx / fps if fps > 0 else 0,
+                    "player_id": receiver_id,
+                    "details": {"player": receiver_id}
+                })
+                
+        # Add interceptions
+        for frame_idx, interceptor_id in enumerate(interceptions):
+            if interceptor_id != -1:
+                events_list.append({
+                    "event_type": "interception",
+                    "frame": frame_idx,
+                    "timestamp_seconds": frame_idx / fps if fps > 0 else 0,
+                    "player_id": interceptor_id,
+                    "details": {"player": interceptor_id}
+                })
+        
+        # Sort events by frame
+        events_list.sort(key=lambda x: x["frame"])
+        result["events"] = events_list
         
         notify_progress("Analysis complete", 100)
         return result

@@ -412,8 +412,8 @@ const MatchAnalysis = () => {
                       <div
                         key={index}
                         className={`p-3 rounded-lg border transition-all cursor-pointer ${activeClip === clip
-                            ? (isDarkMode ? 'bg-orange-950/30 border-orange-500' : 'bg-orange-50 border-orange-400')
-                            : (isDarkMode ? 'bg-gray-700/50 border-gray-600 hover:border-gray-500' : 'bg-gray-50 border-gray-200 hover:border-gray-300')
+                          ? (isDarkMode ? 'bg-orange-950/30 border-orange-500' : 'bg-orange-50 border-orange-400')
+                          : (isDarkMode ? 'bg-gray-700/50 border-gray-600 hover:border-gray-500' : 'bg-gray-50 border-gray-200 hover:border-gray-300')
                           }`}
                         onClick={() => {
                           setActiveClip(clip);
@@ -423,9 +423,9 @@ const MatchAnalysis = () => {
                       >
                         <div className="flex justify-between items-start mb-1">
                           <span className={`text-xs font-bold uppercase py-0.5 px-1.5 rounded ${clip.clip_type === 'poor_spacing' ? 'bg-red-500/20 text-red-500' :
-                              clip.clip_type === 'late_rotation' ? 'bg-orange-500/20 text-orange-500' :
-                                clip.clip_type === 'low_decision_quality' ? 'bg-blue-500/20 text-blue-500' :
-                                  'bg-gray-500/20 text-gray-400'
+                            clip.clip_type === 'late_rotation' ? 'bg-orange-500/20 text-orange-500' :
+                              clip.clip_type === 'low_decision_quality' ? 'bg-blue-500/20 text-blue-500' :
+                                'bg-gray-500/20 text-gray-400'
                             }`}>
                             {clip.clip_type.replace(/_/g, ' ')}
                           </span>
@@ -470,7 +470,7 @@ const MatchAnalysis = () => {
 
                 <div className="space-y-2 max-h-60 overflow-y-auto">
                   {selectedMatch.analysisData && selectedMatch.analysisData.events && selectedMatch.analysisData.events.length > 0 ? (
-                    selectedMatch.analysisData.events.map((event, index) => (
+                    selectedMatch.analysisData.events.filter(e => e.event_type !== 'summary_stats').map((event, index) => (
                       <div
                         key={index}
                         onClick={() => {

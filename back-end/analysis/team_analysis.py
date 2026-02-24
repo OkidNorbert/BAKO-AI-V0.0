@@ -51,7 +51,7 @@ async def run_team_analysis(
     supabase = get_supabase_service()
     
     # Shared state for progress updates between threads
-    progress_state = {"step": "Initializing", "percent": 0}
+    progress_state = {"step": "Initializing", "percent": 0, "finished": False}
     progress_lock = threading.Lock()
     
     def sync_progress_callback(step: str, percent: int):
@@ -59,9 +59,11 @@ async def run_team_analysis(
         Synchronous callback for progress updates - stores in shared state.
         The async updater will periodically read and push to database.
         """
+        # Cap at 99% until the very end to avoid updater exiting early
+        db_percent = min(percent, 99)
         with progress_lock:
             progress_state["step"] = step
-            progress_state["percent"] = percent
+            progress_state["percent"] = db_percent
         print(f"[{percent}%] {step}")
     
     async def background_progress_updater():
@@ -79,9 +81,10 @@ async def run_team_analysis(
             with progress_lock:
                 current_step = progress_state["step"]
                 current_percent = progress_state["percent"]
+                is_finished = progress_state["finished"]
             
-            # Update database if progress changed (with rate limiting)
-            if current_percent > last_update or current_percent == 100:
+            # Update database if progress changed
+            if current_percent > last_update:
                 try:
                     await supabase.update("videos", video_id, {
                         "current_step": current_step,
@@ -91,8 +94,8 @@ async def run_team_analysis(
                 except Exception as e:
                     print(f"⚠️  Error updating progress: {e}")
             
-            # Exit when analysis completes
-            if current_percent >= 100:
+            # Exit when signaled
+            if is_finished:
                 break
     
     try:
@@ -172,40 +175,42 @@ async def run_team_analysis(
             # Wait for analysis to complete
             result = await anyio.to_thread.run_sync(run_sync)
         
-        # Run advanced analytics if requested
-        if result.get("status") == "completed" and options.get("enable_advanced_analytics", False):
-            try:
-                sync_progress_callback("Running advanced analytics", 95)
-                from analytics_engine import AnalyticsCoordinator
-                from utils import read_video
-                
-                # Re-read frames for advanced analytics (coordinator needs them for some modules)
-                video_frames = await anyio.to_thread.run_sync(read_video, video_path)
-                
-                coordinator = AnalyticsCoordinator()
-                # Run the coordination pipeline
-                # Note: We pass empty lists for tracks as the coordinator expects them in a specific format
-                # that we'll ideally improve later, but for now it will use events to generate clips.
-                advanced_results = await anyio.to_thread.run_sync(
-                    coordinator.process_all,
-                    video_frames,
-                    [], # player_tracks
-                    [], # ball_tracks
-                    [], # tactical_positions
-                    [], # player_assignment
-                    [], # ball_possession
-                    result.get("events", []),
-                    [], # shots
-                    [], # court_keypoints
-                    [], # speeds
-                    video_path,
-                    result.get("fps", 30.0)
-                )
-                
-                result["advanced_analytics"] = advanced_results
-                sync_progress_callback("Advanced analytics complete", 98)
-            except Exception as e:
-                print(f"⚠️  Advanced analytics failed: {e}")
+            # Run advanced analytics if requested
+            if result.get("status") == "completed" and options.get("enable_advanced_analytics", False):
+                try:
+                    sync_progress_callback("Running advanced analytics", 95)
+                    from analytics_engine import AnalyticsCoordinator
+                    from utils import read_video
+                    
+                    # Re-read frames for advanced analytics
+                    video_frames = await anyio.to_thread.run_sync(read_video, video_path)
+                    
+                    coordinator = AnalyticsCoordinator()
+                    advanced_results = await anyio.to_thread.run_sync(
+                        coordinator.process_all,
+                        video_frames,
+                        [], # player_tracks
+                        [], # ball_tracks
+                        [], # tactical_positions
+                        [], # player_assignment
+                        [], # ball_possession
+                        result.get("events", []),
+                        [], # shots
+                        [], # court_keypoints
+                        [], # speeds
+                        video_path,
+                        result.get("fps", 30.0)
+                    )
+                    
+                    result["advanced_analytics"] = advanced_results
+                    sync_progress_callback("Advanced analytics complete", 98)
+                except Exception as e:
+                    print(f"⚠️  Advanced analytics failed: {e}")
+            
+            # Signal background updater to finish
+            with progress_lock:
+                progress_state["finished"] = True
+        
         
         # Final progress update
         if video_id and supabase:

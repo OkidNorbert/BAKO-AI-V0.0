@@ -34,6 +34,28 @@ from app.services.supabase_client import SupabaseService
 router = APIRouter()
 
 
+def _hydrate_analysis_result(result: dict) -> dict:
+    """Extract summary stats from events JSONB if they exist and merge into top-level."""
+    if not result or "events" not in result:
+        return result
+        
+    events = result.get("events", [])
+    if not isinstance(events, list):
+        return result
+        
+    for event in events:
+        if isinstance(event, dict) and event.get("event_type") == "summary_stats":
+            details = event.get("details", {})
+            if isinstance(details, dict):
+                # Only fill if the main result field is missing or None
+                for key, value in details.items():
+                    if key not in result or result[key] is None or key == "advanced_analytics":
+                        result[key] = value
+            break
+    return result
+
+
+
 @router.get("/team-summary/{video_id}", response_model=TeamAdvancedSummary)
 async def get_team_advanced_summary(
     video_id: str,
@@ -69,6 +91,7 @@ async def get_team_advanced_summary(
         )
     
     analysis = analysis_results[0]
+    analysis = _hydrate_analysis_result(analysis)
     advanced_analytics = analysis.get("advanced_analytics")
     
     if not advanced_analytics:
@@ -161,12 +184,21 @@ async def get_player_advanced_analysis(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No analysis results found")
     
     analysis = analysis_results[0]
+    analysis = _hydrate_analysis_result(analysis)
     advanced_analytics = analysis.get("advanced_analytics")
     
     if not advanced_analytics:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Advanced analytics not available"
+        return PlayerAdvancedAnalysis(
+            player_track_id=player_track_id,
+            video_id=UUID(video_id),
+            spacing_involvement=0,
+            defensive_reactions=[],
+            transition_efforts=[],
+            decision_analyses=[],
+            fatigue_indices=[],
+            avg_effort_score=0.0,
+            avg_reaction_delay_ms=None,
+            fatigue_level="low"
         )
     
     # Filter data for this specific player
@@ -272,6 +304,7 @@ async def get_lineup_comparison(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No analysis results found")
     
     analysis = analysis_results[0]
+    analysis = _hydrate_analysis_result(analysis)
     advanced_analytics = analysis.get("advanced_analytics")
     
     if not advanced_analytics or "lineup_impact" not in advanced_analytics:
@@ -341,6 +374,7 @@ async def get_coaching_clips(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No analysis results found")
     
     analysis = analysis_results[0]
+    analysis = _hydrate_analysis_result(analysis)
     advanced_analytics = analysis.get("advanced_analytics")
     
     if not advanced_analytics or "clips" not in advanced_analytics:
@@ -348,8 +382,9 @@ async def get_coaching_clips(
             video_id=UUID(video_id),
             clips=[],
             summary=ClipSummary(
-                total_clips=0,
-                breakdown={}
+                total_clips_generated=0,
+                clips_by_type={},
+                output_directory=""
             )
         )
     

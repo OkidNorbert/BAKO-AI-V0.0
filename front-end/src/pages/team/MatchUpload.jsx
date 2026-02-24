@@ -232,10 +232,10 @@ const MatchUpload = () => {
           detectedPlays: data.total_passes + data.total_interceptions, // Proxy for plays
           possessions: Math.round(data.total_frames / 30 / 24 * 2), // Rough estimate or use real possession data if available
           shootingPercentage: data.overall_shooting_percentage ? parseFloat(data.overall_shooting_percentage).toFixed(1) : 0,
-          keyMoments: data.events ? data.events.map(e => ({
-            time: formatTime(e.timestamp_seconds),
+          keyMoments: data.events ? data.events.filter(e => e.event_type !== 'summary_stats').map(e => ({
+            time: formatTime(e.timestamp_seconds || (e.frame ? e.frame / 30 : 0)),
             type: e.event_type,
-            player: `Player ${e.player_id}`
+            player: e.player_id || e.details?.player ? `Player ${e.player_id || e.details.player}` : 'Team'
           })) : []
         });
 

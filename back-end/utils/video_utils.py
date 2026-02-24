@@ -58,8 +58,9 @@ def save_video(output_video_frames, output_video_path):
     extension = os.path.splitext(output_video_path)[1].lower()
     
     if extension == '.mp4':
-        # Use mp4v for high quality and better compatibility on systems without H.264 encoders
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        # Use avc1 (H.264) for better browser compatibility. 
+        # Fallback to mp4v if avc1 is not available on this system's OpenCV build.
+        fourcc = cv2.VideoWriter_fourcc(*'avc1')
     else:
         # Default to XVID for AVI or other formats
         fourcc = cv2.VideoWriter_fourcc(*'XVID')
@@ -67,6 +68,15 @@ def save_video(output_video_frames, output_video_path):
     height, width = output_video_frames[0].shape[:2]
     out = cv2.VideoWriter(output_video_path, fourcc, 24, (width, height))
     
+    # Fallback to mp4v if avc1 is not supported by this OpenCV build or environment
+    if not out.isOpened() and extension == '.mp4':
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        out = cv2.VideoWriter(output_video_path, fourcc, 24, (width, height))
+
+    if not out.isOpened():
+        print(f"⚠️  Failed to open VideoWriter with path: {output_video_path}")
+        return
+        
     for frame in output_video_frames:
         out.write(frame)
     out.release()

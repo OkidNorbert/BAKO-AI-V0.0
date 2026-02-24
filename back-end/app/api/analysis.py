@@ -97,7 +97,6 @@ async def run_analysis_background(video_id: str, mode: str, supabase: SupabaseSe
             "avg_elbow_angle_shooting",
             "training_load_score",
             "events",
-            "advanced_analytics", # Persist advanced insights and clips
             "processing_time_seconds",
         }
 
@@ -129,6 +128,7 @@ async def run_analysis_background(video_id: str, mode: str, supabase: SupabaseSe
             "total_distance_meters": result.get("total_distance_meters", 0.0),
             "avg_speed_kmh": result.get("avg_speed_kmh", 0.0),
             "max_speed_kmh": result.get("max_speed_kmh", 0.0),
+            "advanced_analytics": result.get("advanced_analytics"),
         }
         
         current_events = result.get("events", [])
@@ -167,8 +167,8 @@ async def run_analysis_background(video_id: str, mode: str, supabase: SupabaseSe
 
         if store_detections and detections:
             await supabase.update("videos", video_id, {
-                "current_step": "Saving detections",
-                "progress_percent": 90,
+                "current_step": f"Saving {len(detections)} detection highlights",
+                "progress_percent": 99,
             })
 
             max_detections = max(1_000, max_detections)
@@ -430,7 +430,8 @@ def _hydrate_analysis_result(result: dict) -> dict:
             if isinstance(details, dict):
                 # Only fill if the main result field is missing or None
                 for key, value in details.items():
-                    if key not in result or result[key] is None:
+                    # Only fill if the main result field is missing or None
+                    if key not in result or result[key] is None or key == "advanced_analytics":
                         result[key] = value
             break
     return result

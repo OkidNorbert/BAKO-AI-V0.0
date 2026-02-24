@@ -104,6 +104,9 @@ class AnalysisResult(BaseModel):
     # Events
     events: List[AnalysisEvent] = Field(default_factory=list)
     
+    # Advanced analytics metadata (hydrated from events)
+    advanced_analytics: Optional[Dict[str, Any]] = None
+    
     # Processing info
     processing_time_seconds: float
     created_at: datetime
