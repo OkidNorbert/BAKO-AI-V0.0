@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 
 const JERSEY_PRESETS = [
+    { name: 'Grey', desc: 'grey jersey', hex: '#9CA3AF' },
     { name: 'White', desc: 'white jersey', hex: '#F5F5F5' },
     { name: 'Black', desc: 'black jersey', hex: '#1F2937' },
     { name: 'Red', desc: 'red jersey', hex: '#DC2626' },
@@ -21,7 +22,6 @@ const JERSEY_PRESETS = [
     { name: 'Green', desc: 'green jersey', hex: '#10B981' },
     { name: 'Purple', desc: 'purple jersey', hex: '#A855F7' },
     { name: 'Orange', desc: 'orange jersey', hex: '#F97316' },
-    { name: 'Grey', desc: 'grey jersey', hex: '#9CA3AF' },
 ];
 
 const ColorPicker = ({ value, onChange, label, accentClass }) => (
@@ -187,6 +187,7 @@ const CoachMatchAnalysis = () => {
                 max_players_on_court: parseInt(form.maxPlayers, 10),
                 read_from_stub: form.useCache,
                 clear_stubs_after: form.clearCache,
+                enable_advanced_analytics: true,
             });
 
             poll(videoId);

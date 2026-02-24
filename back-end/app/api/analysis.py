@@ -85,9 +85,7 @@ async def run_analysis_background(video_id: str, mode: str, supabase: SupabaseSe
             "team_2_possession_percent",
             "total_passes",
             "total_interceptions",
-            "defensive_actions",
             "shot_attempts",
-            "overall_shooting_percentage",
             "shot_form_consistency",
             "dribble_count",
             "dribble_frequency_per_minute",
@@ -115,9 +113,7 @@ async def run_analysis_background(video_id: str, mode: str, supabase: SupabaseSe
             "team_2_possession_percent": 50.0,
             "total_passes": 0,
             "total_interceptions": 0,
-            "defensive_actions": 0,
             "shot_attempts": 0,
-            "overall_shooting_percentage": 0.0,
             "processing_time_seconds": 0.0,
         }
         
@@ -125,6 +121,26 @@ async def run_analysis_background(video_id: str, mode: str, supabase: SupabaseSe
             if field not in analysis_payload or analysis_payload[field] is None:
                 analysis_payload[field] = default_val
         
+        # Capture extra metrics that might be missing from schema in the events JSONB
+        # This keeps the backend functional even if the DB hasn't been migrated yet.
+        extra_metrics = {
+            "defensive_actions": result.get("defensive_actions", 0),
+            "overall_shooting_percentage": result.get("overall_shooting_percentage", 0.0),
+            "total_distance_meters": result.get("total_distance_meters", 0.0),
+            "avg_speed_kmh": result.get("avg_speed_kmh", 0.0),
+            "max_speed_kmh": result.get("max_speed_kmh", 0.0),
+        }
+        
+        current_events = result.get("events", [])
+        if isinstance(current_events, list):
+            current_events.append({
+                "event_type": "summary_stats",
+                "frame": 0,
+                "timestamp_seconds": 0.0,
+                "details": extra_metrics
+            })
+            analysis_payload["events"] = current_events
+
         analysis_record = {
             "id": analysis_id,
             "video_id": video_id,
@@ -399,6 +415,27 @@ async def trigger_personal_analysis(
     }
 
 
+def _hydrate_analysis_result(result: dict) -> dict:
+    """Extract summary stats from events JSONB if they exist and merge into top-level."""
+    if not result or "events" not in result:
+        return result
+        
+    events = result.get("events", [])
+    if not isinstance(events, list):
+        return result
+        
+    for event in events:
+        if isinstance(event, dict) and event.get("event_type") == "summary_stats":
+            details = event.get("details", {})
+            if isinstance(details, dict):
+                # Only fill if the main result field is missing or None
+                for key, value in details.items():
+                    if key not in result or result[key] is None:
+                        result[key] = value
+            break
+    return result
+
+
 @router.get("/{analysis_id}", response_model=Union[AnalysisResult, PersonalAnalysisResult])
 async def get_analysis_result(
     analysis_id: str,
@@ -423,6 +460,9 @@ async def get_analysis_result(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have access to this analysis"
         )
+
+    # Hydrate with extra metrics if stored in events
+    result = _hydrate_analysis_result(result)
 
     # Return model based on video's analysis_mode
     if video.get("analysis_mode") == AnalysisMode.PERSONAL.value:
@@ -458,6 +498,8 @@ async def get_latest_analysis_for_video(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No analysis found for this video")
 
     result = results[0]
+    result = _hydrate_analysis_result(result)
+    
     if video.get("analysis_mode") == AnalysisMode.PERSONAL.value:
         return PersonalAnalysisResult(**result)
     return AnalysisResult(**result)

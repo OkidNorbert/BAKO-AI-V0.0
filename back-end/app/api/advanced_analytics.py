@@ -72,9 +72,17 @@ async def get_team_advanced_summary(
     advanced_analytics = analysis.get("advanced_analytics")
     
     if not advanced_analytics:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Advanced analytics not available for this video. Re-run analysis with enable_advanced_analytics=true"
+        return TeamAdvancedSummary(
+            video_id=UUID(video_id),
+            spacing_summary=None,
+            defensive_summary=None,
+            transition_summary=None,
+            decision_summary=None,
+            lineup_summary=None,
+            fatigue_summary=None,
+            clip_summary=None,
+            modules_executed=[],
+            modules_failed=[]
         )
     
     # Extract summaries from each module
@@ -267,9 +275,12 @@ async def get_lineup_comparison(
     advanced_analytics = analysis.get("advanced_analytics")
     
     if not advanced_analytics or "lineup_impact" not in advanced_analytics:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Lineup analytics not available"
+        return LineupComparison(
+            video_id=UUID(video_id),
+            team_1_lineups=[],
+            team_2_lineups=[],
+            best_overall_lineup=None,
+            worst_overall_lineup=None
         )
     
     lineup_data = advanced_analytics["lineup_impact"]
@@ -333,9 +344,13 @@ async def get_coaching_clips(
     advanced_analytics = analysis.get("advanced_analytics")
     
     if not advanced_analytics or "clips" not in advanced_analytics:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Clip generation not available"
+        return ClipCatalog(
+            video_id=UUID(video_id),
+            clips=[],
+            summary=ClipSummary(
+                total_clips=0,
+                breakdown={}
+            )
         )
     
     clip_data = advanced_analytics["clips"]

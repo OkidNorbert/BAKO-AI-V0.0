@@ -135,9 +135,11 @@ CREATE TABLE IF NOT EXISTS analysis_results (
     team_2_possession_percent REAL,
     total_passes INTEGER,
     total_interceptions INTEGER,
+    defensive_actions INTEGER,
     
     -- Personal analysis specific
     shot_attempts INTEGER,
+    overall_shooting_percentage REAL,
     shot_form_consistency REAL,
     dribble_count INTEGER,
     dribble_frequency_per_minute REAL,

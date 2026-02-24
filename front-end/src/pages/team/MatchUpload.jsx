@@ -84,6 +84,7 @@ const MatchUpload = () => {
 
   // Jersey color presets
   const jerseyColorPresets = [
+    { name: 'Grey', description: 'grey jersey', hex: '#9CA3AF' },
     { name: 'White', description: 'white jersey', hex: '#F5F5F5' },
     { name: 'Black', description: 'black jersey', hex: '#1F2937' },
     { name: 'Red', description: 'red jersey', hex: '#DC2626' },
@@ -307,6 +308,7 @@ const MatchUpload = () => {
         max_players_on_court: parseInt(uploadData.maxPlayersOnCourt || '10', 10),
         read_from_stub: uploadData.readFromStub,
         clear_stubs_after: uploadData.clearStubs,
+        enable_advanced_analytics: true,
       };
 
       await analysisAPI.triggerTeamAnalysis(videoId, analysisOptions);
@@ -513,8 +515,8 @@ const MatchUpload = () => {
                           type="button"
                           onClick={() => handleInputChange('ourTeamJersey', preset.description)}
                           className={`p-3 rounded-lg transition-all border-2 flex flex-col items-center justify-center ${uploadData.ourTeamJersey === preset.description
-                              ? isDarkMode ? 'border-orange-400' : 'border-orange-500'
-                              : isDarkMode ? 'border-gray-600' : 'border-gray-300'
+                            ? isDarkMode ? 'border-orange-400' : 'border-orange-500'
+                            : isDarkMode ? 'border-gray-600' : 'border-gray-300'
                             }`}
                           title={preset.name}
                         >
@@ -542,8 +544,8 @@ const MatchUpload = () => {
                           type="button"
                           onClick={() => handleInputChange('opponentJersey', preset.description)}
                           className={`p-3 rounded-lg transition-all border-2 flex flex-col items-center justify-center ${uploadData.opponentJersey === preset.description
-                              ? isDarkMode ? 'border-blue-400' : 'border-blue-500'
-                              : isDarkMode ? 'border-gray-600' : 'border-gray-300'
+                            ? isDarkMode ? 'border-blue-400' : 'border-blue-500'
+                            : isDarkMode ? 'border-gray-600' : 'border-gray-300'
                             }`}
                           title={preset.name}
                         >
