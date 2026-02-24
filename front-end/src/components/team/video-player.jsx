@@ -27,7 +27,7 @@ const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate, onTacticalUpdate })
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
-  const [showOverlays, setShowOverlays] = useState(true);
+  const [showOverlays, setShowOverlays] = useState(false);
   const [selectedOverlay, setSelectedOverlay] = useState('players');
   const [isFullscreen, setIsFullscreen] = useState(false);
 

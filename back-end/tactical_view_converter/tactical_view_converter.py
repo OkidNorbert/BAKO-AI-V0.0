@@ -151,7 +151,7 @@ class TacticalViewConverter:
                 for obj_id, pos in frame_points.items():
                     obj_pos = np.array([pos])
                     tactical_pos = transformer.transform_points(obj_pos)
-                    if 0 <= tactical_pos[0][0] <= self.width and 0 <= tactical_pos[0][1] <= self.height:
+                    if -100 <= tactical_pos[0][0] <= self.width + 100 and -100 <= tactical_pos[0][1] <= self.height + 100:
                         tactical_positions[obj_id] = tactical_pos[0].tolist()
             
             tactical_output.append(tactical_positions)
