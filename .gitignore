@@ -1,0 +1,52 @@
+# Datasets
+NBL-*/
+Basketball-Players-*/
+*/NBL-*/
+*/Basketball-Players-*/
+back-end/NBL-*/
+back-end/training_notebooks/NBL-*/
+
+# Model weights
+*.pt
+*.pth
+*.ckpt
+*.weights
+
+# Training outputs
+runs/
+results/
+back-end/runs/
+back-end/training_notebooks/runs/
+
+# Cache and build
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.Python
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+
+# Temporary
+*.zip
+dataset_path.txt
+*.tmp
