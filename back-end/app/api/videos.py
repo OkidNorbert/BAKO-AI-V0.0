@@ -358,7 +358,13 @@ async def download_video(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Video not found")
 
     if video.get("uploader_id") != current_user["id"]:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You don't have access to this video")
+        # If they aren't the uploader, check if they are the team owner for the org
+        if current_user.get("account_type") == "TEAM":
+            orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
+            if not orgs or str(video.get("organization_id")) != str(orgs[0]["id"]):
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You don't have access to this video")
+        else:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You don't have access to this video")
 
     storage_path = video.get("storage_path")
     if not storage_path or not os.path.exists(storage_path):
@@ -369,10 +375,22 @@ async def download_video(
     safe_name = quote(original_title.replace("/", "_").replace("\\", "_"))
     _, ext = os.path.splitext(storage_path)
     ext = ext if ext else ".mp4"
+    
+    # Guess media type based on extension
+    media_types = {
+        ".mp4": "video/mp4",
+        ".webm": "video/webm",
+        ".avi": "video/x-msvideo",
+        ".mov": "video/quicktime",
+        ".mkv": "video/x-matroska",
+    }
+    media_type = media_types.get(ext.lower(), "video/mp4")
+
     return FileResponse(
         path=storage_path,
         filename=f"{safe_name}{ext}",
-        media_type="application/octet-stream",
+        media_type=media_type,
+        content_disposition_type="inline"
     )
 
 
