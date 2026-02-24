@@ -74,13 +74,21 @@ class TeamAssigner:
         pil_image = Image.fromarray(rgb_image)
         image = pil_image
 
-        classes = [self.team_1_class_name, self.team_2_class_name]
+        prompt_1 = f"a photo of a player wearing a {self.team_1_class_name}"
+        prompt_2 = f"a photo of a player wearing a {self.team_2_class_name}"
+        classes = [prompt_1, prompt_2]
 
         inputs = self.processor(text=classes, images=image, return_tensors="pt", padding=True)
 
         outputs = self.model(**inputs)
         logits_per_image = outputs.logits_per_image
         probs = logits_per_image.softmax(dim=1) 
+
+        class_idx = probs.argmax(dim=1)[0].item()
+        
+        # We must return the original class name so the caller logic works
+        original_classes = [self.team_1_class_name, self.team_2_class_name]
+        return original_classes[class_idx]
 
 
         class_name=  classes[probs.argmax(dim=1)[0]]

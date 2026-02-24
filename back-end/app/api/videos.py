@@ -167,12 +167,17 @@ async def upload_video(
         
         # Determine the user's organization context
         user_org_id = current_user.get("organization_id")
+        if user_org_id in ("null", "undefined", ""):
+            user_org_id = None
         
         # If the user is a team manager but organization_id isn't in token (unlikely but safe check)
         if not user_org_id and current_user.get("account_type") == AccountType.TEAM.value:
             orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
             if orgs:
                 user_org_id = str(orgs[0]["id"])
+
+        if organization_id in ("null", "undefined", ""):
+            organization_id = None
 
         if not organization_id:
             organization_id = user_org_id
@@ -348,7 +353,13 @@ async def download_video(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Video not found")
 
     if video.get("uploader_id") != current_user["id"]:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You don't have access to this video")
+        # If they aren't the uploader, check if they are the team owner for the org
+        if current_user.get("account_type") == "TEAM":
+            orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
+            if not orgs or str(video.get("organization_id")) != str(orgs[0]["id"]):
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You don't have access to this video")
+        else:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You don't have access to this video")
 
     storage_path = video.get("storage_path")
     if not storage_path or not os.path.exists(storage_path):
@@ -359,10 +370,22 @@ async def download_video(
     safe_name = quote(original_title.replace("/", "_").replace("\\", "_"))
     _, ext = os.path.splitext(storage_path)
     ext = ext if ext else ".mp4"
+    
+    # Guess media type based on extension
+    media_types = {
+        ".mp4": "video/mp4",
+        ".webm": "video/webm",
+        ".avi": "video/x-msvideo",
+        ".mov": "video/quicktime",
+        ".mkv": "video/x-matroska",
+    }
+    media_type = media_types.get(ext.lower(), "video/mp4")
+
     return FileResponse(
         path=storage_path,
         filename=f"{safe_name}{ext}",
-        media_type="application/octet-stream",
+        media_type=media_type,
+        content_disposition_type="inline"
     )
 
 
@@ -380,7 +403,13 @@ async def download_annotated_video(
     if not video:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Video not found")
     if video.get("uploader_id") != current_user["id"]:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You don't have access to this video")
+        # If they aren't the uploader, check if they are the team owner for the org
+        if current_user.get("account_type") == "TEAM":
+            orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
+            if not orgs or str(video.get("organization_id")) != str(orgs[0]["id"]):
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You don't have access to this video")
+        else:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You don't have access to this video")
 
     annotated_path = _annotated_video_path(video_id)
     if not os.path.exists(annotated_path):
@@ -392,6 +421,7 @@ async def download_annotated_video(
         path=annotated_path,
         filename=f"{safe_name}-annotated.mp4",
         media_type="video/mp4",
+        content_disposition_type="inline"
     )
 
 

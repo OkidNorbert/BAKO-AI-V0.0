@@ -2,7 +2,7 @@ import axios from 'axios';
 import { showToast } from '../components/shared/Toast';
 // Create axios instance with default config
 const api = axios.create({
-  baseURL: '/api',  // Use relative path to work with Vite proxy
+  baseURL: import.meta?.env?.VITE_API_BASE || '/api', // Use env override in production, fallback to relative /api for Vite proxy
   headers: {
     'Content-Type': 'application/json',
   },
