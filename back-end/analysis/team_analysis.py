@@ -217,7 +217,8 @@ async def run_team_analysis(
             await supabase.update("videos", video_id, {
                 "current_step": "Analysis complete",
                 "progress_percent": 100,
-                "status": result.get("status", "completed")
+                "status": result.get("status", "completed"),
+                "has_annotated": True if result.get("status") == "completed" else False,
             })
         
         # Ensure all required fields are present (never null)

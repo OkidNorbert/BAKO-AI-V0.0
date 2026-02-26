@@ -293,10 +293,12 @@ async def list_videos(
     return VideoListResponse(
         videos=[
             Video(
-                **v,
-                download_url=f"/api/videos/{v.get('id')}/download",
-                annotated_download_url=f"/api/videos/{v.get('id')}/annotated",
-                has_annotated=os.path.exists(_annotated_video_path(str(v.get('id')))),
+                **{
+                    **v,
+                    "download_url": f"/api/videos/{v.get('id')}/download",
+                    "annotated_download_url": f"/api/videos/{v.get('id')}/annotated",
+                    "has_annotated": v.get('has_annotated') if v.get('has_annotated') is not None else os.path.exists(_annotated_video_path(str(v.get('id')))),
+                }
             )
             for v in paginated
         ],
@@ -331,10 +333,12 @@ async def get_video(
         )
     
     return Video(
-        **video,
-        download_url=f"/api/videos/{video_id}/download",
-        annotated_download_url=f"/api/videos/{video_id}/annotated",
-        has_annotated=os.path.exists(_annotated_video_path(video_id)),
+        **{
+            **video,
+            "download_url": f"/api/videos/{video_id}/download",
+            "annotated_download_url": f"/api/videos/{video_id}/annotated",
+            "has_annotated": video.get("has_annotated") if video.get("has_annotated") is not None else os.path.exists(_annotated_video_path(video_id)),
+        }
     )
 
 

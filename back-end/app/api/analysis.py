@@ -276,6 +276,7 @@ async def run_analysis_background(video_id: str, mode: str, supabase: SupabaseSe
             "progress_percent": 100,
             "current_step": "Complete",
             "completed_at": datetime.utcnow().isoformat(),
+            "has_annotated": True,
         })
         
     except Exception as e:

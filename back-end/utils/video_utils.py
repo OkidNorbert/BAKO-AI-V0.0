@@ -57,9 +57,11 @@ def save_video(output_video_frames, output_video_path):
     # Determine codec based on file extension
     extension = os.path.splitext(output_video_path)[1].lower()
     
+    # Track if we used a legacy codec that needs transcoding for browser support
+    needs_transcoding = False
+    
     if extension == '.mp4':
         # Use avc1 (H.264) for better browser compatibility. 
-        # Fallback to mp4v if avc1 is not available on this system's OpenCV build.
         fourcc = cv2.VideoWriter_fourcc(*'avc1')
     else:
         # Default to XVID for AVI or other formats
@@ -68,10 +70,11 @@ def save_video(output_video_frames, output_video_path):
     height, width = output_video_frames[0].shape[:2]
     out = cv2.VideoWriter(output_video_path, fourcc, 24, (width, height))
     
-    # Fallback to mp4v if avc1 is not supported by this OpenCV build or environment
+    # Fallback to mp4v if avc1 is not supported by this OpenCV build
     if not out.isOpened() and extension == '.mp4':
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         out = cv2.VideoWriter(output_video_path, fourcc, 24, (width, height))
+        needs_transcoding = True # mp4v (mpeg4) is often NOT supported by browsers
 
     if not out.isOpened():
         print(f"⚠️  Failed to open VideoWriter with path: {output_video_path}")
@@ -80,3 +83,25 @@ def save_video(output_video_frames, output_video_path):
     for frame in output_video_frames:
         out.write(frame)
     out.release()
+
+    # Transcode to H.264 if we used a legacy codec and have ffmpeg available
+    if needs_transcoding:
+        try:
+            temp_path = output_video_path + ".temp.mp4"
+            os.rename(output_video_path, temp_path)
+            
+            # Using libx264 ensures maximum browser compatibility
+            import subprocess
+            cmd = [
+                'ffmpeg', '-y', '-i', temp_path,
+                '-c:v', 'libx264', '-pix_fmt', 'yuv420p',
+                '-preset', 'ultrafast', '-crf', '23',
+                output_video_path
+            ]
+            subprocess.run(cmd, capture_output=True, check=True)
+            os.remove(temp_path)
+            print(f"✅  Transcoded video to H.264 for browser compatibility: {output_video_path}")
+        except Exception as e:
+            print(f"⚠️  Failed to transcode video with FFmpeg: {e}")
+            if os.path.exists(temp_path) and not os.path.exists(output_video_path):
+                os.rename(temp_path, output_video_path)
