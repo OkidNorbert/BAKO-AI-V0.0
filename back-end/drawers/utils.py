@@ -94,3 +94,64 @@ def draw_ellipse(frame,bbox,color,track_id=None):
         )
 
     return frame
+
+def draw_rounded_rect(frame, rect, color, thickness=1, radius=10):
+    """
+    Draws a rounded rectangle on the given frame.
+    """
+    x, y, w, h = rect
+    
+    # Top-left corner
+    cv2.ellipse(frame, (x + radius, y + radius), (radius, radius), 180, 0, 90, color, thickness)
+    # Top-right corner
+    cv2.ellipse(frame, (x + w - radius, y + radius), (radius, radius), 270, 0, 90, color, thickness)
+    # Bottom-right corner
+    cv2.ellipse(frame, (x + w - radius, y + h - radius), (radius, radius), 0, 0, 90, color, thickness)
+    # Bottom-left corner
+    cv2.ellipse(frame, (x + radius, y + h - radius), (radius, radius), 90, 0, 90, color, thickness)
+    
+    # Lines
+    cv2.line(frame, (x + radius, y), (x + w - radius, y), color, thickness)
+    cv2.line(frame, (x, y + radius), (x, y + h - radius), color, thickness)
+    cv2.line(frame, (x + w, y + radius), (x + w, y + h - radius), color, thickness)
+    cv2.line(frame, (x + radius, y + h), (x + w - radius, y + h), color, thickness)
+    
+    return frame
+
+def draw_glass_panel(frame, rect, alpha=0.6, color=(20, 20, 20), radius=15):
+    """
+    Draws a modern 'glass' panel overlay.
+    """
+    x, y, w, h = rect
+    overlay = frame.copy()
+    
+    # Fill background
+    cv2.rectangle(overlay, (x, y), (x + w, y + h), color, -1)
+    
+    # Create mask for rounded corners
+    mask = np.zeros(frame.shape[:2], dtype=np.uint8)
+    cv2.rectangle(mask, (x + radius, y), (x + w - radius, y + h), 255, -1)
+    cv2.rectangle(mask, (x, y + radius), (x + w, y + h - radius), 255, -1)
+    cv2.circle(mask, (x + radius, y + radius), radius, 255, -1)
+    cv2.circle(mask, (x + w - radius, y + radius), radius, 255, -1)
+    cv2.circle(mask, (x + radius, y + h - radius), radius, 255, -1)
+    cv2.circle(mask, (x + w - radius, y + h - radius), radius, 255, -1)
+    
+    # Apply alpha blending only on the mask area
+    mask_bool = mask > 0
+    frame[mask_bool] = cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0)[mask_bool]
+    
+    # Draw a thin subtle border (silver/white)
+    draw_rounded_rect(frame, (x, y, w, h), (200, 200, 200), thickness=1, radius=radius)
+    
+    return frame
+
+def draw_text_with_shadow(frame, text, pos, font_scale=0.6, color=(255, 255, 255), thickness=1):
+    """
+    Draws text with a small black shadow for readability.
+    """
+    # Shadow
+    cv2.putText(frame, text, (pos[0]+1, pos[1]+1), cv2.FONT_HERSHEY_SIMPLEX, font_scale, (0, 0, 0), thickness+1, cv2.LINE_AA)
+    # Main text
+    cv2.putText(frame, text, pos, cv2.FONT_HERSHEY_SIMPLEX, font_scale, color, thickness, cv2.LINE_AA)
+    return frame

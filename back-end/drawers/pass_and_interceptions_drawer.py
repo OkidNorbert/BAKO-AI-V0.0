@@ -68,35 +68,21 @@ class PassInterceptionDrawer:
     def draw_frame(self, frame, frame_num, passes, interceptions):
         """
         Draw a semi-transparent overlay of pass and interception counts on a single frame.
-
-        Args:
-            frame (numpy.ndarray): The current video frame on which the overlay will be drawn.
-            frame_num (int): The index of the current frame.
-            passes (list): A list of pass events up to this frame.
-            interceptions (list): A list of interception events up to this frame.
-
-        Returns:
-            numpy.ndarray: The frame with the semi-transparent overlay and statistics.
         """
-        # Draw a semi-transparent rectangle
-        overlay = frame.copy()
-        font_scale = 0.7
-        font_thickness=2
+        # HUD Design Constants
+        frame_height, frame_width = frame.shape[:2]
+        panel_w = int(frame_width * 0.35)
+        panel_h = int(frame_height * 0.12)
+        panel_x = int(frame_width * 0.05)
+        panel_y = int(frame_height * 0.83) # Bottom Left
+        
+        # Draw Glass Panel
+        from .utils import draw_glass_panel, draw_text_with_shadow
+        draw_glass_panel(frame, (panel_x, panel_y, panel_w, panel_h), alpha=0.8, radius=15)
 
-        # Overlay Position
-        frame_height, frame_width = overlay.shape[:2]
-        rect_x1 = int(frame_width * 0.16) 
-        rect_y1 = int(frame_height * 0.75)
-        rect_x2 = int(frame_width * 0.55)  
-        rect_y2 = int(frame_height * 0.90)
-        # Text positions
-        text_x = int(frame_width * 0.19)  
-        text_y1 = int(frame_height * 0.80)  
-        text_y2 = int(frame_height * 0.88)
-
-        cv2.rectangle(overlay, (rect_x1, rect_y1), (rect_x2, rect_y2), (255,255,255), -1)
-        alpha = 0.8
-        cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0, frame)
+        # Header with neon line
+        cv2.line(frame, (panel_x + 15, panel_y + 35), (panel_x + panel_w - 15, panel_y + 35), (100, 100, 100), 1)
+        draw_text_with_shadow(frame, "MATCH PERFORMANCE DATA", (panel_x + 15, panel_y + 25), font_scale=0.45, color=(0, 255, 255), thickness=1)
 
         # Get stats until current frame
         passes_till_frame = passes[:frame_num+1]
@@ -107,25 +93,25 @@ class PassInterceptionDrawer:
             interceptions_till_frame
         )
 
-        cv2.putText(
-            frame, 
-            f"Team 1 - Passes: {team1_passes} Interceptions: {team1_interceptions}",
-            (text_x, text_y1), 
-            cv2.FONT_HERSHEY_SIMPLEX, 
-            font_scale, 
-            (0,0,0), 
-            font_thickness
-        )
+        # Stats Rows - Compact
+        row_y1 = panel_y + 65
+        row_y2 = panel_y + 95
         
-        cv2.putText(
-            frame, 
-            f"Team 2 - Passes: {team2_passes} Interceptions: {team2_interceptions}",
-            (text_x, text_y2), 
-            cv2.FONT_HERSHEY_SIMPLEX, 
-            font_scale, 
-            (0,0,0), 
-            font_thickness
-        )
+        # Labels
+        draw_text_with_shadow(frame, "TEAM", (panel_x + 20, row_y1 - 10), font_scale=0.3, color=(150, 150, 150), thickness=1)
+        draw_text_with_shadow(frame, "PASSES", (panel_x + 120, row_y1 - 10), font_scale=0.3, color=(150, 150, 150), thickness=1)
+        draw_text_with_shadow(frame, "INTERCEPTIONS", (panel_x + 220, row_y1 - 10), font_scale=0.3, color=(150, 150, 150), thickness=1)
 
+        # Team 1 (Blue)
+        cv2.circle(frame, (panel_x + 25, row_y1), 5, (255, 120, 0), -1)
+        draw_text_with_shadow(frame, "HOME", (panel_x + 40, row_y1 + 5), font_scale=0.45, color=(255, 255, 255), thickness=1)
+        draw_text_with_shadow(frame, str(team1_passes), (panel_x + 135, row_y1 + 5), font_scale=0.5, color=(255, 255, 255), thickness=1)
+        draw_text_with_shadow(frame, str(team1_interceptions), (panel_x + 260, row_y1 + 5), font_scale=0.5, color=(100, 255, 100), thickness=1)
+
+        # Team 2 (Red)
+        cv2.circle(frame, (panel_x + 25, row_y2), 5, (0, 0, 200), -1)
+        draw_text_with_shadow(frame, "AWAY", (panel_x + 40, row_y2 + 5), font_scale=0.45, color=(255, 255, 255), thickness=1)
+        draw_text_with_shadow(frame, str(team2_passes), (panel_x + 135, row_y2 + 5), font_scale=0.5, color=(255, 255, 255), thickness=1)
+        draw_text_with_shadow(frame, str(team2_interceptions), (panel_x + 260, row_y2 + 5), font_scale=0.5, color=(100, 255, 100), thickness=1)
 
         return frame

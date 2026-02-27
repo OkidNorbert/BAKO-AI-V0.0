@@ -177,6 +177,9 @@ def run_team_analysis(
         tactical_player_positions = tactical_view_converter.transform_players_to_tactical_view(
             court_keypoints_per_frame, player_tracks
         )
+        tactical_ball_positions = tactical_view_converter.transform_balls_to_tactical_view(
+            court_keypoints_per_frame, ball_tracks
+        )
         
         # ── Speed & Distance ───────────────────────────────────────────────────
         notify_progress("Calculating speed and distance", 75)
@@ -257,6 +260,7 @@ def run_team_analysis(
                 tactical_view_converter.height,
                 tactical_view_converter.key_points,
                 tactical_player_positions,
+                tactical_ball_positions,
                 player_assignment,
                 ball_aquisition,
             )
@@ -282,11 +286,12 @@ def run_team_analysis(
         # Prepare detections list for frontend with tactical coordinates included
         notify_progress("Building tactical detections", 92)
         detections_with_tactical = []
+        
+        # 1. Add Players
         for frame_idx, (frame_tracks, frame_assignment) in enumerate(zip(player_tracks, player_assignment)):
             if frame_tracks is None:
                 continue
             
-            # Get tactical positions for this frame if available
             frame_tactical_positions = tactical_player_positions[frame_idx] if frame_idx < len(tactical_player_positions) else {}
             
             for player_id, player_data in frame_tracks.items():
@@ -294,7 +299,6 @@ def run_team_analysis(
                 if not bbox or len(bbox) != 4:
                     continue
                 
-                # Get tactical coordinates if available
                 tactical_pos = frame_tactical_positions.get(player_id)
                 
                 det_entry = {
@@ -307,7 +311,34 @@ def run_team_analysis(
                     "has_ball": player_id == ball_aquisition[frame_idx] if frame_idx < len(ball_aquisition) else False,
                 }
                 
-                # Add tactical coordinates if available
+                if tactical_pos:
+                    det_entry["tactical_x"] = float(tactical_pos[0])
+                    det_entry["tactical_y"] = float(tactical_pos[1])
+                
+                detections_with_tactical.append(det_entry)
+
+        # 2. Add Ball (basketball) - already transformed to tactical above
+        for frame_idx, frame_ball_tracks in enumerate(ball_tracks):
+            if frame_ball_tracks is None:
+                continue
+            
+            frame_tactical_ball = tactical_ball_positions[frame_idx] if frame_idx < len(tactical_ball_positions) else {}
+            
+            for ball_id, ball_data in frame_ball_tracks.items():
+                bbox = ball_data.get("bbox", [])
+                if not bbox or len(bbox) != 4:
+                    continue
+                
+                tactical_pos = frame_tactical_ball.get(ball_id)
+                
+                det_entry = {
+                    "frame": frame_idx,
+                    "track_id": str(ball_id),
+                    "object_type": "basketball",
+                    "bbox": bbox,
+                    "confidence": 1.0,
+                }
+                
                 if tactical_pos:
                     det_entry["tactical_x"] = float(tactical_pos[0])
                     det_entry["tactical_y"] = float(tactical_pos[1])
@@ -373,7 +404,11 @@ def run_team_analysis(
             "team_1_possession_percent": float(round(team_1_pct, 1)),
             "team_2_possession_percent": float(round(team_2_pct, 1)),
             "total_passes": int(len([p for p in passes if p != -1])),
+            "team_1_passes": int(len([frame_idx for frame_idx, p in enumerate(passes) if p != -1 and player_assignment[frame_idx].get(p) == 1])),
+            "team_2_passes": int(len([frame_idx for frame_idx, p in enumerate(passes) if p != -1 and player_assignment[frame_idx].get(p) == 2])),
             "total_interceptions": int(len([i for i in interceptions if i != -1])),
+            "team_1_interceptions": int(len([frame_idx for frame_idx, i in enumerate(interceptions) if i != -1 and player_assignment[frame_idx].get(i) == 1])),
+            "team_2_interceptions": int(len([frame_idx for frame_idx, i in enumerate(interceptions) if i != -1 and player_assignment[frame_idx].get(i) == 2])),
             "defensive_actions": int(defensive_actions),
             "shot_attempts": int(shot_stats['total_attempts']),
             "shots_made": int(shot_stats['total_made']),
@@ -395,8 +430,8 @@ def run_team_analysis(
         for shot in shots:
             events_list.append({
                 "event_type": "shot",
-                "frame": shot["frame"],
-                "timestamp_seconds": shot["frame"] / fps if fps > 0 else 0,
+                "frame": shot["start_frame"],
+                "timestamp_seconds": shot["start_frame"] / fps if fps > 0 else 0,
                 "player_id": shot.get("player_id"),
                 "details": {
                     "outcome": shot.get("outcome"),

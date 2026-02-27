@@ -18,6 +18,8 @@ class Detection(BaseModel):
     keypoints: Optional[List[List[float]]] = Field(None, description="Pose keypoints for players")
     team_id: Optional[int] = None
     has_ball: bool = False
+    tactical_x: Optional[float] = None
+    tactical_y: Optional[float] = None
 
 
 class DetectionBatch(BaseModel):
@@ -79,7 +81,11 @@ class AnalysisResult(BaseModel):
     team_1_possession_percent: Optional[float] = None
     team_2_possession_percent: Optional[float] = None
     total_passes: Optional[int] = None
+    team_1_passes: Optional[int] = 0
+    team_2_passes: Optional[int] = 0
     total_interceptions: Optional[int] = None
+    team_1_interceptions: Optional[int] = 0
+    team_2_interceptions: Optional[int] = 0
     
     # Shot analysis
     shot_attempts: Optional[int] = 0

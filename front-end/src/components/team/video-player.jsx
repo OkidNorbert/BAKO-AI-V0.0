@@ -146,6 +146,7 @@ const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate, onTacticalUpdate, s
           tactical_y: d.tactical_y,
           keypoints: d.keypoints,
           team: d.team_id === 1 ? 'home' : 'away',
+          has_ball: d.has_ball || d.keypoints?.has_ball || false,
           number: d.track_id.toString().slice(-2)
         };
       });
@@ -168,12 +169,15 @@ const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate, onTacticalUpdate, s
       // 2. Process Ball
       const ballDet = detections.find(d => d.effective_type === 'ball' || d.effective_type === 'basketball');
       if (ballDet) {
+        // Find if any player has the ball in this frame
+        const playerWithBall = mapped.find(p => p.has_ball || (p.keypoints?.has_ball));
         const [x1, y1, x2, y2] = ballDet.bbox;
         ballData = {
           x: ((x1 + x2) / 2) / videoDimensions.width * 100,
           y: ((y1 + y2) / 2) / videoDimensions.height * 100,
           tactical_x: ballDet.tactical_x,
-          tactical_y: ballDet.tactical_y
+          tactical_y: ballDet.tactical_y,
+          has_possession: playerWithBall ? (playerWithBall.team === 'home' ? 1 : 2) : -1
         };
         setBallPosition(ballData);
       } else {
@@ -391,7 +395,7 @@ const VideoPlayer = ({ videoSrc, analysisData, onTimeUpdate, onTacticalUpdate, s
                 ))}
               </>
             )}
-            
+
             {showOverlays && refereePositions.length > 0 && (
               <>
                 {refereePositions.map(ref => (

@@ -63,48 +63,48 @@ class TeamBallControlDrawer:
             output_video_frames.append(frame_drawn)
         return output_video_frames
     
-    def draw_frame(self,frame,frame_num,team_ball_control):
+    def draw_frame(self, frame, frame_num, team_ball_control):
         """
         Draw a semi-transparent overlay of team ball control percentages on a single frame.
-
-        Args:
-            frame (numpy.ndarray): The current video frame on which the overlay will be drawn.
-            frame_num (int): The index of the current frame.
-            team_ball_control (numpy.ndarray): An array indicating which team has ball control for each frame.
-
-        Returns:
-            numpy.ndarray: The frame with the semi-transparent overlay and statistics.
         """
+        # HUD Design Constants
+        frame_height, frame_width = frame.shape[:2]
+        panel_w = int(frame_width * 0.28)
+        panel_h = int(frame_height * 0.12)
+        panel_x = int(frame_width * 0.68)
+        panel_y = int(frame_height * 0.05) # Move to Top Right
         
-        # Draw a semi-transparent rectaggle 
-        overlay = frame.copy()
-        font_scale = 0.7
-        font_thickness=2
-        
-        # Overlay Position
-        frame_height, frame_width = overlay.shape[:2]
-        rect_x1 = int(frame_width * 0.60) 
-        rect_y1 = int(frame_height * 0.75)
-        rect_x2 = int(frame_width * 0.99)  
-        rect_y2 = int(frame_height * 0.90)
-        # Text positions
-        text_x = int(frame_width * 0.63)  
-        text_y1 = int(frame_height * 0.80)  
-        text_y2 = int(frame_height * 0.88)
+        # Draw Glass Panel
+        from .utils import draw_glass_panel, draw_text_with_shadow
+        draw_glass_panel(frame, (panel_x, panel_y, panel_w, panel_h), alpha=0.8, radius=15)
 
-
-        cv2.rectangle(overlay, (rect_x1, rect_y1), (rect_x2, rect_y2), (255,255,255), -1 )
-        alpha = 0.8
-        cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0, frame)
+        # Header with neon line
+        cv2.line(frame, (panel_x + 15, panel_y + 35), (panel_x + panel_w - 15, panel_y + 35), (100, 100, 100), 1)
+        draw_text_with_shadow(frame, "MATCH POSSESSION", (panel_x + 15, panel_y + 25), font_scale=0.45, color=(0, 255, 255), thickness=1)
 
         team_ball_control_till_frame = team_ball_control[:frame_num+1]
-        # Get the number of time each team had ball control
         team_1_num_frames = team_ball_control_till_frame[team_ball_control_till_frame==1].shape[0]
         team_2_num_frames = team_ball_control_till_frame[team_ball_control_till_frame==2].shape[0]
-        team_1 = team_1_num_frames/(team_ball_control_till_frame.shape[0])
-        team_2 = team_2_num_frames/(team_ball_control_till_frame.shape[0])
+        total_controlled = max(1, team_1_num_frames + team_2_num_frames)
+        team_1_pct = team_1_num_frames / total_controlled
+        team_2_pct = team_2_num_frames / total_controlled
 
-        cv2.putText(frame, f"Team 1 Ball Control: {team_1*100:.2f}%",(text_x, text_y1), cv2.FONT_HERSHEY_SIMPLEX, font_scale, (0,0,0), font_thickness)
-        cv2.putText(frame, f"Team 2 Ball Control: {team_2*100:.2f}%",(text_x, text_y2), cv2.FONT_HERSHEY_SIMPLEX, font_scale, (0,0,0), font_thickness)
+        # Multi-color Progress Bar
+        bar_x = panel_x + 20
+        bar_y = panel_y + 75
+        bar_w = panel_w - 40
+        bar_h = 10
+        
+        # Team 1 part (Blue)
+        t1_w = int(bar_w * team_1_pct)
+        cv2.rectangle(frame, (bar_x, bar_y), (bar_x + t1_w, bar_y + bar_h), (255, 120, 0), -1)
+        # Team 2 part (Red)
+        cv2.rectangle(frame, (bar_x + t1_w, bar_y), (bar_x + bar_w, bar_y + bar_h), (0, 0, 200), -1)
+        # Border
+        cv2.rectangle(frame, (bar_x, bar_y), (bar_x + bar_w, bar_y + bar_h), (255, 255, 255), 1)
+
+        # Percentage Labels
+        draw_text_with_shadow(frame, f"HOME {team_1_pct*100:.0f}%", (bar_x, bar_y - 10), font_scale=0.4, color=(255, 255, 255), thickness=1)
+        draw_text_with_shadow(frame, f"AWAY {team_2_pct*100:.0f}%", (bar_x + bar_w - 60, bar_y - 10), font_scale=0.4, color=(255, 255, 255), thickness=1)
 
         return frame

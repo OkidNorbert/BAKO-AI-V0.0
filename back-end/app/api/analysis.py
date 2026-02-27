@@ -84,8 +84,21 @@ async def run_analysis_background(video_id: str, mode: str, supabase: SupabaseSe
             "team_1_possession_percent",
             "team_2_possession_percent",
             "total_passes",
+            "team_1_passes",
+            "team_2_passes",
             "total_interceptions",
+            "team_1_interceptions",
+            "team_2_interceptions",
             "shot_attempts",
+            "shots_made",
+            "shots_missed",
+            "shooting_percentage",
+            "team_1_shot_attempts",
+            "team_1_shots_made",
+            "team_2_shot_attempts",
+            "team_2_shots_made",
+            "overall_shooting_percentage",
+            "defensive_actions",
             "shot_form_consistency",
             "dribble_count",
             "dribble_frequency_per_minute",
@@ -100,6 +113,23 @@ async def run_analysis_background(video_id: str, mode: str, supabase: SupabaseSe
             "processing_time_seconds",
         }
 
+        def convert_numpy(obj):
+            import numpy as np
+            if isinstance(obj, (np.int64, np.int32, np.int16, np.int8)):
+                return int(obj)
+            if isinstance(obj, (np.float64, np.float32, np.float16)):
+                return float(obj)
+            if isinstance(obj, np.ndarray):
+                return obj.tolist()
+            if isinstance(obj, dict):
+                return {k: convert_numpy(v) for k, v in obj.items()}
+            if isinstance(obj, list):
+                return [convert_numpy(v) for v in obj]
+            return obj
+
+        result = convert_numpy(result)
+        detections = convert_numpy(detections)
+        
         analysis_id = str(uuid4())
         analysis_payload = {k: v for k, v in result.items() if k in allowed_fields}
         
@@ -148,7 +178,10 @@ async def run_analysis_background(video_id: str, mode: str, supabase: SupabaseSe
             "created_at": datetime.utcnow().isoformat(),
         }
         
-        await supabase.insert("analysis_results", analysis_record)
+        try:
+            await supabase.insert("analysis_results", analysis_record)
+        except Exception as e:
+            raise e
 
         # Persist detections for overlay playback (always every frame for smoothness)
         store_detections = True

@@ -13,8 +13,8 @@ from utils import get_foot_position,measure_distance
 class TacticalViewConverter:
     def __init__(self, court_image_path):
         self.court_image_path = court_image_path
-        self.width = 300
-        self.height= 161
+        self.width = 280
+        self.height= 150
 
         self.actual_width_in_meters=28
         self.actual_height_in_meters=15 
@@ -173,3 +173,21 @@ class TacticalViewConverter:
         
         return tactical_player_positions
 
+    def transform_balls_to_tactical_view(self, keypoints_list, ball_tracks):
+        """
+        Extract ball center positions and transform.
+        """
+        ball_points = []
+        for frame_tracks in ball_tracks:
+            frame_points = {}
+            if frame_tracks is not None:
+                for bid, bdata in frame_tracks.items():
+                    bbox = bdata.get("bbox")
+                    if bbox and len(bbox) == 4:
+                        # Ball uses center instead of feet
+                        center_x = (bbox[0] + bbox[2]) / 2
+                        center_y = (bbox[1] + bbox[3]) / 2
+                        frame_points[bid] = (center_x, center_y)
+            ball_points.append(frame_points)
+            
+        return self.transform_points_to_tactical(keypoints_list, ball_points)

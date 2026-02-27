@@ -330,6 +330,18 @@ const MatchAnalysis = () => {
                 <TacticalBoard
                   players={liveTacticalData.players}
                   ball={liveTacticalData.ball}
+                  team1Stats={selectedMatch.analysisData ? {
+                    name: 'HOME',
+                    possession: selectedMatch.analysisData.team_1_possession_percent,
+                    passes: selectedMatch.analysisData.team_1_passes || 0,
+                    interceptions: selectedMatch.analysisData.team_1_interceptions || 0
+                  } : {}}
+                  team2Stats={selectedMatch.analysisData ? {
+                    name: 'AWAY',
+                    possession: selectedMatch.analysisData.team_2_possession_percent,
+                    passes: selectedMatch.analysisData.team_2_passes || 0,
+                    interceptions: selectedMatch.analysisData.team_2_interceptions || 0
+                  } : {}}
                   isDarkMode={isDarkMode}
                 />
               </div>
@@ -351,41 +363,70 @@ const MatchAnalysis = () => {
                   const madeCount = data.shots_made || shots.filter(s => s.details?.outcome === 'made').length;
                   const missedCount = data.shots_missed || shots.filter(s => s.details?.outcome === 'missed').length;
                   const totalCount = data.shot_attempts || shots.length;
-                  const percentage = data.shooting_percentage || (totalCount > 0 ? (madeCount / totalCount * 100) : 0);
+                  const percentage = data.overall_shooting_percentage || (totalCount > 0 ? (madeCount / totalCount * 100) : 0);
 
                   return (
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Players Detected</span>
-                        <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{data.players_detected}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Total Passes</span>
-                        <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{data.total_passes}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Possession (T1/T2)</span>
-                        <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{data.team_1_possession_percent}% / {data.team_2_possession_percent}%</span>
+                    <div className="grid grid-cols-1 gap-4">
+                      {/* Possession Bar */}
+                      <div className="mb-2">
+                        <div className="flex justify-between text-xs font-bold uppercase tracking-wider mb-2">
+                          <span className="text-blue-500">Home {data.team_1_possession_percent}%</span>
+                          <span className="text-red-500">{data.team_2_possession_percent}% Away</span>
+                        </div>
+                        <div className="h-2 w-full bg-gray-700 rounded-full flex overflow-hidden">
+                          <div
+                            className="h-full bg-blue-500 transition-all duration-1000"
+                            style={{ width: `${data.team_1_possession_percent}%` }}
+                          />
+                          <div
+                            className="h-full bg-red-500 transition-all duration-1000"
+                            style={{ width: `${data.team_2_possession_percent}%` }}
+                          />
+                        </div>
                       </div>
 
-                      <div className="pt-2 border-t border-gray-700">
-                        <div className="flex justify-between">
-                          <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Total Shots</span>
-                          <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{totalCount}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Shots Made</span>
-                          <span className={`font-bold text-green-500`}>{madeCount}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Shots Missed</span>
-                          <span className={`font-bold text-red-500`}>{missedCount}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Shooting %</span>
-                          <span className={`font-bold ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>
-                            {typeof percentage === 'number' ? percentage.toFixed(1) : percentage}%
+                      <div className="grid grid-cols-2 gap-3">
+                        <MatchStatCard
+                          label="Passes (H/A)"
+                          value={`${data.team_1_passes || 0} / ${data.team_2_passes || 0}`}
+                          icon={<Share size={14} />}
+                          isDarkMode={isDarkMode}
+                          subtitle="Split by team"
+                        />
+                        <MatchStatCard
+                          label="Interceptions (H/A)"
+                          value={`${data.team_1_interceptions || 0} / ${data.team_2_interceptions || 0}`}
+                          icon={<Target size={14} />}
+                          isDarkMode={isDarkMode}
+                          color="text-emerald-500"
+                          subtitle="Split by team"
+                        />
+                        <MatchStatCard
+                          label="Distance"
+                          value={`${data.total_distance_meters || 0}m`}
+                          icon={<Activity size={14} />}
+                          isDarkMode={isDarkMode}
+                        />
+                        <MatchStatCard
+                          label="Players"
+                          value={data.players_detected}
+                          icon={<Users size={14} />}
+                          isDarkMode={isDarkMode}
+                        />
+                      </div>
+
+                      <div className={`mt-4 pt-4 border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="text-sm font-bold uppercase tracking-wider">Shooting Performance</h4>
+                          <span className={`text-xs font-black px-2 py-0.5 rounded ${percentage > 45 ? 'bg-green-500/20 text-green-500' : 'bg-yellow-500/20 text-yellow-500'}`}>
+                            {typeof percentage === 'number' ? percentage.toFixed(1) : percentage}% ACC
                           </span>
+                        </div>
+
+                        <div className="space-y-2">
+                          <ShootingBar label="Attempts" value={totalCount} total={totalCount} color="bg-gray-500" isDarkMode={isDarkMode} />
+                          <ShootingBar label="Made" value={madeCount} total={totalCount} color="bg-green-500" isDarkMode={isDarkMode} />
+                          <ShootingBar label="Missed" value={missedCount} total={totalCount} color="bg-red-500" isDarkMode={isDarkMode} />
                         </div>
                       </div>
                     </div>
@@ -753,3 +794,34 @@ const MatchAnalysis = () => {
 };
 
 export default MatchAnalysis;
+
+const MatchStatCard = ({ label, value, icon, isDarkMode, color = "text-indigo-500", subtitle }) => (
+  <div className={`p-4 rounded-xl border ${isDarkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-gray-50 border-gray-100 shadow-sm'} transition-all hover:scale-[1.02]`}>
+    <div className="flex justify-between items-start mb-2">
+      <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white shadow-sm'} ${color}`}>
+        {icon}
+      </div>
+    </div>
+    <div className="text-xl font-black mb-0.5">{value}</div>
+    <div className={`text-[10px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{label}</div>
+    {subtitle && <div className="text-[9px] opacity-60 italic mt-0.5">{subtitle}</div>}
+  </div>
+);
+
+const ShootingBar = ({ label, value, total, color, isDarkMode }) => {
+  const percentage = total > 0 ? (value / total * 100) : 0;
+  return (
+    <div className="space-y-1">
+      <div className="flex justify-between text-[10px] font-bold uppercase tracking-tighter">
+        <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>{label}</span>
+        <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{value}</span>
+      </div>
+      <div className={`h-1.5 w-full rounded-full ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'} overflow-hidden`}>
+        <div
+          className={`h-full ${color} transition-all duration-1000`}
+          style={{ width: `${percentage}%` }}
+        />
+      </div>
+    </div>
+  );
+};
