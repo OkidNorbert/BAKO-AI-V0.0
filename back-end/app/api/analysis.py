@@ -159,6 +159,9 @@ async def run_analysis_background(video_id: str, mode: str, supabase: SupabaseSe
             "avg_speed_kmh": result.get("avg_speed_kmh", 0.0),
             "max_speed_kmh": result.get("max_speed_kmh", 0.0),
             "advanced_analytics": result.get("advanced_analytics"),
+            # Jersey colors — stored so the frontend can colour player markers by actual kit
+            "team_1_jersey": (options or {}).get("our_team_jersey", ""),
+            "team_2_jersey": (options or {}).get("opponent_jersey", ""),
         }
         
         current_events = result.get("events", [])

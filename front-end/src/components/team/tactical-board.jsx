@@ -79,11 +79,60 @@ const LINE_DIM = { stroke: 'rgba(255,255,255,0.18)', strokeWidth: 0.22 };
 const ORANGE = '#ff7a18';
 
 
-// ── Component ────────────────────────────────────────────────────────────────
-const TacticalBoard = ({ players, ball, isDarkMode, team1Stats, team2Stats }) => {
+/**
+ * jerseyToColor — maps a jersey description like "white jersey" → CSS colour.
+ * Supports the most common basketball kit colours.
+ */
+const JERSEY_COLOR_MAP = {
+    white: '#f0f0f0',
+    cream: '#f5f0dc',
+    black: '#1a1a1a',
+    grey: '#9ca3af',
+    gray: '#9ca3af',
+    silver: '#c0c0c0',
+    red: '#ef4444',
+    crimson: '#dc143c',
+    maroon: '#7f0000',
+    blue: '#3b82f6',
+    'dark blue': '#1d4ed8',
+    navy: '#1e3a5f',
+    'royal blue': '#4169e1',
+    'sky blue': '#38bdf8',
+    green: '#22c55e',
+    'dark green': '#15803d',
+    lime: '#a3e635',
+    yellow: '#facc15',
+    gold: '#f59e0b',
+    orange: '#f97316',
+    purple: '#a855f7',
+    violet: '#7c3aed',
+    pink: '#ec4899',
+    brown: '#92400e',
+    teal: '#14b8a6',
+    cyan: '#06b6d4',
+};
+
+function jerseyToColor(jerseyStr, fallback = '#3b82f6') {
+    if (!jerseyStr) return fallback;
+    const lower = jerseyStr.toLowerCase();
+    for (const [keyword, color] of Object.entries(JERSEY_COLOR_MAP)) {
+        if (lower.includes(keyword)) return color;
+    }
+    return fallback;
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
+const TacticalBoard = ({ players, ball, isDarkMode, team1Stats, team2Stats, team1Jersey = '', team2Jersey = '' }) => {
     // Backend 280×150 → SVG court area (1..93 × 1..49)
     const mapX = (bx) => 1 + (bx / 280) * 92;
     const mapY = (by) => 1 + (by / 150) * 48;
+
+    // Jersey → color (fallback: home=blue, away=red)
+    const team1Color = jerseyToColor(team1Jersey, '#3b82f6');
+    const team2Color = jerseyToColor(team2Jersey, '#ef4444');
+    // White jerseys need a dark stroke to be visible on the dark court
+    const team1Stroke = team1Jersey?.toLowerCase().includes('white') ? '#555' : 'white';
+    const team2Stroke = team2Jersey?.toLowerCase().includes('white') ? '#555' : 'white';
 
     const PossessionIndicator = ({ team, color }) => (
         <div className={`flex items-center space-x-2 px-3 py-1.5 rounded-full ${isDarkMode ? 'bg-gray-800/80' : 'bg-white/80'
@@ -103,8 +152,8 @@ const TacticalBoard = ({ players, ball, isDarkMode, team1Stats, team2Stats }) =>
                 {/* Possession HUD */}
                 <div className="absolute top-2 inset-x-2 flex items-start z-10 pointer-events-none">
                     <div className="flex flex-col space-y-1">
-                        {ball?.has_possession === 1 && <PossessionIndicator team="Home" color="#3b82f6" />}
-                        {ball?.has_possession === 2 && <PossessionIndicator team="Away" color="#ef4444" />}
+                        {ball?.has_possession === 1 && <PossessionIndicator team="Home" color={team1Color} />}
+                        {ball?.has_possession === 2 && <PossessionIndicator team="Away" color={team2Color} />}
                     </div>
                 </div>
 
@@ -230,29 +279,31 @@ const TacticalBoard = ({ players, ball, isDarkMode, team1Stats, team2Stats }) =>
                     {Array.isArray(players) && players.map(player =>
                         player?.tactical_x !== undefined && player?.tactical_y !== undefined && (
                             <g key={player.id ?? `${player.tactical_x}-${player.tactical_y}`}>
-                                {/* glow */}
+                                {/* glow halo in jersey colour */}
                                 <circle
-                                    cx={mapX(player.tactical_x)} cy={mapY(player.tactical_y)} r="1.8"
-                                    fill={player.team === 'home' ? 'rgba(59,130,246,0.18)' : 'rgba(239,68,68,0.18)'}
+                                    cx={mapX(player.tactical_x)} cy={mapY(player.tactical_y)} r="2.4"
+                                    fill={player.team === 'home' ? team1Color : team2Color}
+                                    opacity="0.18"
                                 />
-                                {/* dot */}
+                                {/* filled dot in jersey colour */}
                                 <circle
-                                    cx={mapX(player.tactical_x)} cy={mapY(player.tactical_y)} r="1.2"
-                                    fill={player.team === 'home' ? '#3b82f6' : '#ef4444'}
-                                    stroke="white" strokeWidth="0.3"
+                                    cx={mapX(player.tactical_x)} cy={mapY(player.tactical_y)} r="1.3"
+                                    fill={player.team === 'home' ? team1Color : team2Color}
+                                    stroke={player.team === 'home' ? team1Stroke : team2Stroke}
+                                    strokeWidth="0.35"
                                 />
-                                {/* ball-possession ring */}
+                                {/* ball-possession ring (gold) */}
                                 {player.has_ball && (
                                     <>
                                         <circle
-                                            cx={mapX(player.tactical_x)} cy={mapY(player.tactical_y)} r="2.2"
-                                            fill="none" stroke="#fbbf24" strokeWidth="0.35" strokeDasharray="0.8,0.4"
+                                            cx={mapX(player.tactical_x)} cy={mapY(player.tactical_y)} r="2.3"
+                                            fill="none" stroke="#fbbf24" strokeWidth="0.4" strokeDasharray="0.8,0.4"
                                         />
                                         <circle
-                                            cx={mapX(player.tactical_x)} cy={mapY(player.tactical_y)} r="3"
+                                            cx={mapX(player.tactical_x)} cy={mapY(player.tactical_y)} r="3.2"
                                             fill="none"
-                                            stroke={player.team === 'home' ? '#60a5fa' : '#f87171'}
-                                            strokeWidth="0.2" opacity="0.5"
+                                            stroke={player.team === 'home' ? team1Color : team2Color}
+                                            strokeWidth="0.2" opacity="0.45"
                                         />
                                     </>
                                 )}

@@ -172,6 +172,15 @@ const MatchAnalysis = () => {
         const res = await analysisAPI.getLastResultByVideo(match.id);
         analysisData = res.data;
 
+        // Extract jersey colours saved in the summary_stats event
+        if (analysisData?.events) {
+          const summary = analysisData.events.find(e => e.event_type === 'summary_stats');
+          if (summary?.details) {
+            analysisData.team_1_jersey = summary.details.team_1_jersey || '';
+            analysisData.team_2_jersey = summary.details.team_2_jersey || '';
+          }
+        }
+
         try {
           const detRes = await analysisAPI.getDetections(analysisData.id);
           if (detRes.data && detRes.data.detections) {
@@ -330,6 +339,8 @@ const MatchAnalysis = () => {
                 <TacticalBoard
                   players={liveTacticalData.players}
                   ball={liveTacticalData.ball}
+                  team1Jersey={selectedMatch.analysisData?.team_1_jersey || ''}
+                  team2Jersey={selectedMatch.analysisData?.team_2_jersey || ''}
                   team1Stats={selectedMatch.analysisData ? {
                     name: 'HOME',
                     possession: selectedMatch.analysisData.team_1_possession_percent,
