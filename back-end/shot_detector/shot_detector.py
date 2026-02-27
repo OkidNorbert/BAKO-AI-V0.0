@@ -436,22 +436,22 @@ class ShotDetector:
                 
             # Horizontal distance to the rim center
             horizontal_dist = abs(ball_point['x'] - hoop['x'])
+            is_falling = ball_point.get('vy', 1) > 0  # Ball must be dropping
             
-            # Check if ball has passed rim level with a small buffer (15px) to avoid "too early" detection.
-            # We also ensure it's within a tighter horizontal range for success.
-            if ball_point['y'] >= hoop['rim_y'] + 15 and outcome_frame is None:
+            # Check if ball has passed rim level with a small buffer to avoid "too early" detection.
+            if ball_point['y'] >= hoop['rim_y'] + 10 and outcome_frame is None:
                 outcome_frame = frame_num
                 min_dist_at_rim = horizontal_dist
                 
                 # SUCCESS CONDITION: 
-                # Ball center must be within the rim's diameter roughly.
-                # 65px is a more reliable threshold for "through the hoop" at typical distances
-                if horizontal_dist < 65: 
+                # Ball center must be within the rim's diameter.
+                # Must be dropping and tightly horizontally aligned (< 40px)
+                if horizontal_dist < 40 and is_falling: 
                     made_detected = True
                     break
 
             # SECONDARY CHECK: Collision/Meeting (Ball slightly below rim and very close horizontally)
-            if horizontal_dist < 50 and 15 <= (ball_point['y'] - hoop['rim_y']) < 100:
+            if horizontal_dist < 35 and 10 <= (ball_point['y'] - hoop['rim_y']) < 80 and is_falling:
                 made_detected = True
                 outcome_frame = frame_num
                 min_dist_at_rim = horizontal_dist
@@ -471,21 +471,25 @@ class ShotDetector:
         # Determine final outcome
         if made_detected:
             outcome = 'made'
-            confidence = 0.98
+            confidence = 0.90
         else:
-            # If tracking was lost before the ball reached rim level
-            # We check if the last tracked position was still above the rim
+            # If tracking was lost before the ball reached reasonably below the rim
             last_idx = end_idx - 1
             if last_idx >= 0:
                 last_point = trajectory[last_idx]
                 h_last = self._get_hoop_at_frame(hoop_detections, last_point['frame'])
-                if h_last and last_point['y'] < h_last['rim_y'] - 30:
-                    # Ball was lost before it reached the "Danger Zone"
+                if h_last:
+                    if last_point['y'] < h_last['rim_y'] - 10:
+                        # Ball tracking lost high in the air
+                        outcome = 'unknown'
+                        confidence = 0.0
+                    else:
+                        # Ball tracking survived to the rim level but didn't pass the "made" criteria
+                        outcome = 'missed'
+                        confidence = 0.7 if min_dist_at_rim < 150 else 0.4
+                else:
                     outcome = 'unknown'
                     confidence = 0.0
-                else:
-                    outcome = 'missed'
-                    confidence = 0.8 if min_dist_at_rim < 150 else 0.5
             else:
                 outcome = 'unknown'
                 confidence = 0.0

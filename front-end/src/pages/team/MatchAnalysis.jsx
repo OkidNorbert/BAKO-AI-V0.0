@@ -538,7 +538,7 @@ const MatchAnalysis = () => {
                           </span>
                           <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                             {event.event_type === 'shot'
-                              ? `${event.details?.outcome === 'made' ? '🏀 Made' : '❌ Missed'} ${event.details?.type || ''} Shot`
+                              ? `${event.details?.outcome === 'made' ? '🏀 Made' : event.details?.outcome === 'missed' ? '❌ Missed' : '❓ Unknown'} ${event.details?.type && event.details?.type !== 'unknown' ? event.details.type : ''} Shot`.replace('  ', ' ')
                               : (event.event_type || event.type || 'unknown').charAt(0).toUpperCase() + (event.event_type || event.type || 'unknown').slice(1)}
                           </span>
                         </div>

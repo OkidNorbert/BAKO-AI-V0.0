@@ -435,7 +435,7 @@ def run_team_analysis(
                 "player_id": shot.get("player_id"),
                 "details": {
                     "outcome": shot.get("outcome"),
-                    "type": shot.get("type"),
+                    "type": shot.get("shot_type") or shot.get("type", "unknown"),
                     "player": shot.get("player_id")
                 }
             })
