@@ -183,13 +183,19 @@ api.interceptors.response.use(
       if (token) {
         try {
           const tokenPayload = JSON.parse(atob(token.split('.')[1]));
-          console.log('Response interceptor: Access forbidden. Current token payload:', {
-            token: token.substring(0, 50) + '...',
-            userRole: tokenPayload.user?.role || tokenPayload.role,
-            userId: tokenPayload.user?.id || tokenPayload.id
+          const extractedRole = tokenPayload.account_type || tokenPayload.role || (tokenPayload.user?.account_type || tokenPayload.user?.role);
+          const extractedId = tokenPayload.sub || tokenPayload.id || (tokenPayload.user?.id);
+          const orgId = tokenPayload.organization_id || tokenPayload.organizationId;
+
+          console.log('Response interceptor: Access forbidden (403).', {
+            url: originalRequest.url,
+            userRole: extractedRole,
+            userId: extractedId,
+            organizationId: orgId,
+            tokenType: tokenPayload.type || 'access'
           });
-        } catch (error) {
-          console.warn('Response interceptor: Error parsing token in 403 handler:', error);
+        } catch (err) {
+          console.warn('Response interceptor: Error parsing token in 403 handler:', err);
         }
       }
     }

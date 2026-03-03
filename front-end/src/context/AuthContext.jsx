@@ -58,12 +58,12 @@ export const AuthProvider = ({ children }) => {
 
         // Map backend user to frontend expectations
         const userData = {
-          id: backendUser?.id || tokenPayload.sub,
+          id: backendUser?.id || tokenPayload.sub || tokenPayload.id,
           email: backendUser?.email || tokenPayload.email,
-          role: (backendUser?.accountType || tokenPayload.accountType) === 'personal' ? 'player' : (backendUser?.accountType || tokenPayload.accountType),
-          name: backendUser?.fullName || 'User',
-          organizationId: backendUser?.organizationId || tokenPayload.organizationId,
-          staffRole: backendUser?.staffRole || backendUser?.staff_role || tokenPayload.staffRole || tokenPayload.staff_role, // Added
+          role: (backendUser?.accountType || backendUser?.account_type || tokenPayload.account_type || tokenPayload.accountType || 'personal') === 'personal' ? 'player' : (backendUser?.accountType || backendUser?.account_type || tokenPayload.account_type || tokenPayload.accountType),
+          name: backendUser?.fullName || backendUser?.full_name || 'User',
+          organizationId: backendUser?.organizationId || backendUser?.organization_id || tokenPayload.organization_id || tokenPayload.organizationId,
+          staffRole: backendUser?.staffRole || backendUser?.staff_role || tokenPayload.staff_role || tokenPayload.staffRole,
           teamId: backendUser?.teamId || backendUser?.team_id
         };
 
@@ -77,8 +77,8 @@ export const AuthProvider = ({ children }) => {
         if (userData.organizationId) {
           localStorage.setItem('organizationId', userData.organizationId);
         }
-        if (userData.staffRole) { // Added
-          localStorage.setItem('staffRole', userData.staffRole); // Added
+        if (userData.staffRole) {
+          localStorage.setItem('staffRole', userData.staffRole);
         }
 
         setUser(userData);
@@ -110,10 +110,12 @@ export const AuthProvider = ({ children }) => {
 
       // Map backend fields to frontend expected ones
       const user = {
-        ...backendUser,
-        role: backendUser.accountType === 'personal' ? 'player' : backendUser.accountType,
-        name: backendUser.fullName || 'User',
-        staffRole: backendUser.staffRole || backendUser.staff_role // Added
+        id: backendUser?.id || backendUser?.id,
+        email: backendUser?.email,
+        role: (backendUser?.accountType || backendUser?.account_type) === 'personal' ? 'player' : (backendUser?.accountType || backendUser?.account_type),
+        name: backendUser.fullName || backendUser.full_name || 'User',
+        organizationId: backendUser?.organizationId || backendUser?.organization_id,
+        staffRole: backendUser.staffRole || backendUser.staff_role
       };
 
       console.log('AuthContext: Registration successful, mapped user:', user);
@@ -175,6 +177,10 @@ export const AuthProvider = ({ children }) => {
 
     const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
     const payload = btoa(JSON.stringify({
+      sub: mockUser.id,
+      email: mockUser.email,
+      account_type: role,
+      organization_id: mockUser.organizationId || null,
       user: mockUser,
       role: role,
       id: mockUser.id,

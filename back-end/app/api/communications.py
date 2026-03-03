@@ -17,7 +17,7 @@ router = APIRouter()
 
 @router.get("/announcements", response_model=AnnouncementListResponse)
 async def get_announcements(
-    current_user: dict = Depends(require_linked_account),
+    current_user: dict = Depends(get_current_user),
     supabase: SupabaseService = Depends(get_supabase),
 ):
     """
@@ -25,12 +25,23 @@ async def get_announcements(
     Accessible by Team Owners, Coaches, and Linked Players.
     """
     org_id = current_user.get("organization_id")
+    
+    # Fallback to DB check if not in token (account might have been linked after login)
     if not org_id:
-        # Fallback for Owners if not in token
-        orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
-        if not orgs:
-            return AnnouncementListResponse(announcements=[], total=0)
-        org_id = orgs[0]["id"]
+        user_id = current_user["id"]
+        user_record = await supabase.select_one("users", user_id)
+        
+        if user_record and user_record.get("organization_id"):
+            org_id = user_record["organization_id"]
+        elif current_user.get("account_type") == "team":
+            # Extra fallback for Owners
+            orgs = await supabase.select("organizations", filters={"owner_id": user_id})
+            if orgs:
+                org_id = orgs[0]["id"]
+    
+    if not org_id:
+        # User is not linked to any organization
+        return AnnouncementListResponse(announcements=[], total=0)
 
     announcements_data = await supabase.select(
         "announcements", 
