@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '@/utils/axiosConfig';
 import { useAuth } from '@/context/AuthContext';
+import { showToast } from '@/components/shared/Toast';
 
 const NotificationContext = createContext(null);
 
@@ -11,15 +12,16 @@ export const NotificationProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [isRetrying, setIsRetrying] = useState(false);
   const { user, isAuthenticated } = useAuth();
+  const isInitialMount = React.useRef(true);
 
   useEffect(() => {
     if (isAuthenticated) {
       fetchNotifications();
 
-      // Polling for new notifications every minute
+      // Polling for new notifications every 30 seconds
       const intervalId = setInterval(() => {
         fetchNotifications();
-      }, 60000);
+      }, 30000);
 
       return () => clearInterval(intervalId);
     }
@@ -27,8 +29,21 @@ export const NotificationProvider = ({ children }) => {
 
   useEffect(() => {
     // Update unread count whenever notifications change
-    const count = notifications.filter(notification => !notification.read).length;
-    setUnreadCount(count);
+    const newUnreadCount = notifications.filter(notification => !notification.read).length;
+
+    // Show toast if unread count increased (new notification arrived)
+    if (!isInitialMount.current && newUnreadCount > unreadCount) {
+      const latest = notifications.find(n => !n.read);
+      if (latest) {
+        showToast(`New ${latest.type || 'notification'}: ${latest.title}`, 'info');
+      }
+    }
+
+    if (notifications.length > 0) {
+      isInitialMount.current = false;
+    }
+
+    setUnreadCount(newUnreadCount);
   }, [notifications]);
 
   const fetchNotifications = async () => {
@@ -42,6 +57,7 @@ export const NotificationProvider = ({ children }) => {
       if (!role) {
         console.warn('No user role found, cannot fetch notifications');
         setError('Authentication required');
+        setLoading(false);
         return;
       }
 

@@ -1,10 +1,11 @@
 """
 Player Portal API endpoints (for Personal/Individual Player Users).
 """
+import os
 from uuid import uuid4
 from datetime import datetime
 from typing import Optional, List
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, UploadFile, File
 
 from app.dependencies import require_personal_account, get_supabase, get_current_user
 from app.services.supabase_client import SupabaseService
@@ -268,6 +269,57 @@ async def get_skills_analytics(
             "defense": 0
         }
     }
+
+@router.post("/profile/image")
+async def upload_profile_image(
+    image: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user),
+    supabase: SupabaseService = Depends(get_supabase),
+):
+    """
+    Upload a profile picture for the current user/player.
+    Saves the file locally and returns the public URL.
+    """
+    # Validate file type
+    valid_types = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"]
+    if image.content_type not in valid_types:
+        raise HTTPException(status_code=400, detail="Only image files (JPG, PNG, GIF, WEBP) are allowed")
+    
+    # Read file content
+    content = await image.read()
+    if len(content) > 5 * 1024 * 1024:  # 5MB limit
+        raise HTTPException(status_code=400, detail="Image size must be less than 5MB")
+    
+    # Build a safe filename and storage path
+    ext = os.path.splitext(image.filename or "avatar.jpg")[1] or ".jpg"
+    safe_filename = f"{current_user['id']}_avatar{ext}"
+    avatars_dir = os.path.join("./uploads", "avatars")
+    os.makedirs(avatars_dir, exist_ok=True)
+    file_path = os.path.join(avatars_dir, safe_filename)
+    
+    # Write the file to disk
+    with open(file_path, "wb") as f:
+        f.write(content)
+    
+    # The public URL served by the backend static file server
+    image_url = f"/uploads/avatars/{safe_filename}"
+    
+    # Update user avatar_url
+    try:
+        await supabase.update("users", current_user["id"], {"avatar_url": image_url})
+    except Exception as e:
+        print(f"Warning: Failed to update user avatar_url: {e}")
+    
+    # If the user has a player profile, update that too
+    try:
+        players = await supabase.select("players", filters={"user_id": current_user["id"]})
+        for player in players:
+            await supabase.update("players", player["id"], {"avatar_url": image_url})
+    except Exception as e:
+        print(f"Warning: Failed to update player avatar_url: {e}")
+    
+    return {"imageUrl": image_url}
+
 
 @router.get("/profile")
 async def get_profile(

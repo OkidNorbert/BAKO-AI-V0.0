@@ -30,20 +30,26 @@ const Notifications = () => {
   const [filter, setFilter] = useState('all');
   const [selectedNotification, setSelectedNotification] = useState(null);
 
-  // Personal player (no teamId) has no notifications — redirect to dashboard
+  // Personal player (unlinked) has no notifications — redirect to dashboard
   useEffect(() => {
-    if (user?.role === 'player' && !user?.teamId) {
+    if (user?.role === 'player' && !user?.organizationId) {
       navigate('/player', { replace: true });
     }
-  }, [user?.role, user?.teamId, navigate]);
+  }, [user?.role, user?.organizationId, navigate]);
 
   useEffect(() => {
-    if (user?.role === 'player' && !user?.teamId) return;
+    if (user?.role === 'player' && !user?.organizationId) {
+      setLoading(false);
+      return;
+    }
     fetchNotifications();
-  }, [filter, user?.role, user?.teamId]);
+  }, [filter, user?.role, user?.organizationId]);
 
   const fetchNotifications = async () => {
-    if (user?.role === 'player' && !user?.teamId) return;
+    if (user?.role === 'player' && !user?.organizationId) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       let raw = [];
@@ -53,7 +59,7 @@ const Notifications = () => {
         const res = await adminAPI.getNotifications();
         const data = res?.data;
         raw = Array.isArray(data) ? data : (data?.sent && data?.received ? [...(data.sent || []), ...(data.received || [])] : []);
-      } else if (user?.role === 'player' && user?.teamId) {
+      } else if (user?.role === 'player' && user?.organizationId) {
         const res = await playerAPI.getNotifications();
         raw = Array.isArray(res?.data) ? res.data : [];
       }
@@ -142,6 +148,8 @@ const Notifications = () => {
         return <Trophy className="w-5 h-5 text-blue-500" />;
       case 'system_update':
         return <AlertTriangle className="w-5 h-5 text-gray-500" />;
+      case 'announcement':
+        return <Bell className="w-5 h-5 text-orange-500" />;
       default:
         return <Bell className="w-5 h-5 text-gray-500" />;
     }
@@ -185,7 +193,7 @@ const Notifications = () => {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   // Don't render notifications UI for personal player (redirecting)
-  if (user?.role === 'player' && !user?.teamId) {
+  if (user?.role === 'player' && !user?.organizationId) {
     return null;
   }
 

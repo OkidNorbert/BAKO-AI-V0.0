@@ -2,7 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
-import { Bell, Calendar, User, Home, FileText, Trophy, Sun, Moon, ChevronDown, LogOut, Video, TrendingUp, MessageSquare } from 'lucide-react';
+import { Bell, Calendar, User, Home, FileText, Trophy, Sun, Moon, ChevronDown, LogOut, Video, TrendingUp, MessageSquare, X, Clock } from 'lucide-react';
+import { useNotifications } from '@/context/NotificationContext';
 
 
 const Navbar = ({ role }) => {
@@ -12,19 +13,25 @@ const Navbar = ({ role }) => {
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const notificationsRef = useRef(null);
+  const { notifications, unreadCount, markAsRead } = useNotifications();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsDropdownOpen(false);
       }
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
+        setIsNotificationsOpen(false);
+      }
     };
-    if (isDropdownOpen) {
+    if (isDropdownOpen || isNotificationsOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isDropdownOpen]);
+  }, [isDropdownOpen, isNotificationsOpen]);
 
   const handleLogout = () => {
     logout();
@@ -126,6 +133,83 @@ const Navbar = ({ role }) => {
                 {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
               </button>
 
+              {/* Notifications Bell */}
+              {user && (
+                <div className="relative" ref={notificationsRef}>
+                  <button
+                    onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                    className={`p-2 rounded-full relative transition-all duration-200 ${isDarkMode
+                      ? 'text-gray-300 hover:text-white hover:bg-gray-800'
+                      : 'text-white hover:bg-white hover:bg-opacity-20'
+                      }`}
+                    aria-label="Notifications"
+                  >
+                    <Bell className="h-5 w-5" />
+                    {unreadCount > 0 && (
+                      <span className="absolute top-0 right-0 flex items-center justify-center h-4 w-4 rounded-full bg-red-500 text-white text-[10px] font-bold border-2 border-indigo-600">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Notifications Dropdown */}
+                  {isNotificationsOpen && (
+                    <div className={`absolute right-0 mt-2 w-80 rounded-xl shadow-2xl z-50 overflow-hidden border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
+                      }`}>
+                      <div className={`p-4 border-b flex justify-between items-center ${isDarkMode ? 'bg-gray-700/50 border-gray-700' : 'bg-gray-50 border-gray-100'
+                        }`}>
+                        <h3 className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Notifications</h3>
+                        <Link
+                          to={`/${role}/notifications`}
+                          className="text-xs text-orange-500 hover:text-orange-400 font-semibold"
+                          onClick={() => setIsNotificationsOpen(false)}
+                        >
+                          View All
+                        </Link>
+                      </div>
+
+                      <div className="max-h-96 overflow-y-auto">
+                        {notifications.length > 0 ? (
+                          notifications.slice(0, 5).map((n) => (
+                            <div
+                              key={n.id}
+                              className={`p-4 border-b last:border-0 cursor-pointer transition-colors ${isDarkMode ? 'border-gray-700 hover:bg-gray-700' : 'border-gray-50 hover:bg-blue-50'
+                                } ${!n.read ? 'bg-orange-500/5' : ''}`}
+                              onClick={() => {
+                                markAsRead(n.id);
+                                setIsNotificationsOpen(false);
+                                navigate(`/${role}/notifications`);
+                              }}
+                            >
+                              <div className="flex space-x-3">
+                                <div className={`mt-1 h-2 w-2 rounded-full flex-shrink-0 ${!n.read ? 'bg-orange-500' : 'bg-transparent'}`} />
+                                <div className="space-y-1">
+                                  <p className={`text-sm font-semibold leading-none ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+                                    {n.title}
+                                  </p>
+                                  <p className={`text-xs line-clamp-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                                    {n.message}
+                                  </p>
+                                  <div className="flex items-center text-[10px] text-gray-400">
+                                    <Clock className="h-3 w-3 mr-1" />
+                                    {new Date(n.timestamp || n.createdAt || n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="p-8 text-center">
+                            <Bell className="h-10 w-10 text-gray-300 mx-auto mb-2 opacity-20" />
+                            <p className="text-sm text-gray-500">No new notifications</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {user && !['/login', '/register'].includes(location.pathname) ? (
                 <div className="relative" ref={dropdownRef}>
                   <button
@@ -161,7 +245,7 @@ const Navbar = ({ role }) => {
                   {isDropdownOpen && (
                     <div className={`absolute right-0 mt-2 w-48 rounded-xl shadow-xl z-20 py-2 ${isDarkMode ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-800'
                       }`}>
-                      {!(role === 'player' && !user?.teamId) && (
+                      {!(role === 'player' && !user?.organizationId) && (
                         <Link
                           to={`/${role}/notifications`}
                           className={`flex items-center px-4 py-2 text-sm hover:text-indigo-600 ${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-indigo-50'
