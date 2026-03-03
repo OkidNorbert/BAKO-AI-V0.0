@@ -4,7 +4,7 @@ Pydantic models for player schemas.
 from datetime import datetime, date
 from typing import Optional, List
 from uuid import UUID
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class PlayerCreate(BaseModel):
@@ -20,6 +20,7 @@ class PlayerCreate(BaseModel):
     address: Optional[str] = None
     experience_years: Optional[str] = None
     bio: Optional[str] = None
+    status: Optional[str] = "active"
 
 
 class PlayerUpdate(BaseModel):
@@ -35,6 +36,7 @@ class PlayerUpdate(BaseModel):
     address: Optional[str] = None
     experience_years: Optional[str] = None
     bio: Optional[str] = None
+    status: Optional[str] = None
 
 
 class Player(BaseModel):
@@ -53,11 +55,22 @@ class Player(BaseModel):
     bio: Optional[str] = None
     organization_id: Optional[UUID] = None
     user_id: Optional[UUID] = None  # For PERSONAL accounts
+    email: Optional[str] = None
+    status: Optional[str] = "active"
+    ppg: Optional[float] = 0.0
     created_at: datetime
     updated_at: Optional[datetime] = None
     
     class Config:
         from_attributes = True
+
+    @field_validator("experience_years", mode="before")
+    @classmethod
+    def coerce_experience_years(cls, v):
+        """Convert numeric experience_years to string (handles DB int values)."""
+        if v is not None and not isinstance(v, str):
+            return str(v)
+        return v
 
 
 class PlayerWithStats(Player):

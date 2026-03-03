@@ -90,31 +90,76 @@ async def get_users(
     """
     # Determine organization_id
     org_id = current_user.get("organization_id")
-    if not org_id:
+    if not org_id and current_user.get("account_type") == AccountType.TEAM.value:
         orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
         if not orgs:
             return []
         org_id = orgs[0]["id"]
     
+    if not org_id:
+        return []
+
     # Get players in the org
-    players = await supabase.select("players", filters={"organization_id": org_id})
+    players = await supabase.select("players", filters={"organization_id": str(org_id)})
+    
+    # Identify linked users to fetch their personal profiles for data fallback
+    linked_user_ids = [str(p["user_id"]) for p in players if p.get("user_id")]
+    personal_profiles = {}
+    
+    if linked_user_ids:
+        try:
+            # Batch fetch all potential personal profiles for these users
+            all_profiles = await supabase.select_in("players", "user_id", linked_user_ids)
+            # Filter for true personal profiles (no organization_id)
+            for prof in all_profiles:
+                if not prof.get("organization_id"):
+                    personal_profiles[str(prof["user_id"])] = prof
+        except Exception as e:
+            print(f"Warning: Failed to fetch personal profiles for roster fallback: {e}")
+
+    # Ensure all fields for the roster are present, falling back to personal data if team data is blank
+    for p in players:
+        user_id_str = str(p.get("user_id")) if p.get("user_id") else None
+        personal = personal_profiles.get(user_id_str) if user_id_str else None
+        
+        # Helper to get value with fallback
+        def get_val(field, default=None):
+            v = p.get(field)
+            # If team-specific value exists and isn't empty, use it
+            if v is not None and v != "":
+                return v
+            # Otherwise, try to use the player's personal profile value
+            if personal and personal.get(field) is not None and personal.get(field) != "":
+                return personal[field]
+            return default
+
+        p["jersey_number"] = get_val("jersey_number", None)
+        p["position"] = get_val("position", "Not set")
+        p["status"] = get_val("status", "active")
+        # PPG is typically calculated per organization/team context
+        p_ppg = p.get("ppg")
+        p["ppg"] = float(p_ppg) if p_ppg is not None and p_ppg != "" else 0.0
+        
     return players
 
 @router.post("/players")
 async def create_player(
     player_data: PlayerCreate,
-    current_user: dict = Depends(require_organization_admin),
+    current_user: dict = Depends(require_team_account),
     supabase: SupabaseService = Depends(get_supabase),
 ):
     """
     Add a new player to the team roster.
     """
     org_id = current_user.get("organization_id")
-    if not org_id:
+    if not org_id and current_user.get("account_type") == AccountType.TEAM.value:
         orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
         if not orgs:
             raise HTTPException(status_code=400, detail="No organization found for this account")
         org_id = orgs[0]["id"]
+    
+    if not org_id:
+         raise HTTPException(status_code=403, detail="Account not linked to an organization")
     player_dict = player_data.model_dump()
     player_dict["organization_id"] = str(org_id)
     player_dict["id"] = str(uuid4())
@@ -137,13 +182,22 @@ async def update_player(
     """
     Update a player's profile.
     """
-    # Verify ownership
+    # Verify access
     player = await supabase.select_one("players", player_id)
     if not player:
         raise HTTPException(status_code=404, detail="Player not found")
         
-    orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
-    if not orgs or player.get("organization_id") != orgs[0]["id"]:
+    has_access = False
+    if current_user.get("account_type") == AccountType.TEAM.value:
+        if player.get("organization_id"):
+            org = await supabase.select_one("organizations", str(player["organization_id"]))
+            has_access = org and str(org.get("owner_id")) == str(current_user["id"])
+    elif current_user.get("account_type") == AccountType.COACH.value:
+        coach_org = current_user.get("organization_id")
+        if coach_org and str(player.get("organization_id")) == str(coach_org):
+            has_access = True
+            
+    if not has_access:
         raise HTTPException(status_code=403, detail="Access denied")
         
     update_dict = player_data.model_dump(exclude_unset=True)
@@ -167,7 +221,7 @@ async def get_roster(
 async def update_player_status(
     player_id: str,
     status_data: dict,
-    current_user: dict = Depends(require_organization_admin),
+    current_user: dict = Depends(require_team_account),
     supabase: SupabaseService = Depends(get_supabase),
 ):
     """
@@ -179,8 +233,13 @@ async def update_player_status(
     if not player:
         raise HTTPException(status_code=404, detail="Player not found")
         
-    orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
-    if not orgs or player.get("organization_id") != orgs[0]["id"]:
+    org_id = current_user.get("organization_id")
+    if not org_id:
+        orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
+        if orgs:
+            org_id = orgs[0]["id"]
+            
+    if not org_id or str(player.get("organization_id")) != str(org_id):
         raise HTTPException(status_code=403, detail="Access denied")
 
     try:
@@ -193,7 +252,7 @@ async def update_player_status(
 @router.delete("/players/{player_id}")
 async def delete_player(
     player_id: str,
-    current_user: dict = Depends(require_organization_admin),
+    current_user: dict = Depends(require_team_account),
     supabase: SupabaseService = Depends(get_supabase),
 ):
     """
@@ -234,7 +293,7 @@ async def delete_player(
 async def link_player_account(
     player_id: str,
     link_data: dict,
-    current_user: dict = Depends(require_organization_admin),
+    current_user: dict = Depends(require_team_account),
     supabase: SupabaseService = Depends(get_supabase),
 ):
     """
@@ -246,16 +305,18 @@ async def link_player_account(
         raise HTTPException(status_code=400, detail="Email is required")
 
     # 1. Get organization
-    try:
-        orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
-        if not orgs:
-            raise HTTPException(status_code=404, detail="Organization not found. You must create an organization profile first.")
-        org_id = orgs[0]["id"]
-    except HTTPException:
-        raise
-    except Exception as e:
-        print(f"Error fetching organization for linking: {e}")
-        raise HTTPException(status_code=500, detail="Error retrieving organization data")
+    org_id = current_user.get("organization_id")
+    if not org_id:
+        try:
+            orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
+            if not orgs:
+                raise HTTPException(status_code=404, detail="Organization not found. You must create an organization profile first.")
+            org_id = orgs[0]["id"]
+        except HTTPException:
+            raise
+        except Exception as e:
+            print(f"Error fetching organization for linking: {e}")
+            raise HTTPException(status_code=500, detail="Error retrieving organization data")
 
     # 2. Search for user by email
     try:
@@ -275,25 +336,52 @@ async def link_player_account(
         raise HTTPException(status_code=400, detail="This user is already linked to another organization")
 
     # 3. Handle player roster entry
+    org_name = "your team"
+    if org_id:
+        try:
+            org_record = await supabase.select_one("organizations", str(org_id))
+            if org_record:
+                org_name = org_record.get("name", "your team")
+        except Exception:
+            pass
+
     try:
         if player_id == "new":
             # Check if already in roster
             existing_roster = await supabase.select("players", filters={
-                "organization_id": org_id,
-                "user_id": target_user["id"]
+                "organization_id": str(org_id),
+                "user_id": str(target_user["id"])
             })
             if existing_roster:
                 raise HTTPException(status_code=400, detail="This player is already in your roster")
             
+            # Search for an existing personal player profile for this user
+            personal_profiles = await supabase.select("players", filters={"user_id": str(target_user["id"])})
+            # Filter for the one without an org (personal)
+            personal_profile = next((p for p in personal_profiles if not p.get("organization_id")), None)
+
             # Create new roster entry
             new_player_id = str(uuid4())
-            await supabase.insert("players", {
+            new_player_record = {
                 "id": new_player_id,
                 "organization_id": str(org_id),
                 "user_id": str(target_user["id"]),
                 "name": target_user.get("full_name") or target_user.get("email") or "New Player",
                 "created_at": datetime.now().isoformat()
-            })
+            }
+
+            # If they have a personal profile, copy the stats
+            if personal_profile:
+                fields_to_copy = [
+                    "jersey_number", "position", "height_cm", "weight_kg", 
+                    "date_of_birth", "avatar_url", "phone", "address", 
+                    "experience_years", "bio", "status"
+                ]
+                for field in fields_to_copy:
+                    if personal_profile.get(field) is not None:
+                        new_player_record[field] = personal_profile[field]
+
+            await supabase.insert("players", new_player_record)
             player_id = new_player_id
         else:
             # Verify existing player belongs to owner's org
@@ -324,7 +412,7 @@ async def link_player_account(
             "id": str(uuid4()),
             "recipient_id": target_user["id"],
             "title": "Team Link",
-            "message": f"You have been added to the team roster of {orgs[0].get('name', 'a team')}.",
+            "message": f"You have been added to the team roster of {org_name}.",
             "type": "team_invite",
             "read": False,
             "created_at": datetime.now().isoformat()
@@ -336,7 +424,7 @@ async def link_player_account(
 
 @router.get("/staff")
 async def get_staff(
-    current_user: dict = Depends(require_organization_admin),
+    current_user: dict = Depends(require_team_account),
     supabase: SupabaseService = Depends(get_supabase),
 ):
     """

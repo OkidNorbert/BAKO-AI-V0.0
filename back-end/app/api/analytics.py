@@ -54,14 +54,20 @@ async def get_player_analytics(
         )
     
     # Check access based on account type
+    has_access = False
     if current_user.get("account_type") == AccountType.TEAM.value:
         if player.get("organization_id"):
             org = await supabase.select_one("organizations", player["organization_id"])
-            if not org or org["owner_id"] != current_user["id"]:
-                raise HTTPException(status_code=403, detail="Access denied")
+            has_access = org and org["owner_id"] == current_user["id"]
+    elif current_user.get("account_type") == AccountType.COACH.value:
+        player_org = player.get("organization_id")
+        coach_org = current_user.get("organization_id")
+        has_access = player_org and coach_org and str(player_org) == str(coach_org)
     else:
-        if player.get("user_id") != current_user["id"]:
-            raise HTTPException(status_code=403, detail="Access denied")
+        has_access = player.get("user_id") == current_user["id"]
+    
+    if not has_access:
+        raise HTTPException(status_code=403, detail="Access denied")
     
     # Calculate period
     period_end = date.today()
@@ -158,7 +164,15 @@ async def get_team_analytics(
             detail="Organization not found"
         )
     
-    if org["owner_id"] != current_user["id"]:
+    # Verify access
+    has_access = False
+    if current_user.get("account_type") == AccountType.TEAM.value:
+        has_access = org["owner_id"] == current_user["id"]
+    elif current_user.get("account_type") == AccountType.COACH.value:
+        coach_org_id = current_user.get("organization_id")
+        has_access = coach_org_id and str(coach_org_id) == str(org_id)
+    
+    if not has_access:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied"
@@ -308,6 +322,10 @@ async def get_player_progress(
         if player.get("organization_id"):
             org = await supabase.select_one("organizations", player["organization_id"])
             has_access = org and org["owner_id"] == current_user["id"]
+    elif current_user.get("account_type") == AccountType.COACH.value:
+        player_org = player.get("organization_id")
+        coach_org = current_user.get("organization_id")
+        has_access = player_org and coach_org and str(player_org) == str(coach_org)
     else:
         has_access = player.get("user_id") == current_user["id"]
     

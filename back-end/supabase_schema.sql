@@ -66,6 +66,7 @@ CREATE TABLE IF NOT EXISTS players (
     address TEXT,
     experience_years TEXT,
     bio TEXT,
+    status TEXT DEFAULT 'active',
     organization_id UUID REFERENCES organizations(id) ON DELETE SET NULL,
     user_id UUID REFERENCES users(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
