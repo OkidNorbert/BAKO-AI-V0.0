@@ -45,6 +45,7 @@ class UserUpdate(BaseModel):
     full_name: Optional[str] = Field(None, max_length=100)
     avatar_url: Optional[str] = None
     staff_role: Optional[str] = None
+    phone: Optional[str] = None
 
 
 class User(UserBase):
@@ -53,6 +54,7 @@ class User(UserBase):
     account_type: AccountType
     full_name: Optional[str] = None
     avatar_url: Optional[str] = None
+    phone: Optional[str] = None
     organization_id: Optional[UUID] = None
     staff_role: Optional[str] = None
     created_at: datetime

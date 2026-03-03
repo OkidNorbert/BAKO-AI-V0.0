@@ -68,7 +68,6 @@ const PlayerProfile = () => {
       const endpoint = playerId ? `/players/${playerId}` : '/player/profile';
       const response = await api.get(endpoint);
 
-      // Handle the different data structures between the two endpoints
       if (playerId) {
         // Response from /players/{id}
         const data = response.data;
@@ -85,12 +84,29 @@ const PlayerProfile = () => {
           height: data.height_cm || '',
           weight: data.weight_kg || '',
           bio: data.bio || '',
-          profileImage: data.image_url || null,
+          profileImage: data.avatar_url || data.image_url || null,
           createdAt: data.created_at
         });
       } else {
         // Response from /player/profile
-        setProfile(response.data);
+        const { user, player } = response.data;
+        // Merge user and player data into flat state
+        setProfile({
+          firstName: user?.full_name?.split(' ')[0] || player?.name?.split(' ')[0] || '',
+          lastName: user?.full_name?.split(' ').slice(1).join(' ') || player?.name?.split(' ').slice(1).join(' ') || '',
+          email: user?.email || '',
+          phone: player?.phone || user?.phone || '',
+          address: player?.address || '',
+          dateOfBirth: player?.date_of_birth || '',
+          position: player?.position || '',
+          jerseyNumber: player?.jersey_number || '',
+          experience: player?.experience_years || '',
+          height: player?.height_cm || '',
+          weight: player?.weight_kg || '',
+          bio: player?.bio || '',
+          profileImage: user?.avatar_url || player?.avatar_url || null,
+          createdAt: user?.created_at
+        });
       }
     } catch (err) {
       console.error('Error fetching profile:', err);
@@ -99,6 +115,7 @@ const PlayerProfile = () => {
       setLoading(false);
     }
   };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setProfile(prev => ({ ...prev, [name]: value }));
@@ -150,12 +167,48 @@ const PlayerProfile = () => {
     setSuccess('');
 
     try {
-      await api.put('/player/profile', profile);
+      // If we're updating a specific player via admin (team context)
+      if (playerId) {
+        const adminPayload = {
+          name: `${profile.firstName} ${profile.lastName}`.trim(),
+          jersey_number: profile.jerseyNumber ? parseInt(profile.jerseyNumber) : null,
+          position: profile.position,
+          height_cm: profile.height ? parseFloat(profile.height) : null,
+          weight_kg: profile.weight ? parseFloat(profile.weight) : null,
+          date_of_birth: profile.dateOfBirth || null,
+          experience_years: profile.experience,
+          bio: profile.bio,
+          phone: profile.phone,
+          address: profile.address
+        };
+        await api.put(`/players/${playerId}`, adminPayload);
+      } else {
+        // Personal profile update (nested structure)
+        const personalPayload = {
+          user: {
+            full_name: `${profile.firstName} ${profile.lastName}`.trim(),
+          },
+          player: {
+            name: `${profile.firstName} ${profile.lastName}`.trim(),
+            jersey_number: profile.jerseyNumber ? parseInt(profile.jerseyNumber) : null,
+            position: profile.position,
+            height_cm: profile.height ? parseFloat(profile.height) : null,
+            weight_kg: profile.weight ? parseFloat(profile.weight) : null,
+            date_of_birth: profile.dateOfBirth || null,
+            experience_years: profile.experience,
+            bio: profile.bio,
+            phone: profile.phone,
+            address: profile.address
+          }
+        };
+        await api.put('/player/profile', personalPayload);
+      }
       setSuccess('Profile updated successfully!');
       setIsEditing(false);
+      fetchProfile(); // Refresh to ensure synchronization
     } catch (err) {
       console.error('Error updating profile:', err);
-      setError(err.response?.data?.message || 'Failed to update profile. Please try again.');
+      setError(err.response?.data?.detail || err.response?.data?.message || 'Failed to update profile. Please try again.');
       if (err.response?.status === 401) {
         setError('Session expired. Please login again.');
       }

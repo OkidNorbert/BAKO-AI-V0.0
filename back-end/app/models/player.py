@@ -16,6 +16,10 @@ class PlayerCreate(BaseModel):
     weight_kg: Optional[float] = Field(None, ge=30, le=200)
     date_of_birth: Optional[date] = None
     organization_id: Optional[UUID] = Field(None, description="Required for TEAM players")
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    experience_years: Optional[str] = None
+    bio: Optional[str] = None
 
 
 class PlayerUpdate(BaseModel):
@@ -27,6 +31,10 @@ class PlayerUpdate(BaseModel):
     weight_kg: Optional[float] = Field(None, ge=30, le=200)
     date_of_birth: Optional[date] = None
     avatar_url: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    experience_years: Optional[str] = None
+    bio: Optional[str] = None
 
 
 class Player(BaseModel):
@@ -39,6 +47,10 @@ class Player(BaseModel):
     weight_kg: Optional[float] = None
     date_of_birth: Optional[date] = None
     avatar_url: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    experience_years: Optional[str] = None
+    bio: Optional[str] = None
     organization_id: Optional[UUID] = None
     user_id: Optional[UUID] = None  # For PERSONAL accounts
     created_at: datetime

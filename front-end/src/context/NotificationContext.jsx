@@ -49,7 +49,8 @@ export const NotificationProvider = ({ children }) => {
 
       console.log(`Fetching notifications for role: ${role}`);
 
-      const apiPrefix = role === 'team' ? 'admin' : 'player';
+      const isAdminRole = role === 'team' || role === 'coach' || role === 'admin';
+      const apiPrefix = isAdminRole ? 'admin' : 'player';
 
       try {
         const response = await api.get(`/${apiPrefix}/notifications`);
@@ -135,7 +136,8 @@ export const NotificationProvider = ({ children }) => {
         return;
       }
 
-      const apiPrefix = role === 'team' ? 'admin' : 'player';
+      const isAdminRole = role === 'team' || role === 'coach' || role === 'admin';
+      const apiPrefix = isAdminRole ? 'admin' : 'player';
 
       // Attempt to update on the server
       try {
@@ -168,13 +170,14 @@ export const NotificationProvider = ({ children }) => {
         return;
       }
 
-      const apiPrefix = role === 'team' ? 'admin' : 'player';
+      const isAdminRole = role === 'team' || role === 'coach' || role === 'admin';
+      const apiPrefix = isAdminRole ? 'admin' : 'player';
 
       // Attempt to update on the server
       try {
         await api.put(`/${apiPrefix}/notifications/read-all`);
       } catch (apiError) {
-        console.warn('Error marking all notifications as read on server:', apiError);
+        console.warn('Error marking all as read on server:', apiError);
         // Continue with local state update only
       }
     } catch (err) {
@@ -201,7 +204,8 @@ export const NotificationProvider = ({ children }) => {
         return;
       }
 
-      const apiPrefix = role === 'team' ? 'admin' : 'player';
+      const isAdminRole = role === 'team' || role === 'coach' || role === 'admin';
+      const apiPrefix = isAdminRole ? 'admin' : 'player';
 
       // Attempt to update on the server
       try {

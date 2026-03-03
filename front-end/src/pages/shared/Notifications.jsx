@@ -47,7 +47,9 @@ const Notifications = () => {
     try {
       setLoading(true);
       let raw = [];
-      if (user?.role === 'team') {
+      const isAdminRole = user?.role === 'team' || user?.role === 'coach' || user?.role === 'admin';
+
+      if (isAdminRole) {
         const res = await adminAPI.getNotifications();
         const data = res?.data;
         raw = Array.isArray(data) ? data : (data?.sent && data?.received ? [...(data.sent || []), ...(data.received || [])] : []);
@@ -55,6 +57,7 @@ const Notifications = () => {
         const res = await playerAPI.getNotifications();
         raw = Array.isArray(res?.data) ? res.data : [];
       }
+
       const list = raw.map(n => ({
         id: n.id,
         type: n.type || 'system_update',
@@ -65,13 +68,16 @@ const Notifications = () => {
         priority: n.priority || 'medium',
         actionUrl: n.actionUrl || n.action_url || null
       }));
+
       let filtered = list;
       if (filter !== 'all') {
         filtered = list.filter(n => n.type === filter);
       }
+
       if (user?.role === 'player') {
         filtered = filtered.filter(n => !['team_invite', 'match_scheduled'].includes(n.type));
       }
+
       setNotifications(filtered);
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -86,7 +92,8 @@ const Notifications = () => {
       prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
     );
     try {
-      if (user?.role === 'team') await adminAPI.markNotificationAsRead(notificationId);
+      const isAdminRole = user?.role === 'team' || user?.role === 'coach' || user?.role === 'admin';
+      if (isAdminRole) await adminAPI.markNotificationAsRead(notificationId);
       else if (user?.role === 'player') await playerAPI.markNotificationAsRead(notificationId);
     } catch (e) {
       console.warn('Error marking notification as read:', e);
@@ -96,7 +103,8 @@ const Notifications = () => {
   const deleteNotification = async (notificationId) => {
     setNotifications(prev => prev.filter(n => n.id !== notificationId));
     try {
-      if (user?.role === 'team') await adminAPI.deleteNotification(notificationId);
+      const isAdminRole = user?.role === 'team' || user?.role === 'coach' || user?.role === 'admin';
+      if (isAdminRole) await adminAPI.deleteNotification(notificationId);
       else if (user?.role === 'player') await playerAPI.deleteNotification(notificationId);
     } catch (e) {
       console.warn('Error deleting notification:', e);
@@ -106,8 +114,9 @@ const Notifications = () => {
   const markAllAsRead = async () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     try {
-      if (user?.role === 'player') await playerAPI.markAllNotificationsAsRead();
-      // team may not have mark-all endpoint; leave as local-only if needed
+      const isAdminRole = user?.role === 'team' || user?.role === 'coach' || user?.role === 'admin';
+      if (isAdminRole) await api.put('/admin/notifications/read-all');
+      else if (user?.role === 'player') await playerAPI.markAllNotificationsAsRead();
     } catch (e) {
       console.warn('Error marking all as read:', e);
     }
@@ -225,8 +234,8 @@ const Notifications = () => {
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
                 className={`appearance-none pl-10 pr-8 py-2 rounded-lg border ${isDarkMode
-                    ? 'bg-gray-700 border-gray-600 text-white'
-                    : 'bg-white border-gray-300 text-gray-900'
+                  ? 'bg-gray-700 border-gray-600 text-white'
+                  : 'bg-white border-gray-300 text-gray-900'
                   }`}
               >
                 {filters.map(f => (
@@ -242,8 +251,8 @@ const Notifications = () => {
             <button
               onClick={markAllAsRead}
               className={`flex items-center px-3 py-2 rounded-lg ${isDarkMode
-                  ? 'bg-gray-700 hover:bg-gray-600 text-white'
-                  : 'bg-gray-200 hover:bg-gray-300 text-gray-900'
+                ? 'bg-gray-700 hover:bg-gray-600 text-white'
+                : 'bg-gray-200 hover:bg-gray-300 text-gray-900'
                 } transition-colors`}
             >
               <CheckCircle className="w-4 h-4 mr-2" />
@@ -253,8 +262,8 @@ const Notifications = () => {
             <button
               onClick={clearAllNotifications}
               className={`flex items-center px-3 py-2 rounded-lg ${isDarkMode
-                  ? 'bg-red-600 hover:bg-red-700 text-white'
-                  : 'bg-red-500 hover:bg-red-600 text-white'
+                ? 'bg-red-600 hover:bg-red-700 text-white'
+                : 'bg-red-500 hover:bg-red-600 text-white'
                 } transition-colors`}
             >
               <Trash2 className="w-4 h-4 mr-2" />
@@ -264,8 +273,8 @@ const Notifications = () => {
             <button
               onClick={fetchNotifications}
               className={`flex items-center px-3 py-2 rounded-lg ${isDarkMode
-                  ? 'bg-gray-700 hover:bg-gray-600 text-white'
-                  : 'bg-gray-200 hover:bg-gray-300 text-gray-900'
+                ? 'bg-gray-700 hover:bg-gray-600 text-white'
+                : 'bg-gray-200 hover:bg-gray-300 text-gray-900'
                 } transition-colors`}
             >
               <RefreshCw className="w-4 h-4" />
@@ -298,8 +307,8 @@ const Notifications = () => {
                 <div
                   key={notification.id}
                   className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer ${!notification.read
-                      ? isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
-                      : ''
+                    ? isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+                    : ''
                     }`}
                   onClick={() => setSelectedNotification(notification)}
                 >
@@ -428,8 +437,8 @@ const Notifications = () => {
                       setSelectedNotification(null);
                     }}
                     className={`inline-flex items-center px-4 py-2 rounded-lg font-medium ${isDarkMode
-                        ? 'bg-orange-600 hover:bg-orange-700 text-white'
-                        : 'bg-orange-500 hover:bg-orange-600 text-white'
+                      ? 'bg-orange-600 hover:bg-orange-700 text-white'
+                      : 'bg-orange-500 hover:bg-orange-600 text-white'
                       } transition-colors`}
                   >
                     View Details

@@ -78,34 +78,48 @@ async def get_player_analytics(
     ]
     
     # Aggregate metrics
-    total_distance = sum(a.get("value", 0) for a in analytics if a.get("metric_type") == "distance_km")
-    speed_values = [a.get("value") for a in analytics if a.get("metric_type") == "avg_speed_kmh" and a.get("value")]
-    max_speed_values = [a.get("value") for a in analytics if a.get("metric_type") == "max_speed_kmh" and a.get("value")]
+    def safe_float(v):
+        try:
+            return float(v) if v is not None else 0.0
+        except (ValueError, TypeError):
+            return 0.0
+
+    total_distance = sum(safe_float(a.get("value")) for a in analytics if a.get("metric_type") == "distance_km")
+    
+    speed_values = [safe_float(a.get("value")) for a in analytics if a.get("metric_type") == "avg_speed_kmh" and a.get("value") is not None]
+    max_speed_values = [safe_float(a.get("value")) for a in analytics if a.get("metric_type") == "max_speed_kmh" and a.get("value") is not None]
+    
     shot_attempts = sum(
-        int(a.get("value", 0) or 0)
+        int(safe_float(a.get("value")))
         for a in analytics
         if a.get("metric_type") == "shot_attempt"
     )
-    form_scores = [a.get("value") for a in analytics if a.get("metric_type") == "form_consistency" and a.get("value")]
-    dribbles = sum(a.get("value", 0) for a in analytics if a.get("metric_type") == "dribble_count")
+    
+    form_scores = [safe_float(a.get("value")) for a in analytics if a.get("metric_type") == "form_consistency" and a.get("value") is not None]
+    
+    dribbles = sum(safe_float(a.get("value")) for a in analytics if a.get("metric_type") == "dribble_count")
     
     # Get unique video count
-    video_ids = set(a.get("video_id") for a in analytics if a.get("video_id"))
+    video_ids = set(str(a.get("video_id")) for a in analytics if a.get("video_id"))
     
     # Calculate training time from videos
     training_minutes = 0.0
     if video_ids:
-        # Best-effort batch fetch if supported
         try:
+            # Batch fetch video durations
             vids = await supabase.select_in("videos", "id", list(video_ids), columns="id,duration_seconds")
             for v in vids:
-                if v and v.get("duration_seconds"):
-                    training_minutes += float(v["duration_seconds"]) / 60
-        except Exception:
+                if v and v.get("duration_seconds") is not None:
+                    training_minutes += safe_float(v["duration_seconds"]) / 60
+        except Exception as e:
+            print(f"Background: Error batch fetching video durations: {e}")
             for vid in video_ids:
-                video = await supabase.select_one("videos", vid)
-                if video and video.get("duration_seconds"):
-                    training_minutes += float(video["duration_seconds"]) / 60
+                try:
+                    video = await supabase.select_one("videos", vid)
+                    if video and video.get("duration_seconds") is not None:
+                        training_minutes += safe_float(video["duration_seconds"]) / 60
+                except Exception:
+                    continue
     
     return PlayerAnalyticsSummary(
         player_id=player_id,
@@ -216,16 +230,17 @@ async def get_skill_summary(
     analytics = await supabase.select("analytics", filters={"player_id": player_id})
     
     # Calculate scores (0-100 scale)
-    def calculate_score(values, target_min=0, target_max=100):
-        if not values:
+    def calculate_score(values):
+        clean_values = [float(v) for v in values if v is not None]
+        if not clean_values:
             return 50.0  # Neutral score if no data
-        avg = sum(values) / len(values)
-        return min(100, max(0, avg))
+        avg = sum(clean_values) / len(clean_values)
+        return min(100.0, max(0.0, avg))
     
-    # Extract metrics
-    form_scores = [a.get("value", 50) for a in analytics if a.get("metric_type") == "form_consistency"]
-    speed_scores = [a.get("value", 50) for a in analytics if a.get("metric_type") == "movement_score"]
-    dribble_scores = [a.get("value", 50) for a in analytics if a.get("metric_type") == "dribble_score"]
+    # Extract metrics defensively
+    form_scores = [a.get("value") for a in analytics if a.get("metric_type") == "form_consistency"]
+    speed_scores = [a.get("value") for a in analytics if a.get("metric_type") == "movement_score"]
+    dribble_scores = [a.get("value") for a in analytics if a.get("metric_type") == "dribble_score"]
     
     shooting_score = calculate_score(form_scores)
     movement_score = calculate_score(speed_scores)
@@ -325,12 +340,13 @@ async def get_player_progress(
     data_points = []
     for a in metric_data:
         timestamp = a.get("timestamp")
-        if timestamp:
+        value = a.get("value")
+        if timestamp and value is not None:
             try:
                 dt = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
                 data_points.append(ProgressData(
                     date=dt.date(),
-                    value=a.get("value", 0),
+                    value=float(value),
                     metric_type=metric_type,
                 ))
             except (ValueError, TypeError):

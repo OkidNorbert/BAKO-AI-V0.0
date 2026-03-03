@@ -10,7 +10,8 @@ import {
   BarChart2,
   Shield,
   Trophy,
-  MessageSquare
+  MessageSquare,
+  Bell
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 
@@ -25,6 +26,7 @@ const AdminSidebar = ({ isOpen }) => {
   const menuItems = [
     { path: '/team/dashboard', icon: Home, label: 'Dashboard', color: 'from-blue-500 to-indigo-600', show: true },
     { path: '/team/roster', icon: Users, label: 'Team Roster', color: 'from-purple-500 to-violet-600', show: isLinked },
+    { path: '/team/notifications', icon: Bell, label: 'Notifications', color: 'from-orange-500 to-red-600', show: isLinked },
     { path: '/team/staff', icon: Shield, label: 'Coaching Staff', color: 'from-indigo-500 to-blue-600', show: isOwner && isLinked },
     { path: '/team/announcements', icon: MessageSquare, label: 'Announcements', color: 'from-green-500 to-emerald-600', show: isLinked },
     { path: '/team/matches', icon: Video, label: 'Match Analysis', color: 'from-orange-400 to-pink-500', show: isCoach && isLinked },

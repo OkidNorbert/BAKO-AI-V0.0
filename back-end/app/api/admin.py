@@ -246,55 +246,77 @@ async def link_player_account(
         raise HTTPException(status_code=400, detail="Email is required")
 
     # 1. Get organization
-    orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
-    if not orgs:
-        raise HTTPException(status_code=404, detail="Organization not found")
-    
-    org_id = orgs[0]["id"]
+    try:
+        orgs = await supabase.select("organizations", filters={"owner_id": current_user["id"]})
+        if not orgs:
+            raise HTTPException(status_code=404, detail="Organization not found. You must create an organization profile first.")
+        org_id = orgs[0]["id"]
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error fetching organization for linking: {e}")
+        raise HTTPException(status_code=500, detail="Error retrieving organization data")
 
     # 2. Search for user by email
-    users = await supabase.select("users", filters={"email": email})
-    if not users:
-        raise HTTPException(status_code=404, detail=f"No account found with email {email}. The player must sign up first.")
+    try:
+        users = await supabase.select("users", filters={"email": email})
+        if not users:
+            raise HTTPException(status_code=404, detail=f"No account found with email {email}. The player must sign up first.")
+        target_user = users[0]
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error searching for user by email {email}: {e}")
+        raise HTTPException(status_code=500, detail="Error searching for player account")
     
-    target_user = users[0]
-    
-    if target_user.get("organization_id") and target_user.get("organization_id") != org_id:
+    # Check if already linked to another org
+    current_linked_org = target_user.get("organization_id")
+    if current_linked_org and str(current_linked_org) != str(org_id):
         raise HTTPException(status_code=400, detail="This user is already linked to another organization")
 
     # 3. Handle player roster entry
-    if player_id == "new":
-        # Check if already in roster
-        existing_roster = await supabase.select("players", filters={
-            "organization_id": org_id,
-            "user_id": target_user["id"]
-        })
-        if existing_roster:
-            raise HTTPException(status_code=400, detail="This player is already in your roster")
-        
-        # Create new roster entry
-        new_player_id = str(uuid4())
-        await supabase.insert("players", {
-            "id": new_player_id,
-            "organization_id": org_id,
-            "user_id": target_user["id"],
-            "name": target_user.get("full_name", "New Player"),
-            "status": "active"
-        })
-        player_id = new_player_id
-    else:
-        # Verify existing player belongs to owner's org
-        player = await supabase.select_one("players", player_id)
-        if not player:
-            raise HTTPException(status_code=404, detail="Player not found")
-        if player.get("organization_id") != org_id:
-            raise HTTPException(status_code=403, detail="Access denied")
-        
-        # Update player profile with user_id
-        await supabase.update("players", player_id, {"user_id": target_user["id"]})
+    try:
+        if player_id == "new":
+            # Check if already in roster
+            existing_roster = await supabase.select("players", filters={
+                "organization_id": org_id,
+                "user_id": target_user["id"]
+            })
+            if existing_roster:
+                raise HTTPException(status_code=400, detail="This player is already in your roster")
+            
+            # Create new roster entry
+            new_player_id = str(uuid4())
+            await supabase.insert("players", {
+                "id": new_player_id,
+                "organization_id": str(org_id),
+                "user_id": str(target_user["id"]),
+                "name": target_user.get("full_name") or target_user.get("email") or "New Player",
+                "created_at": datetime.now().isoformat()
+            })
+            player_id = new_player_id
+        else:
+            # Verify existing player belongs to owner's org
+            player = await supabase.select_one("players", player_id)
+            if not player:
+                raise HTTPException(status_code=404, detail="Player not found")
+            if str(player.get("organization_id")) != str(org_id):
+                raise HTTPException(status_code=403, detail="Access denied")
+            
+            # Update player profile with user_id
+            await supabase.update("players", player_id, {"user_id": target_user["id"]})
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error updating/creating roster entry: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to update team roster: {e}")
     
     # 4. Update user profile with organization_id
-    await supabase.update("users", target_user["id"], {"organization_id": org_id})
+    try:
+        await supabase.update("users", target_user["id"], {"organization_id": str(org_id)})
+    except Exception as e:
+        print(f"Error updating user organization link: {e}")
+        # Not a fatal error if roster was linked, but still problematic
     
     # 5. Create a notification
     try:
@@ -307,10 +329,10 @@ async def link_player_account(
             "read": False,
             "created_at": datetime.now().isoformat()
         })
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"Failed to create link notification: {e}")
 
-    return {"message": "Account linked successfully", "user": {"id": target_user["id"], "name": target_user.get("full_name")}}
+    return {"message": "Account linked successfully", "user": {"id": target_user["id"], "name": target_user.get("full_name") or target_user.get("email")}}
 
 @router.get("/staff")
 async def get_staff(
@@ -648,6 +670,7 @@ async def create_notification(
     return saved
 
 @router.put("/notifications/{notification_id}/mark-as-read")
+@router.put("/notifications/{notification_id}/read")
 async def mark_notification_read(
     notification_id: str,
     current_user: dict = Depends(get_current_user),
@@ -655,6 +678,17 @@ async def mark_notification_read(
 ):
     updated = await supabase.update("notifications", notification_id, {"read": True})
     return updated
+
+@router.put("/notifications/read-all")
+async def mark_all_notifications_read(
+    current_user: dict = Depends(get_current_user),
+    supabase: SupabaseService = Depends(get_supabase),
+):
+    # Mark all unread notifications for the current user as read
+    notifs = await supabase.select("notifications", filters={"recipient_id": current_user["id"], "read": False})
+    for n in notifs:
+         await supabase.update("notifications", n["id"], {"read": True})
+    return {"message": "All notifications marked as read"}
 
 @router.put("/notifications/{notification_id}")
 async def update_notification(

@@ -119,19 +119,31 @@ const TeamNavbar = ({ onSidebarToggle }) => {
     try {
       const response = await adminAPI.markNotificationAsRead(notificationId);
 
-      if (response.data && response.data.notification) {
-        // Update notifications state with the server response
-        setNotifications(prevNotifications =>
-          prevNotifications.map(notification =>
-            notification.id === notificationId
-              ? { ...notification, ...response.data.notification }
-              : notification
-          )
-        );
+      // Update local state first to ensure UI is responsive
+      setNotifications(prevNotifications =>
+        prevNotifications.map(notification =>
+          notification.id === notificationId
+            ? { ...notification, read: true }
+            : notification
+        )
+      );
+
+      // Optionally update with server data if available in different formats
+      if (response.data) {
+        const updatedData = response.data.notification || response.data;
+        if (updatedData && typeof updatedData === 'object' && updatedData.id) {
+          setNotifications(prevNotifications =>
+            prevNotifications.map(notification =>
+              notification.id === notificationId
+                ? { ...notification, ...updatedData }
+                : notification
+            )
+          );
+        }
       }
     } catch (error) {
       console.error('Error marking notification as read:', error);
-      throw error; // Re-throw to handle in the calling function
+      // Local state was already updated, so we don't necessarily need to throw
     }
   };
 

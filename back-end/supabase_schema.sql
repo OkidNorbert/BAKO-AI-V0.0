@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
     account_type TEXT NOT NULL CHECK (account_type IN ('team', 'personal', 'coach')),
     full_name TEXT,
     avatar_url TEXT,
+    phone TEXT,
     organization_id UUID, -- Explicitly added for linking to orgs
     staff_role TEXT, -- e.g., 'Main Coach', 'Assistant Coach'
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -61,6 +62,10 @@ CREATE TABLE IF NOT EXISTS players (
     weight_kg REAL,
     date_of_birth DATE,
     avatar_url TEXT,
+    phone TEXT,
+    address TEXT,
+    experience_years TEXT,
+    bio TEXT,
     organization_id UUID REFERENCES organizations(id) ON DELETE SET NULL,
     user_id UUID REFERENCES users(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
