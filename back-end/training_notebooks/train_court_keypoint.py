@@ -11,7 +11,7 @@ import subprocess
 from pathlib import Path
 
 # Configuration
-VENV_YOLO = "/home/student/Music/OKIDI-DON'T TOUCH/BAKO-AI-V0.0/back-end/.venv/bin/yolo"
+VENV_YOLO = "./venv/bin/yolo"
 ROBOFLOW_API_KEY = "ZzD21wz5oTPdE0fhb04C"
 WORKSPACE = "fyp-3bwmg"
 PROJECT = "reloc2-den7l"
@@ -19,10 +19,10 @@ DATASET_VERSION = 1
 DATASET_FORMAT = "yolov8"
 
 # Training parameters (pose task for keypoint detection)
-MODEL = "yolov8x-pose.pt"  # YOLOv8 pose model for keypoint detection
-EPOCHS = 100  # Reduced from 500 for reasonable training time
+MODEL = "yolov8x-pose.pt"  # Extra Large Pose model for precision
+EPOCHS = 500  # Industry standard for keypoint precision
 IMG_SIZE = 640
-BATCH_SIZE = 16
+BATCH_SIZE = 16  # Safe for 4080 (16GB VRAM)
 PLOTS = True
 
 def setup_venv():
@@ -118,9 +118,11 @@ def train_model(dataset_dir):
             f"epochs={EPOCHS}",
             f"imgsz={IMG_SIZE}",
             f"batch={BATCH_SIZE}",
-            "patience=10",
+            "patience=50", # Allow more time for keypoints to converge
             f"plots={str(PLOTS).lower()}",
-            "device=0"
+            "device=0",
+            "workers=8",
+            "amp=True"
         ]
         
         print(f"\nRunning: {' '.join(cmd)}\n")

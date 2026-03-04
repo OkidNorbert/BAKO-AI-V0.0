@@ -10,18 +10,18 @@ import subprocess
 from pathlib import Path
 
 # Configuration
-VENV_YOLO = "/home/student/Music/OKIDI-DON'T TOUCH/BAKO-AI-V0.0/back-end/.venv/bin/yolo"
+VENV_YOLO = "./venv/bin/yolo"
 ROBOFLOW_API_KEY = "ZzD21wz5oTPdE0fhb04C"
 WORKSPACE = "tomatoes-iicln"
 PROJECT = "nbl"
-DATASET_VERSION = 6
+DATASET_VERSION = 13
 DATASET_FORMAT = "yolov5"
 
 # Training parameters
-MODEL = "yolov5l6u.pt"  # Use yolov5l6u for better accuracy on player detection
+MODEL = "yolov5l6u.pt"  # Large model
 EPOCHS = 100
 IMG_SIZE = 640
-BATCH_SIZE = 8
+BATCH_SIZE = 32  # Players are large; 32 is safe for 4080
 PLOTS = True
 
 def setup_venv():
@@ -118,6 +118,9 @@ def train_model(dataset_dir):
         f"imgsz={IMG_SIZE}",
         f"batch={BATCH_SIZE}",
         f"plots={PLOTS}",
+        "device=0",
+        "workers=8",
+        "amp=True"
     ]
     
     try:

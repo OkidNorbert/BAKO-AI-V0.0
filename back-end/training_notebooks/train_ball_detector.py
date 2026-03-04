@@ -10,11 +10,11 @@ import subprocess
 from pathlib import Path
 
 # Configuration
-VENV_YOLO = "/home/student/Music/OKIDI-DON'T TOUCH/BAKO-AI-V0.0/back-end/.venv/bin/yolo"
+VENV_YOLO = "./venv/bin/yolo" # Using relative path for local environment
 ROBOFLOW_API_KEY = "ZzD21wz5oTPdE0fhb04C"
 WORKSPACE = "tomatoes-iicln"
 PROJECT = "nbl"
-DATASET_VERSION = 6
+DATASET_VERSION = 13
 DATASET_FORMAT = "yolov5"
 
 # Training parameters
@@ -119,6 +119,9 @@ def train_model(dataset_dir):
         f"imgsz={IMG_SIZE}",
         f"batch={BATCH_SIZE}",
         f"plots={PLOTS}",
+        "device=0",      # Use the first GPU
+        "workers=8",     # Multi-threaded data loading
+        "amp=True"       # Automatic Mixed Precision for 40-series speedup
     ]
     
     try:

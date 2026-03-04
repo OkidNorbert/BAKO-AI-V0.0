@@ -24,13 +24,11 @@ else:
 # Mount Google Drive to save weights persistently
 drive.mount('/content/drive')
 
-# 3. Download Dataset (Optimized V1 Version)
-# Note: Roboflow project basketball-players-fy4c2-vfsuv version 17 
-# was found to be the best for ball detection in the V1 analysis.
+# 3. Download Dataset (Custom NBL Dataset)
 ROBOFLOW_API_KEY = "Your_API_Key_Here" # ⬅️ REPLACE WITH YOUR KEY 
 rf = Roboflow(api_key=ROBOFLOW_API_KEY)
-project = rf.workspace("workspace-5ujvu").project("basketball-players-fy4c2-vfsuv")
-version = project.version(17)
+project = rf.workspace("tomatoes-iicln").project("nbl")
+version = project.version(13)
 dataset = version.download("yolov5")
 
 # 🛠️ Path Fix: Roboflow often nests paths incorrectly in data.yaml
