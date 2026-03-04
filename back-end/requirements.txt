@@ -8,6 +8,8 @@ supervision>=0.25.0
 torch>=2.2.0
 transformers>=4.40.0
 ultralytics>=8.3.0
+scipy>=1.11.0
+scikit-learn>=1.4.0
 
 # FastAPI and API dependencies
 fastapi>=0.109.0

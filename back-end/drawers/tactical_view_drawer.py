@@ -1,4 +1,6 @@
 import cv2 
+import numpy as np
+from utils.path_smoothing import smooth_trajectory
 
 class TacticalViewDrawer:
     def __init__(self, team_1_color=[255, 245, 238], team_2_color=[128, 0, 0]):
@@ -66,127 +68,96 @@ class TacticalViewDrawer:
              player_assignment=None,
              ball_acquisition=None):
         """
-        Draw tactical view with court keypoints and player positions.
-        
-        Args:
-            video_frames (list): List of video frames to draw on.
-            court_image_path (str): Path to the court image.
-            width (int): Width of the tactical view.
-            height (int): Height of the tactical view.
-            tactical_court_keypoints (list): List of court keypoints in tactical view.
-            tactical_player_positions (list, optional): List of dictionaries mapping player IDs to 
-                their positions in tactical view coordinates.
-            tactical_ball_positions (list, optional): List of dictionaries mapping ball IDs to 
-                their positions in tactical view coordinates.
-            player_assignment (list, optional): List of dictionaries mapping player IDs to team assignments.
-            ball_acquisition (list, optional): List indicating which player has the ball in each frame.
-            
-        Returns:
-            list: List of frames with tactical view drawn on them.
+        Draw professional tactical board with programmatic court lines and smooth trajectories.
         """
-        # Load court image with alpha channel if possible, or just standard
-        court_image = cv2.imread(court_image_path)
-        court_image = cv2.resize(court_image, (width, height))
+        # Create programmatic court instead of static image
+        court_image = self._draw_programmatic_court(width, height)
 
         output_video_frames = []
         for frame_idx, frame in enumerate(video_frames):
             frame = frame.copy()
-
-            # Panel positioning
             p_x, p_y = self.start_x, self.start_y
             p_w, p_h = width, height
             
-            # Draw a dark background panel first for contrast
+            # --- Draw Panel & Header ---
             from .utils import draw_glass_panel, draw_text_with_shadow
-            draw_glass_panel(frame, (p_x-10, p_y-30, p_w+20, p_h+40), alpha=0.8, radius=15)
-            
-            # Header with glow effect
+            draw_glass_panel(frame, (p_x-10, p_y-30, p_w+20, p_h+40), alpha=0.9, radius=15)
             cv2.rectangle(frame, (p_x-10, p_y-30), (p_x+p_w+10, p_y-5), (20, 20, 20), -1)
             cv2.rectangle(frame, (p_x-10, p_y-30), (p_x+p_w+10, p_y-5), (0, 255, 255), 1)
+            draw_text_with_shadow(frame, "ADVANCED TACTICAL BOARD v2", (p_x + 10, p_y - 12), font_scale=0.35, color=(0, 255, 255), thickness=1)
             
-            draw_text_with_shadow(frame, "REAL-TIME TACTICAL BOARD", (p_x + 10, p_y - 12), font_scale=0.35, color=(0, 255, 255), thickness=1)
-            
-            # Blend court image
-            alpha = 0.4
+            # Blend programmatic court
             roi = frame[p_y:p_y+p_h, p_x:p_x+p_w]
-            cv2.addWeighted(court_image, alpha, roi, 1 - alpha, 0, roi)
+            cv2.addWeighted(court_image, 0.4, roi, 0.6, 0, roi)
 
-            # Draw subtle grid
-            grid_color = (100, 100, 100)
-            for gx in range(0, p_w, 20):
-                cv2.line(frame, (p_x + gx, p_y), (p_x + gx, p_y + p_h), grid_color, 1)
-            for gy in range(0, p_h, 20):
-                cv2.line(frame, (p_x, p_y + gy), (p_x + p_w, p_y + gy), grid_color, 1)
-
-            # Scanning line effect
-            scan_y = (frame_idx * 5) % p_h
-            cv2.line(frame, (p_x, p_y + scan_y), (p_x + p_w, p_y + scan_y), (0, 255, 255), 1)
-            # Add a faint glow below scan line
-            if scan_y < p_h - 2:
-                overlay = frame.copy()
-                cv2.rectangle(overlay, (p_x, p_y + scan_y), (p_x + p_w, p_y + scan_y + 10), (0, 255, 255), -1)
-                cv2.addWeighted(overlay, 0.1, frame, 0.9, 0, frame)
-            
-            # --- Draw Ball ---
-            if tactical_ball_positions and frame_idx < len(tactical_ball_positions):
-                frame_ball_pos = tactical_ball_positions[frame_idx]
-                for ball_id, position in frame_ball_pos.items():
-                    bx, by = int(position[0]) + p_x, int(position[1]) + p_y
-                    # Draw ball with glow
-                    cv2.circle(frame, (bx, by), 5, (0, 140, 255), -1)
-                    cv2.circle(frame, (bx, by), 5, (255, 255, 255), 1)
-            
-            # --- Draw Players ---
+            # --- Draw Smoothed Players ---
             if tactical_player_positions and player_assignment and frame_idx < len(tactical_player_positions):
-                # Apply interpolation once at the start of drawing if not already done
-                if not hasattr(self, '_interpolated_cache'):
-                    setattr(self, '_interpolated_cache', self._interpolate_missing_positions(tactical_player_positions))
-                
-                current_positions = getattr(self, '_interpolated_cache')[frame_idx]
+                # Apply Interpolation and Savitzky-Golay once
+                if not hasattr(self, '_smoothed_player_tracks'):
+                    interpolated = self._interpolate_missing_positions(tactical_player_positions)
+                    player_tracks = {}
+                    for f_idx, f_dict in enumerate(interpolated):
+                        for pid, pos in f_dict.items():
+                            if pid not in player_tracks: player_tracks[pid] = []
+                            player_tracks[pid].append((f_idx, pos))
+                    
+                    smoothed_tracks = [{} for _ in range(len(video_frames))]
+                    for pid, pts in player_tracks.items():
+                        coords = [p[1] for p in pts]
+                        # Professional smoothing (window 11, poly 2)
+                        s_coords = smooth_trajectory(coords, window=11, poly=2)
+                        for (f_idx, _), s_pos in zip(pts, s_coords):
+                            if f_idx < len(smoothed_tracks): smoothed_tracks[f_idx][pid] = s_pos
+                    setattr(self, '_smoothed_player_tracks', smoothed_tracks)
+
+                current_positions = getattr(self, '_smoothed_player_tracks')[frame_idx]
                 frame_assignments = player_assignment[frame_idx] if frame_idx < len(player_assignment) else {}
                 player_with_ball = ball_acquisition[frame_idx] if ball_acquisition and frame_idx < len(ball_acquisition) else -1
                 
-                smoothed_frame_positions = {}
-                alpha = 0.8 # Smoothing factor (0.8 = steady, 0.2 = twitchy)
-
-                for player_id, curr_pos in current_positions.items():
-                    curr_pos = np.array(curr_pos)
-                    
-                    # Apply Exponential Moving Average (EMA) smoothing
-                    if player_id in self.previous_smoothed_positions:
-                        prev_pos = self.previous_smoothed_positions[player_id]
-                        smooth_pos = alpha * prev_pos + (1 - alpha) * curr_pos
-                    else:
-                        smooth_pos = curr_pos
-                    
-                    self.previous_smoothed_positions[player_id] = smooth_pos
-                    
+                for player_id, smooth_pos in current_positions.items():
                     team_id = frame_assignments.get(player_id, 1)
                     color = self.team_1_color if team_id == 1 else self.team_2_color
-                    
                     x, y = int(smooth_pos[0]) + p_x, int(smooth_pos[1]) + p_y
                     
-                    # Draw player marker with border
-                    r = 6
-                    cv2.circle(frame, (x, y), r+1, (255, 255, 255), -1) # White border
-                    cv2.circle(frame, (x, y), r, color, -1)
-                    
-                    # If has ball, draw an outer glow
+                    cv2.circle(frame, (x, y), 7, (255, 255, 255), -1) # Border
+                    cv2.circle(frame, (x, y), 6, color, -1)
                     if player_id == player_with_ball:
-                        cv2.circle(frame, (x, y), r+4, (0, 255, 255), 2) # Cyan highlight
-                        # Draw ball icon near player
-                        cv2.circle(frame, (x+r+2, y-r-2), 3, (0, 140, 255), -1)
-                        cv2.circle(frame, (x+r+2, y-r-2), 3, (255, 255, 255), 1)
-
-            # Footer for Tactical Feed
-            cv2.rectangle(frame, (p_x-10, p_y+p_h+5), (p_x+p_w+10, p_y+p_h+30), (20, 20, 20), -1)
-            draw_text_with_shadow(frame, "TELEMETRY: ACTIVE", (p_x + 10, p_y + p_h + 22), font_scale=0.3, color=(0, 255, 0), thickness=1)
+                        cv2.circle(frame, (x, y), 10, (0, 255, 255), 2) # Possession glow
             
-            # Small blinking 'REC' or 'LIVE' dot
+            # --- Draw Footers ---
             if (frame_idx // 10) % 2 == 0:
                 cv2.circle(frame, (p_x + width - 20, p_y - 17), 4, (0, 0, 255), -1)
-            draw_text_with_shadow(frame, "LIVE", (p_x + width - 45, p_y - 12), font_scale=0.3, color=(255, 255, 255), thickness=1)
+            draw_text_with_shadow(frame, "PHYSICS-SMOOTHED TRAJECTORIES", (p_x + 10, p_y + p_h + 22), font_scale=0.3, color=(0, 255, 0), thickness=1)
             
             output_video_frames.append(frame)
-
         return output_video_frames
+
+    def _draw_programmatic_court(self, w, h):
+        """Draw a clean 2D NBA court diagram."""
+        court = np.full((h, w, 3), (120, 100, 80), dtype=np.uint8) # Dark wood color
+        c = (200, 200, 200) # Light grey lines
+        t = 2
+        
+        # Boundary
+        cv2.rectangle(court, (0, 0), (w-1, h-1), c, t)
+        cv2.line(court, (w//2, 0), (w//2, h), c, t) # Half-court
+        cv2.circle(court, (w//2, h//2), int(w*0.06), c, t) # Center circle
+        
+        # Free-throw areas
+        # Left paint
+        cv2.rectangle(court, (0, int(h*0.3)), (int(w*0.19), int(h*0.7)), c, t)
+        cv2.ellipse(court, (int(w*0.19), h//2), (int(w*0.06), int(h*0.1)), 0, -90, 90, c, t)
+        
+        # Right paint
+        cv2.rectangle(court, (int(w*0.81), int(h*0.3)), (w, int(h*0.7)), c, t)
+        cv2.ellipse(court, (int(w*0.81), h//2), (int(w*0.06), int(h*0.1)), 0, 90, 270, c, t)
+        
+        # 3-Point Lines (simplified arcs)
+        cv2.ellipse(court, (int(w*0.04), h//2), (int(w*0.22), int(h*0.4)), 0, -90, 90, c, t)
+        cv2.ellipse(court, (int(w*0.96), h//2), (int(w*0.22), int(h*0.4)), 0, 90, 270, c, t)
+        
+        # Hoops
+        cv2.circle(court, (int(w*0.04), h//2), 3, (0, 0, 255), -1)
+        cv2.circle(court, (int(w*0.96), h//2), 3, (0, 0, 255), -1)
+        
+        return court
