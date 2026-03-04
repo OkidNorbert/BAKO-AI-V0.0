@@ -26,7 +26,7 @@ drive.mount('/content/drive')
 # 3. Download Dataset (Optimized V1 Version)
 # Note: Roboflow project reloc2-den7l is the industry standard for 
 # basketball court keypoint detection (YOLOv8-pose format).
-ROBOFLOW_API_KEY = "Your_API_Key_Here" # ⬅️ REPLACE WITH YOUR KEY 
+ROBOFLOW_API_KEY = "ZzD21wz5oTPdE0fhb04C" # ⬅️ Updated with your key 
 rf = Roboflow(api_key=ROBOFLOW_API_KEY)
 project = rf.workspace("fyp-3bwmg").project("reloc2-den7l")
 version = project.version(1)
