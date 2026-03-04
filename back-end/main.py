@@ -165,7 +165,7 @@ def run_team_analysis(
         
         notify_progress("Detecting passes and interceptions", 65)
         pass_and_interception_detector = PassAndInterceptionDetector()
-        passes = pass_and_interception_detector.detect_passes(ball_aquisition, player_assignment)
+        passes = pass_and_interception_detector.detect_passes(ball_aquisition, player_assignment, player_tracks=player_tracks)
         interceptions = pass_and_interception_detector.detect_interceptions(ball_aquisition, player_assignment)
         
         # ── Tactical View ──────────────────────────────────────────────────────

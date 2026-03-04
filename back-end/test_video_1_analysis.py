@@ -31,7 +31,12 @@ async def run_test():
     options = {
         "enable_advanced_analytics": True,
         "detections_stride": 5,  # Sample every 5th frame for detections
-        "max_detections": 50000   # Limit detections to avoid memory issues
+        "max_detections": 50000,   # Limit detections to avoid memory issues
+        "our_team_jersey": "white jersey",
+        "opponent_jersey": "dark blue jersey",
+        "our_team_id": 1,
+        "read_from_stub": False,
+        "clear_stubs_after": True
     }
     
     print(f"📹 Video: {video_path}")

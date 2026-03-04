@@ -1,4 +1,5 @@
-import sys 
+import sys
+from collections import deque, Counter
 sys.path.append('../')
 from utils.bbox_utils import measure_distance, get_center_of_bbox
 
@@ -19,6 +20,7 @@ class BallAquisitionDetector:
         self.possession_threshold = 120
         self.min_frames = 3
         self.containment_threshold = 0.6
+        self.smoothing_window = 5  # New: for majority-vote smoothing
         
     def get_key_basketball_player_assignment_points(self, player_bbox,ball_center):
         """
@@ -178,8 +180,9 @@ class BallAquisitionDetector:
         """
         num_frames = len(ball_tracks)
         possession_list = [-1] * num_frames
-        consecutive_possession_count = {}
         
+        # New smoothing logic using deque and Counter
+        candidate_buffer = deque(maxlen=self.smoothing_window)
         last_confirmed_player = -1
         lost_frames = 0
         max_lost_frames = 5 # Grace period for flickery tracking
@@ -197,22 +200,29 @@ class BallAquisitionDetector:
                     ball_bbox
                 )
 
-            if best_player_id != -1:
-                count = consecutive_possession_count.get(best_player_id, 0) + 1
-                consecutive_possession_count = {best_player_id: count} 
+            # Add current candidate to buffer for smoothing
+            candidate_buffer.append(best_player_id)
 
-                if count >= self.min_frames:
-                    possession_list[frame_num] = best_player_id
-                    last_confirmed_player = best_player_id
+            if len(candidate_buffer) == self.smoothing_window:
+                # Majority vote within the window
+                common_candidate, count = Counter(candidate_buffer).most_common(1)[0]
+                
+                # If we have a clear winner (majority) and it's not "no player"
+                if common_candidate != -1 and count >= (self.smoothing_window // 2 + 1):
+                    possession_list[frame_num] = common_candidate
+                    last_confirmed_player = common_candidate
                     lost_frames = 0
+                else:
+                    # Handover or noise: use last confirmed player if within grace period
+                    if last_confirmed_player != -1 and lost_frames < max_lost_frames:
+                        possession_list[frame_num] = last_confirmed_player
+                        lost_frames += 1
+                    else:
+                        last_confirmed_player = -1
             else:
-                # No clear possession in this frame
+                # Buffer not full yet, use last confirmed if available
                 if last_confirmed_player != -1 and lost_frames < max_lost_frames:
-                    # Maintain possession for a few frames to handle ball-player occlusion/distance jitters
                     possession_list[frame_num] = last_confirmed_player
                     lost_frames += 1
-                else:
-                    last_confirmed_player = -1
-                    consecutive_possession_count = {}
     
         return possession_list

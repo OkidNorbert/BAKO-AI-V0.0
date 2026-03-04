@@ -74,8 +74,9 @@ class TeamAssigner:
         pil_image = Image.fromarray(rgb_image)
         image = pil_image
 
-        prompt_1 = f"a photo of a player wearing a {self.team_1_class_name}"
-        prompt_2 = f"a photo of a player wearing a {self.team_2_class_name}"
+        # Enhanced CLIP prompts for better zero-shot performance
+        prompt_1 = f"a professional basketball player wearing a {self.team_1_class_name}"
+        prompt_2 = f"a professional basketball player wearing a {self.team_2_class_name}"
         classes = [prompt_1, prompt_2]
 
         inputs = self.processor(text=classes, images=image, return_tensors="pt", padding=True)
@@ -83,10 +84,14 @@ class TeamAssigner:
         outputs = self.model(**inputs)
         logits_per_image = outputs.logits_per_image
         probs = logits_per_image.softmax(dim=1) 
-
+        
+        confidence = probs.max().item()
         class_idx = probs.argmax(dim=1)[0].item()
         
-        # We must return the original class name so the caller logic works
+        # If the model is not confident, return None to indicate ambiguous detection
+        if confidence < 0.6:
+            return None
+            
         original_classes = [self.team_1_class_name, self.team_2_class_name]
         return original_classes[class_idx]
 
@@ -111,6 +116,9 @@ class TeamAssigner:
           return self.player_team_dict[player_id]
 
         player_color = self.get_player_color(frame,player_bbox)
+
+        if player_color is None:
+            return -1
 
         team_id=2
         if player_color==self.team_1_class_name:
@@ -155,6 +163,13 @@ class TeamAssigner:
                 team = self.get_player_team(video_frames[frame_num],   
                                                     track['bbox'],
                                                     player_id)
+                # Temporal fallback for ambiguous AI classification
+                if team == -1:
+                    if frame_num > 0 and player_id in player_assignment[frame_num-1]:
+                        team = player_assignment[frame_num-1][player_id]
+                    else:
+                        team = 1 # Default fallback if first frame is ambiguous
+                
                 player_assignment[frame_num][player_id] = team
         
         save_stub(stub_path,player_assignment)
