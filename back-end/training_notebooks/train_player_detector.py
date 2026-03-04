@@ -10,7 +10,7 @@ import subprocess
 from pathlib import Path
 
 # Configuration
-VENV_YOLO = "./venv/bin/yolo"
+VENV_YOLO = "../.venv/bin/yolo"
 ROBOFLOW_API_KEY = "ZzD21wz5oTPdE0fhb04C"
 WORKSPACE = "tomatoes-iicln"
 PROJECT = "nbl"

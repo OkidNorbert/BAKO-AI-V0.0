@@ -10,7 +10,7 @@ import subprocess
 from pathlib import Path
 
 # Configuration
-VENV_YOLO = "./venv/bin/yolo" # Using relative path for local environment
+VENV_YOLO = "../.venv/bin/yolo" # Using relative path for local environment
 ROBOFLOW_API_KEY = "ZzD21wz5oTPdE0fhb04C"
 WORKSPACE = "tomatoes-iicln"
 PROJECT = "nbl"
