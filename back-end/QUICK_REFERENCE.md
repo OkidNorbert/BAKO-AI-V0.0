@@ -38,7 +38,7 @@ python main.py input_videos/video_1.mp4 --output_video output_videos/my_output.a
 ### ✅ Models Ready
 All three pre-trained models from the basketball_analysis repository are installed:
 - `player_detector.pt` - YOLO v11 player detection
-- `ball_detector_model.pt` - YOLO v5 ball detection with motion blur handling
+- `ball_detector.pt` - YOLO v5 ball detection with motion blur handling
 - `court_keypoint_detector.pt` - YOLO v8 court keypoint detection
 
 ### 📁 Directory Structure

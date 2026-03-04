@@ -81,7 +81,7 @@ def check_models():
     models_dir = Path("models")
     required_models = {
         'player_detector.pt': 'Player Detection Model',
-        'ball_detector_model.pt': 'Ball Detection Model',
+        'ball_detector.pt': 'Ball Detection Model',
         'court_keypoint_detector.pt': 'Court Keypoint Detection Model'
     }
     
@@ -164,8 +164,8 @@ def test_model_loading():
         from ultralytics import YOLO
         
         models = {
-            'Player Detector': 'models/player_detector_v1.pt',
-            'Ball Detector': 'models/ball_detector_v1.pt',
+            'Player Detector': 'models/player_detector.pt',
+            'Ball Detector': 'models/ball_detector.pt',
             'Court Keypoint Detector': 'models/court_keypoint_detector.pt'
         }
         

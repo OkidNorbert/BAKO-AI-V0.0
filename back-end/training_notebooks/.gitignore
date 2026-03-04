@@ -1,6 +1,7 @@
 # Dataset directories
 NBL-*/
 Basketball-Players-*/
+reloc*/
 
 # Model weights
 *.pt
