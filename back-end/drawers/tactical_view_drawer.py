@@ -6,6 +6,54 @@ class TacticalViewDrawer:
         self.start_y = 40
         self.team_1_color = team_1_color
         self.team_2_color = team_2_color
+        self.previous_smoothed_positions = {}
+        self.last_valid_positions = None
+
+    def _interpolate_missing_positions(self, tactical_player_positions):
+        """
+        Linearly interpolate missing player positions frame-by-frame.
+        Fill gaps caused by occlusion or detection failure.
+        """
+        total_frames = len(tactical_player_positions)
+        player_tracks = {}
+
+        # Build player tracks from input frames
+        for f_idx, frame_dict in enumerate(tactical_player_positions):
+            if not frame_dict:
+                continue
+            for pid, pos in frame_dict.items():
+                if pid not in player_tracks:
+                    player_tracks[pid] = {}
+                player_tracks[pid][f_idx] = np.array(pos)
+
+        interpolated_positions = [{} for _ in range(total_frames)]
+
+        for pid, frames in player_tracks.items():
+            sorted_frames = sorted(frames.keys())
+            if not sorted_frames:
+                continue
+                
+            for i in range(total_frames):
+                if i in frames:
+                    interpolated_positions[i][pid] = frames[i]
+                else:
+                    # Find nearest previous and next frames with positions
+                    prev = next((j for j in reversed(range(0, i)) if j in frames), None)
+                    next_ = next((j for j in range(i + 1, total_frames) if j in frames), None)
+
+                    if prev is not None and next_ is not None:
+                        # Linear interpolation
+                        alpha = (i - prev) / (next_ - prev)
+                        interp_pos = (1 - alpha) * frames[prev] + alpha * frames[next_]
+                        interpolated_positions[i][pid] = interp_pos
+                    elif prev is not None:
+                        # Forward fill
+                        interpolated_positions[i][pid] = frames[prev]
+                    elif next_ is not None:
+                        # Backward fill
+                        interpolated_positions[i][pid] = frames[next_]
+
+        return interpolated_positions
 
     def draw(self, 
              video_frames, 
@@ -88,17 +136,35 @@ class TacticalViewDrawer:
                     cv2.circle(frame, (bx, by), 5, (0, 140, 255), -1)
                     cv2.circle(frame, (bx, by), 5, (255, 255, 255), 1)
             
-            # Draw player positions in tactical view
+            # --- Draw Players ---
             if tactical_player_positions and player_assignment and frame_idx < len(tactical_player_positions):
-                frame_positions = tactical_player_positions[frame_idx]
+                # Apply interpolation once at the start of drawing if not already done
+                if not hasattr(self, '_interpolated_cache'):
+                    setattr(self, '_interpolated_cache', self._interpolate_missing_positions(tactical_player_positions))
+                
+                current_positions = getattr(self, '_interpolated_cache')[frame_idx]
                 frame_assignments = player_assignment[frame_idx] if frame_idx < len(player_assignment) else {}
                 player_with_ball = ball_acquisition[frame_idx] if ball_acquisition and frame_idx < len(ball_acquisition) else -1
                 
-                for player_id, position in frame_positions.items():
+                smoothed_frame_positions = {}
+                alpha = 0.8 # Smoothing factor (0.8 = steady, 0.2 = twitchy)
+
+                for player_id, curr_pos in current_positions.items():
+                    curr_pos = np.array(curr_pos)
+                    
+                    # Apply Exponential Moving Average (EMA) smoothing
+                    if player_id in self.previous_smoothed_positions:
+                        prev_pos = self.previous_smoothed_positions[player_id]
+                        smooth_pos = alpha * prev_pos + (1 - alpha) * curr_pos
+                    else:
+                        smooth_pos = curr_pos
+                    
+                    self.previous_smoothed_positions[player_id] = smooth_pos
+                    
                     team_id = frame_assignments.get(player_id, 1)
                     color = self.team_1_color if team_id == 1 else self.team_2_color
                     
-                    x, y = int(position[0]) + p_x, int(position[1]) + p_y
+                    x, y = int(smooth_pos[0]) + p_x, int(smooth_pos[1]) + p_y
                     
                     # Draw player marker with border
                     r = 6

@@ -18,6 +18,8 @@ class TacticalViewConverter:
 
         self.actual_width_in_meters=28
         self.actual_height_in_meters=15 
+        self.last_valid_keypoints = None
+        self.max_orientation_dist = 50 # Threshold for deciding if a detection is "too far" from previous
 
         self.key_points = [
             # left edge
@@ -136,7 +138,18 @@ class TacticalViewConverter:
             current_homography = None
 
             if kp_list and len(kp_list) > 0:
-                detected_keypoints = kp_list[0]
+                detected_keypoints = np.array(kp_list[0])
+                
+                # Orientation Stability Logic:
+                # If we have a previous state, check if inverting the detections matches better.
+                # This prevents the "court flip" when the AI confuses two ends of the court.
+                if self.last_valid_keypoints is not None and len(detected_keypoints) == len(self.last_valid_keypoints):
+                    dist_normal = np.mean(np.linalg.norm(detected_keypoints - self.last_valid_keypoints, axis=1))
+                    dist_inverted = np.mean(np.linalg.norm(detected_keypoints[::-1] - self.last_valid_keypoints, axis=1))
+                    
+                    if dist_inverted < dist_normal:
+                        detected_keypoints = detected_keypoints[::-1]
+                
                 valid_indices = [i for i, kp in enumerate(detected_keypoints) if kp[0] > 0 and kp[1] > 0]
                 if len(valid_indices) >= 4:
                     source_points = np.array([detected_keypoints[i] for i in valid_indices], dtype=np.float32)
@@ -144,6 +157,7 @@ class TacticalViewConverter:
                     try:
                         current_homography = Homography(source_points, target_points)
                         last_homography = current_homography
+                        self.last_valid_keypoints = detected_keypoints # Update stability state
                     except: pass
 
             transformer = current_homography or last_homography
