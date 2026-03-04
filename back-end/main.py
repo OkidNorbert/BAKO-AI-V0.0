@@ -15,7 +15,7 @@ import shutil
 import time
 from typing import Dict, Any, Optional, Callable
 from utils import read_video, save_video
-from trackers import PlayerTracker, BallTracker
+from trackers import PlayerTracker, BallTracker, SAM2Tracker
 from team_assigner import TeamAssigner
 from court_keypoint_detector import CourtKeypointDetector
 from ball_aquisition import BallAquisitionDetector
@@ -38,8 +38,8 @@ from configs import(
     STUBS_DEFAULT_PATH,
     PLAYER_DETECTOR_PATH,
     BALL_DETECTOR_PATH,
-    TEAM_MODEL_PATH,
     COURT_KEYPOINT_DETECTOR_PATH,
+    SAM2_MODEL_PATH,
     OUTPUT_VIDEO_PATH
 )
 
@@ -67,6 +67,7 @@ def run_team_analysis(
     read_from_stub: bool = False,
     clear_stubs_after: bool = True,
     save_annotated_video: bool = True,
+    use_sam2: bool = False,
     progress_callback: Optional[Callable[[str, int], None]] = None,
     **kwargs
 ) -> Dict[str, Any]:
@@ -119,6 +120,11 @@ def run_team_analysis(
         ball_tracker = BallTracker(BALL_DETECTOR_PATH)
         court_keypoint_detector = CourtKeypointDetector(COURT_KEYPOINT_DETECTOR_PATH)
         
+        sam2_tracker = None
+        if use_sam2:
+            notify_progress("Initializing SAM2 Segmentation", 12)
+            sam2_tracker = SAM2Tracker(SAM2_MODEL_PATH)
+        
         # ── Run Detection / Load from Stubs ────────────────────────────────────
         notify_progress("Tracking players", 20)
         player_tracks = player_tracker.get_object_tracks(
@@ -149,7 +155,8 @@ def run_team_analysis(
         notify_progress("Assigning players to teams", 50)
         team_assigner = TeamAssigner(
             team_1_class_name=our_team_jersey,
-            team_2_class_name=opponent_jersey
+            team_2_class_name=opponent_jersey,
+            use_hsv_clustering=True # V2 Upgrade: Robust HSV clustering
         )
         player_assignment = team_assigner.get_player_teams_across_frames(
             video_frames,
@@ -503,6 +510,8 @@ def parse_args():
                         help='Use cached detections instead of fresh analysis')
     parser.add_argument('--keep_stubs', action='store_true',
                         help='Keep stub files after analysis')
+    parser.add_argument('--use_sam2', action='store_true',
+                        help='Enable experimental SAM2 pixel-perfect segmentation (requires GPU)')
     return parser.parse_args()
 
 
@@ -526,6 +535,7 @@ def main():
         our_team_id=args.our_team_id,
         read_from_stub=args.read_from_stub,
         clear_stubs_after=not args.keep_stubs,
+        use_sam2=args.use_sam2,
     )
     
     if result.get("status") == "completed":
