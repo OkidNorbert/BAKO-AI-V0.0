@@ -93,23 +93,24 @@ async def get_schedule(
     """
     Get schedule for the player.
     Includes personal events + team events if they belong to a team.
+    Always prefers the player record that has an organization_id.
     """
     players = await supabase.select("players", filters={"user_id": current_user["id"]})
     if not players:
         return []
-    
-    player = players[0]
+
+    # If multiple player records exist, prefer the one with an organization_id
+    linked = [p for p in players if p.get("organization_id")]
+    player = linked[0] if linked else players[0]
+
     org_id = player.get("organization_id")
-    
-    start_time_column = "start_time" # Assuming column exists
-    
-    # Simple query: if org_id, fetch org schedule.
+
     if org_id:
         schedule = await supabase.select("schedules", filters={"organization_id": org_id})
     else:
         schedule = []
-        
-    return schedule
+
+    return schedule or []
 
 @router.get("/training")
 async def get_training_sessions(
@@ -143,7 +144,12 @@ async def get_training_videos(
     """
     Alias for /training to satisfy frontend PlayerDashboard.
     """
-    return await get_training_sessions(current_user=current_user, supabase=supabase)
+    try:
+        videos = await supabase.select("videos", filters={"uploader_id": current_user["id"]})
+        return videos or []
+    except Exception as e:
+        print(f"Error fetching training videos: {e}")
+        return []
 
 
 @router.get("/training-history")
@@ -152,12 +158,23 @@ async def get_training_history(
     supabase: SupabaseService = Depends(get_supabase),
 ):
     """
-    Get training history for the player.
+    Get training history for the player based on their activities.
     """
-    players = await supabase.select("players", filters={"user_id": current_user["id"]})
-    if not players:
+    try:
+        players = await supabase.select("players", filters={"user_id": current_user["id"]})
+        if not players:
+            return []
+        player_id = players[0]["id"]
+        activities = await supabase.select(
+            "activities",
+            filters={"player_id": player_id},
+            order_by="date",
+            ascending=False
+        )
+        return activities or []
+    except Exception as e:
+        print(f"Error fetching training history: {e}")
         return []
-    return await get_player_activities(player_id=players[0]["id"], current_user=current_user, supabase=supabase)
 
 @router.post("/training")
 async def log_training(

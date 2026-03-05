@@ -224,7 +224,7 @@ const TeamSchedule = () => {
               Manage practices, matches, and team events
             </p>
           </div>
-          {isCoach && (
+          {(isCoach || isOwner) && (
             <button
               onClick={handleAddEventClick}
               className={`flex items-center space-x-2 px-4 py-2 rounded-full shadow-md transition-all duration-200 hover:shadow-lg hover:scale-105 ${isDarkMode
@@ -288,7 +288,7 @@ const TeamSchedule = () => {
                       )}
                     </div>
                   </div>
-                  {isCoach && (
+                  {(isCoach || isOwner) && (
                     <div className="flex items-center space-x-2">
                       <button
                         onClick={() => handleEditClick(event)}

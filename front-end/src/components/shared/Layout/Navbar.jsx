@@ -58,6 +58,7 @@ const Navbar = ({ role }) => {
           { to: '/player/skills', icon: <TrendingUp className="h-5 w-5" />, label: 'Skill Analytics' }
         ];
         if (isLinked) {
+          base.push({ to: '/player/schedule', icon: <Calendar className="h-5 w-5" />, label: 'Team Schedule' });
           base.push({ to: '/player/announcements', icon: <MessageSquare className="h-5 w-5" />, label: 'Team Announcements' });
           base.push({ to: '/player/notifications', icon: <Bell className="h-5 w-5" />, label: 'Notifications' });
         }
