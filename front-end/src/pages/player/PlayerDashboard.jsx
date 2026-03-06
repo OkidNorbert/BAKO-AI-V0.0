@@ -25,7 +25,8 @@ import {
   Timer,
   Star,
   MessageSquare,
-  Megaphone
+  Megaphone,
+  Trophy
 } from 'lucide-react';
 
 const PlayerDashboard = () => {
@@ -154,363 +155,170 @@ const PlayerDashboard = () => {
     );
   }
 
+  const sub = isDarkMode ? 'text-gray-400' : 'text-gray-500';
+
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-blue-50 text-gray-800'}`}>
-      <div className="h-2 w-full bg-gradient-to-r from-orange-400 via-red-500 to-pink-500" />
-      <div className="max-w-7xl mx-auto p-6">
-        <div className={`${isDarkMode ? 'bg-gradient-to-r from-gray-900 via-indigo-950 to-purple-900' : 'bg-gradient-to-r from-blue-500 to-indigo-600'} py-8 px-6 rounded-t-xl shadow-lg relative z-10 mb-6`}>
-          <div className="flex items-center">
-            <div className={`p-3 rounded-full mr-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white bg-opacity-20'}`}>
-              <Home className={`h-8 w-8 ${isDarkMode ? 'text-orange-400' : 'text-white'}`} />
+    <div className={`min-h-screen transition-all duration-500 ${isDarkMode ? 'bg-[#0f1115] text-white' : 'bg-gray-50 text-gray-800'}`}>
+      <div className="max-w-7xl mx-auto p-8 space-y-12">
+        
+        {/* Welcome Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12">
+            <div>
+                <h1 className="text-6xl font-black tracking-tighter mb-4">Player Dashboard</h1>
+                <p className={`text-xl ${sub}`}>Welcome back, <span className="text-orange-500 font-black">{user?.firstName || 'Champ'}</span>. Ready to grind?</p>
             </div>
-            <h1 className="text-3xl font-bold text-white">Player Dashboard</h1>
-          </div>
+            <div className={`flex items-center gap-4 p-4 rounded-[2rem] border-2 shadow-glass ${isDarkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-100'}`}>
+                <div className="h-12 w-12 rounded-2xl bg-orange-500 flex items-center justify-center text-white shadow-premium">
+                    <TrendingUp className="h-6 w-6" />
+                </div>
+                <div>
+                   <p className="text-[10px] font-black uppercase tracking-widest opacity-50">Global Rank</p>
+                   <p className="text-xl font-black">#12,492</p>
+                </div>
+            </div>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 rounded-lg bg-red-100 text-red-800 border-l-4 border-red-500 flex items-center justify-between">
+          <div className="mb-6 p-6 glass rounded-3xl border-l-4 border-red-500 text-red-400 flex items-center justify-between animate-in fade-in slide-in-from-top-4">
             <div className="flex items-center">
-              <AlertCircle className="h-5 w-5 mr-2 text-red-500" />
-              <span>{error}</span>
+              <AlertCircle className="h-5 w-5 mr-4" />
+              <span className="font-bold">{error}</span>
             </div>
-            <button onClick={() => { setIsRetrying(true); fetchData().finally(() => setIsRetrying(false)); }} disabled={isRetrying} className={`px-3 py-1 rounded-md flex items-center ${isDarkMode ? 'bg-gray-800 hover:bg-gray-700 text-white' : 'bg-white hover:bg-gray-100 text-gray-700'}`}>
-              <RefreshCw className={`h-4 w-4 mr-1 ${isRetrying ? 'animate-spin' : ''}`} /> Retry
+            <button onClick={() => { setIsRetrying(true); fetchData().finally(() => setIsRetrying(false)); }} disabled={isRetrying} className={`px-4 py-2 rounded-xl flex items-center font-bold text-xs ${isDarkMode ? 'bg-white/5 hover:bg-white/10 border border-white/10' : 'bg-gray-100 hover:bg-gray-200'}`}>
+              <RefreshCw className={`h-3 w-3 mr-2 ${isRetrying ? 'animate-spin' : ''}`} /> Retry
             </button>
           </div>
         )}
 
-        {user?.organizationId && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            {/* Recent Notifications */}
-            <div className={`rounded-xl shadow-lg overflow-hidden flex flex-col`}>
-              <div className={`px-6 py-4 text-xl font-semibold ${isDarkMode ? 'bg-gray-700' : 'bg-indigo-50'}`}>
-                <h2 className="flex items-center">
-                  <Bell className={`h-6 w-6 mr-2 ${isDarkMode ? 'text-orange-400' : 'text-indigo-600'}`} />
-                  Recent Notifications
-                  {unreadCount > 0 && <span className={`ml-2 px-2 py-0.5 text-xs rounded-full ${isDarkMode ? 'bg-indigo-900 text-indigo-300' : 'bg-indigo-100 text-indigo-700'}`}>{unreadCount} new</span>}
-                </h2>
-              </div>
-              <div className={`p-6 flex-1 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                {notifications.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-8">
-                    <Bell className={`h-12 w-12 mb-3 ${isDarkMode ? 'text-gray-600' : 'text-gray-300'}`} />
-                    <p className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>No notifications yet.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {notifications.slice(0, 3).map((n, i) => (
-                      <div key={n.id || i} className={`p-4 rounded-lg cursor-pointer ${n.read ? (isDarkMode ? 'bg-gray-700' : 'bg-gray-50') : (isDarkMode ? 'bg-indigo-900/30 border border-indigo-700' : 'bg-indigo-50 border border-indigo-200')}`} onClick={() => !n.read && markAsRead(n.id)}>
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className={`text-sm font-semibold ${!n.read && (isDarkMode ? 'text-indigo-300' : 'text-indigo-700')}`}>{n.title}</h3>
-                            <p className={`text-xs mt-1 line-clamp-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>{n.message}</p>
-                          </div>
-                          <span className={`text-[10px] ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{formatDate(n.createdAt || n.created_at || n.timestamp)}</span>
-                        </div>
-                      </div>
-                    ))}
-                    <div className="text-center mt-auto pt-4">
-                      <Link to="/player/notifications" className={`text-sm font-semibold flex items-center justify-center ${isDarkMode ? 'text-orange-400 hover:text-orange-300' : 'text-indigo-600 hover:text-indigo-500'}`}>
-                        View All Notifications <ChevronRight className="h-4 w-4 ml-1" />
-                      </Link>
+        {/* Top Metrics Row */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {[
+                { label: 'Overall Rating', value: performanceMetrics.overallRating, icon: <Star />, color: 'bg-orange-500' },
+                { label: 'Shooting %', value: `${performanceMetrics.shootingAccuracy}%`, icon: <Target />, color: 'bg-red-500' },
+                { label: 'Improvement', value: `+${performanceMetrics.improvementRate}%`, icon: <TrendingUp />, color: 'bg-green-500' },
+                { label: 'Training Sessions', value: performanceMetrics.weeklyStats?.sessionsCompleted || 0, icon: <Timer />, color: 'bg-blue-500' },
+              ].map(stat => (
+                <div key={stat.label} className={`group p-8 rounded-[2.5rem] border transition-all duration-500 hover:scale-105 ${isDarkMode ? 'bg-gray-800/20 border-gray-700/50 hover:bg-gray-800/40' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
+                    <div className={`p-3 rounded-2xl mb-4 text-white inline-block shadow-lg ${stat.color}`}>
+                        {React.cloneElement(stat.icon, { className: 'h-6 w-6' })}
                     </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Team Announcements */}
-            <div className={`rounded-xl shadow-lg overflow-hidden flex flex-col`}>
-              <div className={`px-6 py-4 text-xl font-semibold ${isDarkMode ? 'bg-gray-700' : 'bg-indigo-50'}`}>
-                <h2 className="flex items-center">
-                  <Megaphone className={`h-6 w-6 mr-2 ${isDarkMode ? 'text-orange-400' : 'text-indigo-600'}`} />
-                  Team Announcements
-                </h2>
-              </div>
-              <div className={`p-6 flex-1 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                {announcements.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-8">
-                    <MessageSquare className={`h-12 w-12 mb-3 ${isDarkMode ? 'text-gray-600' : 'text-gray-300'}`} />
-                    <p className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>No announcements yet.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {announcements.slice(0, 3).map((ann, i) => (
-                      <div key={ann.id || i} className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1 min-w-0">
-                            <h3 className={`text-sm font-bold truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{ann.title}</h3>
-                            <p className={`text-xs mt-1 line-clamp-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>{ann.content}</p>
-                            <p className="text-[10px] text-gray-500 mt-2">By {ann.author_name || 'Coach'}</p>
-                          </div>
-                          <span className={`text-[10px] ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{formatDate(ann.created_at)}</span>
-                        </div>
-                      </div>
-                    ))}
-                    <div className="text-center mt-auto pt-4">
-                      <Link to="/player/announcements" className={`text-sm font-semibold flex items-center justify-center ${isDarkMode ? 'text-orange-400 hover:text-orange-300' : 'text-indigo-600 hover:text-indigo-500'}`}>
-                        View All Announcements <ChevronRight className="h-4 w-4 ml-1" />
-                      </Link>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Performance Metrics Section */}
-        <div className={`rounded-xl shadow-lg overflow-hidden mb-6`}>
-          <div className={`px-6 py-4 text-xl font-semibold ${isDarkMode ? 'bg-gray-700' : 'bg-indigo-50'}`}>
-            <h2 className="flex items-center">
-              <BarChart3 className={`h-6 w-6 mr-2 ${isDarkMode ? 'text-orange-400' : 'text-indigo-600'}`} /> Performance Metrics
-            </h2>
-          </div>
-          <div className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                <div className="flex items-center justify-between mb-2">
-                  <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Overall Rating</span>
-                  <Star className={`h-4 w-4 ${performanceMetrics.overallRating >= 80 ? 'text-green-500' : performanceMetrics.overallRating >= 60 ? 'text-yellow-500' : 'text-red-500'}`} />
+                    <p className={`text-3xl font-black tracking-tighter mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{stat.value}</p>
+                    <p className={`text-[10px] uppercase tracking-widest font-black ${sub}`}>{stat.label}</p>
                 </div>
-                <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{performanceMetrics.overallRating}</p>
-              </div>
-
-              <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                <div className="flex items-center justify-between mb-2">
-                  <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Shooting Accuracy</span>
-                  <Target className={`h-4 w-4 ${performanceMetrics.shootingAccuracy >= 70 ? 'text-green-500' : 'text-orange-500'}`} />
-                </div>
-                <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{performanceMetrics.shootingAccuracy}%</p>
-              </div>
-
-              <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                <div className="flex items-center justify-between mb-2">
-                  <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Improvement Rate</span>
-                  <TrendingUp className={`h-4 w-4 ${performanceMetrics.improvementRate >= 10 ? 'text-green-500' : 'text-blue-500'}`} />
-                </div>
-                <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>+{performanceMetrics.improvementRate}%</p>
-              </div>
-
-              <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                <div className="flex items-center justify-between mb-2">
-                  <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Weekly Sessions</span>
-                  <Timer className={`h-4 w-4 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
-                </div>
-                <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{performanceMetrics.weeklyStats?.sessionsCompleted || 0}</p>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Weekly Stats</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Minutes Trained</p>
-                  <p className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{performanceMetrics.weeklyStats?.minutesTrained || 0}</p>
-                </div>
-                <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Shots Attempted</p>
-                  <p className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{performanceMetrics.weeklyStats?.shotsAttempted || 0}</p>
-                </div>
-                <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Shots Made</p>
-                  <p className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{performanceMetrics.weeklyStats?.shotsMade || 0}</p>
-                </div>
-              </div>
-            </div>
-          </div>
+              ))}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className={`rounded-xl shadow-lg overflow-hidden`}>
-            <div className={`px-6 py-4 text-xl font-semibold ${isDarkMode ? 'bg-gray-700' : 'bg-indigo-50'}`}>
-              <h2 className="flex items-center">
-                <Video className={`h-6 w-6 mr-2 ${isDarkMode ? 'text-orange-400' : 'text-indigo-600'}`} /> Training Videos
-              </h2>
-            </div>
-            <div className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-              {trainingVideos.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-8">
-                  <Video className={`h-12 w-12 mb-3 ${isDarkMode ? 'text-gray-600' : 'text-gray-300'}`} />
-                  <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-500'} mb-4`}>No training videos uploaded yet.</p>
-                  <Link to="/player/training" className={`inline-flex items-center px-4 py-2 rounded-md ${isDarkMode ? 'bg-indigo-900 hover:bg-indigo-800 text-indigo-100' : 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700'}`}>
-                    <PlayCircle className="h-4 w-4 mr-2" /> Upload Your First Video
-                  </Link>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {trainingVideos.map(v => (
-                    <Link key={v._id || v.id} to={`/player/training/${v._id || v.id}`} className={`block p-4 rounded-lg ${isDarkMode ? 'bg-gray-700 hover:bg-gray-650' : 'bg-gray-50 hover:bg-gray-100'}`}>
-                      <div className="flex items-center">
-                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${v.status === 'analyzed' ? (isDarkMode ? 'bg-green-900 text-green-200' : 'bg-green-100 text-green-800') : v.status === 'processing' ? (isDarkMode ? 'bg-yellow-900 text-yellow-200' : 'bg-yellow-100 text-yellow-800') : (isDarkMode ? 'bg-blue-900 text-blue-200' : 'bg-blue-100 text-blue-800')}`}>
-                          <Video className="h-6 w-6" />
-                        </div>
-                        <div className="ml-3 flex-1">
-                          <h3 className="font-medium">{v.title || v.filename || 'Training Session'}</h3>
-                          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{v.status === 'analyzed' ? 'Analysis Complete' : v.status === 'processing' ? 'Processing...' : 'Pending Analysis'}</p>
-                        </div>
-                        <ChevronRight className={`ml-auto ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-                      </div>
-                    </Link>
-                  ))}
-                  <div className="text-center mt-4">
-                    <Link to="/player/training" className={`inline-flex items-center px-4 py-2 rounded-md ${isDarkMode ? 'bg-indigo-900 hover:bg-indigo-800 text-indigo-100' : 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700'}`}>
-                      View All Videos <ChevronRight className="h-4 w-4 ml-1" />
-                    </Link>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className={`rounded-xl shadow-lg overflow-hidden`}>
-            <div className={`px-6 py-4 text-xl font-semibold ${isDarkMode ? 'bg-gray-700' : 'bg-indigo-50'}`}>
-              <h2 className="flex items-center">
-                <ActivityIcon className={`h-6 w-6 mr-2 ${isDarkMode ? 'text-orange-400' : 'text-indigo-600'}`} /> Training History
-              </h2>
-            </div>
-            <div className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-              {trainingHistory.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-8">
-                  <ActivityIcon className={`h-12 w-12 mb-3 ${isDarkMode ? 'text-gray-600' : 'text-gray-300'}`} />
-                  <p className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>No training sessions recorded yet.</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {trainingHistory.map(s => (
-                    <div key={s._id || s.id} className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                      <div className="flex items-start">
-                        <div className={`p-2 rounded-full ${getSessionTypeColor(s.type, isDarkMode)}`}>{getSessionTypeIcon(s.type)}</div>
-                        <div className="ml-3 flex-1">
-                          <h3 className="font-medium">{s.title || s.type || 'Training Session'}</h3>
-                          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{s.description || 'Basketball training session'}</p>
-                          <div className="flex items-center text-xs mt-1">
-                            <Calendar className="h-3 w-3 mr-1" />
-                            <span className="mr-2">{formatDate(s.date || s.createdAt)}</span>
-                            <Clock className="h-3 w-3 mr-1" />
-                            <span>{formatTime(s.date || s.createdAt)}</span>
-                          </div>
-                        </div>
-                      </div>
+        {/* Combined Feeds Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+            
+            {/* Left Column: Communications & Activity */}
+            <div className="lg:col-span-1 space-y-10">
+                {/* Announcements */}
+                <div className={`rounded-[3rem] p-8 glass-dark shadow-glass overflow-hidden relative`}>
+                    <div className="absolute top-0 right-0 p-8 opacity-10">
+                        <Megaphone className="h-32 w-32" />
                     </div>
-                  ))}
-                  <div className="text-center mt-4">
-                    <Link to="/player/skills" className={`inline-flex items-center px-4 py-2 rounded-md ${isDarkMode ? 'bg-indigo-900 hover:bg-indigo-800 text-indigo-100' : 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700'}`}>
-                      View Skill Analytics <ChevronRight className="h-4 w-4 ml-1" />
-                    </Link>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Skill Improvement Trends Section */}
-        <div className={`rounded-xl shadow-lg overflow-hidden mb-6`}>
-          <div className={`px-6 py-4 text-xl font-semibold ${isDarkMode ? 'bg-gray-700' : 'bg-indigo-50'}`}>
-            <h2 className="flex items-center">
-              <TrendingUp className={`h-6 w-6 mr-2 ${isDarkMode ? 'text-orange-400' : 'text-indigo-600'}`} /> Skill Trends
-            </h2>
-          </div>
-          <div className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Shooting Trend */}
-              <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                <h3 className={`text-lg font-medium mb-3 flex items-center ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  <Target className="mr-2 h-5 w-5 text-orange-500" />
-                  Shooting Accuracy
-                </h3>
-                <div className="space-y-2">
-                  {skillTrends.shooting.slice(-3).map((trend, index) => (
-                    <div key={index} className="flex justify-between items-center">
-                      <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{trend.date}</span>
-                      <div className="flex items-center space-x-2">
-                        <span className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{trend.value}%</span>
-                        {trend.improvement > 0 && (
-                          <span className={`text-xs px-2 py-1 rounded-full ${isDarkMode ? 'bg-green-900 text-green-300' : 'bg-green-100 text-green-700'}`}>
-                            +{trend.improvement}%
-                          </span>
+                    <h2 className="text-2xl font-black tracking-tight mb-8">Team News</h2>
+                    <div className="space-y-4">
+                        {announcements.length === 0 ? (
+                            <p className={`text-sm italic opacity-50`}>No new announcements from coach.</p>
+                        ) : (
+                            announcements.slice(0, 3).map((ann, i) => (
+                                <div key={i} className={`p-5 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors`}>
+                                    <h3 className="font-black text-sm mb-1">{ann.title}</h3>
+                                    <p className="text-[11px] opacity-60 line-clamp-2">{ann.content}</p>
+                                </div>
+                            ))
                         )}
-                      </div>
+                        <Link to="/player/announcements" className="block text-center pt-4 text-[10px] font-black uppercase tracking-widest text-orange-500 hover:text-orange-400">View Bulletin Board</Link>
                     </div>
-                  ))}
                 </div>
-                <Link to="/player/skills" className={`w-full text-center mt-3 px-3 py-2 rounded-lg text-sm ${isDarkMode ? 'bg-orange-600 hover:bg-orange-700 text-white' : 'bg-orange-500 hover:bg-orange-600 text-white'}`}>
-                  View Detailed Analytics
-                </Link>
-              </div>
 
-              {/* Dribbling Trend */}
-              <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                <h3 className={`text-lg font-medium mb-3 flex items-center ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  <ActivityIcon className="mr-2 h-5 w-5 text-blue-500" />
-                  Dribble Speed
-                </h3>
-                <div className="space-y-2">
-                  {skillTrends.dribbling.slice(-3).map((trend, index) => (
-                    <div key={index} className="flex justify-between items-center">
-                      <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{trend.date}</span>
-                      <div className="flex items-center space-x-2">
-                        <span className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{trend.value}</span>
-                        {trend.improvement > 0 && (
-                          <span className={`text-xs px-2 py-1 rounded-full ${isDarkMode ? 'bg-green-900 text-green-300' : 'bg-green-100 text-green-700'}`}>
-                            +{trend.improvement}
-                          </span>
-                        )}
-                      </div>
+                {/* Notifications */}
+                <div className={`rounded-[3rem] p-8 border ${isDarkMode ? 'bg-gray-800/20 border-gray-700/50' : 'bg-white border-gray-100 shadow-xl'}`}>
+                    <h2 className="text-2xl font-black tracking-tight mb-8 flex items-center justify-between">
+                        Pulse
+                        {unreadCount > 0 && <span className="h-2 w-2 rounded-full bg-orange-500 animate-pulse" />}
+                    </h2>
+                    <div className="space-y-4">
+                        {notifications.slice(0, 3).map((n, i) => (
+                            <div key={i} onClick={() => !n.read && markAsRead(n.id)} className={`p-5 rounded-2xl transition-all cursor-pointer ${!n.read ? 'bg-orange-500/10 border border-orange-500/30' : 'bg-white/5'}`}>
+                                <h3 className={`text-xs font-black ${!n.read ? 'text-orange-400' : ''}`}>{n.title}</h3>
+                                <p className="text-[10px] opacity-60 truncate">{n.message}</p>
+                            </div>
+                        ))}
                     </div>
-                  ))}
                 </div>
-              </div>
-
-              {/* Fitness Trend */}
-              <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                <h3 className={`text-lg font-medium mb-3 flex items-center ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  <Zap className="mr-2 h-5 w-5 text-green-500" />
-                  Fitness Score
-                </h3>
-                <div className="space-y-2">
-                  {skillTrends.fitness.slice(-3).map((trend, index) => (
-                    <div key={index} className="flex justify-between items-center">
-                      <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{trend.date}</span>
-                      <div className="flex items-center space-x-2">
-                        <span className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{trend.value}</span>
-                        {trend.improvement > 0 && (
-                          <span className={`text-xs px-2 py-1 rounded-full ${isDarkMode ? 'bg-green-900 text-green-300' : 'bg-green-100 text-green-700'}`}>
-                            +{trend.improvement}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
-          </div>
+
+            {/* Right Column: Training & Performance */}
+            <div className="lg:col-span-2 space-y-10">
+                {/* Videos Feed */}
+                <div className={`rounded-[3rem] p-8 border ${isDarkMode ? 'bg-gray-800/20 border-gray-700/50' : 'bg-white border-gray-100 shadow-xl'}`}>
+                    <div className="flex items-center justify-between mb-8">
+                        <h2 className="text-2xl font-black tracking-tight">Recent Sessions</h2>
+                        <Link to="/player/training" className="text-xs font-black uppercase tracking-widest text-orange-500">All Sessions</Link>
+                    </div>
+                    {trainingVideos.length === 0 ? (
+                        <div className="text-center py-10 opacity-40">
+                            <Video className="h-16 w-16 mx-auto mb-4" />
+                            <p className="font-bold">No footage detected yet.</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {trainingVideos.slice(0, 2).map((v, i) => (
+                                <Link key={i} to={`/player/training`} className="group block relative aspect-video rounded-3xl overflow-hidden bg-black">
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10" />
+                                    <PlayCircle className="absolute inset-0 m-auto h-12 w-12 text-white/50 group-hover:text-orange-500 transition-all z-20 scale-150 group-hover:scale-100 opacity-0 group-hover:opacity-100" />
+                                    <div className="absolute bottom-6 left-6 z-20">
+                                        <p className="text-white font-black text-lg">{v.title || 'Training Clip'}</p>
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-orange-500">{v.status}</span>
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* Performance Trends Chart Placeholder */}
+                <div className={`rounded-[3rem] p-8 glass-dark shadow-glass`}>
+                    <div className="flex items-center justify-between mb-10">
+                        <h2 className="text-2xl font-black tracking-tight">Efficiency Trends</h2>
+                        <div className="flex gap-2">
+                            {['7D', '1M', '6M'].map(t => <button key={t} className={`px-4 py-1.5 rounded-xl text-[10px] font-black transition-colors ${t === '7D' ? 'bg-orange-500 text-white shadow-premium' : 'bg-white/5 hover:bg-white/10'}`}>{t}</button>)}
+                        </div>
+                    </div>
+                    {/* Simulated Graph Lines */}
+                    <div className="h-48 flex items-end gap-2 px-2">
+                        {[40, 60, 45, 80, 55, 90, 75, 85, 95, 80, 100].map((h, i) => (
+                            <div key={i} className="flex-1 group relative">
+                                <div style={{ height: `${h}%` }} className={`w-full rounded-t-lg transition-all duration-500 group-hover:shadow-[0_0_20px_rgba(249,115,22,0.4)] ${i === 10 ? 'bg-orange-500' : 'bg-white/10 group-hover:bg-white/20'}`} />
+                                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-orange-500 text-white text-[10px] font-black px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                    {h}%
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <Link to="/player/training" className={`p-6 rounded-lg text-center ${isDarkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-white hover:bg-gray-50 shadow-md'}`}>
-            <Video className={`h-8 w-8 mx-auto mb-3 ${isDarkMode ? 'text-orange-400' : 'text-orange-600'}`} />
-            <h3 className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Upload Training Video</h3>
-            <p className={`text-sm mt-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Analyze your performance</p>
-          </Link>
-
-          <Link to="/player/skills" className={`p-6 rounded-lg text-center ${isDarkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-white hover:bg-gray-50 shadow-md'}`}>
-            <BarChart3 className={`h-8 w-8 mx-auto mb-3 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
-            <h3 className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Skill Analytics</h3>
-            <p className={`text-sm mt-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>View detailed metrics</p>
-          </Link>
-
-          <Link to="/player/profile" className={`p-6 rounded-lg text-center ${isDarkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-white hover:bg-gray-50 shadow-md'}`}>
-            <Users className={`h-8 w-8 mx-auto mb-3 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`} />
-            <h3 className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Player Profile</h3>
-            <p className={`text-sm mt-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Manage your info</p>
-          </Link>
+        {/* Quick Access Footer */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-10 border-t border-white/5">
+                {[
+                    { label: 'Bio Analysis', path: '/player/training', icon: <PlayCircle /> },
+                    { label: 'Drill Schedule', path: '/player/schedule', icon: <Calendar /> },
+                    { label: 'Leaderboard', path: '/player/skills', icon: <Trophy /> },
+                    { label: 'Account', path: '/player/profile', icon: <Users /> },
+                ].map(action => (
+                    <Link key={action.label} to={action.path} className={`flex flex-col items-center gap-4 p-8 rounded-[2.5rem] transition-all duration-500 hover:bg-orange-500 hover:text-white group`}>
+                        <div className="p-4 rounded-2xl bg-white/5 border border-white/10 group-hover:bg-transparent group-hover:border-white/30 transition-all">
+                            {React.cloneElement(action.icon, { className: 'h-8 w-8' })}
+                        </div>
+                        <span className="text-xs font-black uppercase tracking-widest">{action.label}</span>
+                    </Link>
+                ))}
         </div>
-
-        <div className="h-2 w-full bg-gradient-to-r from-pink-500 via-red-500 to-orange-400 mt-8" />
       </div>
     </div>
   );

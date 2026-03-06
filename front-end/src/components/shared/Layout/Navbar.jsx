@@ -72,28 +72,24 @@ const Navbar = ({ role }) => {
   const navLinks = getNavLinks();
 
   return (
-    <nav className={`sticky top-0 z-50 transition-colors duration-300 ${isDarkMode
-      ? 'bg-gradient-to-r from-gray-900 via-indigo-950 to-purple-900 shadow-xl'
-      : 'bg-gradient-to-r from-blue-500 to-indigo-600 shadow-lg'
+    <nav className={`sticky top-0 z-50 transition-all duration-500 ${isDarkMode
+      ? 'glass-dark shadow-2xl'
+      : 'bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm'
       }`}>
-      {/* Decorative border */}
-      <div className="h-1 w-full bg-gradient-to-r from-orange-400 via-red-500 to-pink-500"></div>
+      {/* Premium accent line */}
+      <div className="h-[2px] w-full bg-gradient-to-r from-orange-500 to-red-600"></div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 relative">
         <div className="flex justify-between h-20">
           <div className="flex items-center">
-            <Link to={user && role ? `/${role}` : '/'} className="flex items-center space-x-2 group">
-              <div className={`h-12 w-12 rounded-xl overflow-hidden shadow-md ring-2 transition-all duration-300 transform group-hover:scale-110 ${isDarkMode ? 'ring-orange-500/50' : 'ring-white/30'
-                }`}>
-                <img
-                  src="https://images.unsplash.com/photo-1546519638-68e109498ffc?q=80&w=2090&auto=format&fit=crop"
-                  alt="BAKO"
-                  className="h-full w-full object-cover"
-                />
-              </div>
+            <Link to={user && role ? `/${role}` : '/'} className="flex items-center space-x-3 group">
               <div className="flex flex-col">
-                <span className="text-2xl font-bold text-white">BAKO</span>
-                <span className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-blue-100'}`}>Basketball Analytics</span>
+                <span className={`text-2xl font-black tracking-tighter ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    BAKO<span className="text-orange-500">.</span>AI
+                </span>
+                <span className={`text-[10px] font-black uppercase tracking-[0.2em] -mt-1 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                    Analytics
+                </span>
               </div>
             </Link>
           </div>
@@ -109,13 +105,16 @@ const Navbar = ({ role }) => {
                   <Link
                     key={link.to}
                     to={link.to}
-                    className={`flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-white ${isActive
-                      ? isDarkMode ? 'bg-gray-800 text-yellow-300' : 'bg-white bg-opacity-20 font-semibold'
-                      : 'hover:bg-white hover:bg-opacity-20'
+                    className={`flex items-center px-4 py-2 rounded-xl transition-all duration-300 text-sm font-bold relative group ${isActive
+                      ? isDarkMode ? 'text-orange-500 shadow-[0_0_20px_rgba(249,115,22,0.15)] bg-white/5' : 'text-orange-600 bg-orange-50'
+                      : isDarkMode ? 'text-gray-400 hover:text-white hover:bg-white/5' : 'text-gray-600 hover:bg-gray-100'
                       }`}
                   >
                     {link.icon}
                     <span className="ml-2">{link.label}</span>
+                    {isActive && (
+                        <div className="absolute -bottom-1 left-4 right-4 h-0.5 bg-orange-500 rounded-full shadow-[0_0_10px_rgba(249,115,22,0.8)]" />
+                    )}
                   </Link>
                 );
               })}

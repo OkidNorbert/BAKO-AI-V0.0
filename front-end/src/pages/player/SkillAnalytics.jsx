@@ -92,114 +92,132 @@ const SkillAnalytics = () => {
     );
   }
 
+  const sub = isDarkMode ? 'text-gray-400' : 'text-gray-500';
+
   return (
-    <div className={`min-h-screen p-6 ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
-      <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-          <h1 className="text-2xl font-bold flex items-center">
-            <BarChart2 className="h-8 w-8 mr-2 text-orange-500" />
-            Skill Analytics
-          </h1>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={fetchSkills}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-lg ${isDarkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-white hover:bg-gray-100 border border-gray-200'} transition-colors`}
-            >
-              <RefreshCw className="h-4 w-4" />
-              <span>Refresh</span>
-            </button>
-          </div>
+    <div className={`min-h-screen transition-all duration-500 ${isDarkMode ? 'bg-[#0f1115] text-white' : 'bg-gray-50 text-gray-900'}`}>
+      <div className="max-w-7xl mx-auto p-8 space-y-12">
+        
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12">
+            <div>
+                <h1 className="text-6xl font-black tracking-tighter mb-4">Skill Analytics</h1>
+                <p className={`text-xl ${sub}`}>Visualizing your path to <span className="text-orange-500 font-black">Elite</span> performance.</p>
+            </div>
+            <div className="flex items-center gap-3">
+                <button
+                onClick={fetchSkills}
+                className={`flex items-center space-x-2 px-6 py-3 rounded-2xl font-bold text-sm transition-all duration-300 ${isDarkMode ? 'bg-white/5 hover:bg-white/10 border border-white/10' : 'bg-white hover:bg-gray-100 border border-gray-200'}`}
+                >
+                <RefreshCw className="h-4 w-4" />
+                <span>Sync Data</span>
+                </button>
+            </div>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-amber-500/10 border-l-4 border-amber-500 text-amber-700 dark:text-amber-400 rounded-md">
+          <div className="mb-6 p-6 glass rounded-3xl border-l-4 border-amber-500 text-amber-400 font-bold animate-in fade-in">
             {error}
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+          
           {/* Main Analytics Content */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className={`rounded-xl p-6 shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-              <h2 className="text-xl font-bold mb-4 flex items-center">
-                <Target className="mr-2 text-orange-500" />
-                Performance Overview
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="p-4 rounded-lg bg-orange-500/10 border border-orange-500/20">
-                  <span className={`text-xs uppercase font-bold ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Overall Score</span>
-                  <p className="text-3xl font-bold text-orange-500">{summary.overall || '—'}</p>
+          <div className="lg:col-span-2 space-y-10">
+            
+            {/* Overview Stats */}
+            <div className={`rounded-[3rem] p-10 glass-dark shadow-glass border border-white/5 overflow-hidden relative`}>
+                <div className="absolute top-0 right-0 p-10 opacity-5">
+                    <BarChart2 className="h-48 w-48" />
                 </div>
-                <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
-                  <span className={`text-xs uppercase font-bold ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Shooting</span>
-                  <p className="text-3xl font-bold text-yellow-500">{summary.shooting || '—'}</p>
+                <h2 className="text-2xl font-black tracking-tight mb-8">Performance Overview</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    {[
+                        { label: 'Overall Score', value: summary.overall, color: 'text-orange-500', bg: 'bg-orange-500/10 border-orange-500/20' },
+                        { label: 'Shooting', value: summary.shooting, color: 'text-yellow-500', bg: 'bg-yellow-500/10 border-yellow-500/20' },
+                        { label: 'Defense', value: summary.defense, color: 'text-green-500', bg: 'bg-green-500/10 border-green-500/20' }
+                    ].map(item => (
+                        <div key={item.label} className={`p-6 rounded-3xl border ${item.bg}`}>
+                            <span className={`text-[10px] uppercase font-black tracking-widest ${sub}`}>{item.label}</span>
+                            <p className={`text-4xl font-black mt-1 ${item.color}`}>{item.value || '—'}</p>
+                        </div>
+                    ))}
                 </div>
-                <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
-                  <span className={`text-xs uppercase font-bold ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Defense</span>
-                  <p className="text-3xl font-bold text-green-500">{summary.defense || '—'}</p>
-                </div>
-              </div>
             </div>
 
-            {/* Video Analysis Section (if a session is selected) */}
-            <div className={`rounded-xl shadow-lg overflow-hidden ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-              <div className={`px-6 py-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'} flex justify-between items-center`}>
-                <h2 className="text-lg font-semibold flex items-center">
-                  <Zap className="h-5 w-5 mr-2 text-yellow-500" />
-                  Session Feedback
-                </h2>
-              </div>
-              <div className="p-6">
-{skills.length > 0 && skills[0].videoUrl && ( 
- <VideoPlayer 
- videoSrc={skills[0].videoUrl} 
- analysisData={skills[0].analysisData} 
- /> 
- )}
-                <AICoachFeedback analysisData={skills.length > 0 ? skills[0].analysisData : null} />
-              </div>
+            {/* Session Feedback */}
+            <div className={`rounded-[3rem] overflow-hidden border ${isDarkMode ? 'bg-gray-800/20 border-gray-700/50' : 'bg-white border-gray-100 shadow-xl'}`}>
+                <div className={`px-10 py-8 border-b ${isDarkMode ? 'border-white/5' : 'border-gray-50'}`}>
+                    <h2 className="text-2xl font-black tracking-tight flex items-center">
+                        <Zap className="h-6 w-6 mr-3 text-yellow-500" />
+                        Session Feedback
+                    </h2>
+                </div>
+                <div className="p-10">
+                    {skills.length > 0 && skills[0].videoUrl && ( 
+                        <div className="rounded-3xl overflow-hidden mb-8 border border-white/10">
+                            <VideoPlayer 
+                                videoSrc={skills[0].videoUrl} 
+                                analysisData={skills[0].analysisData} 
+                            /> 
+                        </div>
+                    )}
+                    <div className="glass-dark rounded-3xl p-8 border border-white/5">
+                        <AICoachFeedback analysisData={skills.length > 0 ? skills[0].analysisData : null} />
+                    </div>
+                </div>
             </div>
           </div>
 
-          {/* Sidebar: Recent Sessions / Skill Breakdown */}
-          <div className="space-y-6">
-            <div className={`rounded-xl p-6 shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-              <h3 className="text-lg font-bold mb-4">Training Stats</h3>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Sessions</span>
-                  <span className="font-bold">{summary.training_sessions || 0}</span>
+          {/* Sidebar: Stats & Skills */}
+          <div className="space-y-10">
+            
+            {/* Training Totals */}
+            <div className={`rounded-[3rem] p-8 glass-dark shadow-glass border border-white/5`}>
+                <h3 className="text-xl font-black tracking-tight mb-8">Training Totals</h3>
+                <div className="space-y-6">
+                    {[
+                        { label: 'Sessions', value: summary.training_sessions || 0, icon: <Activity className="h-4 w-4" /> },
+                        { label: 'Minutes Trained', value: summary.training_minutes || 0, icon: <TrendingUp className="h-4 w-4" /> },
+                        { label: 'Distance Covered', value: `${summary.distance || '0.00'} km`, icon: <Zap className="h-4 w-4" /> }
+                    ].map(stat => (
+                        <div key={stat.label} className="flex justify-between items-center group">
+                            <span className={`text-sm font-bold flex items-center transition-colors group-hover:text-orange-500 ${sub}`}>
+                                <span className="mr-2 p-1.5 rounded-lg bg-white/5 border border-white/10">{stat.icon}</span>
+                                {stat.label}
+                            </span>
+                            <span className="font-black text-lg">{stat.value}</span>
+                        </div>
+                    ))}
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Minutes</span>
-                  <span className="font-bold">{summary.training_minutes || 0}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Distance</span>
-                  <span className="font-bold">{summary.distance || '0.00'} km</span>
-                </div>
-              </div>
             </div>
 
-            <div className={`rounded-xl shadow-lg overflow-hidden ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-              <div className={`px-6 py-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                <h3 className="font-semibold capitalize">Skill progress</h3>
-              </div>
-              <div className="p-4 space-y-3">
-                {skills.map((skill, idx) => (
-                  <div key={idx} className="space-y-1">
-                    <div className="flex justify-between text-xs">
-                      <span>{skill.name}</span>
-                      <span className="font-bold text-orange-500">{skill.score}</span>
+            {/* Skill Progress */}
+            <div className={`rounded-[3rem] overflow-hidden border ${isDarkMode ? 'bg-gray-800/20 border-gray-700/50' : 'bg-white border-gray-100 shadow-xl'}`}>
+                <div className={`px-8 py-6 border-b ${isDarkMode ? 'border-white/5' : 'border-gray-50'}`}>
+                    <h3 className="text-[10px] font-black uppercase tracking-widest opacity-50">Skill Mastery</h3>
+                </div>
+                <div className="p-8 space-y-6">
+                    {skills.length > 0 ? skills.map((skill, idx) => (
+                    <div key={idx} className="space-y-2">
+                        <div className="flex justify-between text-xs font-black">
+                        <span className="uppercase tracking-wider">{skill.name}</span>
+                        <span className="text-orange-500">{skill.score}%</span>
+                        </div>
+                        <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden border border-white/10">
+                        <div className="h-full bg-gradient-to-r from-orange-500 to-red-600 shadow-[0_0_10px_rgba(249,115,22,0.5)]" style={{ width: `${skill.score}%` }} />
+                        </div>
                     </div>
-                    <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                      <div className="h-full bg-orange-500" style={{ width: `${skill.score}%` }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
+                    )) : (
+                        <div className="text-center py-6 opacity-40 italic text-sm">
+                            No skill data available.
+                        </div>
+                    )}
+                </div>
             </div>
           </div>
+
         </div>
       </div>
     </div>

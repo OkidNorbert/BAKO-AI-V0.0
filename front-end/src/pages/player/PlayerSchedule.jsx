@@ -54,116 +54,135 @@ const PlayerSchedule = () => {
         );
     }
 
-    return (
-        <div className={`min-h-screen ${isDarkMode
-            ? 'bg-gradient-to-b from-gray-900 to-indigo-950 text-white'
-            : 'bg-gradient-to-b from-blue-50 to-indigo-100 text-gray-900'
-            }`}>
-            <div className="max-w-7xl mx-auto p-6">
-                <div className="flex justify-between items-center mb-8">
-                    <div>
-                        <h1 className={`text-2xl font-bold ${isDarkMode
-                            ? 'text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-400'
-                            : 'text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-red-600'
-                            }`}>Team Schedule</h1>
-                        <p className={`mt-1 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                            Your team's upcoming practices, matches, and events
-                        </p>
-                    </div>
+  const sub = isDarkMode ? 'text-gray-400' : 'text-gray-500';
+
+  return (
+    <div className={`min-h-screen transition-all duration-500 ${isDarkMode ? 'bg-[#0f1115] text-white' : 'bg-gray-50 text-gray-800'}`}>
+      <div className="max-w-7xl mx-auto p-8 space-y-12">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12">
+            <div>
+                <h1 className="text-6xl font-black tracking-tighter mb-4 text-white">Team Schedule</h1>
+                <p className={`text-xl ${sub}`}>Your roadmap to <span className="text-orange-500 font-black">victory</span>. Stay locked in.</p>
+            </div>
+            <div className={`flex items-center gap-4 p-4 rounded-[2rem] border-2 shadow-glass ${isDarkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-100'}`}>
+                <div className="h-12 w-12 rounded-2xl bg-orange-500 flex items-center justify-center text-white shadow-premium">
+                    <CalendarIcon className="h-6 w-6" />
                 </div>
-
-                {/* Filter */}
-                <div className={`p-4 rounded-lg mb-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'
-                    }`}>
-                    <div className="flex items-center space-x-2">
-                        <Filter className={`h-4 w-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                            }`} />
-                        <select
-                            value={filterType}
-                            onChange={(e) => setFilterType(e.target.value)}
-                            className={`rounded-md border-none focus:ring-2 focus:ring-orange-500 ${isDarkMode
-                                ? 'bg-gray-700 text-white'
-                                : 'bg-gray-50 text-gray-900'
-                                }`}
-                        >
-                            <option value="all">All Events</option>
-                            <option value="practice">Practices</option>
-                            <option value="match">Matches</option>
-                            <option value="workout">Workouts</option>
-                            <option value="meeting">Meetings</option>
-                        </select>
-                    </div>
-                </div>
-
-                {error && (
-                    <div className="mb-6 p-4 rounded-lg bg-red-100 text-red-800 border-l-4 border-red-500">
-                        {error}
-                    </div>
-                )}
-
-                {/* Schedule Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredEvents.length > 0 ? (
-                        filteredEvents.map((event) => (
-                            <div
-                                key={event.id}
-                                className={`p-6 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'
-                                    } border-l-4 ${event.eventType === 'match' ? 'border-red-500' :
-                                        event.eventType === 'practice' ? 'border-orange-500' :
-                                            event.eventType === 'workout' ? 'border-green-500' : 'border-blue-500'
-                                    } shadow-md hover:shadow-lg transition-shadow duration-200`}
-                            >
-                                <div className="flex justify-between items-start mb-4">
-                                    <div>
-                                        <h3 className="font-semibold text-lg">{event.title}</h3>
-                                        <div className="flex items-center mt-1">
-                                            <span className={`text-xs px-2 py-0.5 rounded-full uppercase font-bold ${event.eventType === 'match' ? 'bg-red-100 text-red-800' :
-                                                event.eventType === 'practice' ? 'bg-orange-100 text-orange-800' :
-                                                    event.eventType === 'workout' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
-                                                }`}>
-                                                {event.eventType}
-                                            </span>
-                                            {event.mandatory && (
-                                                <span className="ml-2 text-xs text-red-500 font-semibold">*Mandatory</span>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 line-clamp-2">{event.notes || event.description}</p>
-
-                                <div className="space-y-3">
-                                    <div className="flex items-center space-x-3">
-                                        <CalendarIcon className="h-4 w-4 text-gray-400" />
-                                        <span className="text-sm">
-                                            {event.date ? new Date(event.date).toLocaleDateString() : (event.start_time ? new Date(event.start_time).toLocaleDateString() : 'N/A')}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center space-x-3">
-                                        <Clock className="h-4 w-4 text-gray-400" />
-                                        <span className="text-sm">
-                                            {event.startTime ? `${event.startTime} - ${event.endTime}` : (event.start_time ? `${new Date(event.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(event.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'N/A')}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center space-x-3">
-                                        <MapPin className="h-4 w-4 text-gray-400" />
-                                        <span className="text-sm">
-                                            {event.location || 'TBD'}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        ))
-                    ) : (
-                        <div className="col-span-full text-center py-12">
-                            <CalendarIcon className={`h-12 w-12 mx-auto mb-4 ${isDarkMode ? 'text-gray-700' : 'text-gray-300'}`} />
-                            <p className="text-gray-500 dark:text-gray-400 text-lg">No scheduled events for your team</p>
-                        </div>
-                    )}
+                <div>
+                   <p className="text-[10px] font-black uppercase tracking-widest opacity-50">Next Event</p>
+                   <p className="text-xl font-black">{filteredEvents[0]?.title || 'Rest Day'}</p>
                 </div>
             </div>
         </div>
-    );
+
+        {/* Filter & Stats Row */}
+        <div className="flex flex-col lg:flex-row gap-6 items-center justify-between">
+            <div className="flex items-center gap-4 p-2 rounded-3xl glass-dark border border-white/5 shadow-glass w-full lg:w-auto">
+                {['all', 'practice', 'match', 'workout'].map(type => (
+                    <button
+                        key={type}
+                        onClick={() => setFilterType(type)}
+                        className={`px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all duration-500 ${filterType === type 
+                            ? 'bg-orange-500 text-white shadow-premium scale-105' 
+                            : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                    >
+                        {type}
+                    </button>
+                ))}
+            </div>
+            
+            <div className="flex gap-4 w-full lg:w-auto">
+                <div className="flex-1 lg:w-48 p-6 glass-dark rounded-[2.5rem] border border-white/5 shadow-glass group hover:border-orange-500/30 transition-all duration-500">
+                    <p className="text-[10px] font-black uppercase tracking-widest opacity-30 group-hover:opacity-100 transition-opacity">Total Events</p>
+                    <p className="text-3xl font-black text-white">{filteredEvents.length}</p>
+                </div>
+                <div className="flex-1 lg:w-48 p-6 glass-dark rounded-[2.5rem] border border-white/5 shadow-glass group hover:border-red-500/30 transition-all duration-500">
+                    <p className="text-[10px] font-black uppercase tracking-widest opacity-30 group-hover:opacity-100 transition-opacity">Matches</p>
+                    <p className="text-3xl font-black text-red-500">{events.filter(e => e.eventType === 'match').length}</p>
+                </div>
+            </div>
+        </div>
+
+        {error && (
+            <div className="p-6 glass rounded-3xl border-l-4 border-red-500 text-red-400 font-bold animate-in fade-in slide-in-from-top-4">
+                <AlertCircle className="h-5 w-5 mr-3 inline" /> {error}
+            </div>
+        )}
+
+        {/* Schedule Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+          {filteredEvents.length > 0 ? (
+            filteredEvents.map((event, idx) => {
+              const typeConfig = {
+                match: { border: 'border-red-500/50', bg: 'bg-red-500/10', text: 'text-red-500', icon: <Trophy /> },
+                practice: { border: 'border-orange-500/50', bg: 'bg-orange-500/10', text: 'text-orange-500', icon: <Activity /> },
+                workout: { border: 'border-green-500/50', bg: 'bg-green-500/10', text: 'text-green-500', icon: <Activity /> },
+                meeting: { border: 'border-blue-500/50', bg: 'bg-blue-500/10', text: 'text-blue-500', icon: <Users /> }
+              }[event.eventType] || { border: 'border-white/20', bg: 'bg-white/5', text: 'text-white', icon: <CalendarIcon /> };
+
+              return (
+                <div
+                    key={event.id}
+                    className={`group relative p-8 rounded-[3rem] glass-dark border border-white/5 shadow-glass hover:shadow-[0_20px_60px_rgba(0,0,0,0.5)] hover:-translate-y-2 transition-all duration-500 overflow-hidden animate-in fade-in zoom-in slide-in-from-bottom-6`}
+                    style={{ animationDelay: `${idx * 100}ms` }}
+                >
+                    {/* Background abstract element */}
+                    <div className={`absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity`}>
+                        {React.cloneElement(typeConfig.icon, { className: "h-32 w-32" })}
+                    </div>
+
+                    <div className="relative z-10 flex flex-col h-full">
+                        <div className="flex justify-between items-start mb-8">
+                            <div className={`px-5 py-2 rounded-2xl ${typeConfig.bg} border ${typeConfig.border} ${typeConfig.text} text-[10px] font-black uppercase tracking-widest flex items-center gap-2`}>
+                                {typeConfig.icon && React.cloneElement(typeConfig.icon, { className: "h-3 w-3" })}
+                                {event.eventType}
+                            </div>
+                            {event.mandatory && (
+                                <div className="text-red-500 font-black text-[10px] uppercase tracking-widest flex items-center gap-1">
+                                    <div className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" /> Mandatory
+                                </div>
+                            )}
+                        </div>
+
+                        <h3 className="text-3xl font-black tracking-tight mb-4 group-hover:text-orange-500 transition-colors">{event.title}</h3>
+                        <p className={`text-sm font-medium mb-10 line-clamp-2 opacity-50 group-hover:opacity-100 transition-opacity leading-relaxed`}>
+                            {event.notes || event.description || 'No additional session details provided.'}
+                        </p>
+
+                        <div className="mt-auto space-y-4">
+                            <div className="flex items-center p-4 rounded-2xl bg-white/5 border border-white/5 group-hover:bg-white/10 transition-colors">
+                                <CalendarIcon className="h-5 w-5 mr-4 text-orange-500" />
+                                <span className="text-sm font-black text-white/80">
+                                    {event.date ? new Date(event.date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }) : 'Date TBD'}
+                                </span>
+                            </div>
+                            <div className="flex items-center p-4 rounded-2xl bg-white/5 border border-white/5 group-hover:bg-white/10 transition-colors">
+                                <Clock className="h-5 w-5 mr-4 text-orange-500" />
+                                <span className="text-sm font-black text-white/80">
+                                    {event.startTime ? `${event.startTime} - ${event.endTime}` : 'Time TBD'}
+                                </span>
+                            </div>
+                            <div className="flex items-center p-4 rounded-2xl bg-white/5 border border-white/5 group-hover:bg-white/10 transition-colors">
+                                <MapPin className="h-5 w-5 mr-4 text-orange-500" />
+                                <span className="text-sm font-black text-white/80 line-clamp-1">{event.location || 'Tactical Room'}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="col-span-full py-24 glass-dark rounded-[4rem] border border-white/5 text-center">
+                <CalendarIcon className="h-24 w-24 mx-auto mb-6 text-white opacity-10" />
+                <h3 className="text-3xl font-black opacity-20 uppercase tracking-tighter">Mission Log Clear</h3>
+                <p className={`mt-2 ${sub}`}>No upcoming team operations scheduled.</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default PlayerSchedule;

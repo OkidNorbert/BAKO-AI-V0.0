@@ -252,46 +252,52 @@ const PlayerProfile = () => {
     );
   }
 
-  return (
-    <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-blue-50 text-gray-800'}`}>
-      <div className="h-2 w-full bg-gradient-to-r from-orange-400 via-red-500 to-pink-500"></div>
+  const sub = isDarkMode ? 'text-gray-400' : 'text-gray-500';
 
-      <div className={`${isDarkMode ? 'bg-gradient-to-r from-gray-900 via-indigo-950 to-purple-900' : 'bg-gradient-to-r from-orange-500 to-red-600'} py-10 px-6 shadow-lg relative z-10`}>
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-6">
-          <div className="relative">
-            <div className="w-36 h-36 rounded-full border-4 border-white overflow-hidden shadow-lg">
+  return (
+    <div className={`min-h-screen transition-all duration-500 ${isDarkMode ? 'bg-[#0f1115] text-white' : 'bg-gray-50 text-gray-800'}`}>
+      
+      {/* Premium Profile Header */}
+      <div className={`${isDarkMode ? 'bg-white/5 border-b border-white/5' : 'bg-white border-b border-gray-100'} py-16 px-8 relative overflow-hidden`}>
+        {/* Abstract background glow */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-orange-500/10 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2" />
+        
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-10 relative z-10">
+          <div className="relative group">
+            <div className="w-48 h-48 rounded-[3rem] border-4 border-orange-500/20 overflow-hidden shadow-premium transition-transform duration-500 group-hover:scale-105">
               {profile.profileImage ? (
                 <img src={profile.profileImage} alt="Profile" className="w-full h-full object-cover" />
               ) : (
-                <div className={`w-full h-full flex items-center justify-center ${isDarkMode ? 'bg-indigo-800' : 'bg-indigo-300'}`}>
-                  <User className="h-20 w-20 text-white" />
+                <div className={`w-full h-full flex items-center justify-center ${isDarkMode ? 'bg-white/5' : 'bg-gray-100'}`}>
+                  <User className="h-24 w-24 opacity-20" />
                 </div>
               )}
             </div>
             {isOwnProfile && (
-              <label className="absolute bottom-2 right-2 p-2 rounded-full cursor-pointer bg-orange-400 hover:bg-orange-300 text-gray-900 shadow-lg transition-all duration-200 transform hover:scale-110">
+              <label className="absolute -bottom-2 -right-2 p-4 rounded-2xl cursor-pointer bg-orange-500 hover:bg-orange-600 text-white shadow-premium transition-all duration-300 hover:scale-110">
                 <Camera className="h-5 w-5" />
                 <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
               </label>
             )}
           </div>
 
-          <div className="text-center md:text-left md:flex-1">
-            <h1 className="text-3xl md:text-4xl font-bold text-white">
+          <div className="text-center md:text-left flex-1">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-500 text-[10px] font-black uppercase tracking-widest mb-6">
+                <Trophy className="h-3 w-3" /> Professional Account
+            </div>
+            <h1 className="text-6xl font-black tracking-tighter mb-4">
               {profile.firstName} {profile.lastName}
             </h1>
-            <div className="flex items-center justify-center md:justify-start mt-2 text-indigo-100">
-              <Trophy className="h-5 w-5 mr-2" />
-              <span className="font-medium">BAKO Player</span>
-            </div>
-            <div className="flex flex-wrap gap-4 mt-4 justify-center md:justify-start">
-              <div className="bg-white bg-opacity-20 backdrop-blur-sm px-4 py-2 rounded-lg flex items-center text-white">
-                <Award className="h-5 w-5 mr-2 text-yellow-300" />
-                <span>{profile.position || '—'} • #{profile.jerseyNumber || '—'}</span>
+            <p className={`text-xl ${sub} mb-8`}>Crafting the <span className="text-orange-500 font-black">future</span> of elite basketball.</p>
+            
+            <div className="flex flex-wrap gap-4 justify-center md:justify-start">
+              <div className="glass-dark px-6 py-3 rounded-2xl flex items-center border border-white/5 hover:border-white/10 transition-colors">
+                <Award className="h-4 w-4 mr-3 text-orange-500" />
+                <span className="text-sm font-black">{profile.position || 'UNASSIGNED'} • #{profile.jerseyNumber || '00'}</span>
               </div>
-              <div className="bg-white bg-opacity-20 backdrop-blur-sm px-4 py-2 rounded-lg flex items-center text-white">
-                <Activity className="h-5 w-5 mr-2 text-pink-400" />
-                <span>{profile.experience || 0} years playing</span>
+              <div className="glass-dark px-6 py-3 rounded-2xl flex items-center border border-white/5 hover:border-white/10 transition-colors">
+                <Activity className="h-4 w-4 mr-3 text-orange-500" />
+                <span className="text-sm font-black">{profile.experience || 0} SEASONS ACTIVE</span>
               </div>
             </div>
           </div>
@@ -299,195 +305,201 @@ const PlayerProfile = () => {
           {isOwnProfile && (
             <button
               onClick={() => setIsEditing(!isEditing)}
-              className={`${isDarkMode ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-orange-400 hover:bg-orange-500 text-gray-900'} px-6 py-3 rounded-lg font-medium flex items-center shadow-lg transition-all duration-200 transform hover:scale-105`}
+              className={`px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest flex items-center transition-all duration-300 ${isEditing ? 'bg-white/10 hover:bg-white/20 border border-white/10' : 'bg-orange-500 hover:bg-orange-600 text-white shadow-premium hover:shadow-[0_0_30px_rgba(249,115,22,0.4)] hover:scale-105'}`}
             >
-              <Edit className="h-5 w-5 mr-2" />
-              {isEditing ? 'Cancel Edit' : 'Edit Profile'}
+              {isEditing ? <><Edit className="h-4 w-4 mr-2" /> Cancel</> : <><Edit className="h-4 w-4 mr-2" /> Edit Bio</>}
             </button>
           )}
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto mt-6 px-6">
+      <div className="max-w-7xl mx-auto px-8">
         {error && (
-          <div className="mb-6 p-4 bg-red-500 bg-opacity-10 border-l-4 border-red-500 text-red-700 rounded-md flex items-center">
-            <AlertCircle className="h-6 w-6 mr-3 flex-shrink-0" />
-            <span>{error}</span>
+          <div className="mt-8 p-6 glass rounded-3xl border-l-4 border-red-500 text-red-400 font-bold animate-in fade-in slide-in-from-top-4">
+            <AlertCircle className="h-5 w-5 mr-3 inline" /> {error}
           </div>
         )}
         {success && (
-          <div className="mb-6 p-4 bg-green-500 bg-opacity-10 border-l-4 border-green-500 text-green-700 rounded-md flex items-center">
-            <CheckCircle className="h-6 w-6 mr-3 flex-shrink-0" />
-            <span>{success}</span>
+          <div className="mt-8 p-6 glass rounded-3xl border-l-4 border-green-500 text-green-400 font-bold animate-in fade-in slide-in-from-top-4">
+            <CheckCircle className="h-5 w-5 mr-3 inline" /> {success}
           </div>
         )}
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-8 grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="md:col-span-2 space-y-6">
-          <form onSubmit={handleSubmit}>
-            <div className={`rounded-xl shadow-lg overflow-hidden ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-              <div className={`px-6 py-4 text-xl font-semibold ${isDarkMode ? 'bg-gray-700' : 'bg-indigo-50'}`}>
-                <h2 className="flex items-center">
-                  <User className={`h-6 w-6 mr-2 ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}`} />
-                  Personal Information
-                </h2>
-              </div>
-              <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                {['firstName', 'lastName', 'email', 'phone', 'dateOfBirth', 'position', 'jerseyNumber', 'experience', 'height', 'weight'].map((field) => (
-                  <div key={field}>
-                    <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                      {field.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase())}
-                    </label>
-                    <input
-                      type={field === 'email' ? 'email' : field === 'dateOfBirth' ? 'date' : field === 'experience' || field === 'jerseyNumber' ? 'text' : 'text'}
-                      name={field}
-                      value={profile[field] || ''}
-                      onChange={handleInputChange}
-                      disabled={!isEditing}
-                      className={`w-full px-4 py-3 rounded-lg border ${isEditing ? (isDarkMode ? 'bg-gray-700 border-gray-600 text-white focus:border-indigo-500' : 'bg-gray-50 border-gray-300 focus:border-indigo-500') : isDarkMode ? 'bg-gray-800 border-gray-700 text-gray-300' : 'bg-gray-100 border-gray-200 text-gray-800'}`}
+      <div className="max-w-7xl mx-auto px-8 py-12 grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <div className="lg:col-span-2 space-y-12">
+          <form onSubmit={handleSubmit} className="space-y-12">
+            {/* Identity Form */}
+            <div className={`rounded-[3rem] overflow-hidden border ${isDarkMode ? 'bg-gray-800/20 border-gray-700/50' : 'bg-white border-gray-100 shadow-xl'}`}>
+                <div className={`px-10 py-8 border-b ${isDarkMode ? 'border-white/5' : 'border-gray-50'}`}>
+                    <h2 className="text-2xl font-black tracking-tight flex items-center">
+                    <User className={`h-6 w-6 mr-3 text-orange-500`} />
+                    Identity
+                    </h2>
+                </div>
+                <div className="p-10 grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {[
+                        { id: 'firstName', label: 'First Name', type: 'text' },
+                        { id: 'lastName', label: 'Last Name', type: 'text' },
+                        { id: 'email', label: 'Contact Email', type: 'email' },
+                        { id: 'phone', label: 'Phone Line', type: 'text' },
+                        { id: 'dateOfBirth', label: 'Brith Date', type: 'date' },
+                        { id: 'position', label: 'Tactical Position', type: 'text' },
+                        { id: 'jerseyNumber', label: 'Jersey #', type: 'text' },
+                        { id: 'experience', label: 'Experience Years', type: 'text' },
+                        { id: 'height', label: 'Height (cm)', type: 'text' },
+                        { id: 'weight', label: 'Weight (kg)', type: 'text' }
+                    ].map((field) => (
+                    <div key={field.id} className="space-y-2">
+                        <label className={`text-[10px] font-black uppercase tracking-widest opacity-50 block ml-2`}>
+                            {field.label}
+                        </label>
+                        <input
+                        type={field.type}
+                        name={field.id}
+                        value={profile[field.id] || ''}
+                        onChange={handleInputChange}
+                        disabled={!isEditing}
+                        className={`w-full px-6 py-4 rounded-2xl border transition-all duration-300 outline-none font-bold text-sm ${isEditing ? (isDarkMode ? 'bg-white/5 border-orange-500/50 text-white focus:bg-white/10' : 'bg-gray-50 border-orange-500/30 focus:bg-white') : (isDarkMode ? 'bg-transparent border-white/5 text-gray-500' : 'bg-gray-100/50 border-gray-100 text-gray-400')}`}
+                        />
+                    </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Narrative Form */}
+            <div className={`rounded-[3rem] overflow-hidden border ${isDarkMode ? 'bg-gray-800/20 border-gray-700/50' : 'bg-white border-gray-100 shadow-xl'}`}>
+                <div className={`px-10 py-8 border-b ${isDarkMode ? 'border-white/5' : 'border-gray-50'}`}>
+                    <h2 className="text-2xl font-black tracking-tight flex items-center">
+                    <Target className={`h-6 w-6 mr-3 text-orange-500`} />
+                    Elite Bio
+                    </h2>
+                </div>
+                <div className="p-10 text-right">
+                    <textarea
+                    name="bio"
+                    value={profile.bio || ''}
+                    onChange={handleInputChange}
+                    disabled={!isEditing}
+                    rows="6"
+                    placeholder="Describe your athletic journey..."
+                    className={`w-full px-8 py-6 rounded-[2rem] border transition-all duration-300 outline-none font-medium text-sm resize-none mb-6 ${isEditing ? (isDarkMode ? 'bg-white/5 border-orange-500/50 text-white focus:bg-white/10' : 'bg-gray-50 border-orange-500/30 focus:bg-white') : (isDarkMode ? 'bg-transparent border-white/5 text-gray-500' : 'bg-gray-100/50 border-gray-100 text-gray-400')}`}
                     />
-                  </div>
-                ))}
-              </div>
+                    {isEditing && (
+                        <button
+                            type="submit"
+                            disabled={saving}
+                            className={`px-10 py-4 rounded-2xl font-black text-sm uppercase tracking-widest bg-orange-500 hover:bg-orange-600 text-white shadow-premium hover:shadow-[0_0_30px_rgba(249,115,22,0.4)] hover:scale-105 transition-all duration-300 ${saving ? 'opacity-50 grayscale' : ''}`}
+                        >
+                            {saving ? 'Syncing...' : 'Confirm Changes'}
+                        </button>
+                    )}
+                </div>
             </div>
-            <div className={`mt-6 rounded-xl shadow-lg overflow-hidden ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-              <div className={`px-6 py-4 text-xl font-semibold ${isDarkMode ? 'bg-gray-700' : 'bg-indigo-50'}`}>
-                <h2 className="flex items-center">
-                  <Target className={`h-6 w-6 mr-2 ${isDarkMode ? 'text-pink-400' : 'text-pink-500'}`} />
-                  About Me
-                </h2>
-              </div>
-              <div className="p-6">
-                <textarea
-                  name="bio"
-                  value={profile.bio || ''}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                  rows="4"
-                  placeholder="Tell us about your basketball journey and goals..."
-                  className={`w-full px-4 py-3 rounded-lg border ${isEditing ? (isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-gray-50 border-gray-300') : isDarkMode ? 'bg-gray-800 border-gray-700 text-gray-300' : 'bg-gray-100 border-gray-200 text-gray-800'}`}
-                />
-              </div>
-            </div>
-            {isEditing && (
-              <div className="mt-6 flex justify-end">
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className={`${isDarkMode ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700'} text-white px-6 py-3 rounded-lg font-medium flex items-center shadow-lg ${saving ? 'opacity-70 cursor-not-allowed' : ''}`}
-                >
-                  {saving ? <><div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"></div>Saving...</> : <><Save className="h-5 w-5 mr-2" />Save Changes</>}
-                </button>
-              </div>
-            )}
           </form>
         </div>
-        <div className="space-y-6">
-          <div className={`rounded-xl shadow-lg overflow-hidden ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-            <div className={`px-6 py-4 text-xl font-semibold ${isDarkMode ? 'bg-gray-700' : 'bg-indigo-50'}`}>
-              <h2 className="flex items-center">
-                <Trophy className={`h-6 w-6 mr-2 ${isDarkMode ? 'text-yellow-400' : 'text-yellow-500'}`} />
-                Player Highlights
-              </h2>
-            </div>
-            <div className="p-6 space-y-4">
-              <div className={`rounded-lg p-4 flex items-center ${isDarkMode ? 'bg-gray-700' : 'bg-blue-50'}`}>
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-blue-900 text-blue-300' : 'bg-blue-100 text-blue-600'}`}>
-                  <Target className="h-6 w-6" />
-                </div>
-                <div className="ml-4">
-                  <h3 className={`font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>Position</h3>
-                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{profile.position || 'Not set'}</p>
-                </div>
-              </div>
-              <div className={`rounded-lg p-4 flex items-center ${isDarkMode ? 'bg-gray-700' : 'bg-purple-50'}`}>
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-purple-900 text-purple-300' : 'bg-purple-100 text-purple-600'}`}>
-                  <Award className="h-6 w-6" />
-                </div>
-                <div className="ml-4">
-                  <h3 className={`font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>Experience</h3>
-                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{profile.experience || '0'} years</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Danger Zone */}
-        {isOwnProfile && (
-          <div className={`rounded-xl shadow-lg border-2 p-6 transition-all ${isDarkMode ? 'bg-red-950/10 border-red-900/20' : 'bg-red-50 border-red-100'}`}>
-            <h3 className={`text-lg font-bold mb-2 flex items-center gap-2 ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>
-              <AlertTriangle className="w-5 h-5" />
-              Danger Zone
-            </h3>
-            <p className={`text-sm mb-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              Delete your account and all basketball analysis data. This action is irreversible.
-            </p>
-            <button
-              onClick={() => setShowDeleteModal(true)}
-              className="flex items-center px-4 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-all text-sm font-bold shadow-lg shadow-red-900/20"
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              Delete My Account
-            </button>
-          </div>
-        )}
+        {/* Sidebar Info */}
+        <div className="space-y-12">
+            
+            {/* Quick Highlights */}
+            <div className={`rounded-[3rem] p-10 glass-dark shadow-glass border border-white/5 relative overflow-hidden group`}>
+                <div className="absolute -bottom-10 -right-10 opacity-5 group-hover:scale-110 group-hover:-rotate-12 transition-transform duration-700">
+                    <Trophy className="h-64 w-64" />
+                </div>
+                <h2 className="text-2xl font-black tracking-tight mb-10">Elite Scorecard</h2>
+                <div className="space-y-8">
+                    <div className="flex items-center group/card">
+                        <div className="w-16 h-16 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500 group-hover/card:bg-orange-500 group-hover/card:text-white transition-all duration-500">
+                            <Target className="h-8 w-8" />
+                        </div>
+                        <div className="ml-6">
+                            <p className="text-[10px] font-black uppercase tracking-widest opacity-50">Position</p>
+                            <h3 className="text-xl font-black">{profile.position || 'READY'}</h3>
+                        </div>
+                    </div>
+                    <div className="flex items-center group/card">
+                        <div className="w-16 h-16 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500 group-hover/card:bg-orange-500 group-hover/card:text-white transition-all duration-500">
+                            <Award className="h-8 w-8" />
+                        </div>
+                        <div className="ml-6">
+                            <p className="text-[10px] font-black uppercase tracking-widest opacity-50">Tenure</p>
+                            <h3 className="text-xl font-black">{profile.experience || '0'} YEARS</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Danger Zone Refactor */}
+            {isOwnProfile && (
+                <div className={`rounded-[3rem] p-10 border transition-all duration-500 group ${isDarkMode ? 'bg-red-500/5 border-red-500/20 hover:bg-red-500/10' : 'bg-red-50 border-red-100 hover:bg-red-100/50'}`}>
+                    <h3 className={`text-xl font-black tracking-tight mb-4 flex items-center gap-3 text-red-500`}>
+                    <AlertTriangle className="w-6 h-6 animate-pulse" />
+                    Security
+                    </h3>
+                    <p className={`text-xs font-medium mb-8 leading-relaxed opacity-60`}>
+                    Removing your account will permanently scrub all biometric data and training history from our servers. This action cannot be reversed.
+                    </p>
+                    <button
+                    onClick={() => setShowDeleteModal(true)}
+                    className="w-full px-6 py-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-500 font-black text-[10px] uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all duration-500 shadow-premium"
+                    >
+                    Deactivate Account
+                    </button>
+                </div>
+            )}
+        </div>
       </div>
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Confirmation Modal Refactor */}
       {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className={`w-full max-w-md p-6 rounded-2xl shadow-2xl ${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white'}`}>
-            <div className="flex items-center gap-3 mb-4 text-red-500">
-              <AlertTriangle className="w-8 h-8" />
-              <h2 className="text-xl font-bold">Confirm Deletion</h2>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-8 bg-black/95 backdrop-blur-xl animate-in fade-in zoom-in duration-300">
+          <div className="w-full max-w-xl p-12 rounded-[4rem] glass-dark border border-red-500/30 shadow-[0_0_100px_rgba(239,68,68,0.2)]">
+            <div className="flex flex-col items-center text-center gap-6 mb-10">
+              <div className="w-24 h-24 rounded-[2rem] bg-red-500 flex items-center justify-center text-white shadow-[0_0_30px_rgba(239,68,68,0.5)]">
+                <AlertTriangle className="w-12 h-12" />
+              </div>
+              <h2 className="text-4xl font-black tracking-tighter">Final Confirmation</h2>
+              <p className={`text-sm font-medium opacity-60 max-w-sm`}>
+                This will dissolve your BAKO presence. All analytics, session data, and records will be deleted permanently.
+              </p>
             </div>
 
-            <p className={`mb-6 text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-              This will permanently delete your profile, training videos, and performance analytics. This cannot be undone.
-            </p>
-
-            <div className="mb-6">
-              <label className={`block text-xs font-bold mb-2 uppercase tracking-widest ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                Type <span className="font-bold text-red-600 underline">DELETE MY ACCOUNT</span> to confirm
+            <div className="space-y-4 mb-10">
+              <label className={`block text-[10px] font-black uppercase tracking-widest opacity-50 text-center mb-4`}>
+                Type <span className="text-red-500 underline">DELETE MY ACCOUNT</span> to proceed
               </label>
               <input
                 type="text"
                 value={deleteConfirmPhrase}
                 onChange={(e) => setDeleteConfirmPhrase(e.target.value)}
-                placeholder="Type here..."
-                className={`w-full px-4 py-3 rounded-xl border-2 transition-all outline-none ${isDarkMode
-                  ? 'bg-gray-900 border-gray-700 text-white focus:border-red-500'
-                  : 'bg-white border-gray-200 text-gray-900 focus:border-red-500'
-                  }`}
+                placeholder="Type confirmation phrase..."
+                className="w-full px-8 py-6 rounded-3xl bg-white/5 border border-red-500/30 text-white text-center font-bold outline-none focus:bg-white/10 focus:border-red-500 transition-all"
               />
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-4">
               <button
                 onClick={() => { setShowDeleteModal(false); setDeleteConfirmPhrase(''); }}
-                className={`flex-1 px-4 py-3 rounded-xl font-semibold transition-colors ${isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                  }`}
+                className="flex-1 px-8 py-5 rounded-3xl font-black text-sm uppercase tracking-widest bg-white/5 border border-white/10 hover:bg-white/10 transition-all"
               >
-                Cancel
+                Go Back
               </button>
               <button
                 onClick={handleDeleteAccount}
                 disabled={deleteConfirmPhrase !== 'DELETE MY ACCOUNT' || isDeleting}
-                className={`flex-1 px-4 py-3 rounded-xl font-bold text-white transition-all ${deleteConfirmPhrase === 'DELETE MY ACCOUNT'
-                  ? 'bg-red-600 hover:bg-red-700'
-                  : 'bg-gray-400 cursor-not-allowed grayscale'
+                className={`flex-1 px-8 py-5 rounded-3xl font-black text-sm uppercase tracking-widest transition-all ${deleteConfirmPhrase === 'DELETE MY ACCOUNT'
+                  ? 'bg-red-500 text-white shadow-premium hover:bg-red-600'
+                  : 'bg-white/5 text-white/20 cursor-not-allowed grayscale'
                   }`}
               >
-                {isDeleting ? 'Deleting...' : 'Delete Permanently'}
+                {isDeleting ? 'Erasing...' : 'Scrub Data'}
               </button>
             </div>
           </div>
         </div>
       )}
-
-      <div className="h-2 w-full bg-gradient-to-r from-pink-500 via-red-500 to-orange-400 mt-8"></div>
+      <div className="h-2 w-full bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 mt-20 opacity-20" />
     </div>
   );
 };

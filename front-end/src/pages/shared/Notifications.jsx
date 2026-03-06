@@ -214,246 +214,218 @@ const Notifications = () => {
     );
   }
 
+  const sub = isDarkMode ? 'text-gray-400' : 'text-gray-500';
+
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${isDarkMode
-      ? 'bg-gradient-to-b from-gray-900 to-purple-950'
-      : 'bg-gradient-to-b from-blue-50 to-purple-100'
-      }`}>
-
-      <div className="max-w-4xl mx-auto p-6">
+    <div className={`min-h-screen transition-all duration-500 ${isDarkMode ? 'bg-[#0f1115] text-white' : 'bg-gray-50 text-gray-800'}`}>
+      <div className="max-w-5xl mx-auto p-8 space-y-12">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              Notifications
-            </h1>
-            {unreadCount > 0 && (
-              <span className={`ml-3 px-2 py-1 rounded-full text-sm font-medium ${isDarkMode ? 'bg-orange-600 text-white' : 'bg-orange-500 text-white'
-                }`}>
-                {unreadCount} unread
-              </span>
-            )}
-          </div>
-
-          <div className="flex items-center space-x-3">
-            {/* Filter Dropdown */}
-            <div className="relative">
-              <select
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-                className={`appearance-none pl-10 pr-8 py-2 rounded-lg border ${isDarkMode
-                  ? 'bg-gray-700 border-gray-600 text-white'
-                  : 'bg-white border-gray-300 text-gray-900'
-                  }`}
-              >
-                {filters.map(f => (
-                  <option key={f.value} value={f.value}>
-                    {f.label}
-                  </option>
-                ))}
-              </select>
-              <Filter className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-            </div>
-
-            {/* Actions */}
-            <button
-              onClick={markAllAsRead}
-              className={`flex items-center px-3 py-2 rounded-lg ${isDarkMode
-                ? 'bg-gray-700 hover:bg-gray-600 text-white'
-                : 'bg-gray-200 hover:bg-gray-300 text-gray-900'
-                } transition-colors`}
-            >
-              <CheckCircle className="w-4 h-4 mr-2" />
-              Mark All Read
-            </button>
-
-            <button
-              onClick={clearAllNotifications}
-              className={`flex items-center px-3 py-2 rounded-lg ${isDarkMode
-                ? 'bg-red-600 hover:bg-red-700 text-white'
-                : 'bg-red-500 hover:bg-red-600 text-white'
-                } transition-colors`}
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              Clear All
-            </button>
-
-            <button
-              onClick={fetchNotifications}
-              className={`flex items-center px-3 py-2 rounded-lg ${isDarkMode
-                ? 'bg-gray-700 hover:bg-gray-600 text-white'
-                : 'bg-gray-200 hover:bg-gray-300 text-gray-900'
-                } transition-colors`}
-            >
-              <RefreshCw className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-
-        {/* Notifications List */}
-        <div className={`rounded-xl shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500"></div>
-            </div>
-          ) : notifications.length === 0 ? (
-            <div className="text-center py-12">
-              <Bell className={`w-12 h-12 mx-auto mb-4 ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`} />
-              <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                No notifications found
-              </p>
-              <p className={`text-sm mt-2 ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
-                {filter === 'all'
-                  ? 'You\'re all caught up! Check back later for new notifications.'
-                  : `No ${filters.find(f => f.value === filter)?.label.toLowerCase() || 'notifications'} found.`
-                }
-              </p>
-            </div>
-          ) : (
-            <div className="divide-y divide-gray-200">
-              {notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer ${!notification.read
-                    ? isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
-                    : ''
-                    }`}
-                  onClick={() => setSelectedNotification(notification)}
-                >
-                  <div className="flex items-start space-x-3">
-                    {/* Icon */}
-                    <div className={`p-2 rounded-full ${getPriorityColor(notification.priority)}`}>
-                      {getNotificationIcon(notification.type)}
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h3 className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                            {notification.title}
-                          </h3>
-                          <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                            {notification.message}
-                          </p>
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex items-center space-x-2 ml-4">
-                          {!notification.read && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                markAsRead(notification.id);
-                              }}
-                              className={`p-1 rounded hover:bg-gray-200 transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                                }`}
-                              title="Mark as read"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                          )}
-
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              deleteNotification(notification.id);
-                            }}
-                            className={`p-1 rounded hover:bg-gray-200 transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                              }`}
-                            title="Delete notification"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Timestamp */}
-                      <div className="flex items-center mt-2">
-                        <Clock className={`w-3 h-3 mr-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-                        <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                          {formatTimestamp(notification.timestamp)}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 mb-12">
+            <div>
+                <div className="flex items-center gap-3 mb-4">
+                    <h1 className="text-6xl font-black tracking-tighter text-white">Inbox</h1>
+                    {unreadCount > 0 && (
+                        <span className="px-4 py-1.5 rounded-full bg-orange-500 text-white text-[10px] font-black uppercase tracking-widest shadow-premium animate-pulse">
+                            {unreadCount} UNREAD
                         </span>
-                      </div>
-
-                      {/* Action Link */}
-                      {notification.actionUrl && (
-                        <div className="mt-2">
-                          <a
-                            href={notification.actionUrl}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              markAsRead(notification.id);
-                            }}
-                            className={`inline-flex items-center text-sm font-medium ${isDarkMode ? 'text-orange-400 hover:text-orange-300' : 'text-orange-600 hover:text-orange-700'
-                              } transition-colors`}
-                          >
-                            View Details
-                            <ChevronRight className="w-4 h-4 ml-1" />
-                          </a>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                    )}
                 </div>
-              ))}
+                <p className={`text-xl ${sub}`}>Operational updates and <span className="text-orange-500 font-black">mission</span> status.</p>
             </div>
-          )}
+            
+            <div className="flex flex-wrap items-center gap-4">
+                <button
+                    onClick={markAllAsRead}
+                    className={`flex items-center px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all duration-300 ${isDarkMode ? 'bg-white/5 hover:bg-white/10 border border-white/10' : 'bg-white border-gray-200 shadow-sm'}`}
+                >
+                    <CheckCircle className="w-3.5 h-3.5 mr-2" />
+                    Sync Read
+                </button>
+                <button
+                    onClick={clearAllNotifications}
+                    className={`flex items-center px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest text-white transition-all duration-300 bg-red-500 hover:bg-red-600 shadow-premium`}
+                >
+                    <Trash2 className="w-3.5 h-3.5 mr-2" />
+                    Purge All
+                </button>
+                <button
+                    onClick={fetchNotifications}
+                    className={`p-3 rounded-2xl transition-all duration-300 ${isDarkMode ? 'bg-white/5 hover:bg-white/10 border border-white/10' : 'bg-white border-gray-200 shadow-sm'}`}
+                >
+                    <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                </button>
+            </div>
         </div>
 
-        {/* Notification Detail Modal */}
+        {/* Filter Bar */}
+        <div className="p-2 rounded-[2rem] glass-dark border border-white/5 shadow-glass flex flex-wrap gap-2 overflow-x-auto whitespace-nowrap scrollbar-hide">
+            {filters.map(f => (
+                <button
+                    key={f.value}
+                    onClick={() => setFilter(f.value)}
+                    className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-500 ${filter === f.value 
+                        ? 'bg-orange-500 text-white shadow-premium' 
+                        : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                >
+                    {f.label}
+                </button>
+            ))}
+        </div>
+
+        {/* Notifications List Container */}
+        <div className={`rounded-[3rem] overflow-hidden border border-white/5 glass-dark shadow-glass min-h-[400px]`}>
+            {loading ? (
+                <div className="flex flex-col items-center justify-center py-32 space-y-6">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+                    <p className={`text-[10px] font-black uppercase tracking-widest opacity-30`}>Retrieving Comms...</p>
+                </div>
+            ) : notifications.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-32 text-center px-10">
+                    <div className="h-24 w-24 rounded-[2rem] bg-white/5 flex items-center justify-center mb-8 border border-white/10">
+                        <Bell className={`w-10 h-10 opacity-20`} />
+                    </div>
+                    <h3 className="text-3xl font-black opacity-20 uppercase tracking-tighter">Frequency Silent</h3>
+                    <p className={`mt-2 ${sub} max-w-xs mx-auto`}>
+                        {filter === 'all'
+                        ? 'No active intel. You\'re caught up on all tactical operations.'
+                        : `No records found for ${filters.find(f => f.value === filter)?.label}.`
+                        }
+                    </p>
+                </div>
+            ) : (
+                <div className="divide-y divide-white/5">
+                {notifications.map((notification, idx) => (
+                    <div
+                        key={notification.id}
+                        className={`group relative p-8 transition-all duration-500 cursor-pointer ${!notification.read ? 'bg-orange-500/[0.03]' : 'hover:bg-white/[0.02]'}`}
+                        onClick={() => setSelectedNotification(notification)}
+                        style={{ animationDelay: `${idx * 50}ms` }}
+                    >
+                        {/* Status Indicator */}
+                        {!notification.read && (
+                            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-12 bg-orange-500 rounded-r-full shadow-[0_0_20px_rgba(249,115,22,0.5)]" />
+                        )}
+
+                        <div className="flex items-start gap-8 relative z-10">
+                            {/* Icon Stack */}
+                            <div className={`flex-shrink-0 w-16 h-16 rounded-2xl border flex items-center justify-center transition-transform duration-500 group-hover:scale-110 ${getPriorityColor(notification.priority)}`}>
+                                {getNotificationIcon(notification.type)}
+                            </div>
+
+                            {/* Content Block */}
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-start justify-between gap-4 mb-2">
+                                    <div className="flex-1">
+                                        <h3 className={`text-xl font-black tracking-tight group-hover:text-orange-500 transition-colors ${!notification.read ? 'text-white' : 'text-white/60'}`}>
+                                            {notification.title}
+                                        </h3>
+                                        <p className={`text-sm font-medium mt-1 leading-relaxed line-clamp-2 ${!notification.read ? 'text-white/80' : 'text-white/40'}`}>
+                                            {notification.message}
+                                        </p>
+                                    </div>
+
+                                    {/* Action Buttons */}
+                                    <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        {!notification.read && (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    markAsRead(notification.id);
+                                                }}
+                                                className={`p-3 rounded-xl bg-orange-500/10 text-orange-500 hover:bg-orange-500 hover:text-white transition-all`}
+                                                title="Mark as read"
+                                            >
+                                                <Eye className="w-4 h-4" />
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                deleteNotification(notification.id);
+                                            }}
+                                            className={`p-3 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all`}
+                                            title="Delete notification"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-6">
+                                    <div className="flex items-center text-[10px] font-black uppercase tracking-widest opacity-40 group-hover:opacity-100 transition-opacity">
+                                        <Clock className="w-3.5 h-3.5 mr-2 text-orange-500" />
+                                        {formatTimestamp(notification.timestamp)}
+                                    </div>
+                                    
+                                    {notification.actionUrl && (
+                                        <div className="text-[10px] font-black uppercase tracking-widest text-orange-500 group-hover:translate-x-1 transition-transform">
+                                            Intelligence Available →
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+                </div>
+            )}
+        </div>
+
+        {/* Intelligence Detail Modal */}
         {selectedNotification && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className={`rounded-xl p-6 max-w-lg w-full mx-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'
-              }`}>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  {selectedNotification.title}
-                </h3>
+          <div className="fixed inset-0 bg-[#0f1115]/95 backdrop-blur-xl flex items-center justify-center z-[100] p-6 animate-in fade-in transition-all">
+            <div className="max-w-2xl w-full p-12 rounded-[4rem] glass-dark border border-white/5 shadow-premium animate-in zoom-in duration-300">
+              <div className="flex items-center justify-between mb-10">
+                <div className={`px-6 py-2 rounded-2xl bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest opacity-40`}>
+                    Communication Details
+                </div>
                 <button
                   onClick={() => setSelectedNotification(null)}
-                  className={`p-1 rounded hover:bg-gray-200 transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                    }`}
+                  className={`p-4 rounded-2xl hover:bg-white/5 transition-all`}
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-6 h-6" />
                 </button>
               </div>
 
-              <div className="flex items-start space-x-3 mb-4">
-                <div className={`p-3 rounded-full ${getPriorityColor(selectedNotification.priority)}`}>
-                  {getNotificationIcon(selectedNotification.type)}
+              <div className="flex flex-col items-center text-center gap-8 mb-12">
+                <div className={`w-24 h-24 rounded-[2rem] border-2 flex items-center justify-center shadow-lg ${getPriorityColor(selectedNotification.priority)}`}>
+                  {React.cloneElement(getNotificationIcon(selectedNotification.type), { className: "w-10 h-10" })}
                 </div>
-                <div className="flex-1">
-                  <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                <div>
+                   <h3 className="text-4xl font-black tracking-tighter mb-4">
+                    {selectedNotification.title}
+                  </h3>
+                  <p className={`text-lg font-medium opacity-60 leading-relaxed`}>
                     {selectedNotification.message}
                   </p>
-                  <div className="flex items-center mt-2">
-                    <Clock className={`w-3 h-3 mr-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-                    <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                      {new Date(selectedNotification.timestamp).toLocaleString()}
-                    </span>
-                  </div>
                 </div>
               </div>
 
-              {selectedNotification.actionUrl && (
-                <div className="flex justify-end">
-                  <a
-                    href={selectedNotification.actionUrl}
+              <div className="flex flex-col items-center gap-10">
+                <div className="flex items-center text-[10px] font-black uppercase tracking-widest opacity-30">
+                    <Clock className="w-4 h-4 mr-3 text-orange-500" />
+                    Sent {new Date(selectedNotification.timestamp).toLocaleString()}
+                </div>
+
+                {selectedNotification.actionUrl ? (
+                  <button
                     onClick={() => {
                       markAsRead(selectedNotification.id);
-                      setSelectedNotification(null);
+                      window.location.href = selectedNotification.actionUrl;
                     }}
-                    className={`inline-flex items-center px-4 py-2 rounded-lg font-medium ${isDarkMode
-                      ? 'bg-orange-600 hover:bg-orange-700 text-white'
-                      : 'bg-orange-500 hover:bg-orange-600 text-white'
-                      } transition-colors`}
+                    className="px-12 py-5 rounded-3xl bg-orange-500 hover:bg-orange-600 text-white font-black uppercase tracking-widest shadow-premium hover:shadow-[0_0_40px_rgba(249,115,22,0.4)] transition-all hover:scale-105"
                   >
-                    View Details
-                    <ChevronRight className="w-4 h-4 ml-2" />
-                  </a>
-                </div>
-              )}
+                    Assess Intel Now
+                  </button>
+                ) : (
+                    <button
+                        onClick={() => setSelectedNotification(null)}
+                        className="px-12 py-5 rounded-3xl bg-white/5 hover:bg-white/10 text-white font-black uppercase tracking-widest transition-all"
+                    >
+                        Close Channel
+                    </button>
+                )}
+              </div>
             </div>
           </div>
         )}

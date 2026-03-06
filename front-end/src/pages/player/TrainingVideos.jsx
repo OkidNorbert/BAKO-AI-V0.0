@@ -97,121 +97,136 @@ const TrainingVideos = () => {
   const sub = isDarkMode ? 'text-gray-400' : 'text-gray-500';
 
   return (
-    <div className={`min-h-screen p-6 ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
-      <div className="max-w-7xl mx-auto">
+    <div className={`min-h-screen ${isDarkMode ? 'bg-[#0f1115] text-white' : 'bg-gray-50 text-gray-900'} transition-all duration-500`}>
+      <div className="max-w-7xl mx-auto px-6 py-10">
 
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center">
-              <Video className="h-7 w-7 mr-2 text-orange-500" />
-              Training Videos
-            </h1>
-            <p className={`text-sm mt-1 ${sub}`}>Upload a personal training clip to analyse your shot form & make/miss stats</p>
+        {/* Header Section */}
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-12 gap-8">
+          <div className="max-w-2xl">
+            <h1 className="text-5xl font-black tracking-tight mb-4">Training Videos</h1>
+            <p className={`text-lg leading-relaxed ${sub}`}>
+              Upload a personal training clip to analyse your shot form, 
+              measure your release angles, and track your make/miss statistics.
+            </p>
           </div>
           
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            {/* Handedness Selector */}
-            <div className={`flex items-center p-1 rounded-xl border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200 shadow-sm'}`}>
-              <button 
-                onClick={() => setShootingArm('right')}
-                className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${shootingArm === 'right' ? 'bg-orange-500 text-white shadow' : sub}`}
-              >
-                Right Hand
-              </button>
-              <button 
-                onClick={() => setShootingArm('left')}
-                className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${shootingArm === 'left' ? 'bg-orange-500 text-white shadow' : sub}`}
-              >
-                Left Hand
-              </button>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-6 w-full lg:w-auto">
+            {/* Shooting Side Selector - Glassmorphic */}
+            <div className="flex flex-col gap-2">
+                <span className={`text-[10px] uppercase tracking-widest font-bold ml-1 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>Shooting Side</span>
+                <div className={`flex items-center p-1.5 rounded-2xl glass-dark shadow-glass`}>
+                    <button 
+                        onClick={() => setShootingArm('right')}
+                        className={`px-6 py-2 rounded-xl text-xs font-bold transition-all duration-300 ${shootingArm === 'right' ? 'bg-orange-500 text-white shadow-premium' : 'text-gray-500 hover:text-gray-300'}`}
+                    >
+                        Right Hand
+                    </button>
+                    <button 
+                        onClick={() => setShootingArm('left')}
+                        className={`px-6 py-2 rounded-xl text-xs font-bold transition-all duration-300 ${shootingArm === 'left' ? 'bg-orange-500 text-white shadow-premium' : 'text-gray-500 hover:text-gray-300'}`}
+                    >
+                        Left Hand
+                    </button>
+                </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <button
-                onClick={fetchVideos}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-lg ${isDarkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-white hover:bg-gray-100 border border-gray-200'} transition-colors`}
-              >
-                <RefreshCw className="h-4 w-4" /><span>Refresh</span>
-              </button>
-
-              {/* PRIMARY ACTION: Upload + Analyse */}
-              <label className={`flex items-center space-x-2 px-5 py-2.5 rounded-full cursor-pointer font-semibold shadow-md hover:shadow-lg transition-all ${uploading ? 'opacity-70 pointer-events-none' : ''} ${isDarkMode ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white' : 'bg-gradient-to-r from-orange-500 to-red-500 text-white'}`}>
-                {uploading
-                  ? <><div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" /><span>Uploading…</span></>
-                  : <><Zap className="h-4 w-4" /><span>Upload &amp; Analyse</span></>
-                }
-                <input ref={fileRef} type="file" accept="video/*" onChange={handleUploadAndAnalyse} className="hidden" />
-              </label>
-            </div>
+            {/* PRIMARY ACTION: Upload + Analyse - Premium Glowing Button */}
+            <label className={`group relative flex items-center justify-center gap-3 px-8 py-4 rounded-2xl cursor-pointer font-bold text-lg overflow-hidden transition-all duration-500 hover:scale-105 active:scale-95 shadow-premium ${uploading ? 'opacity-70 pointer-events-none' : ''} bg-gradient-premium text-white`}>
+              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out" />
+              {uploading
+                ? <><div className="h-5 w-5 rounded-full border-2 border-white border-t-transparent animate-spin" /><span>Uploading…</span></>
+                : <><Zap className="h-5 w-5 fill-current" /><span>Upload & Analyse</span></>
+              }
+              <input ref={fileRef} type="file" accept="video/*" onChange={handleUploadAndAnalyse} className="hidden" />
+            </label>
           </div>
+        </div>
+
+        {/* Search & Filters Placeholder */}
+        <div className="flex flex-col md:flex-row items-center justify-between mb-10 gap-4">
+             <div className="relative w-full md:w-96 group">
+                <div className={`absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors ${isDarkMode ? 'text-gray-600 group-focus-within:text-orange-500' : 'text-gray-400'}`}>
+                    <Video className="h-5 w-5" />
+                </div>
+                <input 
+                    type="text" 
+                    placeholder="Search videos..." 
+                    className={`w-full pl-12 pr-4 py-3 rounded-2xl border transition-all duration-300 outline-none ${isDarkMode ? 'bg-gray-800/50 border-gray-700 focus:border-orange-500/50 text-white' : 'bg-white border-gray-200 focus:border-orange-500'}`}
+                />
+             </div>
+             <div className="flex items-center gap-3 w-full md:w-auto">
+                 {['All', 'Last 7 Days', 'Shooting'].map((f) => (
+                     <div key={f} className={`px-4 py-2.5 rounded-xl text-sm font-semibold border cursor-pointer hover:border-orange-500/50 transition-all ${isDarkMode ? 'bg-gray-800/30 border-gray-700 text-gray-400' : 'bg-white border-gray-200 text-gray-600'}`}>{f}</div>
+                 ))}
+             </div>
         </div>
 
         {/* Error */}
         {error && (
-          <div className="mb-6 p-4 bg-red-500/10 border-l-4 border-red-500 text-red-700 dark:text-red-400 rounded-md flex items-center">
-            <AlertCircle className="h-5 w-5 mr-3 flex-shrink-0" />
-            <span>{error}</span>
+          <div className="mb-10 p-5 glass rounded-2xl border-l-4 border-red-500 text-red-400 flex items-center animate-in fade-in slide-in-from-top-4">
+            <AlertCircle className="h-6 w-6 mr-4 flex-shrink-0" />
+            <span className="font-medium">{error}</span>
           </div>
         )}
-
-        {/* How it works callout */}
-        <div className={`mb-6 p-4 rounded-xl border ${isDarkMode ? 'border-orange-700/30 bg-orange-900/10' : 'border-orange-200 bg-orange-50'}`}>
-          <p className="font-semibold text-orange-500 mb-1">🏀 How Personal Analysis Works</p>
-          <ul className={`text-sm space-y-1 ${sub}`}>
-            <li>1. Select your <strong>Shooting Hand</strong> (Right or Left).</li>
-            <li>2. Click <strong>Upload &amp; Analyse</strong> and select your training video.</li>
-            <li>3. The AI detects your elbow angles on the selected arm, ball release, and scores each shot.</li>
-            <li>4. Results appear automatically — usually within 1-3 minutes per minute of video.</li>
-          </ul>
-        </div>
 
         {/* Past Analyses */}
         <PastAnalyses isDarkMode={isDarkMode} navigate={navigate} />
 
-        {/* Stored Videos */}
+        {/* Stored Videos Grid */}
         {videos.length > 0 && (
-          <>
-            <h2 className="text-lg font-bold mt-8 mb-4">Stored Videos</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {videos.map((video) => (
-                <div key={video.id || video._id} className={`rounded-xl overflow-hidden shadow-lg ${card}`}>
-                  <div className="aspect-video bg-gray-700 flex items-center justify-center relative">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mt-12">
+            {videos.map((video) => {
+              const status = video.job_status || 'analysed'; // mockup shows 'Analysed' or 'Processing'
+              return (
+                <div key={video.id || video._id} className={`group rounded-[2rem] overflow-hidden border transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl ${isDarkMode ? 'bg-gray-800/20 border-gray-700/50 hover:bg-gray-800/40 hover:border-orange-500/20' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
+                  <div className="aspect-[4/3] bg-gray-900 flex items-center justify-center relative overflow-hidden">
                     {video.thumbnailUrl
-                      ? <img src={video.thumbnailUrl} alt="" className="w-full h-full object-cover" />
-                      : <PlayCircle className="h-16 w-16 text-gray-500" />
+                      ? <img src={video.thumbnailUrl} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                      : <PlayCircle className="h-20 w-20 text-gray-700 group-hover:text-orange-500 transition-colors" />
                     }
+                    <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center bg-black/40 backdrop-blur-md rounded-xl p-2 px-3 border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <span className="text-[10px] font-bold text-white uppercase tracking-tighter">0:45</span>
+                        <PlayCircle className="h-5 w-5 text-orange-500" />
+                    </div>
                   </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold truncate">{video.title || video.filename || 'Untitled'}</h3>
+                  <div className="p-6">
+                    <div className="flex justify-between items-start mb-3">
+                        <h3 className="font-bold text-lg leading-tight truncate flex-1 mr-2">{video.title || video.filename || 'Untitled'}</h3>
+                        <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-lg border tracking-wider ${status === 'analysed' ? 'text-orange-500 border-orange-500/30' : 'text-gray-500 border-gray-700'}`}>
+                            {status}
+                        </span>
+                    </div>
                     {video.created_at && (
-                      <p className={`text-sm mt-1 flex items-center ${sub}`}>
-                        <Calendar className="h-3 w-3 mr-1" />
-                        {new Date(video.created_at).toLocaleDateString()}
+                      <p className={`text-xs font-semibold mb-6 flex items-center ${sub}`}>
+                        {new Date(video.created_at).toLocaleDateString('en-GB')}
                       </p>
                     )}
                     <button
                       onClick={() => handleAnalyseExisting(video)}
                       disabled={!!analysing[video.id]}
-                      className="mt-3 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium disabled:opacity-60"
+                      className={`w-full flex items-center justify-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-300 ${isDarkMode ? 'bg-orange-500/10 border border-orange-500/30 text-orange-500 hover:bg-orange-500 hover:text-white' : 'bg-orange-50 text-orange-600 hover:bg-orange-500 hover:text-white'}`}
                     >
                       {analysing[video.id]
-                        ? <><div className="h-3 w-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> Analysing…</>
-                        : <><Zap className="h-4 w-4" /> Analyse This Video</>
+                        ? <><div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> Analysing…</>
+                        : <><Zap className="h-4 w-4 fill-current" /> Analyse</>
                       }
                     </button>
                   </div>
                 </div>
-              ))}
-            </div>
-          </>
+              );
+            })}
+          </div>
         )}
 
         {videos.length === 0 && (
-          <div className={`rounded-xl border-2 border-dashed p-12 text-center ${isDarkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-300 bg-white'}`}>
-            <Video className={`h-16 w-16 mx-auto mb-4 ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`} />
-            <p className={`text-lg font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>No stored videos yet</p>
-            <p className={`text-sm mb-6 ${sub}`}>Click "Upload &amp; Analyse" above to start your first session.</p>
+          <div className={`mt-10 rounded-[3rem] border-2 border-dashed p-24 text-center transition-all duration-500 ${isDarkMode ? 'border-gray-800 bg-gray-900/40 hover:bg-gray-900/60' : 'border-gray-200 bg-white shadow-inner'}`}>
+            <div className="relative inline-block mb-8">
+                <div className="absolute inset-0 bg-orange-500 blur-3xl opacity-20 animate-pulse" />
+                <Video className={`h-24 w-24 mx-auto relative ${isDarkMode ? 'text-gray-700' : 'text-gray-300'}`} />
+            </div>
+            <p className={`text-2xl font-bold mb-3 tracking-tight ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>No stored videos yet</p>
+            <p className={`text-sm mb-10 max-w-sm mx-auto ${sub}`}>Capture your training session, upload it here, and let our AI provide expert feedback on your performance.</p>
+            <button onClick={() => fileRef.current?.click()} className="px-8 py-3.5 bg-orange-500 rounded-2xl text-white font-bold hover:shadow-premium transition-all">Start First Session</button>
           </div>
         )}
       </div>
@@ -233,31 +248,37 @@ const PastAnalyses = ({ isDarkMode, navigate }) => {
   if (!analyses.length) return null;
 
   return (
-    <div>
-      <h2 className="text-lg font-bold mb-4">Past Analyses</h2>
-      <div className="space-y-3">
-        {analyses.map(a => {
+    <div className="mt-20">
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="text-3xl font-black tracking-tighter">Recent Analytics</h2>
+        <div className={`text-sm font-bold cursor-pointer hover:text-orange-500 transition-colors ${sub}`}>View All History</div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {analyses.slice(0, 3).map(a => {
           const res = a.results_json || a;
+          const status = res.status || 'completed';
           return (
             <button
               key={a.id || a.job_id}
               onClick={() => navigate(`/player/analysis/${a.job_id || res.job_id}`)}
-              className={`w-full text-left p-4 rounded-xl flex items-center gap-4 shadow hover:shadow-md transition-shadow ${isDarkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-white hover:bg-gray-50'}`}
+              className={`group w-full text-left p-6 rounded-[2.5rem] flex items-center gap-6 transition-all duration-500 border ${isDarkMode ? 'bg-gray-800/20 border-gray-700/50 hover:bg-gray-800/40 hover:border-orange-500/20' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/40'}`}
             >
-              {res.status === 'completed'
-                ? <CheckCircle className="h-8 w-8 text-green-500 flex-shrink-0" />
-                : res.status === 'failed'
-                  ? <AlertCircle className="h-8 w-8 text-red-500 flex-shrink-0" />
-                  : <Clock className="h-8 w-8 text-orange-400 flex-shrink-0 animate-pulse" />
-              }
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold truncate">Analysis #{(a.job_id || '').slice(0, 8)}</p>
-                <p className={`text-sm ${sub}`}>{new Date(a.created_at).toLocaleString()}</p>
+              <div className={`p-4 rounded-3xl transition-transform duration-500 group-hover:scale-110 ${status === 'completed' ? 'bg-green-500/10 text-green-500' : status === 'failed' ? 'bg-red-500/10 text-red-500' : 'bg-orange-500/10 text-orange-500'}`}>
+                {status === 'completed'
+                    ? <CheckCircle className="h-8 w-8" />
+                    : status === 'failed'
+                    ? <AlertCircle className="h-8 w-8" />
+                    : <Clock className="h-8 w-8 animate-pulse" />
+                }
               </div>
-              {res.status === 'completed' && (
-                <div className="flex gap-4 text-sm flex-shrink-0">
-                  <span className="text-green-500 font-bold">{res.shots_made}/{res.shots_total} made</span>
-                  <span className={sub}>{res.made_percentage}%</span>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-lg truncate">Session #{(a.job_id || '').slice(0, 8)}</p>
+                <p className={`text-xs font-bold uppercase tracking-widest ${sub}`}>{(new Date(a.created_at).toLocaleDateString('en-GB'))}</p>
+              </div>
+              {status === 'completed' && (
+                <div className="flex flex-col items-end gap-1">
+                  <span className="text-orange-500 font-black text-xl leading-none">{res.made_percentage}%</span>
+                  <span className={`text-[10px] font-black uppercase tracking-tighter ${sub}`}>{res.shots_made}/{res.shots_total} made</span>
                 </div>
               )}
             </button>
