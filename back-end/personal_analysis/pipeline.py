@@ -100,15 +100,42 @@ def _read_video(path: str):
 
 
 def _write_video(frames: list, out_path: str, fps: float = 30.0):
-    """Write annotated frames to an AVI file."""
+    """Write annotated frames to a browser-compatible MP4 file."""
     if not frames:
         return
     h, w = frames[0].shape[:2]
-    fourcc = cv2.VideoWriter_fourcc(*"XVID")
-    writer = cv2.VideoWriter(out_path, fourcc, fps, (w, h))
+
+    # Try H.264 first (best browser support), then mp4v as fallback.
+    # Both produce .mp4 containers.
+    mp4v_fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+    writer = cv2.VideoWriter(out_path, mp4v_fourcc, fps, (w, h))
+    if not writer.isOpened():
+        # Very unlikely — try avc1 (same codec, different FOURCC)
+        writer = cv2.VideoWriter(out_path, cv2.VideoWriter_fourcc(*"avc1"), fps, (w, h))
     for frame in frames:
         writer.write(frame)
     writer.release()
+
+    # Optional: re-encode with ffmpeg for a proper web-ready H.264+AAC stream
+    # (ffmpeg ensures the moov atom is at the front for fast browser starts)
+    try:
+        import subprocess
+        tmp_path = out_path.replace(".mp4", "_tmp.mp4")
+        os.rename(out_path, tmp_path)
+        result = subprocess.run(
+            ["ffmpeg", "-y", "-i", tmp_path,
+             "-c:v", "libx264", "-preset", "fast", "-movflags", "+faststart",
+             "-pix_fmt", "yuv420p", "-an", out_path],
+            capture_output=True, timeout=300
+        )
+        if result.returncode == 0:
+            os.remove(tmp_path)
+        else:
+            # ffmpeg failed — restore original mp4v file
+            os.rename(tmp_path, out_path)
+    except Exception:
+        # ffmpeg not available or failed — mp4v file is still usable
+        pass
 
 
 def _run_pipeline_sync(video_path: str, output_dir: str, job_id: str, shooting_arm: str = "right") -> dict:
@@ -126,7 +153,7 @@ def _run_pipeline_sync(video_path: str, output_dir: str, job_id: str, shooting_a
 
     os.makedirs(output_dir, exist_ok=True)
     report_path = os.path.join(output_dir, f"{job_id}_report.txt")
-    video_out_path = os.path.join(output_dir, f"{job_id}_output.avi")
+    video_out_path = os.path.join(output_dir, f"{job_id}_output.mp4")
 
     # ── 1. Read video ──────────────────────────────────────────────────────
     logger.info(f"[{job_id}] Reading video: {video_path}")
@@ -210,7 +237,7 @@ def _run_pipeline_sync(video_path: str, output_dir: str, job_id: str, shooting_a
         "made_percentage": made_pct,
         "shot_reports": shot_reports,
         "shooting_arm": shooting_arm,
-        "annotated_video_url": f"/personal-output/{job_id}_output.avi",
+        "annotated_video_url": f"/personal-output/{job_id}_output.mp4",
     }
 
 

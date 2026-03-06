@@ -129,9 +129,15 @@ def shot_started(points, leave_frames):
         end = frame_num + 1
         # print(f"Analyzing frames {start} to {end} for shot start detection.")
         for i in range(start, end):
+            if i < 0 or i >= len(points):
+                continue
+                
             joints = points[i] 
-            right_soulder = joints[6] if joints is not None else None
-            right_elbow = joints[8] if joints is not None else None
+            if joints is None:
+                continue
+                
+            right_soulder = joints[6]
+            right_elbow = joints[8]
 
             if (right_elbow[1] - 25) <= right_soulder[1]:
                 # print(f"right_elbow: {right_elbow}, right_soulder: {right_soulder}")

@@ -152,6 +152,10 @@ class HumanTracker:
             N = kps_xy.shape[0]
 
             # If no people detected
+            if N == 0:
+                all_points.append(None)
+                continue
+
             person_idx = 0  
 
             joints = [(float(x), float(y)) for x, y in kps_xy[person_idx]]

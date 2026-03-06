@@ -99,6 +99,7 @@ export const playerAPI = {
   }),
   getAnalysisResult: (jobId) => api.get(`/player/analysis/${jobId}`),
   listAnalyses: () => api.get('/player/analysis'),
+  deleteAnalysis: (jobId) => api.delete(`/player/analysis/${jobId}`),
 
   // Notification endpoints
   getNotifications: () => api.get('/player/notifications'),

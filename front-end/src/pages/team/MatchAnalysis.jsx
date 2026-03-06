@@ -453,8 +453,12 @@ const MatchAnalysis = () => {
 
                 <div className="space-y-4 max-h-80 overflow-y-auto pr-4 custom-scrollbar">
                   {isFetchingClips ? (
-                    <div className="flex justify-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500"></div>
+                    <div className="flex flex-col items-center justify-center py-12">
+                      <div className="relative">
+                        <div className="absolute inset-0 bg-yellow-500 rounded-full blur-[15px] opacity-20 animate-pulse"></div>
+                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-yellow-500 relative z-10 shadow-[0_0_10px_rgba(234,179,8,0.5)]"></div>
+                      </div>
+                      <p className="mt-4 text-[10px] font-black uppercase tracking-widest text-yellow-500 animate-pulse">Extracting Highlights...</p>
                     </div>
                   ) : clips.length > 0 ? (
                     clips.map((clip, index) => (

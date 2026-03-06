@@ -217,3 +217,52 @@ async def list_my_analyses(
     except Exception as e:
         logger.warning(f"Could not fetch analyses: {e}")
         return []
+
+
+@router.delete("/analysis/{job_id}", status_code=200)
+async def delete_analysis(
+    job_id: str,
+    current_user: dict = Depends(require_personal_account),
+    supabase: SupabaseService = Depends(get_supabase),
+):
+    """
+    Delete a personal analysis job and its output files.
+    """
+    # Verify ownership
+    try:
+        rows = await supabase.select("personal_analyses", filters={"job_id": job_id})
+    except Exception:
+        rows = []
+
+    if not rows:
+        raise HTTPException(status_code=404, detail="Analysis not found")
+
+    record = rows[0]
+    if record.get("user_id") != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    # Delete from DB
+    try:
+        await supabase.delete("personal_analyses", record["id"])
+    except Exception as e:
+        logger.warning(f"Could not delete personal_analyses record: {e}")
+
+    # Delete from videos table too
+    try:
+        await supabase.delete("videos", job_id)
+    except Exception:
+        pass
+
+    # Remove output files from disk
+    for suffix in ["_output.mp4", "_output.avi", "_report.txt"]:
+        fpath = os.path.join(PERSONAL_OUTPUT_DIR, f"{job_id}{suffix}")
+        try:
+            if os.path.exists(fpath):
+                os.remove(fpath)
+        except Exception:
+            pass
+
+    # Remove from in-memory cache
+    _job_cache.pop(job_id, None)
+
+    return {"message": "Analysis deleted successfully"}

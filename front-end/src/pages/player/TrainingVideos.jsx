@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 import { playerAPI } from '../../services/api';
-import { Video, Upload, PlayCircle, Calendar, RefreshCw, AlertCircle, Zap, CheckCircle, Clock } from 'lucide-react';
+import { Video, Upload, PlayCircle, Calendar, RefreshCw, AlertCircle, Zap, CheckCircle, Clock, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 
 const TrainingVideos = () => {
   const [videos, setVideos] = useState([]);
@@ -234,57 +234,109 @@ const TrainingVideos = () => {
   );
 };
 
-/** Shows past personal analysis history */
+/** Shows past personal analysis history with delete support */
 const PastAnalyses = ({ isDarkMode, navigate }) => {
   const [analyses, setAnalyses] = useState([]);
+  const [showAll, setShowAll] = useState(false);
+  const [deleting, setDeleting] = useState({});
+  const [confirmDelete, setConfirmDelete] = useState(null);
   const sub = isDarkMode ? 'text-gray-400' : 'text-gray-500';
 
-  useEffect(() => {
+  const loadAnalyses = () => {
     playerAPI.listAnalyses()
       .then(r => setAnalyses(r.data || []))
-      .catch(() => { });
-  }, []);
+      .catch(() => {});
+  };
+
+  useEffect(() => { loadAnalyses(); }, []);
+
+  const handleDelete = async (jobId, e) => {
+    e.stopPropagation();
+    if (confirmDelete !== jobId) {
+      setConfirmDelete(jobId);
+      return;
+    }
+    setDeleting(prev => ({ ...prev, [jobId]: true }));
+    setConfirmDelete(null);
+    try {
+      await playerAPI.deleteAnalysis(jobId);
+      setAnalyses(prev => prev.filter(a => (a.job_id || a.id) !== jobId));
+    } catch {
+      // ignore
+    } finally {
+      setDeleting(prev => ({ ...prev, [jobId]: false }));
+    }
+  };
 
   if (!analyses.length) return null;
+
+  const displayed = showAll ? analyses : analyses.slice(0, 3);
 
   return (
     <div className="mt-20">
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-3xl font-black tracking-tighter">Recent Analytics</h2>
-        <div className={`text-sm font-bold cursor-pointer hover:text-orange-500 transition-colors ${sub}`}>View All History</div>
+        {analyses.length > 3 && (
+          <button
+            onClick={() => setShowAll(s => !s)}
+            className={`flex items-center gap-1 text-sm font-bold hover:text-orange-500 transition-colors ${sub}`}
+          >
+            {showAll ? <><ChevronUp className="h-4 w-4" /> Show Less</> : <><ChevronDown className="h-4 w-4" /> View All ({analyses.length})</>}
+          </button>
+        )}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {analyses.slice(0, 3).map(a => {
+        {displayed.map(a => {
           const res = a.results_json || a;
+          const jobId = a.job_id || res.job_id;
           const status = res.status || 'completed';
+          const isDeleting = deleting[jobId];
+          const isConfirming = confirmDelete === jobId;
           return (
-            <button
-              key={a.id || a.job_id}
-              onClick={() => navigate(`/player/analysis/${a.job_id || res.job_id}`)}
-              className={`group w-full text-left p-6 rounded-[2.5rem] flex items-center gap-6 transition-all duration-500 border ${isDarkMode ? 'bg-gray-800/20 border-gray-700/50 hover:bg-gray-800/40 hover:border-orange-500/20' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/40'}`}
+            <div
+              key={a.id || jobId}
+              className={`group relative w-full text-left p-6 rounded-[2.5rem] flex items-center gap-6 transition-all duration-500 border ${isDarkMode ? 'bg-gray-800/20 border-gray-700/50 hover:bg-gray-800/40 hover:border-orange-500/20' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/40'}`}
             >
-              <div className={`p-4 rounded-3xl transition-transform duration-500 group-hover:scale-110 ${status === 'completed' ? 'bg-green-500/10 text-green-500' : status === 'failed' ? 'bg-red-500/10 text-red-500' : 'bg-orange-500/10 text-orange-500'}`}>
-                {status === 'completed'
-                    ? <CheckCircle className="h-8 w-8" />
-                    : status === 'failed'
-                    ? <AlertCircle className="h-8 w-8" />
-                    : <Clock className="h-8 w-8 animate-pulse" />
-                }
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-bold text-lg truncate">Session #{(a.job_id || '').slice(0, 8)}</p>
-                <p className={`text-xs font-bold uppercase tracking-widest ${sub}`}>{(new Date(a.created_at).toLocaleDateString('en-GB'))}</p>
-              </div>
-              {status === 'completed' && (
-                <div className="flex flex-col items-end gap-1">
-                  <span className="text-orange-500 font-black text-xl leading-none">{res.made_percentage}%</span>
-                  <span className={`text-[10px] font-black uppercase tracking-tighter ${sub}`}>{res.shots_made}/{res.shots_total} made</span>
+              {/* Status icon */}
+              <button
+                onClick={() => navigate(`/player/analysis/${jobId}`)}
+                className="flex items-center gap-6 flex-1 min-w-0 text-left"
+              >
+                <div className={`p-4 rounded-3xl transition-transform duration-500 group-hover:scale-110 flex-shrink-0 ${status === 'completed' ? 'bg-green-500/10 text-green-500' : status === 'failed' ? 'bg-red-500/10 text-red-500' : 'bg-orange-500/10 text-orange-500'}`}>
+                  {status === 'completed' ? <CheckCircle className="h-8 w-8" /> : status === 'failed' ? <AlertCircle className="h-8 w-8" /> : <Clock className="h-8 w-8 animate-pulse" />}
                 </div>
-              )}
-            </button>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-lg truncate">Session #{(jobId || '').slice(0, 8)}</p>
+                  <p className={`text-xs font-bold uppercase tracking-widest ${sub}`}>{new Date(a.created_at).toLocaleDateString('en-GB')}</p>
+                </div>
+                {status === 'completed' && (
+                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                    <span className="text-orange-500 font-black text-xl leading-none">{res.made_percentage}%</span>
+                    <span className={`text-[10px] font-black uppercase tracking-tighter ${sub}`}>{res.shots_made}/{res.shots_total} made</span>
+                  </div>
+                )}
+              </button>
+
+              {/* Delete button */}
+              <button
+                onClick={(e) => handleDelete(jobId, e)}
+                disabled={isDeleting}
+                className={`flex-shrink-0 p-2.5 rounded-xl transition-all ${isConfirming ? 'bg-red-500 text-white scale-110' : 'bg-white/5 text-gray-500 hover:bg-red-500/10 hover:text-red-500'} ${isDeleting ? 'opacity-50 pointer-events-none' : ''}`}
+                title={isConfirming ? 'Click again to confirm delete' : 'Delete this analysis'}
+              >
+                {isDeleting
+                  ? <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  : <Trash2 className="h-4 w-4" />
+                }
+              </button>
+            </div>
           );
         })}
       </div>
+      {/* Click-away to cancel confirm */}
+      {confirmDelete && (
+        <div className="fixed inset-0 z-40" onClick={() => setConfirmDelete(null)} />
+      )}
     </div>
   );
 };
