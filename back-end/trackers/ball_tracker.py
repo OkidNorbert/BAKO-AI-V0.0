@@ -103,9 +103,11 @@ class BallTracker:
 
         df = pd.DataFrame(extracted_bboxes, columns=['x1', 'y1', 'x2', 'y2'])
         # Interpolate gaps up to 30 frames (1 second) — covers occlusion by players
-        df = df.interpolate(limit=30, limit_direction='both')
-        df = df.bfill(limit=5)
-        df = df.ffill(limit=5)
+        interp_limit = min(30, max(1, len(df) - 1))
+        fill_limit = min(5, interp_limit)
+        df = df.interpolate(limit=interp_limit, limit_direction='both')
+        df = df.bfill(limit=fill_limit)
+        df = df.ffill(limit=fill_limit)
 
         output_positions = []
         for x in df.to_numpy().tolist():

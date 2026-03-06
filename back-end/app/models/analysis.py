@@ -92,6 +92,7 @@ class AnalysisResult(BaseModel):
     shots_made: Optional[int] = 0
     shots_missed: Optional[int] = 0
     overall_shooting_percentage: Optional[float] = None
+    shooting_percentage: Optional[float] = None
     
     # Defensive analysis
     defensive_actions: Optional[int] = 0

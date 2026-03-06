@@ -84,11 +84,37 @@ body {
   }
 }
 
+@layer utilities {
+  .glass {
+    @apply bg-white/10 backdrop-blur-md border border-white/20;
+  }
+  
+  .glass-dark {
+    @apply bg-black/40 backdrop-blur-xl border border-white/10;
+  }
+
+  .text-gradient-orange {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-orange-400 to-red-600;
+  }
+
+  .bg-gradient-premium {
+    @apply bg-gradient-to-br from-orange-500 via-orange-600 to-red-700;
+  }
+
+  .shadow-premium {
+    box-shadow: 0 10px 30px -10px rgba(255, 115, 0, 0.5);
+  }
+
+  .shadow-glass {
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  }
+}
+
 @layer base {
   * {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground transition-colors duration-300;
   }
-} 
+}

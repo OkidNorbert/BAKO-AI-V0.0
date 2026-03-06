@@ -13,19 +13,10 @@ from pathlib import Path
 # Configuration
 VENV_YOLO = "../.venv/bin/yolo"
 ROBOFLOW_API_KEY = "ZzD21wz5oTPdE0fhb04C"
-WORKSPACE = "fyp-3bwmg"
-PROJECT = "reloc2-den7l"
+WORKSPACE = "tomatoes-iicln"
+PROJECT = "nbl_court_keypoints"
 DATASET_VERSION = 1
 DATASET_FORMAT = "yolov8"
-"""
-!pip install roboflow
-
-from roboflow import Roboflow
-rf = Roboflow(api_key="ZzD21wz5oTPdE0fhb04C")
-project = rf.workspace("tomatoes-iicln").project("nbl_court_keypoints")
-version = project.version(1)
-dataset = version.download("yolov8")"""
-                
 
 # Training parameters (pose task for keypoint detection)
 MODEL = "yolov8x-pose.pt"  # Extra Large Pose model for precision

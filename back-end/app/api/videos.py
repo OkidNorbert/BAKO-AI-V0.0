@@ -452,6 +452,21 @@ async def get_video_status(
             detail="You don't have access to this video"
         )
     
+    # HEAL: If status is failed but an analysis result was actually written, 
+    # then the process likely finished but the final status update was interrupted.
+    if video["status"] == VideoStatus.FAILED.value:
+        results = await supabase.select("analysis_results", filters={"video_id": video_id}, limit=1)
+        if results:
+            video["status"] = VideoStatus.COMPLETED.value
+            video["progress_percent"] = 100
+            video["current_step"] = "Complete (Auto-Recovered)"
+            # Apply heal to DB so it doesn't repeat
+            await supabase.update("videos", video_id, {
+                "status": VideoStatus.COMPLETED.value,
+                "progress_percent": 100,
+                "current_step": "Complete (Auto-Recovered)"
+            })
+    
     return VideoStatusResponse(
         id=video["id"],
         status=VideoStatus(video["status"]),

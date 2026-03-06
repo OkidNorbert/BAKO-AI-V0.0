@@ -76,9 +76,9 @@ def test_models_on_video():
         player_tracks = player_tracker.get_object_tracks(test_frames, read_from_stub=False, stub_path=None)
         
         print("✓ Player detection completed")
-        print(f"  Total detections: {len(player_tracks)}")
-        for i, track_id in enumerate(list(player_tracks.keys())[:5]):
-            print(f"    - Track {track_id}: {len(player_tracks[track_id])} frames")
+        print(f"  Total frames processed: {len(player_tracks)}")
+        for i, frame_tracks in enumerate(player_tracks[:5]):
+            print(f"    - Frame {i}: {len(frame_tracks)} tracks")
     except Exception as e:
         print(f"✗ Player detection failed: {e}")
         import traceback
@@ -109,9 +109,9 @@ def test_models_on_video():
         ball_tracks = ball_tracker.interpolate_ball_positions(ball_tracks)
         
         print("✓ Ball detection completed")
-        print(f"  Total detections: {len(ball_tracks)}")
-        for i, track_id in enumerate(list(ball_tracks.keys())[:5]):
-            print(f"    - Track {track_id}: {len(ball_tracks[track_id])} frames")
+        print(f"  Total frames processed: {len(ball_tracks)}")
+        for i, frame_tracks in enumerate(ball_tracks[:5]):
+            print(f"    - Frame {i}: {len(frame_tracks)} tracks")
     except Exception as e:
         print(f"✗ Ball detection failed: {e}")
         import traceback

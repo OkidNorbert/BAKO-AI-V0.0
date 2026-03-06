@@ -25,7 +25,8 @@ from app.api import (
     admin, 
     player_routes, 
     advanced_analytics,
-    communications
+    communications,
+    personal_analysis
 )
 from app.middleware.timeout import TimeoutMiddleware
 
@@ -132,15 +133,24 @@ def create_app() -> FastAPI:
     
     # Static files for uploads (debug/dev only). In production, use authenticated download endpoints
     # or signed object storage URLs instead of exposing a filesystem-backed directory.
-    if settings.debug and settings.serve_uploads_in_debug and os.path.exists(settings.upload_dir):
+    # Anchor all static dirs to the backend root (derived from __file__) so they
+    # resolve correctly even when CWD is mangled (apostrophe-stripped shell).
+    _app_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    if settings.serve_uploads_in_debug and os.path.exists(settings.upload_dir):
         app.mount("/uploads", StaticFiles(directory=settings.upload_dir), name="uploads")
     
     # Serve generated clips (highlights)
-    # Note: In production, consider signed URLs or authenticated proxies.
-    clips_dir = os.path.join(os.getcwd(), "output_videos", "clips")
+    clips_dir = os.path.join(_app_dir, "output_videos", "clips")
     os.makedirs(clips_dir, exist_ok=True)
     app.mount("/clips", StaticFiles(directory=clips_dir), name="clips")
     
+    # Serve personal analysis output videos — always mounted so results are
+    # accessible regardless of the DEBUG flag.
+    personal_out_dir = os.path.join(_app_dir, "uploads", "personal_output")
+    os.makedirs(personal_out_dir, exist_ok=True)
+    app.mount("/personal-output", StaticFiles(directory=personal_out_dir), name="personal-output")
+
     return app
 
 
@@ -241,6 +251,7 @@ def register_routes(app: FastAPI) -> None:
     app.include_router(advanced_analytics.router, prefix="/api/analytics/advanced", tags=["Advanced Analytics"])
     app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
     app.include_router(player_routes.router, prefix="/api/player", tags=["Player Portal"])
+    app.include_router(personal_analysis.router, prefix="/api/player", tags=["Personal Analysis"])
     app.include_router(communications.router, prefix="/api/communications", tags=["Communication"])
 
 

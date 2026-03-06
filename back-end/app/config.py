@@ -62,6 +62,10 @@ class Settings(BaseSettings):
     court_keypoint_detector_path: str = "models/court_keypoint_detector.pt"
     pose_model_path: str = "models/yolov8n-pose.pt"
     
+    # Swish-Vision specific models
+    swish_ball_rim_model: str = "models/swish_ball_rim.pt"
+    swish_pose_model: str = "models/swish_pose.pt"
+    
     # Processing settings
     batch_size: int = 20
     detection_confidence: float = 0.5

@@ -42,6 +42,7 @@ class SupabaseService:
             "matches",
             "schedules",
             "announcements",
+            "personal_analyses",
         }
     
     def _initialize(self) -> None:

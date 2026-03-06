@@ -93,6 +93,13 @@ export const playerAPI = {
   getProfile: () => api.get('/player/profile'),
   updateProfile: (profileData) => api.put('/player/profile', profileData),
 
+  // Personal Analysis endpoints
+  triggerAnalysis: (formData) => api.post('/player/analysis/trigger', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+  getAnalysisResult: (jobId) => api.get(`/player/analysis/${jobId}`),
+  listAnalyses: () => api.get('/player/analysis'),
+
   // Notification endpoints
   getNotifications: () => api.get('/player/notifications'),
   markNotificationAsRead: (notificationId) => api.put(`/player/notifications/${notificationId}/read`),

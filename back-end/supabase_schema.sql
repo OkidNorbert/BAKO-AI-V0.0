@@ -456,3 +456,28 @@ CREATE POLICY "Players can manage own activities" ON activities
             SELECT id FROM players WHERE user_id::text = (SELECT auth.uid())::text
         )
     );
+-- ============================================
+-- PERSONAL ANALYSES TABLE (Standalone for personal accounts)
+-- ============================================
+CREATE TABLE IF NOT EXISTS personal_analyses (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    job_id UUID UNIQUE NOT NULL,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    status TEXT NOT NULL,
+    results_json JSONB,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_personal_analyses_user ON personal_analyses(user_id);
+CREATE INDEX idx_personal_analyses_job ON personal_analyses(job_id);
+
+ALTER TABLE personal_analyses ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can manage own personal analyses" ON personal_analyses
+    FOR ALL USING ((SELECT auth.uid())::text = user_id::text);
+
+-- Triggers
+CREATE TRIGGER update_personal_analyses_updated_at
+    BEFORE UPDATE ON personal_analyses
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at();

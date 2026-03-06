@@ -43,6 +43,7 @@ import PlayerProfile from '@/pages/player/PlayerProfile';
 import SkillAnalytics from '@/pages/player/SkillAnalytics';
 import TrainingVideos from '@/pages/player/TrainingVideos';
 import PlayerSchedule from '@/pages/player/PlayerSchedule';
+import PersonalAnalysisResults from '@/pages/player/PersonalAnalysisResults';
 
 // Shared Pages
 import Profile from '@/pages/shared/Profile';
@@ -132,6 +133,7 @@ function App() {
                 <Route path="profile" element={<PlayerProfile />} />
                 <Route path="skills" element={<SkillAnalytics />} />
                 <Route path="training" element={<TrainingVideos />} />
+                <Route path="analysis/:jobId" element={<PersonalAnalysisResults />} />
                 <Route path="schedule" element={<PlayerSchedule />} />
                 <Route path="notifications" element={<Notifications />} />
                 <Route path="announcements" element={<Announcements />} />

@@ -30,6 +30,10 @@ export default defineConfig({
         target: 'http://localhost:8000',
         changeOrigin: true,
       },
+      '/personal-output': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
     },
   },
   esbuild: {
