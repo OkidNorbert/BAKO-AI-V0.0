@@ -321,7 +321,7 @@ const PastAnalyses = ({ isDarkMode, navigate }) => {
               <button
                 onClick={(e) => handleDelete(jobId, e)}
                 disabled={isDeleting}
-                className={`flex-shrink-0 p-2.5 rounded-xl transition-all ${isConfirming ? 'bg-red-500 text-white scale-110' : 'bg-white/5 text-gray-500 hover:bg-red-500/10 hover:text-red-500'} ${isDeleting ? 'opacity-50 pointer-events-none' : ''}`}
+                className={`relative z-50 flex-shrink-0 p-2.5 rounded-xl transition-all ${isConfirming ? 'bg-red-500 text-white scale-110' : 'bg-white/5 text-gray-500 hover:bg-red-500/10 hover:text-red-500'} ${isDeleting ? 'opacity-50 pointer-events-none' : ''}`}
                 title={isConfirming ? 'Click again to confirm delete' : 'Delete this analysis'}
               >
                 {isDeleting

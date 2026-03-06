@@ -205,53 +205,66 @@ class ShotTracker:
             return "miss"
         
        
-    
-    def draw_shots(self, video_frames):
+    def _draw_premium_hud(self, frame, made, total, percentage):
+        overlay = frame.copy()
+        
+        # Panel configuration
+        box_w, box_h = 280, 100
+        x1, y1 = 30, 30
+        x2, y2 = x1 + box_w, y1 + box_h
+        
+        # Dark background
+        cv2.rectangle(overlay, (x1, y1), (x2, y2), (20, 17, 15), -1) 
+        
+        # Orange border
+        cv2.rectangle(overlay, (x1, y1), (x2, y2), (22, 115, 249), 2) 
+        
+        # Blend
+        alpha = 0.85
+        frame = cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0)
+        
+        # Typography
+        cv2.putText(frame, "SHOOTING STATS", (x1 + 20, y1 + 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (180, 180, 180), 2, cv2.LINE_AA)
+        
+        if total > 0:
+            cv2.putText(frame, f"Made: {made} / {total}", (x1 + 20, y1 + 60), cv2.FONT_HERSHEY_DUPLEX, 0.8, (255, 255, 255), 2, cv2.LINE_AA)
+            
+            # Color code percentage (BGR)
+            pct_color = (0, 220, 0) if percentage >= 50 else (0, 140, 255) if percentage >= 30 else (0, 50, 255)
+            cv2.putText(frame, f"Accuracy: {percentage:.1f}%", (x1 + 20, y1 + 85), cv2.FONT_HERSHEY_DUPLEX, 0.6, pct_color, 2, cv2.LINE_AA)
+        else:
+            cv2.putText(frame, "No shots yet", (x1 + 20, y1 + 70), cv2.FONT_HERSHEY_DUPLEX, 0.8, (100, 100, 100), 2, cv2.LINE_AA)
+            
+        return frame
 
+    def draw_shots(self, video_frames):
         if len(self.shots) == 0:
             for frame_num, frame in enumerate(video_frames):
-                frame = frame.copy()
-                cv2.putText(frame, "No shots detected", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-                video_frames[frame_num] = frame
+                video_frames[frame_num] = self._draw_premium_hud(frame, 0, 0, 0)
             return video_frames
 
-        #  keep track of all shots made and missed. draw on top left of video of percentage of shots made and missed. draw on top right of video the number of shots made and missed
-        output_video_frames = []
         print("Total shots: ", len(self.shots))
         print("Shots made: ", len([shot for shot in self.shots if shot["outcome"] == "make"]))
         print("Shots missed: ", len([shot for shot in self.shots if shot["outcome"] == "miss"]))
 
-
-
+        output_video_frames = []
         total_shots = 0
         made_shots = 0
-        missed_shots = 0
-        made_percentage = 0
-        first_shot_frame = self.shots[0]["frame"]
-        last_shot_frame = self.shots[-1]["frame"]
+        made_percentage = 0.0
+        
+        # Map frame indices to their shot event
+        shot_frames = {shot["frame"]: shot for shot in self.shots}
 
         for frame_num, frame in enumerate(video_frames):
-            # frame = frame.copy()
-            if frame_num < first_shot_frame:
-                frame = cv2.putText(frame, "No shots detected", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-            elif frame_num > last_shot_frame:
-                frame = cv2.putText(frame, f"{made_shots} / {total_shots}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-                frame = cv2.putText(frame, f"Made Percentage: {made_percentage:.2f}%", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-            else:
-                if frame_num == self.shots[total_shots]["frame"]:
-                    if self.shots[total_shots]["outcome"] == "make":
-                        made_shots += 1
-                    else:
-                        missed_shots += 1
-                    total_shots+= 1
-                    made_percentage = (made_shots / total_shots) * 100
-                frame = cv2.putText(frame, f"{made_shots} / {total_shots}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-                frame = cv2.putText(frame, f"Made Percentage: {made_percentage:.2f}%", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-                
+            
+            if frame_num in shot_frames:
+                total_shots += 1
+                if shot_frames[frame_num]["outcome"] == "make":
+                    made_shots += 1
+                made_percentage = (made_shots / total_shots) * 100.0
 
+            frame = self._draw_premium_hud(frame, made_shots, total_shots, made_percentage)
             output_video_frames.append(frame)
-
-
 
         return output_video_frames
 

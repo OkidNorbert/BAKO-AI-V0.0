@@ -287,15 +287,47 @@ class HumanTracksDrawer:
                     f.write(str(item) + "\n")
                 f.write("\n")
 
+            # Draw a premium overlay box for the feedback
             linger = 90
             for k in range(0, linger):
                 draw_frame_index = frame_num + k
                 if draw_frame_index >= len(frames): break
                 frame = frames[draw_frame_index]
-                offset = 0
-                for txt in verdict:
+                
+                overlay = frame.copy()
+                h, w = frame.shape[:2]
+                
+                # Panel size and position (bottom left area)
+                box_w = 600
+                box_h = 40 + (len(verdict) * 30)
+                x1, y1 = 30, h - box_h - 30
+                x2, y2 = x1 + box_w, y1 + box_h
+                
+                # Draw dark bg and border
+                cv2.rectangle(overlay, (x1, y1), (x2, y2), (20, 17, 15), -1) 
+                
+                # Border color: Green for GOOD FORM, Orange for NEEDS WORK
+                border_col = (0, 220, 0) if "GOOD FORM" in verdict else (22, 115, 249)
+                cv2.rectangle(overlay, (x1, y1), (x2, y2), border_col, 2) 
+                
+                # Blend
+                alpha = 0.85
+                frame = cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0)
+                
+                # Header
+                header_txt = "FORM ANALYSIS - " + verdict[0].upper()
+                cv2.putText(frame, header_txt, (x1 + 20, y1 + 30), cv2.FONT_HERSHEY_DUPLEX, 0.6, border_col, 2, cv2.LINE_AA)
+                
+                # Bullet points
+                offset = 60
+                for txt in verdict[1:]:
+                    if txt.strip() == "GOOD FORM":
+                        continue
+                    # Clean up the NEEDS WORK prefix if it exists to just bullet point it
+                    clean_txt = txt.replace("NEEDS WORK: ", "")
+                    cv2.putText(frame, f"~ {clean_txt}", (x1 + 20, y1 + offset), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (230, 230, 230), 1, cv2.LINE_AA)
                     offset += 30
-                    cv2.putText(frame, txt, (10, 60+offset), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2, cv2.LINE_AA)
+                    
                 frames[draw_frame_index] = frame
 
         return frames
