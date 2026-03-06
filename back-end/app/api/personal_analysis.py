@@ -16,6 +16,7 @@ from fastapi.responses import JSONResponse
 
 from app.dependencies import require_personal_account, get_supabase
 from app.services.supabase_client import SupabaseService
+from app.models.video import VideoStatus, AnalysisMode
 
 logger = logging.getLogger("personal_analysis_api")
 
@@ -57,7 +58,7 @@ async def _run_and_update(job_id: str, video_path: str, user_id: str, supabase: 
 
     _job_cache[job_id] = {**result, "user_id": user_id}
 
-    # Persist to DB
+    # Persist to DB (personal_analyses table)
     await _save_job_to_db(supabase, {
         "job_id": job_id,
         "user_id": user_id,
@@ -65,6 +66,16 @@ async def _run_and_update(job_id: str, video_path: str, user_id: str, supabase: 
         "results_json": result,
         "created_at": datetime.utcnow().isoformat(),
     })
+
+    # Update global videos table status
+    try:
+        final_video_status = VideoStatus.COMPLETED.value if result.get("status") == "completed" else VideoStatus.FAILED.value
+        await supabase.update("videos", job_id, {
+            "status": final_video_status,
+            "progress_percent": 100 if final_video_status == VideoStatus.COMPLETED.value else 0
+        })
+    except Exception as e:
+        logger.warning(f"Could not update videos table status: {e}")
 
     # Clean up the raw upload to save disk space
     try:
@@ -106,6 +117,25 @@ async def trigger_analysis(
     with open(upload_path, "wb") as f:
         f.write(content)
 
+    # 1. Register in the global videos table so it shows up in general lists
+    try:
+        # Get basic video info for the record
+        # In a real app we'd use cv2 here, but for personal portal we can use defaults
+        video_record = {
+            "id": job_id,
+            "uploader_id": current_user["id"],
+            "title": video.filename or f"Analysis {datetime.utcnow().strftime('%Y-%m-%d %H:%M')}",
+            "description": f"Personal shot analysis (hand: {shooting_arm})",
+            "analysis_mode": AnalysisMode.PERSONAL.value,
+            "status": VideoStatus.PROCESSING.value,
+            "storage_path": upload_path,
+            "file_size_bytes": len(content),
+            "created_at": datetime.utcnow().isoformat(),
+        }
+        await supabase.insert("videos", video_record)
+    except Exception as e:
+        logger.warning(f"Could not insert into videos table: {e}")
+
     user_id = current_user["id"]
     _job_cache[job_id] = {"job_id": job_id, "status": "processing", "user_id": user_id}
 
@@ -117,7 +147,7 @@ async def trigger_analysis(
     return {
         "job_id": job_id,
         "status": "processing",
-        "message": "Analysis started. Poll /player/analysis/{job_id} for results.",
+        "message": "Analysis started. Poll /player/analysis/${job_id} for results.",
     }
 
 

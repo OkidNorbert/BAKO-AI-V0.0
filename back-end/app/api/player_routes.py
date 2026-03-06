@@ -158,20 +158,48 @@ async def get_training_history(
     supabase: SupabaseService = Depends(get_supabase),
 ):
     """
-    Get training history for the player based on their activities.
+    Get training history for the player including activities and personal analyses.
     """
     try:
         players = await supabase.select("players", filters={"user_id": current_user["id"]})
-        if not players:
-            return []
-        player_id = players[0]["id"]
-        activities = await supabase.select(
-            "activities",
-            filters={"player_id": player_id},
-            order_by="date",
-            ascending=False
-        )
-        return activities or []
+        player_id = players[0]["id"] if players else None
+        
+        history = []
+        
+        # 1. Fetch manual activities
+        if player_id:
+            activities = await supabase.select("activities", filters={"player_id": player_id})
+            for act in activities:
+                history.append({
+                    "id": act.get("id"),
+                    "type": act.get("type", "training"),
+                    "title": act.get("title", "Practice Session"),
+                    "date": act.get("date"),
+                    "duration": act.get("duration"),
+                    "category": "Manual"
+                })
+        
+        # 2. Fetch personal analyses
+        analyses = await supabase.select("personal_analyses", filters={"user_id": current_user["id"]})
+        for row in analyses:
+            results = row.get("results_json") or {}
+            if isinstance(results, str):
+                try: import json; results = json.loads(results);
+                except: results = {}
+            
+            history.append({
+                "id": row.get("id"),
+                "type": "shooting",
+                "title": f"Shot Analysis: {results.get('shots_made', 0)}/{results.get('shots_total', 0)}",
+                "date": row.get("created_at"),
+                "duration": "15 min", # Estimated
+                "category": "AI Analysis",
+                "outcome": results.get("made_percentage")
+            })
+            
+        # Sort by date descending
+        history.sort(key=lambda x: x["date"] or "", reverse=True)
+        return history
     except Exception as e:
         print(f"Error fetching training history: {e}")
         return []
@@ -233,23 +261,66 @@ async def get_performance_metrics(
     supabase: SupabaseService = Depends(get_supabase),
 ):
     """
-    Get performance metrics for the player.
+    Get real performance metrics aggregated from personal analyses and activities.
     """
-    # Placeholder data matching frontend expectations
-    return {
-        "shootingAccuracy": 0,
-        "dribbleSpeed": 0,
-        "verticalJump": 0,
-        "sprintSpeed": 0,
-        "overallRating": 0,
-        "improvementRate": 0,
-        "weeklyStats": {
-            "sessionsCompleted": 0,
-            "minutesTrained": 0,
-            "shotsAttempted": 0,
-            "shotsMade": 0
+    try:
+        analyses = await supabase.select("personal_analyses", filters={"user_id": current_user["id"]})
+        activities = await supabase.select("activities", filters={"player_id": current_user["id"]}) # Assuming player_id is user_id in some contexts, adjust if needed
+        
+        # Pull basic player info to get session count if activities are stored elsewhere
+        players = await supabase.select("players", filters={"user_id": current_user["id"]})
+        player_id = players[0]["id"] if players else None
+        
+        if player_id:
+            activities = await supabase.select("activities", filters={"player_id": player_id})
+        
+        total_shots = 0
+        total_made = 0
+        total_form_score = 0
+        completed_analyses = 0
+        
+        for row in analyses:
+            results = row.get("results_json") or {}
+            # Handle if nested string
+            if isinstance(results, str):
+                try: import json; results = json.loads(results)
+                except: results = {}
+            
+            if results.get("status") == "completed":
+                total_shots += results.get("shots_total", 0)
+                total_made += results.get("shots_made", 0)
+                
+                # Simple form score: 100 for GOOD FORM, 60 for NEEDS WORK
+                reports = results.get("shot_reports", [])
+                if reports:
+                    score = sum(100 if r.get("verdict") == "GOOD FORM" else 60 for r in reports) / len(reports)
+                    total_form_score += score
+                    completed_analyses += 1
+
+        accuracy = (total_made / total_shots * 100) if total_shots > 0 else 0
+        overall_rating = (total_form_score / completed_analyses) if completed_analyses > 0 else 0
+        
+        return {
+            "shootingAccuracy": round(accuracy, 1),
+            "overallRating": round(overall_rating, 1),
+            "weeklyStats": {
+                "sessionsCompleted": len(activities) + len(analyses),
+                "training_sessions": len(activities) + len(analyses),
+                "minutesTrained": (len(activities) + len(analyses)) * 30,
+                "training_minutes": (len(activities) + len(analyses)) * 30,
+                "distance": 0.45 * (len(activities) + len(analyses)), # Est km
+                "shotsAttempted": total_shots,
+                "shotsMade": total_made
+            }
         }
-    }
+    except Exception as e:
+        import traceback
+        print(f"CRITICAL ERROR aggregating performance metrics: {e}")
+        print(traceback.format_exc())
+        return {
+            "shootingAccuracy": 0, "overallRating": 0,
+            "weeklyStats": {"sessionsCompleted": 0, "minutesTrained": 0, "shotsAttempted": 0, "shotsMade": 0}
+        }
 
 
 @router.get("/skill-trends")
@@ -258,14 +329,34 @@ async def get_skill_trends(
     supabase: SupabaseService = Depends(get_supabase),
 ):
     """
-    Get skill improvement trends.
+    Get actual skill improvement trends from historical analysis data.
     """
-    return {
-        "shooting": [],
-        "dribbling": [],
-        "defense": [],
-        "fitness": []
-    }
+    try:
+        analyses = await supabase.select("personal_analyses", filters={"user_id": current_user["id"]})
+        
+        shooting_points = []
+        for row in sorted(analyses, key=lambda x: x["created_at"]):
+            results = row.get("results_json") or {}
+            if isinstance(results, str):
+                try: import json; results = json.loads(results);
+                except: results = {}
+            
+            if results.get("status") == "completed":
+                shooting_points.append(results.get("made_percentage", 0))
+                
+        # If we have too many points, sample or slice
+        shooting_points = shooting_points[-12:] # Last 12 sessions
+        
+        # If we have no data, return empty or mock if requested (usually empty is better for "Real Data")
+        return {
+            "shooting": shooting_points,
+            "dribbling": [],
+            "defense": [],
+            "fitness": []
+        }
+    except Exception as e:
+        print(f"Error fetching trends: {e}")
+        return {"shooting": [], "dribbling": [], "defense": [], "fitness": []}
 
 
 @router.get("/skills")
@@ -276,16 +367,56 @@ async def get_skills_analytics(
     supabase: SupabaseService = Depends(get_supabase),
 ):
     """
-    Get detailed skill analytics for SkillAnalytics page.
+    Get detailed skill analytics based on real personal analysis reports.
     """
-    return {
-        "skills": [],
-        "summary": {
-            "overall": 0,
-            "shooting": 0,
-            "defense": 0
+    try:
+        analyses = await supabase.select("personal_analyses", filters={"user_id": current_user["id"]})
+        
+        skills_data = []
+        shooting_scores = []
+        
+        # Use latest analyses to build the report
+        for row in analyses[-10:]: # Look at last 10
+            results = row.get("results_json") or {}
+            if isinstance(results, str):
+                try: import json; results = json.loads(results)
+                except: results = {}
+            
+            if results.get("status") == "completed":
+                accuracy = results.get("made_percentage", 0)
+                shooting_scores.append(accuracy)
+                
+                reports = results.get("shot_reports", [])
+                for r in reports:
+                    skills_data.append({
+                        "id": f"shot-{row['id']}-{r['shot_number']}",
+                        "name": f"Shot {r['shot_number']}",
+                        "category": "Shooting",
+                        "score": 100 if r.get("verdict") == "GOOD FORM" else 60,
+                        "feedback": r.get("issues", ["Form looking solid"]),
+                        "date": row.get("created_at"),
+                        "videoUrl": results.get("annotated_video_url"),
+                        "analysisData": results # Pass full results for AICoachFeedback
+                    })
+
+        avg_shooting = sum(shooting_scores) / len(shooting_scores) if shooting_scores else 0
+        
+        return {
+            "skills": skills_data,
+            "summary": {
+                "overall": round(avg_shooting * 0.8, 1),
+                "shooting": round(avg_shooting, 1),
+                "defense": 0,
+                "training_sessions": len(analyses),
+                "training_minutes": len(analyses) * 30,
+                "distance": 0.45 * len(analyses)
+            }
         }
-    }
+    except Exception as e:
+        import traceback
+        print(f"CRITICAL ERROR fetching real skills: {e}")
+        print(traceback.format_exc())
+        return {"skills": [], "summary": {"overall": 0, "shooting": 0, "defense": 0}}
 
 @router.post("/profile/image")
 async def upload_profile_image(
@@ -343,11 +474,47 @@ async def get_profile(
     current_user: dict = Depends(get_current_user),
     supabase: SupabaseService = Depends(get_supabase),
 ):
-    user = await supabase.select_one("users", current_user["id"])
-    players = await supabase.select("players", filters={"user_id": current_user["id"]})
-    player = players[0] if players else None
-    
-    return {"user": user, "player": player}
+    """
+    Get the current user's profile, merging user and player table data.
+    Auto-creates player record if missing.
+    """
+    try:
+        user = await supabase.select_one("users", current_user["id"])
+        if not user:
+            # Fallback to current_user info if no record in users table yet
+            user = {
+                "id": current_user["id"],
+                "email": current_user["email"],
+                "full_name": current_user.get("full_name", "Athlete")
+            }
+        
+        # Ensure full_name is present (might be fullName in some DB views)
+        if "fullName" in user and "full_name" not in user:
+            user["full_name"] = user["fullName"]
+
+        players = await supabase.select("players", filters={"user_id": current_user["id"]})
+        player = players[0] if players else None
+        
+        if not player:
+            # Auto-create basic player record if missing
+            new_player = {
+                "user_id": current_user["id"],
+                "name": user.get("full_name") or user.get("fullName") or "New Athlete",
+                "email": user.get("email"),
+                "status": "active",
+                "created_at": datetime.utcnow().isoformat()
+            }
+            try:
+                player = await supabase.insert("players", new_player)
+            except Exception as pe:
+                print(f"Failed to auto-create player record: {pe}")
+        
+        return {"user": user, "player": player}
+    except Exception as e:
+        import traceback
+        print(f"Error in get_profile: {e}")
+        print(traceback.format_exc())
+        return {"user": None, "player": None}
 
 @router.put("/profile")
 async def update_profile(

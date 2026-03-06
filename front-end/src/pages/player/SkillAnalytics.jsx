@@ -14,6 +14,16 @@ import {
 import { format } from 'date-fns';
 import VideoPlayer from '../../components/team/video-player';
 import AICoachFeedback from '../../components/player/AICoachFeedback';
+import { Trophy, Clock } from 'lucide-react';
+
+const displayVal = (val, suffix = '', precision = 0) => {
+  if (val === undefined || val === null || val === '') return '—';
+  const num = typeof val === 'number' ? val : parseFloat(val);
+  if (isNaN(num)) return '—';
+  // Check if it's a small float that should be rounded (e.g. 0.45 km)
+  if (precision > 0) return `${num.toFixed(precision)}${suffix}`;
+  return `${Math.round(num)}${suffix}`;
+};
 
 const SkillAnalytics = () => {
   const { playerId } = useParams();
@@ -135,12 +145,12 @@ const SkillAnalytics = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                     {[
                         { label: 'Overall Score', value: summary.overall, color: 'text-orange-500', bg: 'bg-orange-500/10 border-orange-500/20' },
-                        { label: 'Shooting', value: summary.shooting, color: 'text-yellow-500', bg: 'bg-yellow-500/10 border-yellow-500/20' },
-                        { label: 'Defense', value: summary.defense, color: 'text-green-500', bg: 'bg-green-500/10 border-green-500/20' }
+                        { label: 'Shooting', value: summary.shooting, color: 'text-yellow-500', bg: 'bg-yellow-500/10 border-yellow-500/20', suffix: '%' },
+                        { label: 'Defense', value: summary.defense, color: 'text-green-500', bg: 'bg-green-500/10 border-green-500/20', suffix: '%' }
                     ].map(item => (
                         <div key={item.label} className={`p-6 rounded-3xl border ${item.bg}`}>
                             <span className={`text-[10px] uppercase font-black tracking-widest ${sub}`}>{item.label}</span>
-                            <p className={`text-4xl font-black mt-1 ${item.color}`}>{item.value || '—'}</p>
+                            <p className={`text-4xl font-black mt-1 ${item.color}`}>{displayVal(item.value, item.suffix)}</p>
                         </div>
                     ))}
                 </div>

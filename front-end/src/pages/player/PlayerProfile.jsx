@@ -91,21 +91,28 @@ const PlayerProfile = () => {
         // Response from /player/profile
         const { user, player } = response.data;
         // Merge user and player data into flat state
+        const userData = user || {};
+        const playerData = player || {};
+        
+        // Handle both snake_case (DB) and camelCase (Pydantic/Middleware)
+        const fullName = userData.full_name || userData.fullName || playerData.name || '';
+        const nameParts = fullName.split(' ');
+        
         setProfile({
-          firstName: user?.full_name?.split(' ')[0] || player?.name?.split(' ')[0] || '',
-          lastName: user?.full_name?.split(' ').slice(1).join(' ') || player?.name?.split(' ').slice(1).join(' ') || '',
-          email: user?.email || '',
-          phone: player?.phone || user?.phone || '',
-          address: player?.address || '',
-          dateOfBirth: player?.date_of_birth || '',
-          position: player?.position || '',
-          jerseyNumber: player?.jersey_number || '',
-          experience: player?.experience_years || '',
-          height: player?.height_cm || '',
-          weight: player?.weight_kg || '',
-          bio: player?.bio || '',
-          profileImage: user?.avatar_url || player?.avatar_url || null,
-          createdAt: user?.created_at
+          firstName: nameParts[0] || '',
+          lastName: nameParts.slice(1).join(' ') || '',
+          email: userData.email || '',
+          phone: playerData.phone || userData.phone || '',
+          address: playerData.address || '',
+          dateOfBirth: playerData.date_of_birth || playerData.dateOfBirth || '',
+          position: playerData.position || '',
+          jerseyNumber: playerData.jersey_number || playerData.jerseyNumber || '',
+          experience: playerData.experience_years || playerData.experienceYears || '',
+          height: playerData.height_cm || playerData.heightCm || '',
+          weight: playerData.weight_kg || playerData.weightKg || '',
+          bio: playerData.bio || '',
+          profileImage: userData.avatar_url || userData.avatarUrl || playerData.avatar_url || null,
+          createdAt: userData.created_at || userData.createdAt
         });
       }
     } catch (err) {
