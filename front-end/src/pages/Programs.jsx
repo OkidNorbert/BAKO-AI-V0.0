@@ -1,9 +1,7 @@
 import React from 'react';
-import { useTheme } from '../context/ThemeContext';
 import { BookOpen, Video, Activity, Trophy, ChevronRight, PlayCircle } from 'lucide-react';
 
 const Programs = () => {
-    const { isDarkMode } = useTheme();
 
     const programs = [
         {
@@ -41,14 +39,14 @@ const Programs = () => {
     ];
 
     return (
-        <div className={`min-h-screen py-10 transition-colors duration-300 ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
+        <div className={`min-h-screen py-10 transition-colors duration-300 bg-[#0f1115] text-white`}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center mb-16 relative">
                     <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-transparent via-orange-500 to-transparent"></div>
                     <h1 className="text-4xl md:text-6xl font-black mb-6 uppercase italic tracking-tighter">
                         Training <span className="text-bako-orange">Drills</span>
                     </h1>
-                    <p className={`text-xl max-w-2xl mx-auto ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                    <p className={`text-xl max-w-2xl mx-auto text-gray-300`}>
                         Select your drill card. Upload your video. Get AI feedback instantly.
                     </p>
                 </div>

@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
-import { useTheme } from '../context/ThemeContext';
 import { Camera, Maximize2, X } from 'lucide-react';
 
 const Gallery = () => {
-    const { isDarkMode } = useTheme();
     const [selectedImage, setSelectedImage] = useState(null);
 
     const images = [
@@ -14,13 +12,13 @@ const Gallery = () => {
     ];
 
     return (
-        <div className={`min-h-screen py-10 transition-colors duration-300 ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
+        <div className={`min-h-screen py-10 transition-colors duration-300 bg-[#0f1115] text-white`}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center mb-16">
                     <h1 className="text-5xl md:text-7xl font-black mb-6 uppercase tracking-tighter transform -rotate-2">
                         The <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-600">Highlight</span> Reel
                     </h1>
-                    <p className={`text-xl max-w-2xl mx-auto font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                    <p className={`text-xl max-w-2xl mx-auto font-medium text-gray-300`}>
                         Capturing the intensity, the passion, and the buzzer-beaters.
                     </p>
                 </div>

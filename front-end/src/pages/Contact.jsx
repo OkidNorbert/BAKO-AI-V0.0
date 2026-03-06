@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
-import { useTheme } from '../context/ThemeContext';
 import { Mail, Phone, MapPin, Send, MessageSquare } from 'lucide-react';
 
 const Contact = () => {
-    const { isDarkMode } = useTheme();
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -21,11 +19,11 @@ const Contact = () => {
     };
 
     return (
-        <div className={`min-h-screen relative overflow-hidden transition-colors duration-300 ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-orange-50 text-gray-900'}`}>
+        <div className={`min-h-screen relative overflow-hidden transition-colors duration-300 bg-[#0f1115] text-white`}>
 
             {/* Background Court Textures */}
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{
-                backgroundImage: `radial-gradient(circle, ${isDarkMode ? '#ffffff' : '#000000'} 1px, transparent 1px)`,
+                backgroundImage: `radial-gradient(circle, #ffffff 1px, transparent 1px)`,
                 backgroundSize: '24px 24px'
             }}></div>
 
@@ -34,7 +32,7 @@ const Contact = () => {
                     <h1 className="text-5xl md:text-6xl font-black mb-4 uppercase italic tracking-tighter">
                         Court <span className="text-bako-orange">Side</span> Support
                     </h1>
-                    <p className={`text-xl max-w-2xl mx-auto ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    <p className={`text-xl max-w-2xl mx-auto text-gray-300`}>
                         Got a game plan? We're here to help you execute it. Reach out to our coaching staff.
                     </p>
                 </div>
@@ -42,41 +40,41 @@ const Contact = () => {
                 <div className="grid md:grid-cols-2 gap-12 items-start">
                     {/* Contact Info Card */}
                     <div className="space-y-8">
-                        <div className={`p-8 rounded-3xl shadow-xl border-l-8 border-bako-orange ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                        <div className={`p-8 rounded-3xl shadow-xl border-l-8 border-bako-orange glass-dark border border-white/5`}>
                             <h3 className="text-2xl font-bold mb-8 flex items-center">
                                 <span className="text-bako-orange mr-2">///</span> Contact Details
                             </h3>
 
                             <div className="space-y-8">
                                 <div className="flex items-start group">
-                                    <div className={`p-4 rounded-xl mr-6 transition-colors duration-300 ${isDarkMode ? 'bg-gray-700 text-bako-orange group-hover:bg-bako-orange group-hover:text-white' : 'bg-orange-100 text-orange-600 group-hover:bg-orange-600 group-hover:text-white'}`}>
+                                    <div className={`p-4 rounded-xl mr-6 transition-colors duration-300 bg-white/5 border border-white/10 text-bako-orange group-hover:bg-bako-orange group-hover:text-white`}>
                                         <Phone className="w-6 h-6" />
                                     </div>
                                     <div>
                                         <h4 className="font-bold text-lg uppercase tracking-wide">Phone</h4>
-                                        <p className={`text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>+254 784136754</p>
+                                        <p className={`text-lg text-gray-300`}>+254 784136754</p>
                                         <p className={`text-sm mt-1 uppercase font-bold tracking-wider opacity-60`}>Mon-Fri • Tip Off 7am</p>
                                     </div>
                                 </div>
 
                                 <div className="flex items-start group">
-                                    <div className={`p-4 rounded-xl mr-6 transition-colors duration-300 ${isDarkMode ? 'bg-gray-700 text-bako-orange group-hover:bg-bako-orange group-hover:text-white' : 'bg-orange-100 text-orange-600 group-hover:bg-orange-600 group-hover:text-white'}`}>
+                                    <div className={`p-4 rounded-xl mr-6 transition-colors duration-300 bg-white/5 border border-white/10 text-bako-orange group-hover:bg-bako-orange group-hover:text-white`}>
                                         <Mail className="w-6 h-6" />
                                     </div>
                                     <div>
                                         <h4 className="font-bold text-lg uppercase tracking-wide">Email</h4>
-                                        <p className={`text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>akumann48@gmail.com</p>
+                                        <p className={`text-lg text-gray-300`}>akumann48@gmail.com</p>
                                         <p className={`text-sm mt-1 uppercase font-bold tracking-wider opacity-60`}>24HR Response Time</p>
                                     </div>
                                 </div>
 
                                 <div className="flex items-start group">
-                                    <div className={`p-4 rounded-xl mr-6 transition-colors duration-300 ${isDarkMode ? 'bg-gray-700 text-bako-orange group-hover:bg-bako-orange group-hover:text-white' : 'bg-orange-100 text-orange-600 group-hover:bg-orange-600 group-hover:text-white'}`}>
+                                    <div className={`p-4 rounded-xl mr-6 transition-colors duration-300 bg-white/5 border border-white/10 text-bako-orange group-hover:bg-bako-orange group-hover:text-white`}>
                                         <MapPin className="w-6 h-6" />
                                     </div>
                                     <div>
                                         <h4 className="font-bold text-lg uppercase tracking-wide">Headquarters</h4>
-                                        <p className={`text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>UCU Mukono, Uganda</p>
+                                        <p className={`text-lg text-gray-300`}>UCU Mukono, Uganda</p>
                                     </div>
                                 </div>
                             </div>
@@ -86,7 +84,7 @@ const Contact = () => {
                     {/* Contact Form "Clipboard" */}
                     <div className="relative">
                         <div className={`absolute -inset-4 bg-bako-orange/20 rounded-[2.5rem] transform rotate-2`}></div>
-                        <div className={`relative p-8 rounded-3xl shadow-2xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                        <div className={`relative p-8 rounded-3xl shadow-2xl glass-dark border border-white/5`}>
                             <div className="flex items-center justify-between mb-8 pb-4 border-b border-gray-200 dark:border-gray-700">
                                 <h3 className="text-2xl font-bold uppercase italic">Message Board</h3>
                                 <MessageSquare className="w-6 h-6 text-bako-orange" />
@@ -95,27 +93,25 @@ const Contact = () => {
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 <div className="grid grid-cols-2 gap-6">
                                     <div>
-                                        <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Player Name</label>
+                                        <label className={`block text-xs font-bold uppercase tracking-wider mb-2 text-gray-400`}>Player Name</label>
                                         <input
                                             type="text"
                                             name="name"
                                             value={formData.name}
                                             onChange={handleChange}
-                                            className={`w-full px-4 py-3 rounded-lg font-medium border-2 focus:ring-0 focus:border-bako-orange transition-colors ${isDarkMode ? 'bg-gray-900 border-gray-700 text-white' : 'bg-gray-50 border-gray-200'
-                                                }`}
+                                            className={`w-full px-4 py-3 rounded-lg font-medium border-2 focus:ring-0 focus:border-bako-orange transition-colors $"bg-[#0f1115] border-gray-700 text-white"`}
                                             placeholder="Enter Name"
                                             required
                                         />
                                     </div>
                                     <div>
-                                        <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Email Address</label>
+                                        <label className={`block text-xs font-bold uppercase tracking-wider mb-2 text-gray-400`}>Email Address</label>
                                         <input
                                             type="email"
                                             name="email"
                                             value={formData.email}
                                             onChange={handleChange}
-                                            className={`w-full px-4 py-3 rounded-lg font-medium border-2 focus:ring-0 focus:border-bako-orange transition-colors ${isDarkMode ? 'bg-gray-900 border-gray-700 text-white' : 'bg-gray-50 border-gray-200'
-                                                }`}
+                                            className={`w-full px-4 py-3 rounded-lg font-medium border-2 focus:ring-0 focus:border-bako-orange transition-colors $"bg-[#0f1115] border-gray-700 text-white"`}
                                             placeholder="email@example.com"
                                             required
                                         />
@@ -123,28 +119,26 @@ const Contact = () => {
                                 </div>
 
                                 <div>
-                                    <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Subject</label>
+                                    <label className={`block text-xs font-bold uppercase tracking-wider mb-2 text-gray-400`}>Subject</label>
                                     <input
                                         type="text"
                                         name="subject"
                                         value={formData.subject}
                                         onChange={handleChange}
-                                        className={`w-full px-4 py-3 rounded-lg font-medium border-2 focus:ring-0 focus:border-bako-orange transition-colors ${isDarkMode ? 'bg-gray-900 border-gray-700 text-white' : 'bg-gray-50 border-gray-200'
-                                            }`}
+                                        className={`w-full px-4 py-3 rounded-lg font-medium border-2 focus:ring-0 focus:border-bako-orange transition-colors $"bg-[#0f1115] border-gray-700 text-white"`}
                                         placeholder="What's the game plan?"
                                         required
                                     />
                                 </div>
 
                                 <div>
-                                    <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Message Details</label>
+                                    <label className={`block text-xs font-bold uppercase tracking-wider mb-2 text-gray-400`}>Message Details</label>
                                     <textarea
                                         name="message"
                                         value={formData.message}
                                         onChange={handleChange}
                                         rows="4"
-                                        className={`w-full px-4 py-3 rounded-lg font-medium border-2 focus:ring-0 focus:border-bako-orange transition-colors ${isDarkMode ? 'bg-gray-900 border-gray-700 text-white' : 'bg-gray-50 border-gray-200'
-                                            }`}
+                                        className={`w-full px-4 py-3 rounded-lg font-medium border-2 focus:ring-0 focus:border-bako-orange transition-colors $"bg-[#0f1115] border-gray-700 text-white"`}
                                         placeholder="Type your message here..."
                                         required
                                     ></textarea>

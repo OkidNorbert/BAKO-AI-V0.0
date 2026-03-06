@@ -193,214 +193,100 @@ const TeamNavbar = ({ onSidebarToggle }) => {
   };
 
   return (
-    <nav className={`border-b transition-colors duration-300 ${isDarkMode
-      ? 'bg-gradient-to-r from-gray-900 via-indigo-950 to-purple-900 shadow-xl border-gray-700'
-      : 'bg-gradient-to-r from-blue-500 to-indigo-600 shadow-lg border-blue-600'
-      }`}>
-      {/* African pattern decoration - top border */}
-      <div className="h-1 w-full bg-gradient-to-r from-yellow-400 via-red-500 to-pink-500"></div>
-
-      <div className="px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center">
+    <nav className="bg-[#0f1115]/80 backdrop-blur-md sticky top-0 z-50 border-b border-white/5 shadow-2xl">
+      <div className="max-w-7xl mx-auto px-8">
+        <div className="flex items-center justify-between h-20">
+          <div className="flex items-center gap-6">
             <button
               type="button"
               onClick={toggleSidebar}
-              className={`p-2 rounded-md ${isDarkMode
-                ? 'text-gray-300 hover:text-white hover:bg-gray-700'
-                : 'text-white hover:text-white hover:bg-white hover:bg-opacity-20'
-                }`}
+              className="p-3 rounded-2xl text-gray-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-all duration-300"
             >
-              {isSidebarOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <MenuIcon className="h-6 w-6" />
-              )}
+              <MenuIcon className="h-6 w-6" />
             </button>
+            
+            {/* Logo for mobile or when sidebar closed */}
+            {!isSidebarOpen && (
+                 <h1 className="text-2xl font-black tracking-tighter text-white">
+                    BAKO<span className="text-orange-500">.</span>AI
+                </h1>
+            )}
           </div>
 
-          <div className="flex items-center">
+          <div className="flex items-center gap-4">
             <button
-              onClick={toggleTheme}
-              className={`p-2 rounded-md ${isDarkMode
-                ? 'bg-gray-800 text-yellow-400 hover:bg-gray-700'
-                : 'bg-white bg-opacity-20 text-white hover:bg-opacity-30'
-                }`}
-              aria-label="Toggle theme"
-            >
-              {isDarkMode ? (
-                <Sun className="h-5 w-5" />
-              ) : (
-                <Moon className="h-5 w-5" />
-              )}
-            </button>
-
-            {/* Notifications Dropdown */}
-            <div className="ml-4 relative" ref={notificationsRef}>
-              <button
-                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                className={`p-2 rounded-md relative ${isDarkMode
-                  ? 'text-gray-300 hover:text-white hover:bg-gray-700'
-                  : 'text-white hover:bg-white hover:bg-opacity-20'
-                  }`}
+                onClick={() => navigate('/team/notifications')}
+                className="p-3 rounded-2xl relative text-gray-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-all duration-300"
               >
                 <Bell className="h-5 w-5" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-0 right-0 flex items-center justify-center h-4 w-4 rounded-full bg-red-500 text-white text-xs">
+                  <span className="absolute top-2.5 right-2.5 flex items-center justify-center h-4 w-4 rounded-full bg-orange-500 text-white text-[10px] font-black shadow-lg">
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
-              </button>
+            </button>
 
-              {isNotificationsOpen && (
-                <div className={`absolute right-0 mt-2 w-80 rounded-md shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'
-                  } ring-1 ring-black ring-opacity-5 overflow-hidden z-50`}>
-                  <div className={`py-2 px-3 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                    <div className="flex justify-between items-center">
-                      <h3 className="font-semibold">Notifications</h3>
-                      <button
-                        onClick={() => navigate('/team/notifications')}
-                        className={`text-sm ${isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-500'
-                          }`}
-                      >
-                        View all
-                      </button>
-                    </div>
-                  </div>
-                  <div className="max-h-96 overflow-y-auto">
-                    {notificationItems.length > 0 ? (
-                      notificationItems.map((item) => (
-                        <div
-                          key={item.id}
-                          className={`px-4 py-3 border-b cursor-pointer ${isDarkMode ? 'border-gray-700 hover:bg-gray-700' : 'border-gray-100 hover:bg-gray-50'
-                            } ${!item.read ? 'font-medium' : ''}`}
-                          onClick={() => handleItemClick(item)}
-                        >
-                          <div className="flex items-start">
-                            {getNotificationIcon(item)}
-                            <div className="flex-1 min-w-0">
-                              <p className={`text-sm ${isDarkMode ? 'text-gray-200' : 'text-gray-800'
-                                }`}>
-                                {item.title || 'Notification'}
-                              </p>
-                              <p className={`text-xs truncate ${isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                                }`}>
-                                {item.message}
-                              </p>
-                              <p className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-400'
-                                }`}>
-                                {new Date(item.date || item.createdAt).toLocaleString()}
-                              </p>
+            {/* User Profile Trigger */}
+            <Menu as="div" className="relative">
+                <Menu.Button className="flex items-center gap-3 p-1.5 rounded-2xl hover:bg-white/5 border border-transparent hover:border-white/10 transition-all duration-300">
+                    <div className="h-10 w-10 rounded-xl overflow-hidden border border-white/10 shadow-lg">
+                        {orgLogo || user?.profileImage ? (
+                            <img src={orgLogo || user.profileImage} alt="Profile" className="w-full h-full object-cover" />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-white/5 text-white font-black text-xl">
+                                {(orgName || user?.name || 'A').charAt(0)}
                             </div>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className={`px-4 py-6 text-center ${isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                        }`}>
-                        <p>No notifications</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* User Menu */}
-            <div className="ml-4 relative" ref={userMenuRef}>
-              <Menu as="div" className="relative inline-block text-left">
-                <div>
-                  <Menu.Button className={`flex items-center space-x-2 p-2 rounded-lg transition-all duration-200 ${isDarkMode
-                    ? 'hover:bg-gray-800'
-                    : 'hover:bg-white hover:bg-opacity-20'
-                    }`}>
-                    <div className={`h-8 w-8 rounded-full overflow-hidden border-2 ${isDarkMode ? 'border-yellow-400' : 'border-white'
-                      }`}>
-                      {orgLogo || user?.profileImage ? (
-                        <img
-                          src={orgLogo || user.profileImage}
-                          alt={orgName || user?.name || 'User'}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className={`w-full h-full flex items-center justify-center ${isDarkMode ? 'bg-gray-800 text-yellow-400' : 'bg-indigo-700 text-white'
-                          }`}>
-                          <span className="text-lg font-bold">
-                            {(orgName || user?.name || 'A').charAt(0)}
-                          </span>
-                        </div>
-                      )}
+                        )}
                     </div>
-                    <span className="text-white font-medium hidden sm:block">
-                      {orgName || user?.name || 'User'}
-                    </span>
-                    <ChevronDown className={`h-4 w-4 text-white`} />
-                  </Menu.Button>
-                </div>
+                    <div className="hidden md:block text-left mr-2">
+                        <p className="text-xs font-black text-white uppercase tracking-wider">{orgName || user?.name || 'User'}</p>
+                        <p className="text-[10px] font-bold text-gray-500 leading-tight italic">Elite Access</p>
+                    </div>
+                    <ChevronDown className="h-4 w-4 text-gray-500" />
+                </Menu.Button>
+                
                 <Transition
                   as={Fragment}
-                  enter="transition ease-out duration-100"
-                  enterFrom="transform opacity-0 scale-95"
-                  enterTo="transform opacity-100 scale-100"
-                  leave="transition ease-in duration-75"
-                  leaveFrom="transform opacity-100 scale-100"
-                  leaveTo="transform opacity-0 scale-95"
+                  enter="transition ease-out duration-200"
+                  enterFrom="opacity-0 translate-y-2 scale-95"
+                  enterTo="opacity-100 translate-y-0 scale-100"
+                  leave="transition ease-in duration-150"
+                  leaveFrom="opacity-100 translate-y-0 scale-100"
+                  leaveTo="opacity-0 translate-y-2 scale-95"
                 >
-                  <Menu.Items className={`absolute right-0 mt-2 w-56 origin-top-right rounded-xl shadow-lg ring-1 ring-opacity-5 focus:outline-none ${isDarkMode
-                    ? 'bg-gray-800 ring-gray-700'
-                    : 'bg-white ring-gray-200'
-                    }`}>
-                    <div className="py-2">
-                      <div className={`px-4 py-3 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'
-                        }`}>
-                        <p className="text-sm font-medium">{user?.name || 'User'}</p>
-                        <p className={`text-sm truncate ${isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                          }`}>{user?.email || 'user@example.com'}</p>
-                      </div>
-                      <Menu.Item>
-                        {({ active }) => (
-                          <button
-                            onClick={() => navigate('/team/profile')}
-                            className={`flex w-full items-center px-4 py-2 text-sm ${active
-                              ? isDarkMode
-                                ? 'bg-gray-700 text-white'
-                                : 'bg-gray-100 text-gray-900'
-                              : isDarkMode
-                                ? 'text-gray-300'
-                                : 'text-gray-700'
-                              }`}
-                          >
-                            <Settings className="mr-3 h-5 w-5" />
-                            Team Profile
-                          </button>
-                        )}
-                      </Menu.Item>
-                      <div className={`border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'
-                        }`}>
+                  <Menu.Items className="absolute right-0 mt-4 w-64 origin-top-right rounded-[2rem] bg-[#1a1d23] border border-white/10 shadow-glass overflow-hidden focus:outline-none">
+                    <div className="p-6 border-b border-white/5 bg-white/5">
+                        <p className="text-sm font-black text-white">{user?.name || 'User'}</p>
+                        <p className="text-xs font-bold text-gray-500 truncate">{user?.email || 'user@example.com'}</p>
+                    </div>
+                    
+                    <div className="p-4">
                         <Menu.Item>
-                          {({ active }) => (
-                            <button
-                              onClick={handleLogout}
-                              className={`flex w-full items-center px-4 py-2 text-sm ${active
-                                ? isDarkMode
-                                  ? 'bg-gray-700 text-red-400'
-                                  : 'bg-gray-100 text-red-600'
-                                : isDarkMode
-                                  ? 'text-red-400'
-                                  : 'text-red-600'
-                                }`}
-                            >
-                              <LogOut className="mr-3 h-5 w-5" />
-                              Logout
-                            </button>
-                          )}
+                            {({ active }) => (
+                                <button
+                                    onClick={() => navigate('/team/profile')}
+                                    className={`flex w-full items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${active ? 'bg-white/10 text-white' : 'text-gray-400'}`}
+                                >
+                                    <Settings className="h-5 w-5" />
+                                    Account Settings
+                                </button>
+                            )}
                         </Menu.Item>
-                      </div>
+                        <Menu.Item>
+                            {({ active }) => (
+                                <button
+                                    onClick={handleLogout}
+                                    className={`flex w-full items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all mt-1 ${active ? 'bg-red-500/10 text-red-500' : 'text-red-500/80'}`}
+                                >
+                                    <LogOut className="h-5 w-5" />
+                                    Sign Out
+                                </button>
+                            )}
+                        </Menu.Item>
                     </div>
                   </Menu.Items>
                 </Transition>
-              </Menu>
-            </div>
+            </Menu>
           </div>
         </div>
       </div>

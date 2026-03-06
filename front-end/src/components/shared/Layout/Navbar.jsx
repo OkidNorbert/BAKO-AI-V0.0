@@ -122,17 +122,6 @@ const Navbar = ({ role }) => {
             </div>
 
             <div className="flex items-center space-x-5">
-              <button
-                onClick={toggleTheme}
-                className={`p-2 rounded-full transition-all duration-200 ${isDarkMode
-                  ? 'bg-gray-800 text-orange-400 hover:bg-gray-700'
-                  : 'bg-white bg-opacity-20 text-white hover:bg-opacity-30'
-                  }`}
-                aria-label="Toggle theme"
-              >
-                {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-              </button>
-
               {/* Notifications Bell */}
               {user && (
                 <div className="relative" ref={notificationsRef}>

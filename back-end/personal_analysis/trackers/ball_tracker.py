@@ -47,22 +47,15 @@ class BallTracker:
 
                 
                 
-                # if cls_id == cls_names_inv['ball']:
-                # if cls_id == cls_names_inv['Basketball']:
                 if cls_id == cls_names_inv['basketball']:
                     tracks[frame_num][1] = {
                         "bbox": bbox,
                         "class": "Basketball",
-                        
                     }
-                # elif cls_id == cls_names_inv['Rim']:
                 elif cls_id == cls_names_inv['rim']:
                     height = bbox[3] - bbox[1]
-                    # add a margin to the height
                     margin = 0.5 * height
-                    # increase top of the bbox
                     bbox[1] = bbox[1] - margin
-                    
                     
                     tracks[frame_num][2] = {
                         "bbox": bbox,

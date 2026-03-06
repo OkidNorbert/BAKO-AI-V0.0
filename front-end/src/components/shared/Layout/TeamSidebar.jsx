@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 
-const AdminSidebar = ({ isOpen }) => {
+const TeamSidebar = ({ isOpen }) => {
   const { isDarkMode } = useTheme();
   const { user } = useAuth();
 
@@ -24,87 +24,69 @@ const AdminSidebar = ({ isOpen }) => {
   const isLinked = !!user?.organizationId;
 
   const menuItems = [
-    { path: '/team/dashboard', icon: Home, label: 'Dashboard', color: 'from-blue-500 to-indigo-600', show: true },
-    { path: '/team/roster', icon: Users, label: 'Team Roster', color: 'from-purple-500 to-violet-600', show: isLinked },
-    { path: '/team/notifications', icon: Bell, label: 'Notifications', color: 'from-orange-500 to-red-600', show: isLinked },
-    { path: '/team/staff', icon: Shield, label: 'Coaching Staff', color: 'from-indigo-500 to-blue-600', show: isOwner && isLinked },
-    { path: '/team/announcements', icon: MessageSquare, label: 'Announcements', color: 'from-green-500 to-emerald-600', show: isLinked },
-    { path: '/team/matches', icon: Video, label: 'Match Analysis', color: 'from-orange-400 to-pink-500', show: isCoach && isLinked },
-    { path: '/team/schedule', icon: Calendar, label: 'Schedule', color: 'from-yellow-400 to-amber-600', show: isLinked },
-    { path: '/team/reports', icon: BarChart2, label: 'Reports & Analytics', color: 'from-gray-500 to-gray-600', show: isLinked },
-    { path: '/team/settings', icon: Settings, label: 'Team Profile', color: 'from-purple-500 to-indigo-700', show: isOwner }
+    { path: '/team/dashboard', icon: Home, label: 'Dashboard', dotColor: 'bg-orange-500', show: true },
+    { path: '/team/roster', icon: Users, label: 'Team Roster', dotColor: 'bg-purple-500', show: isLinked },
+    { path: '/team/notifications', icon: Bell, label: 'Notifications', dotColor: 'bg-red-500', show: isLinked },
+    { path: '/team/staff', icon: Shield, label: 'Coaching Staff', dotColor: 'bg-indigo-500', show: isOwner && isLinked },
+    { path: '/team/announcements', icon: MessageSquare, label: 'Announcements', dotColor: 'bg-green-500', show: isLinked },
+    { path: '/team/matches', icon: Video, label: 'Match Analysis', dotColor: 'bg-orange-400', show: isCoach && isLinked },
+    { path: '/team/schedule', icon: Calendar, label: 'Schedule', dotColor: 'bg-yellow-400', show: isLinked },
+    { path: '/team/reports', icon: BarChart2, label: 'Reports & Analytics', dotColor: 'bg-gray-400', show: isLinked },
+    { path: '/team/settings', icon: Settings, label: 'Team Profile', dotColor: 'bg-purple-700', show: isOwner }
   ].filter(item => item.show);
+
+  const sub = isDarkMode ? 'text-gray-500' : 'text-gray-400';
+
   return (
-    <aside className={`fixed top-0 left-0 z-40 h-screen transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'
-      } w-64 ${isDarkMode
-        ? 'bg-gradient-to-b from-gray-900 to-gray-800 border-gray-700'
-        : 'bg-gradient-to-b from-white to-gray-50 border-gray-200'
-      } border-r custom-admin-sidebar-scrollbar`}>
-      <div className="h-full px-3 py-4 overflow-y-auto">
-        <div className="mb-8 px-3 flex items-center">
-          <div className="h-11 w-11 rounded-lg overflow-hidden mr-3 shadow-md ring-1 ring-gray-200">
-            <img
-              src="https://images.unsplash.com/photo-1546519638-68e109498ffc?q=80&w=2090&auto=format&fit=crop"
-              alt="BAKO"
-              className="h-full w-full object-cover"
-            />
-          </div>
-          <h1 className={`text-xl font-bold ${isDarkMode
-            ? 'text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-400'
-            : 'text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-red-600'
-            }`}>
-            BAKO Analytics
-          </h1>
+    <aside className={`fixed top-0 left-0 z-40 h-screen transition-all duration-500 ${isOpen ? 'translate-x-0' : '-translate-x-full'
+      } w-64 bg-[#0f1115] border-r border-white/5 shadow-2xl overflow-hidden`}>
+      
+      {/* Background Decorative Gradient */}
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 via-yellow-500 to-orange-500 opacity-50"></div>
+      
+      <div className="h-full px-6 py-10 flex flex-col relative z-10">
+        <div className="mb-12 flex items-center">
+            <h1 className="text-2xl font-black tracking-tighter text-white">
+                BAKO<span className="text-orange-500">.</span>AI
+            </h1>
         </div>
 
-        <div className="my-4 px-3">
-          <p className={`text-xs uppercase font-semibold tracking-wider ${isDarkMode ? 'text-gray-400' : 'text-gray-500'
-            }`}>
-            Main Navigation
+        <div className="mb-6">
+          <p className="text-[10px] uppercase font-black tracking-[0.2em] text-gray-500">
+            Navigation
           </p>
         </div>
 
-        <ul className="space-y-2 px-2">
+        <nav className="flex-1 space-y-2">
           {menuItems.map((item) => (
-            <li key={item.path}>
-              <NavLink
-                to={item.path}
-                className={({ isActive }) => {
-                  const baseClasses = `flex items-center p-2.5 rounded-xl transition-all duration-200`;
-                  const activeClasses = isDarkMode
-                    ? `bg-gradient-to-r ${item.color} text-white`
-                    : `bg-gradient-to-r ${item.color} text-white`;
-                  const inactiveClasses = isDarkMode
-                    ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900';
-
-                  return `${baseClasses} ${isActive ? activeClasses : inactiveClasses}`;
-                }}
-                end={item.path === '/team/dashboard'}
-              >
-                {({ isActive }) => (
-                  <>
-                    <item.icon className={`w-5 h-5 ${!isActive && 'transition-transform group-hover:scale-110'}`} />
-                    <span className="ml-3 font-medium">{item.label}</span>
-                  </>
-                )}
-              </NavLink>
-            </li>
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) => `
+                group flex items-center px-4 py-3 rounded-2xl transition-all duration-300
+                ${isActive 
+                  ? 'bg-white/10 text-white shadow-glass border border-white/10' 
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+                }
+              `}
+              end={item.path === '/team/dashboard'}
+            >
+              <item.icon className="w-5 h-5 mr-4 transition-transform group-hover:scale-110" />
+              <span className="font-bold text-sm tracking-tight">{item.label}</span>
+              {/* Active Indicator Dot */}
+              <div className={`ml-auto w-1.5 h-1.5 rounded-full transition-all duration-500 ${item.dotColor} opacity-0 group-[.active]:opacity-100 shadow-[0_0_10px_rgba(255,255,255,0.5)]`} />
+            </NavLink>
           ))}
-        </ul>
+        </nav>
 
-        <div className={`mt-10 mx-3 p-4 rounded-xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'
-          } shadow-sm`}>
-          <div className="flex flex-col items-center text-center">
-            <div className={`h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center mb-2`}>
-              <Shield className="h-5 w-5 text-white" />
-            </div>
-            <h3 className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              Need Help?
-            </h3>
-            <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              Contact team support for assistance
-            </p>
+        <div className="mt-auto p-6 rounded-[2rem] glass-dark border border-white/5 relative overflow-hidden group">
+          <div className="absolute -top-10 -right-10 w-24 h-24 bg-orange-500/10 blur-3xl rounded-full" />
+          <div className="relative z-10 text-center">
+            <h3 className="text-xs font-black text-white mb-1 uppercase tracking-wider">Need Support?</h3>
+            <p className="text-[10px] text-gray-500 mb-4 font-medium">Get help from our elite performance team.</p>
+            <button className="w-full py-2 bg-white text-black text-[10px] font-black rounded-xl hover:bg-orange-500 hover:text-white transition-colors uppercase tracking-widest">
+              Contact Hub
+            </button>
           </div>
         </div>
       </div>
@@ -112,4 +94,4 @@ const AdminSidebar = ({ isOpen }) => {
   );
 };
 
-export default AdminSidebar; 
+export default TeamSidebar; 

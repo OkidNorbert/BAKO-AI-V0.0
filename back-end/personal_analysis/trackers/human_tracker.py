@@ -60,7 +60,7 @@ class HumanTracker:
         detections,
         shooting_arm: str = "right"
     ):
-        angles = ([], [])  # [0] = shoulder-elbow-wrist, [1] = elbow-shoulder-hip
+        angles: tuple[list[float | None], list[float | None]] = ([], [])  # [0] = shoulder-elbow-wrist, [1] = elbow-shoulder-hip
 
         # Side indices (COCO default)
         if shooting_arm.lower() == "left":

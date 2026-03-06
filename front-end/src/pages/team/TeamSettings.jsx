@@ -150,346 +150,351 @@ const TeamSettings = () => {
     );
   }
 
-  const inputClassName = `w-full p-2.5 rounded-lg border transition-all outline-none focus:ring-2 focus:ring-orange-500/20 ${isDarkMode
-    ? 'bg-gray-700/50 border-gray-600 text-white focus:border-orange-500'
-    : 'bg-white border-gray-300 text-gray-900 focus:border-orange-500 shadow-sm'
-    }`;
+  const inputClassName = "w-full p-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 font-bold transition-all";
 
-  const sectionClassName = `mb-8 p-6 rounded-2xl border ${isDarkMode
-    ? 'bg-gray-800/50 border-gray-700 shadow-xl'
-    : 'bg-white border-gray-100 shadow-md'
-    }`;
+  const sectionClassName = "mb-8 p-8 rounded-[2rem] glass-dark border border-white/5";
 
-  const labelClassName = `block text-sm font-semibold mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`;
+  const labelClassName = "block text-[10px] uppercase font-black tracking-widest text-gray-500 mb-2";
 
   return (
-    <div className={`min-h-screen p-4 md:p-8 ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
-      <div className="max-w-5xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-          <div>
-            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-500 to-red-600">
-              Team Profile
-            </h1>
-            <p className={`mt-1 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              Manage your team's public identity and competition rules
-            </p>
-          </div>
-          <button
-            onClick={handleSaveSettings}
-            disabled={saving}
-            className={`flex items-center space-x-2 px-8 py-3 rounded-xl font-bold transition-all transform active:scale-95 disabled:opacity-50 shadow-lg ${isDarkMode
-              ? 'bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white'
-              : 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white'
-              }`}
-          >
-            {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
-            <span>{saving ? 'Saving...' : 'Save Profile'}</span>
-          </button>
+    <div className="space-y-12 pb-12">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-8">
+        <div>
+          <h1 className="text-6xl font-black tracking-tighter mb-4 text-white">
+            Team Profile
+          </h1>
+          <p className="text-xl text-gray-500">
+            Manage your team's public identity and <span className="text-orange-500 font-black">competition rules</span>.
+          </p>
         </div>
+        <button
+          onClick={handleSaveSettings}
+          disabled={saving}
+          className="flex items-center space-x-2 px-8 py-4 rounded-2xl font-black transition-all transform active:scale-95 disabled:opacity-50 shadow-[0_0_20px_rgba(249,115,22,0.3)] bg-orange-500 hover:bg-orange-600 text-white"
+        >
+          {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
+          <span>{saving ? 'Saving...' : 'Save Profile'}</span>
+        </button>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column: Core Identity */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Identity Section */}
-            <div className={sectionClassName}>
-              <div className="flex items-center space-x-2 mb-6">
-                <Settings className="h-6 w-6 text-orange-500" />
-                <h2 className="text-xl font-bold">General Information</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Column: Core Identity */}
+        <div className="lg:col-span-2 space-y-8">
+          {/* Identity Section */}
+          <div className={sectionClassName}>
+            <div className="flex items-center space-x-3 mb-8">
+              <div className="p-3 rounded-2xl bg-orange-500/10 text-orange-500">
+                <Settings size={28} />
               </div>
-
-              <div className="space-y-6">
-                <div>
-                  <label className={labelClassName}>Team Name</label>
-                  <input
-                    type="text"
-                    value={settings.name}
-                    onChange={(e) => handleSettingChange('name', e.target.value)}
-                    className={inputClassName}
-                    placeholder="e.g. BAKO Analytics Pro"
-                  />
-                </div>
-
-                <div>
-                  <label className={labelClassName}>Team Description</label>
-                  <textarea
-                    value={settings.description ?? ''}
-                    onChange={(e) => handleSettingChange('description', e.target.value)}
-                    rows={3}
-                    className={inputClassName}
-                    placeholder="Tell the world about your team..."
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className={labelClassName}>
-                      <MapPin size={16} className="inline mr-1 text-orange-500" /> Home Court
-                    </label>
-                    <input
-                      type="text"
-                      value={settings.home_court || ''}
-                      onChange={(e) => handleSettingChange('home_court', e.target.value)}
-                      className={inputClassName}
-                      placeholder="e.g. Madison Square Garden"
-                    />
-                  </div>
-                  <div>
-                    <label className={labelClassName}>
-                      <Globe size={16} className="inline mr-1 text-blue-500" /> Website
-                    </label>
-                    <input
-                      type="url"
-                      value={settings.website || ''}
-                      onChange={(e) => handleSettingChange('website', e.target.value)}
-                      className={inputClassName}
-                      placeholder="https://team-site.com"
-                    />
-                  </div>
-                </div>
-              </div>
+              <h2 className="text-2xl font-black text-white tracking-tight">General Information</h2>
             </div>
 
-            {/* Visual Identity Section */}
-            <div className={sectionClassName}>
-              <div className="flex items-center space-x-2 mb-6">
-                <Palette className="h-6 w-6 text-purple-500" />
-                <h2 className="text-xl font-bold">Visual Identity</h2>
+            <div className="space-y-6">
+              <div>
+                <label className={labelClassName}>Team Name</label>
+                <input
+                  type="text"
+                  value={settings.name}
+                  onChange={(e) => handleSettingChange('name', e.target.value)}
+                  className={inputClassName}
+                  placeholder="e.g. BAKO Analytics Pro"
+                />
               </div>
 
-              <div className="space-y-6">
+              <div>
+                <label className={labelClassName}>Team Description</label>
+                <textarea
+                  value={settings.description ?? ''}
+                  onChange={(e) => handleSettingChange('description', e.target.value)}
+                  rows={4}
+                  className={inputClassName}
+                  placeholder="Tell the world about your team..."
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className={labelClassName}>
-                    <ImageIcon size={16} className="inline mr-1 text-gray-400" /> Logo URL
+                    <MapPin size={14} className="inline mr-1 text-orange-500 mb-0.5" /> Home Court
+                  </label>
+                  <input
+                    type="text"
+                    value={settings.home_court || ''}
+                    onChange={(e) => handleSettingChange('home_court', e.target.value)}
+                    className={inputClassName}
+                    placeholder="e.g. Madison Square Garden"
+                  />
+                </div>
+                <div>
+                  <label className={labelClassName}>
+                    <Globe size={14} className="inline mr-1 text-blue-500 mb-0.5" /> Website
                   </label>
                   <input
                     type="url"
-                    value={settings.logo_url || ''}
-                    onChange={(e) => handleSettingChange('logo_url', e.target.value)}
+                    value={settings.website || ''}
+                    onChange={(e) => handleSettingChange('website', e.target.value)}
                     className={inputClassName}
-                    placeholder="https://..."
+                    placeholder="https://team-site.com"
                   />
                 </div>
+              </div>
+            </div>
+          </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div>
-                    <label className={labelClassName}>Primary Color</label>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="color"
-                        value={settings.primary_color || '#FF5733'}
-                        onChange={(e) => handleSettingChange('primary_color', e.target.value)}
-                        className="h-10 w-full rounded-lg cursor-pointer border-none p-1 bg-transparent"
-                      />
-                      <span className="text-xs font-mono">{settings.primary_color}</span>
-                    </div>
+          {/* Visual Identity Section */}
+          <div className={sectionClassName}>
+            <div className="flex items-center space-x-3 mb-8">
+              <div className="p-3 rounded-2xl bg-purple-500/10 text-purple-500">
+                <Palette size={28} />
+              </div>
+              <h2 className="text-2xl font-black text-white tracking-tight">Visual Identity</h2>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <label className={labelClassName}>
+                  <ImageIcon size={14} className="inline mr-1 text-gray-400 mb-0.5" /> Logo URL
+                </label>
+                <input
+                  type="url"
+                  value={settings.logo_url || ''}
+                  onChange={(e) => handleSettingChange('logo_url', e.target.value)}
+                  className={inputClassName}
+                  placeholder="https://..."
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label className={labelClassName}>Primary Color</label>
+                  <div className="flex items-center space-x-3 p-2 rounded-2xl bg-white/5 border border-white/10">
+                    <input
+                      type="color"
+                      value={settings.primary_color || '#FF5733'}
+                      onChange={(e) => handleSettingChange('primary_color', e.target.value)}
+                      className="h-10 w-16 rounded-xl cursor-pointer border-none bg-transparent"
+                    />
+                    <span className="text-sm font-black text-white font-mono">{settings.primary_color}</span>
                   </div>
-                  <div>
-                    <label className={labelClassName}>Secondary Color</label>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="color"
-                        value={settings.secondary_color || '#333333'}
-                        onChange={(e) => handleSettingChange('secondary_color', e.target.value)}
-                        className="h-10 w-full rounded-lg cursor-pointer border-none p-1 bg-transparent"
-                      />
-                      <span className="text-xs font-mono">{settings.secondary_color}</span>
-                    </div>
+                </div>
+                <div>
+                  <label className={labelClassName}>Secondary Color</label>
+                  <div className="flex items-center space-x-3 p-2 rounded-2xl bg-white/5 border border-white/10">
+                    <input
+                      type="color"
+                      value={settings.secondary_color || '#333333'}
+                      onChange={(e) => handleSettingChange('secondary_color', e.target.value)}
+                      className="h-10 w-16 rounded-xl cursor-pointer border-none bg-transparent"
+                    />
+                    <span className="text-sm font-black text-white font-mono">{settings.secondary_color}</span>
                   </div>
-                  <div>
-                    <label className={labelClassName}>
-                      <Shirt size={16} className="inline mr-1 text-indigo-500" /> Jersey Style
-                    </label>
+                </div>
+                <div>
+                  <label className={labelClassName}>
+                    <Shirt size={14} className="inline mr-1 text-indigo-500 mb-0.5" /> Jersey Style
+                  </label>
+                  <div className="px-4 py-1 rounded-2xl bg-white/5 border border-white/10">
                     <select
                       value={settings.jersey_style || 'Solid'}
                       onChange={(e) => handleSettingChange('jersey_style', e.target.value)}
-                      className={inputClassName}
+                      className="w-full bg-transparent border-none text-white font-bold p-3 focus:ring-0 appearance-none cursor-pointer"
                     >
-                      <option value="Solid">Solid</option>
-                      <option value="Striped">Striped</option>
-                      <option value="Gradient">Gradient</option>
-                      <option value="Minimal">Minimalist</option>
+                      <option value="Solid" className="bg-gray-900">Solid</option>
+                      <option value="Striped" className="bg-gray-900">Striped</option>
+                      <option value="Gradient" className="bg-gray-900">Gradient</option>
+                      <option value="Minimal" className="bg-gray-900">Minimalist</option>
                     </select>
                   </div>
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Contact & Social Section */}
-            <div className={sectionClassName}>
-              <div className="flex items-center space-x-2 mb-6">
-                <Globe className="h-6 w-6 text-green-500" />
-                <h2 className="text-xl font-bold">Connect</h2>
+          {/* Contact & Social Section */}
+          <div className={sectionClassName}>
+            <div className="flex items-center space-x-3 mb-8">
+              <div className="p-3 rounded-2xl bg-green-500/10 text-green-500">
+                <Globe size={28} />
               </div>
+              <h2 className="text-2xl font-black text-white tracking-tight">Connect</h2>
+            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className={labelClassName}>Official Email</label>
-                  <input
-                    type="email"
-                    value={settings.email || ''}
-                    onChange={(e) => handleSettingChange('email', e.target.value)}
-                    className={inputClassName}
-                  />
-                </div>
-                <div>
-                  <label className={labelClassName}>Contact Phone</label>
-                  <input
-                    type="tel"
-                    value={settings.phone || ''}
-                    onChange={(e) => handleSettingChange('phone', e.target.value)}
-                    className={inputClassName}
-                  />
-                </div>
-                <div>
-                  <label className={labelClassName}>
-                    <Twitter size={16} className="inline mr-1 text-blue-400" /> Twitter Handle
-                  </label>
-                  <input
-                    type="text"
-                    value={settings.twitter_handle || ''}
-                    onChange={(e) => handleSettingChange('twitter_handle', e.target.value)}
-                    className={inputClassName}
-                    placeholder="@teamhandle"
-                  />
-                </div>
-                <div>
-                  <label className={labelClassName}>
-                    <Instagram size={16} className="inline mr-1 text-pink-500" /> Instagram Handle
-                  </label>
-                  <input
-                    type="text"
-                    value={settings.instagram_handle || ''}
-                    onChange={(e) => handleSettingChange('instagram_handle', e.target.value)}
-                    className={inputClassName}
-                    placeholder="@teamhandle"
-                  />
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className={labelClassName}>Official Email</label>
+                <input
+                  type="email"
+                  value={settings.email || ''}
+                  onChange={(e) => handleSettingChange('email', e.target.value)}
+                  className={inputClassName}
+                  placeholder="contact@team.com"
+                />
+              </div>
+              <div>
+                <label className={labelClassName}>Contact Phone</label>
+                <input
+                  type="tel"
+                  value={settings.phone || ''}
+                  onChange={(e) => handleSettingChange('phone', e.target.value)}
+                  className={inputClassName}
+                  placeholder="+1 (555) 000-0000"
+                />
+              </div>
+              <div>
+                <label className={labelClassName}>
+                  <Twitter size={14} className="inline mr-1 text-blue-400 mb-0.5" /> Twitter
+                </label>
+                <input
+                  type="text"
+                  value={settings.twitter_handle || ''}
+                  onChange={(e) => handleSettingChange('twitter_handle', e.target.value)}
+                  className={inputClassName}
+                  placeholder="@teamhandle"
+                />
+              </div>
+              <div>
+                <label className={labelClassName}>
+                  <Instagram size={14} className="inline mr-1 text-pink-500 mb-0.5" /> Instagram
+                </label>
+                <input
+                  type="text"
+                  value={settings.instagram_handle || ''}
+                  onChange={(e) => handleSettingChange('instagram_handle', e.target.value)}
+                  className={inputClassName}
+                  placeholder="@teamhandle"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: Rules & Limits */}
+        <div className="space-y-8">
+          <div className={sectionClassName}>
+            <div className="flex items-center space-x-3 mb-8">
+              <div className="p-3 rounded-2xl bg-red-500/10 text-red-500">
+                <Timer size={28} />
+              </div>
+              <h2 className="text-2xl font-black text-white tracking-tight">Matches</h2>
+            </div>
+            <div className="space-y-6">
+              <div>
+                <label className={labelClassName}>Quarter Duration (mins)</label>
+                <input
+                  type="number"
+                  value={settings.competition_settings?.quarterDuration || 12}
+                  onChange={(e) => handleNestedChange('competition_settings', 'quarterDuration', parseInt(e.target.value))}
+                  className={inputClassName}
+                />
+              </div>
+              <div>
+                <label className={labelClassName}>Max Timeouts</label>
+                <input
+                  type="number"
+                  value={settings.competition_settings?.maxTimeouts || 7}
+                  onChange={(e) => handleNestedChange('competition_settings', 'maxTimeouts', parseInt(e.target.value))}
+                  className={inputClassName}
+                />
               </div>
             </div>
           </div>
 
-          {/* Right Column: Rules & Limits */}
-          <div className="space-y-8">
-            <div className={sectionClassName}>
-              <div className="flex items-center space-x-2 mb-6">
-                <Timer className="h-6 w-6 text-red-500" />
-                <h2 className="text-xl font-bold">Matches</h2>
+          <div className={sectionClassName}>
+            <div className="flex items-center space-x-3 mb-8">
+              <div className="p-3 rounded-2xl bg-indigo-500/10 text-indigo-500">
+                <Users size={28} />
               </div>
-              <div className="space-y-4">
+              <h2 className="text-2xl font-black text-white tracking-tight">Roster</h2>
+            </div>
+            <div className="space-y-6">
+              <div>
+                <label className={labelClassName}>Max Players</label>
+                <input
+                  type="number"
+                  value={settings.roster_settings?.maxPlayers || 15}
+                  onChange={(e) => handleNestedChange('roster_settings', 'maxPlayers', parseInt(e.target.value))}
+                  className={inputClassName}
+                />
+              </div>
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10">
                 <div>
-                  <label className={labelClassName}>Quarter Duration (mins)</label>
-                  <input
-                    type="number"
-                    value={settings.competition_settings.quarterDuration}
-                    onChange={(e) => handleNestedChange('competition_settings', 'quarterDuration', parseInt(e.target.value))}
-                    className={inputClassName}
-                  />
+                  <span className="font-black text-white block">Guest Players</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Allow temporary additions</span>
                 </div>
-                <div>
-                  <label className={labelClassName}>Max Timeouts</label>
-                  <input
-                    type="number"
-                    value={settings.competition_settings.maxTimeouts}
-                    onChange={(e) => handleNestedChange('competition_settings', 'maxTimeouts', parseInt(e.target.value))}
-                    className={inputClassName}
-                  />
-                </div>
+                <button
+                  onClick={() => handleNestedChange('roster_settings', 'allowGuestPlayers', !settings.roster_settings?.allowGuestPlayers)}
+                  className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${settings.roster_settings?.allowGuestPlayers ? 'bg-orange-500' : 'bg-gray-600'
+                    }`}
+                >
+                  <span className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${settings.roster_settings?.allowGuestPlayers ? 'translate-x-7' : 'translate-x-1'
+                    }`} />
+                </button>
               </div>
             </div>
+          </div>
 
-            <div className={sectionClassName}>
-              <div className="flex items-center space-x-2 mb-6">
-                <Users className="h-6 w-6 text-indigo-500" />
-                <h2 className="text-xl font-bold">Roster</h2>
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <label className={labelClassName}>Max Players</label>
-                  <input
-                    type="number"
-                    value={settings.roster_settings.maxPlayers}
-                    onChange={(e) => handleNestedChange('roster_settings', 'maxPlayers', parseInt(e.target.value))}
-                    className={inputClassName}
-                  />
-                </div>
-                <div className="flex items-center justify-between pt-2">
-                  <span className="font-medium">Allow Guest Players</span>
-                  <button
-                    onClick={() => handleNestedChange('roster_settings', 'allowGuestPlayers', !settings.roster_settings.allowGuestPlayers)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${settings.roster_settings.allowGuestPlayers ? 'bg-orange-500' : 'bg-gray-400'
-                      }`}
-                  >
-                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings.roster_settings.allowGuestPlayers ? 'translate-x-6' : 'translate-x-1'
-                      }`} />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Danger Zone */}
-            <div className={`mt-8 p-6 rounded-2xl border-2 transition-all ${isDarkMode ? 'bg-red-950/20 border-red-900/30' : 'bg-red-50 border-red-100'}`}>
-              <h3 className={`text-lg font-bold mb-2 flex items-center gap-2 ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>
-                <AlertTriangle size={20} />
-                Danger Zone
-              </h3>
-              <p className={`text-sm mb-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                Permanently delete this organization, all related staff, players, and match analysis data. This action is irreversible.
-              </p>
-              <button
-                onClick={() => setShowDeleteModal(true)}
-                className="flex items-center gap-2 py-2.5 px-6 rounded-xl font-bold bg-red-600 text-white hover:bg-red-700 transition shadow-lg shadow-red-900/20"
-              >
-                <Trash2 size={16} />
-                Delete Everything
-              </button>
-            </div>
+          {/* Danger Zone */}
+          <div className="mt-8 p-8 rounded-[2rem] border border-red-500/30 bg-red-500/5 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 rounded-bl-[100px] -z-10 group-hover:scale-110 transition-transform duration-500"></div>
+            <h3 className="text-2xl font-black mb-4 flex items-center gap-3 text-red-500 tracking-tight">
+              <AlertTriangle size={24} />
+              Danger Zone
+            </h3>
+            <p className="text-sm font-bold mb-6 text-gray-400">
+              Permanently delete this organization, all related staff, players, and match analysis data. This action is irreversible.
+            </p>
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              className="flex items-center justify-center w-full gap-2 py-4 px-6 rounded-2xl font-black bg-red-500 hover:bg-red-600 text-white transition-all shadow-[0_0_20px_rgba(239,68,68,0.3)]"
+            >
+              <Trash2 size={20} />
+              Delete Everything
+            </button>
           </div>
         </div>
       </div>
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className={`w-full max-w-md p-6 rounded-2xl shadow-2xl ${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white text-gray-900'}`}>
-            <div className="flex items-center gap-3 mb-4 text-red-500">
-              <AlertTriangle size={32} />
-              <h2 className="text-xl font-bold">Absolute Confirmation</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="w-full max-w-md p-8 rounded-[3rem] shadow-2xl glass-dark border border-red-500/30">
+            <div className="flex items-center gap-4 mb-6 text-red-500">
+              <div className="p-3 rounded-2xl bg-red-500/10">
+                <AlertTriangle size={32} />
+              </div>
+              <h2 className="text-2xl font-black tracking-tight">Absolute Confirmation</h2>
             </div>
 
-            <p className={`mb-6 text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+            <p className="mb-8 text-sm font-bold text-gray-400">
               Deleting your organization account will permanently remove all coaching staff access, player profiles, and season data.
             </p>
 
-            <div className="mb-6">
-              <label className={`block text-xs font-bold mb-2 uppercase tracking-widest ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                Type <span className="text-red-600 underline">DELETE MY ACCOUNT</span> to confirm
+            <div className="mb-8">
+              <label className="block text-[10px] uppercase font-black tracking-widest text-gray-500 mb-3">
+                Type <span className="text-red-500 border-b border-red-500/50 pb-0.5">DELETE MY ACCOUNT</span> to confirm
               </label>
               <input
                 type="text"
                 value={deleteConfirmPhrase}
                 onChange={(e) => setDeleteConfirmPhrase(e.target.value)}
                 placeholder="Type here..."
-                className={`w-full px-4 py-3 rounded-xl border-2 transition outline-none ${isDarkMode
-                    ? 'bg-gray-900 border-gray-700 text-white focus:border-red-500'
-                    : 'bg-white border-gray-200 text-gray-900 focus:border-red-500'
-                  }`}
+                className="w-full px-5 py-4 rounded-2xl bg-black/50 border border-gray-700 text-white font-black text-lg focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all outline-none"
               />
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-4">
               <button
                 onClick={() => { setShowDeleteModal(false); setDeleteConfirmPhrase(''); }}
-                className={`flex-1 py-3 rounded-xl font-semibold transition ${isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200'
-                  }`}
+                className="flex-1 py-4 rounded-2xl font-black text-white bg-white/10 hover:bg-white/20 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteAccount}
                 disabled={deleteConfirmPhrase !== 'DELETE MY ACCOUNT' || isDeleting}
-                className={`flex-1 py-3 rounded-xl font-bold text-white transition ${deleteConfirmPhrase === 'DELETE MY ACCOUNT'
-                    ? 'bg-red-600 hover:bg-red-700'
-                    : 'bg-gray-400 cursor-not-allowed grayscale'
+                className={`flex-1 py-4 rounded-2xl font-black text-white transition-all ${deleteConfirmPhrase === 'DELETE MY ACCOUNT'
+                    ? 'bg-red-500 hover:bg-red-600 shadow-[0_0_20px_rgba(239,68,68,0.3)]'
+                    : 'bg-white/5 border border-white/10 text-gray-500 cursor-not-allowed'
                   }`}
               >
                 {isDeleting ? 'Deleting...' : 'Delete Permanently'}

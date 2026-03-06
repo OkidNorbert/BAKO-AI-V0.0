@@ -202,427 +202,324 @@ const TeamSchedule = () => {
 
   if (loading && events.length === 0) {
     return (
-      <div className={`flex items-center justify-center min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <div className="flex items-center justify-center min-h-[50vh]">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
       </div>
     );
   }
 
   return (
-    <div className={`min-h-screen ${isDarkMode
-      ? 'bg-gradient-to-b from-gray-900 to-indigo-950 text-white'
-      : 'bg-gradient-to-b from-blue-50 to-indigo-100 text-gray-900'
-      }`}>
-      <div className="max-w-7xl mx-auto p-6">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className={`text-2xl font-bold ${isDarkMode
-              ? 'text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-400'
-              : 'text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-red-600'
-              }`}>Team Schedule</h1>
-            <p className={`mt-1 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              Manage practices, matches, and team events
-            </p>
-          </div>
-          {(isCoach || isOwner) && (
-            <button
-              onClick={handleAddEventClick}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-full shadow-md transition-all duration-200 hover:shadow-lg hover:scale-105 ${isDarkMode
-                ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white'
-                : 'bg-gradient-to-r from-orange-500 to-red-500 text-white'
-                }`}
+    <div className="space-y-12 pb-12">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+        <div>
+          <h1 className="text-6xl font-black tracking-tighter mb-4 text-white">Team Schedule</h1>
+          <p className="text-xl text-gray-500">
+            Manage practices, matches, and <span className="text-orange-500 font-black">team events</span>
+          </p>
+        </div>
+        {(isCoach || isOwner) && (
+          <button
+            onClick={handleAddEventClick}
+            className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm transition-all duration-300 bg-orange-500 hover:bg-orange-600 text-white shadow-[0_0_20px_rgba(249,115,22,0.3)]"
+          >
+            <Plus className="h-4 w-4" />
+            Add Event
+          </button>
+        )}
+      </div>
+
+      {/* Filter */}
+      <div className="p-6 rounded-3xl glass-dark border border-white/5 flex flex-col md:flex-row gap-4 mb-8">
+        <div className="flex items-center gap-4 px-4 py-2 rounded-2xl bg-white/5 border border-white/10 w-full md:w-auto">
+          <Filter size={18} className="text-gray-500" />
+          <select
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value)}
+            className="bg-transparent border-none text-white font-bold focus:outline-none focus:ring-0 appearance-none pr-8 cursor-pointer w-full"
+          >
+            <option value="all" className="bg-gray-900">All Events</option>
+            <option value="practice" className="bg-gray-900">Practices</option>
+            <option value="match" className="bg-gray-900">Matches</option>
+            <option value="workout" className="bg-gray-900">Workouts</option>
+            <option value="meeting" className="bg-gray-900">Meetings</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Schedule Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredEvents.length > 0 ? (
+          filteredEvents.map((event) => (
+            <div
+              key={event.id}
+              className={`p-8 rounded-[2rem] glass-dark border-t-4 border-r border-b border-l border-white/5 hover:bg-white/5 transition-all duration-300 ${
+                event.eventType === 'match' ? 'border-t-red-500' :
+                event.eventType === 'practice' ? 'border-t-orange-500' :
+                event.eventType === 'workout' ? 'border-t-green-500' : 'border-t-blue-500'
+              }`}
             >
-              <Plus className="h-4 w-4" />
-              <span>Add Event</span>
-            </button>
-          )}
-        </div>
-
-        {/* Filter */}
-        <div className={`p-4 rounded-lg mb-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'
-          }`}>
-          <div className="flex items-center space-x-2">
-            <Filter className={`h-4 w-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'
-              }`} />
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              className={`rounded-md ${isDarkMode
-                ? 'bg-gray-700 text-white'
-                : 'bg-gray-50 text-gray-900'
-                }`}
-            >
-              <option value="all">All Events</option>
-              <option value="practice">Practices</option>
-              <option value="match">Matches</option>
-              <option value="workout">Workouts</option>
-              <option value="meeting">Meetings</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Schedule Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredEvents.length > 0 ? (
-            filteredEvents.map((event) => (
-              <div
-                key={event.id}
-                className={`p-6 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'
-                  } border-l-4 ${event.eventType === 'match' ? 'border-red-500' :
-                    event.eventType === 'practice' ? 'border-orange-500' :
-                      event.eventType === 'workout' ? 'border-green-500' : 'border-blue-500'
-                  }`}
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="font-semibold text-lg">{event.title}</h3>
-                    <div className="flex items-center mt-1">
-                      <span className={`text-xs px-2 py-0.5 rounded-full uppercase font-bold ${event.eventType === 'match' ? 'bg-red-100 text-red-800' :
-                        event.eventType === 'practice' ? 'bg-orange-100 text-orange-800' :
-                          event.eventType === 'workout' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
-                        }`}>
-                        {event.eventType}
-                      </span>
-                      {event.mandatory && (
-                        <span className="ml-2 text-xs text-red-500 font-semibold">*Mandatory</span>
-                      )}
-                    </div>
-                  </div>
-                  {(isCoach || isOwner) && (
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => handleEditClick(event)}
-                        className={`p-1 rounded-md ${isDarkMode
-                          ? 'hover:bg-gray-700'
-                          : 'hover:bg-gray-100'
-                          }`}
-                      >
-                        <Edit className="h-4 w-4 text-blue-500" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteEvent(event.id)}
-                        className={`p-1 rounded-md ${isDarkMode
-                          ? 'hover:bg-gray-700'
-                          : 'hover:bg-gray-100'
-                          }`}
-                      >
-                        <Trash className="h-4 w-4 text-red-500" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 line-clamp-2">{event.notes || event.description}</p>
-
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-3">
-                    <CalendarIcon className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm">
-                      {event.date ? new Date(event.date).toLocaleDateString() : (event.start_time ? new Date(event.start_time).toLocaleDateString() : 'N/A')}
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <Clock className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm">
-                      {event.startTime ? `${event.startTime} - ${event.endTime}` : (event.start_time ? `${new Date(event.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(event.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'N/A')}
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <MapPin className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm">
-                      {event.location || 'TBD'}
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <Users className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm">
-                      {event.attendees || 0} participants
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="col-span-full text-center py-8">
-              <p className="text-gray-500 dark:text-gray-400">No scheduled events</p>
-            </div>
-          )}
-        </div>
-
-        {/* Add Event Modal */}
-        {showAddModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className={`bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold">Add New Event</h2>
-                <button
-                  onClick={() => setShowAddModal(false)}
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-
-              <form onSubmit={handleSubmitEvent} className="space-y-6">
-                {/* Title */}
+              <div className="flex justify-between items-start mb-6">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Event Title</label>
-                  <input
-                    type="text"
-                    value={newEvent.title}
-                    onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
-                    className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
-                    placeholder="e.g. Morning Practice"
-                    required
-                  />
+                  <h3 className="font-black text-xl text-white mb-2">{event.title}</h3>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[10px] uppercase font-black tracking-widest px-3 py-1 rounded-xl border ${
+                      event.eventType === 'match' ? 'bg-red-500/10 border-red-500/20 text-red-500' :
+                      event.eventType === 'practice' ? 'bg-orange-500/10 border-orange-500/20 text-orange-500' :
+                      event.eventType === 'workout' ? 'bg-green-500/10 border-green-500/20 text-green-500' : 'bg-blue-500/10 border-blue-500/20 text-blue-500'
+                    }`}>
+                      {event.eventType}
+                    </span>
+                    {event.mandatory && (
+                      <span className="text-[10px] uppercase font-black tracking-widest text-red-500">*Required</span>
+                    )}
+                  </div>
                 </div>
+                {(isCoach || isOwner) && (
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => handleEditClick(event)} className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors border border-transparent hover:border-white/10">
+                      <Edit size={14} />
+                    </button>
+                    <button onClick={() => handleDeleteEvent(event.id)} className="p-2 rounded-xl bg-white/5 hover:bg-red-500/20 text-gray-400 hover:text-red-500 transition-colors border border-transparent hover:border-red-500/30">
+                      <Trash size={14} />
+                    </button>
+                  </div>
+                )}
+              </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Event Type */}
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Event Type</label>
+              <p className="text-sm text-gray-400 mb-6 font-bold leading-relaxed line-clamp-2">{event.notes || event.description}</p>
+
+              <div className="space-y-4 pt-6 border-t border-white/5">
+                <div className="flex items-center gap-4 text-sm font-bold text-gray-300">
+                  <div className="p-2 rounded-xl bg-white/5 text-gray-500"><CalendarIcon size={16} /></div>
+                  {event.date ? new Date(event.date).toLocaleDateString() : (event.start_time ? new Date(event.start_time).toLocaleDateString() : 'N/A')}
+                </div>
+                <div className="flex items-center gap-4 text-sm font-bold text-gray-300">
+                  <div className="p-2 rounded-xl bg-white/5 text-gray-500"><Clock size={16} /></div>
+                  {event.startTime ? `${event.startTime} - ${event.endTime}` : (event.start_time ? `${new Date(event.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(event.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'N/A')}
+                </div>
+                <div className="flex items-center gap-4 text-sm font-bold text-gray-300">
+                  <div className="p-2 rounded-xl bg-white/5 text-gray-500"><MapPin size={16} /></div>
+                  {event.location || 'TBD'}
+                </div>
+                <div className="flex items-center gap-4 text-sm font-bold text-gray-300">
+                  <div className="p-2 rounded-xl bg-white/5 text-gray-500"><Users size={16} /></div>
+                  {event.attendees || 0} participants
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="col-span-full py-20 text-center glass-dark rounded-[3rem] border border-white/5">
+            <div className="flex flex-col items-center gap-4">
+              <div className="h-24 w-24 rounded-full bg-white/5 flex items-center justify-center text-gray-500 mb-2">
+                <CalendarIcon size={40} />
+              </div>
+              <p className="text-xl font-black text-white">No Scheduled Events</p>
+              <p className="text-gray-500 font-bold mb-4">Your team calendar is completely open.</p>
+              {(isCoach || isOwner) && (
+                <button onClick={handleAddEventClick} className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white font-black text-sm transition-colors shadow-[0_0_20px_rgba(249,115,22,0.3)]">
+                  <Plus size={18} /> Schedule First Event
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Add/Edit Event Modals */}
+      {(showAddModal || showEditModal) && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="glass-dark border border-white/10 rounded-[3rem] p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-3xl font-black text-white">{showAddModal ? 'Schedule Event' : 'Edit Event'}</h2>
+              <button
+                onClick={() => { setShowAddModal(false); setShowEditModal(false); }}
+                className="p-3 rounded-2xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={showAddModal ? handleSubmitEvent : handleUpdateEvent} className="space-y-6">
+              <div>
+                <label className="block text-[10px] uppercase font-black tracking-widest text-gray-500 mb-2">Event Title</label>
+                <input
+                  type="text"
+                  value={showAddModal ? newEvent.title : editingEvent.title}
+                  onChange={(e) => showAddModal ? setNewEvent({ ...newEvent, title: e.target.value }) : setEditingEvent({ ...editingEvent, title: e.target.value })}
+                  className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 font-bold"
+                  placeholder="e.g. Morning Practice"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-[10px] uppercase font-black tracking-widest text-gray-500 mb-2">Event Type</label>
+                  <div className="px-4 py-1 rounded-2xl bg-white/5 border border-white/10">
                     <select
-                      value={newEvent.eventType}
-                      onChange={(e) => setNewEvent({ ...newEvent, eventType: e.target.value })}
-                      className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
+                      value={showAddModal ? newEvent.eventType : editingEvent.eventType}
+                      onChange={(e) => showAddModal ? setNewEvent({ ...newEvent, eventType: e.target.value }) : setEditingEvent({ ...editingEvent, eventType: e.target.value })}
+                      className="w-full bg-transparent border-none text-white font-bold p-3 focus:ring-0 appearance-none cursor-pointer"
                     >
-                      <option value="practice">Practice</option>
-                      <option value="match">Match</option>
-                      <option value="workout">Workout</option>
-                      <option value="meeting">Team Meeting</option>
+                      <option value="practice" className="bg-gray-900">Practice</option>
+                      <option value="match" className="bg-gray-900">Match</option>
+                      <option value="workout" className="bg-gray-900">Workout</option>
+                      <option value="meeting" className="bg-gray-900">Team Meeting</option>
                     </select>
                   </div>
+                </div>
 
-                  {/* Coach Selection */}
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Lead Coach</label>
+                <div>
+                  <label className="block text-[10px] uppercase font-black tracking-widest text-gray-500 mb-2">Lead Coach</label>
+                  <div className="px-4 py-1 rounded-2xl bg-white/5 border border-white/10">
                     <select
-                      value={newEvent.coachId}
-                      onChange={(e) => setNewEvent({ ...newEvent, coachId: e.target.value })}
-                      className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
+                      value={showAddModal ? newEvent.coachId : editingEvent.coachId}
+                      onChange={(e) => showAddModal ? setNewEvent({ ...newEvent, coachId: e.target.value }) : setEditingEvent({ ...editingEvent, coachId: e.target.value })}
+                      className="w-full bg-transparent border-none text-white font-bold p-3 focus:ring-0 appearance-none cursor-pointer"
                     >
-                      <option value="">Select Coach</option>
+                      <option value="" className="bg-gray-900">Select Coach</option>
                       {coaches.map((coach) => (
-                        <option key={coach.id} value={coach.id}>
-                          {coach.name || coach.full_name}
-                        </option>
+                        <option key={coach.id} value={coach.id} className="bg-gray-900">{coach.name || coach.full_name}</option>
                       ))}
                     </select>
                   </div>
                 </div>
+              </div>
 
-                {/* Players Selection */}
-                <div>
-                  <label className="block text-sm font-medium mb-1">Assign Players (hold Ctrl/Cmd to select multiple)</label>
-                  <select
-                    multiple
-                    value={newEvent.playerIds}
-                    onChange={handlePlayersChange}
-                    className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 h-32"
-                  >
-                    {players.map((player) => (
-                      <option key={player.id} value={player.id}>
-                        {player.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              <div>
+                <label className="block text-[10px] uppercase font-black tracking-widest text-gray-500 mb-2">Assign Players (Multi-select)</label>
+                <select
+                  multiple
+                  value={showAddModal ? newEvent.playerIds : editingEvent.playerIds}
+                  onChange={handlePlayersChange}
+                  className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-orange-500 focus:ring-1 focus:ring-orange-500 font-bold h-32 custom-scrollbar"
+                >
+                  {players.map((player) => (
+                    <option key={player.id} value={player.id} className="p-2 hover:bg-orange-500">{player.name}</option>
+                  ))}
+                </select>
+              </div>
 
-                {/* Date Selection */}
-                <div>
-                  <label className="block text-sm font-medium mb-1">Event Date</label>
-                  <input
-                    type="date"
-                    value={newEvent.date}
-                    onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
-                    className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
-                    required
-                  />
-                </div>
+              <div>
+                <label className="block text-[10px] uppercase font-black tracking-widest text-gray-500 mb-2">Event Date</label>
+                <input
+                  type="date"
+                  value={showAddModal ? newEvent.date : editingEvent.date}
+                  onChange={(e) => showAddModal ? setNewEvent({ ...newEvent, date: e.target.value }) : setEditingEvent({ ...editingEvent, date: e.target.value })}
+                  className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-orange-500 focus:ring-1 focus:ring-orange-500 font-bold"
+                  required
+                />
+              </div>
 
-                {/* Days Selection */}
+              {showAddModal && (
                 <div>
-                  <label className="block text-sm font-medium mb-1">Recurring Days</label>
+                  <label className="block text-[10px] uppercase font-black tracking-widest text-gray-500 mb-2">Recurring Days</label>
                   <div className="flex flex-wrap gap-2">
                     {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
                       <button
                         key={day}
                         type="button"
                         onClick={() => handleDayToggle(day)}
-                        className={`px-3 py-1 text-sm rounded-full ${newEvent.days.includes(day)
-                          ? isDarkMode
-                            ? 'bg-orange-600 text-white'
-                            : 'bg-orange-500 text-white'
-                          : isDarkMode
-                            ? 'bg-gray-700 text-gray-300'
-                            : 'bg-gray-200 text-gray-700'
-                          }`}
+                        className={`px-4 py-2 font-bold text-sm rounded-xl transition-colors border ${newEvent.days.includes(day) ? 'bg-orange-500/20 text-orange-500 border-orange-500/30' : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'}`}
                       >
-                        {day}
+                        {day.slice(0, 3)}
                       </button>
                     ))}
                   </div>
                 </div>
+              )}
 
-                {/* Time Selection */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Start Time</label>
-                    <input
-                      type="time"
-                      value={newEvent.startTime}
-                      onChange={(e) => setNewEvent({ ...newEvent, startTime: e.target.value })}
-                      className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">End Time</label>
-                    <input
-                      type="time"
-                      value={newEvent.endTime}
-                      onChange={(e) => setNewEvent({ ...newEvent, endTime: e.target.value })}
-                      className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Location & Limit */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Location / Court</label>
-                    <input
-                      type="text"
-                      value={newEvent.location}
-                      onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
-                      className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
-                      placeholder="e.g. Main Court"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Max Players</label>
-                    <input
-                      type="number"
-                      value={newEvent.maxPlayers}
-                      onChange={(e) => setNewEvent({ ...newEvent, maxPlayers: parseInt(e.target.value) })}
-                      className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
-                      min="1"
-                    />
-                  </div>
-                </div>
-
-                {/* Notes */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Notes / Instructions</label>
-                  <textarea
-                    value={newEvent.notes}
-                    onChange={(e) => setNewEvent({ ...newEvent, notes: e.target.value })}
-                    className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
-                    placeholder="e.g. Bring white jersey"
-                    rows="3"
-                  ></textarea>
-                </div>
-
-                <div className="flex items-center">
+                  <label className="block text-[10px] uppercase font-black tracking-widest text-gray-500 mb-2">Start Time</label>
                   <input
-                    type="checkbox"
-                    id="eventRequired"
-                    checked={newEvent.mandatory}
-                    onChange={(e) => setNewEvent({ ...newEvent, mandatory: e.target.checked })}
-                    className="mr-2"
-                  />
-                  <label htmlFor="eventRequired" className="text-sm font-medium">
-                    Required
-                  </label>
-                </div>
-
-                <div className="flex justify-end space-x-4 mt-6">
-                  <button
-                    type="button"
-                    onClick={() => setShowAddModal(false)}
-                    className={`px-4 py-2 rounded-lg ${isDarkMode
-                      ? 'bg-gray-700 hover:bg-gray-600 text-white'
-                      : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
-                      }`}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className={`px-4 py-2 rounded-lg ${isDarkMode
-                      ? 'bg-orange-600 hover:bg-orange-700 text-white'
-                      : 'bg-orange-500 hover:bg-orange-600 text-white'
-                      } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    {loading ? 'Adding...' : 'Add Event'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* Edit Event Modal (Simplified for brevity, similar structure to Add) */}
-        {showEditModal && editingEvent && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className={`bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold">Edit Event</h2>
-                <button
-                  onClick={() => setShowEditModal(false)}
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-
-              <form onSubmit={handleUpdateEvent} className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Event Title</label>
-                  <input
-                    type="text"
-                    value={editingEvent.title}
-                    onChange={(e) => setEditingEvent({ ...editingEvent, title: e.target.value })}
-                    className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
+                    type="time"
+                    value={showAddModal ? newEvent.startTime : editingEvent.startTime}
+                    onChange={(e) => showAddModal ? setNewEvent({ ...newEvent, startTime: e.target.value }) : setEditingEvent({ ...editingEvent, startTime: e.target.value })}
+                    className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-orange-500 font-bold"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Event Type</label>
-                  <select
-                    value={editingEvent.eventType}
-                    onChange={(e) => setEditingEvent({ ...editingEvent, eventType: e.target.value })}
-                    className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
-                  >
-                    <option value="practice">Practice</option>
-                    <option value="match">Match</option>
-                    <option value="workout">Workout</option>
-                    <option value="meeting">Team Meeting</option>
-                  </select>
+                  <label className="block text-[10px] uppercase font-black tracking-widest text-gray-500 mb-2">End Time</label>
+                  <input
+                    type="time"
+                    value={showAddModal ? newEvent.endTime : editingEvent.endTime}
+                    onChange={(e) => showAddModal ? setNewEvent({ ...newEvent, endTime: e.target.value }) : setEditingEvent({ ...editingEvent, endTime: e.target.value })}
+                    className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-orange-500 font-bold"
+                    required
+                  />
                 </div>
+              </div>
 
-                <div className="flex justify-end space-x-4 mt-6">
-                  <button
-                    type="button"
-                    onClick={() => setShowEditModal(false)}
-                    className="px-4 py-2 rounded-lg bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-white"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 rounded-lg bg-orange-500 text-white hover:bg-orange-600"
-                  >
-                    Save Changes
-                  </button>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-[10px] uppercase font-black tracking-widest text-gray-500 mb-2">Location / Court</label>
+                  <input
+                    type="text"
+                    value={showAddModal ? newEvent.location : editingEvent.location}
+                    onChange={(e) => showAddModal ? setNewEvent({ ...newEvent, location: e.target.value }) : setEditingEvent({ ...editingEvent, location: e.target.value })}
+                    className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:border-orange-500 font-bold"
+                    placeholder="e.g. Main Gym"
+                  />
                 </div>
-              </form>
-            </div>
+                <div>
+                  <label className="block text-[10px] uppercase font-black tracking-widest text-gray-500 mb-2">Max Players</label>
+                  <input
+                    type="number"
+                    value={showAddModal ? newEvent.maxPlayers : editingEvent.maxPlayers}
+                    onChange={(e) => showAddModal ? setNewEvent({ ...newEvent, maxPlayers: parseInt(e.target.value) }) : setEditingEvent({ ...editingEvent, maxPlayers: parseInt(e.target.value) })}
+                    className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-orange-500 font-bold"
+                    min="1"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-black tracking-widest text-gray-500 mb-2">Notes / Instructions</label>
+                <textarea
+                  value={showAddModal ? newEvent.notes : editingEvent.notes}
+                  onChange={(e) => showAddModal ? setNewEvent({ ...newEvent, notes: e.target.value }) : setEditingEvent({ ...editingEvent, notes: e.target.value })}
+                  className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:border-orange-500 font-bold custom-scrollbar"
+                  placeholder="e.g. Bring white jersey"
+                  rows="3"
+                ></textarea>
+              </div>
+
+              <div className="flex items-center gap-3 p-4 rounded-2xl bg-white/5 border border-white/10">
+                <input
+                  type="checkbox"
+                  id="eventRequired"
+                  checked={showAddModal ? newEvent.mandatory : editingEvent.mandatory}
+                  onChange={(e) => showAddModal ? setNewEvent({ ...newEvent, mandatory: e.target.checked }) : setEditingEvent({ ...editingEvent, mandatory: e.target.checked })}
+                  className="w-5 h-5 rounded border-gray-600 text-orange-500 focus:ring-orange-500 bg-gray-900"
+                />
+                <label htmlFor="eventRequired" className="text-sm font-bold text-white">
+                  Mandatory Event
+                </label>
+              </div>
+
+              <div className="flex justify-end gap-4 mt-8 pt-8 border-t border-white/5">
+                <button
+                  type="button"
+                  onClick={() => { setShowAddModal(false); setShowEditModal(false); }}
+                  className="px-8 py-4 rounded-2xl font-black text-sm transition-colors text-white hover:bg-white/5"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`px-8 py-4 rounded-2xl font-black text-sm transition-colors bg-orange-500 hover:bg-orange-600 text-white shadow-[0_0_20px_rgba(249,115,22,0.3)] ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {loading ? 'Processing...' : (showAddModal ? 'Schedule Event' : 'Save Changes')}
+                </button>
+              </div>
+            </form>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

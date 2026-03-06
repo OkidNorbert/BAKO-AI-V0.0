@@ -16,15 +16,14 @@ const TeamLayout = () => {
   }
 
   return (
-    <div className={`flex h-screen transition-colors duration-300 ${isDarkMode ? 'dark bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'
-      }`}>
+    <div className={`flex h-screen transition-colors duration-500 bg-[#0f1115] text-white`}>
       <TeamSidebar isOpen={isSidebarOpen} />
-      <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-0'
+      <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-500 ${isSidebarOpen ? 'ml-64' : 'ml-0'
         }`}>
         <TeamNavbar onSidebarToggle={setIsSidebarOpen} />
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 dark:bg-gray-900 admin-main-content-scrollbar">
-          <div className="container mx-auto px-6 py-8">
-            <div className="animate-fade-in">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto admin-main-content-scrollbar">
+          <div className="max-w-7xl mx-auto px-8 py-10">
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
               <Outlet />
             </div>
           </div>

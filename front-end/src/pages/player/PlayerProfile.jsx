@@ -350,25 +350,41 @@ const PlayerProfile = () => {
                         { id: 'lastName', label: 'Last Name', type: 'text' },
                         { id: 'email', label: 'Contact Email', type: 'email' },
                         { id: 'phone', label: 'Phone Line', type: 'text' },
-                        { id: 'dateOfBirth', label: 'Brith Date', type: 'date' },
-                        { id: 'position', label: 'Tactical Position', type: 'text' },
-                        { id: 'jerseyNumber', label: 'Jersey #', type: 'text' },
-                        { id: 'experience', label: 'Experience Years', type: 'text' },
-                        { id: 'height', label: 'Height (cm)', type: 'text' },
-                        { id: 'weight', label: 'Weight (kg)', type: 'text' }
+                        { id: 'dateOfBirth', label: 'Birth Date', type: 'date' },
+                        { id: 'position', label: 'Tactical Position', type: 'select', options: ['', 'Point Guard (PG)', 'Shooting Guard (SG)', 'Small Forward (SF)', 'Power Forward (PF)', 'Center (C)'] },
+                        { id: 'jerseyNumber', label: 'Jersey #', type: 'number' },
+                        { id: 'experience', label: 'Experience Years', type: 'select', options: ['', ...Array.from({ length: 21 }, (_, i) => i.toString())] },
+                        { id: 'height', label: 'Height (cm)', type: 'select', options: ['', ...Array.from({ length: 82 }, (_, i) => (150 + i).toString())] },
+                        { id: 'weight', label: 'Weight (kg)', type: 'select', options: ['', ...Array.from({ length: 101 }, (_, i) => (50 + i).toString())] }
                     ].map((field) => (
                     <div key={field.id} className="space-y-2">
                         <label className={`text-[10px] font-black uppercase tracking-widest opacity-50 block ml-2`}>
                             {field.label}
                         </label>
-                        <input
-                        type={field.type}
-                        name={field.id}
-                        value={profile[field.id] || ''}
-                        onChange={handleInputChange}
-                        disabled={!isEditing}
-                        className={`w-full px-6 py-4 rounded-2xl border transition-all duration-300 outline-none font-bold text-sm ${isEditing ? (isDarkMode ? 'bg-white/5 border-orange-500/50 text-white focus:bg-white/10' : 'bg-gray-50 border-orange-500/30 focus:bg-white') : (isDarkMode ? 'bg-transparent border-white/5 text-gray-500' : 'bg-gray-100/50 border-gray-100 text-gray-400')}`}
-                        />
+                        {field.type === 'select' ? (
+                          <select
+                            name={field.id}
+                            value={profile[field.id] || ''}
+                            onChange={handleInputChange}
+                            disabled={!isEditing}
+                            className={`w-full px-6 py-4 rounded-2xl border transition-all duration-300 outline-none font-bold text-sm appearance-none ${isEditing ? (isDarkMode ? 'bg-white/5 border-orange-500/50 text-white focus:bg-white/10' : 'bg-gray-50 border-orange-500/30 focus:bg-white') : (isDarkMode ? 'bg-transparent border-white/5 text-gray-500' : 'bg-gray-100/50 border-gray-100 text-gray-400')}`}
+                          >
+                            {field.options.map(opt => (
+                              <option key={opt} value={opt} className={`${isDarkMode ? 'bg-[#0f1115] text-white' : 'bg-white text-gray-900'} py-2`}>
+                                {opt === '' ? 'Select...' : opt}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input
+                            type={field.type}
+                            name={field.id}
+                            value={profile[field.id] || ''}
+                            onChange={handleInputChange}
+                            disabled={!isEditing}
+                            className={`w-full px-6 py-4 rounded-2xl border transition-all duration-300 outline-none font-bold text-sm ${isEditing ? (isDarkMode ? 'bg-white/5 border-orange-500/50 text-white focus:bg-white/10' : 'bg-gray-50 border-orange-500/30 focus:bg-white') : (isDarkMode ? 'bg-transparent border-white/5 text-gray-500' : 'bg-gray-100/50 border-gray-100 text-gray-400')}`}
+                          />
+                        )}
                     </div>
                     ))}
                 </div>

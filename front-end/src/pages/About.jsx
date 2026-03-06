@@ -1,13 +1,11 @@
 import React from 'react';
-import { useTheme } from '../context/ThemeContext';
 import { Target, Users, Globe, Award, Heart } from 'lucide-react';
 
 
 const About = () => {
-    const { isDarkMode } = useTheme();
 
     return (
-        <div className={`min-h-screen relative overflow-hidden transition-colors duration-300 ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-orange-50 text-gray-900'}`}>
+        <div className={`min-h-screen relative overflow-hidden transition-colors duration-300 bg-[#0f1115] text-white`}>
 
             {/* Background Court Lines Effect */}
             <div className="absolute inset-0 opacity-5 pointer-events-none">
@@ -22,7 +20,7 @@ const About = () => {
                     <h1 className="text-5xl md:text-6xl font-black mb-6 uppercase tracking-tight relative z-10">
                         About <span className="text-bako-orange">BAKO</span>
                     </h1>
-                    <p className={`text-xl max-w-2xl mx-auto font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    <p className={`text-xl max-w-2xl mx-auto font-medium text-gray-300`}>
                         We're not just coding; we're changing the game. Bridging the gap between raw talent and elite opportunity.
                     </p>
                 </div>
@@ -30,22 +28,22 @@ const About = () => {
                 {/* Mission Section with Basketball Card Design */}
                 <div className="grid md:grid-cols-2 gap-12 items-center mb-24">
                     <div className="space-y-6">
-                        <div className={`inline-block px-4 py-1 rounded-full text-sm font-bold uppercase tracking-wider ${isDarkMode ? 'bg-orange-900 text-orange-300' : 'bg-orange-200 text-orange-800'}`}>
+                        <div className={`inline-block px-4 py-1 rounded-full text-sm font-bold uppercase tracking-wider bg-orange-900 text-orange-300`}>
                             Our Mission
                         </div>
                         <h2 className="text-4xl font-bold leading-tight">
                             Elite Analytics.<br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-600">Accessible to All.</span>
                         </h2>
-                        <p className={`text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                        <p className={`text-lg text-gray-300`}>
                             BAKO uses cutting-edge computer vision to track every dribble, pass, and shot. We believe that detailed performance data shouldn't be a luxury reserved for the pros.
                         </p>
-                        <p className={`text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                        <p className={`text-lg text-gray-300`}>
                             Whether you're playing on a dusty court in Nairobi or a hardwood gym in New York, BAKO gives you the insights to level up.
                         </p>
 
                         <div className="pt-4">
-                            <button className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-bold transition-transform hover:-translate-y-1 shadow-lg ${isDarkMode ? 'bg-bako-orange text-white' : 'bg-orange-600 text-white'}`}>
+                            <button className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-bold transition-transform hover:-translate-y-1 shadow-lg bg-bako-orange text-white`}>
                                 <Heart className="w-5 h-5 animate-pulse" />
                                 <span>Join Our Community</span>
                             </button>
@@ -78,19 +76,16 @@ const About = () => {
                         { icon: <Globe className="w-12 h-12" />, title: "Global", desc: "From Africa to the World.", color: "text-green-500", bg: "bg-green-100" },
                         { icon: <img src="https://images.unsplash.com/photo-1546519638-68e109498ffc?q=80&w=2090&auto=format&fit=crop" alt="Excellence" className="w-12 h-12 rounded-lg object-cover shadow-sm" />, title: "Excellence", desc: "Championship standards.", color: "text-orange-500", bg: "bg-orange-100" }
                     ].map((item, idx) => (
-                        <div key={idx} className={`relative p-8 rounded-3xl border-2 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl ${isDarkMode
-                            ? 'bg-gray-800 border-gray-700 hover:border-orange-500'
-                            : 'bg-white border-gray-100 hover:border-orange-400'
-                            }`}>
-                            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 ${isDarkMode ? 'bg-gray-700' : item.bg} ${item.color}`}>
+                        <div key={idx} className={`relative p-8 rounded-3xl border-2 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl $"glass-dark border border-white/5 border-gray-700 hover:border-orange-500"`}>
+                            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 ${isDarkMode ? 'bg-white/5 border border-white/10' : item.bg} ${item.color}`}>
                                 {item.icon}
                             </div>
                             <h3 className="text-2xl font-bold mb-3">{item.title}</h3>
-                            <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>{item.desc}</p>
+                            <p className="text-gray-400">{item.desc}</p>
 
                             {/* Decorative Corner */}
                             <div className={`absolute top-0 right-0 w-16 h-16 overflow-hidden rounded-tr-3xl`}>
-                                <div className={`absolute top-0 right-0 w-8 h-8 transform translate-x-1/2 -translate-y-1/2 rotate-45 ${isDarkMode ? 'bg-gray-700' : 'bg-orange-100'}`}></div>
+                                <div className={`absolute top-0 right-0 w-8 h-8 transform translate-x-1/2 -translate-y-1/2 rotate-45 bg-white/5 border border-white/10`}></div>
                             </div>
                         </div>
                     ))}

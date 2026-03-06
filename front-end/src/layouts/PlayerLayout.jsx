@@ -7,7 +7,7 @@ const PlayerLayout = () => {
   const { isDarkMode } = useTheme();
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'bg-[#0f1115] text-white' : 'bg-gray-50 text-gray-900'} transition-all duration-500`}>
+    <div className="min-h-screen bg-[#0f1115] text-white transition-all duration-500">
       <Navbar role="player" />
       <main className="pt-8">
         <Outlet />

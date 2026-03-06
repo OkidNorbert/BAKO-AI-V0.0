@@ -20,10 +20,9 @@ const CoachLayout = () => {
     const dark = isDarkMode;
 
     return (
-        <div className={`flex h-screen ${dark ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'}`}>
+        <div className="flex h-screen bg-[#0f1115] text-white">
             {/* Slim Sidebar */}
-            <aside className={`flex-shrink-0 ${sidebarW} transition-all duration-300 flex flex-col border-r ${dark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'
-                }`}>
+            <aside className={`flex-shrink-0 ${sidebarW} transition-all duration-300 flex flex-col border-r bg-[#0f1115] border-white/5`}>
                 {/* Logo */}
                 <div className={`flex items-center gap-3 px-4 py-5 border-b ${dark ? 'border-gray-800' : 'border-gray-100'}`}>
                     <div className="flex-shrink-0 h-9 w-9 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow">
@@ -92,7 +91,7 @@ const CoachLayout = () => {
             </aside>
 
             {/* Main Content */}
-            <main className={`flex-1 overflow-y-auto ${dark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+            <main className="flex-1 overflow-y-auto bg-[#0f1115]">
                 <Outlet />
             </main>
         </div>

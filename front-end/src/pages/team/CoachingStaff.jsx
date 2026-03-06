@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { adminAPI } from '../../services/api';
 import { showToast } from '@/components/shared/Toast';
@@ -9,14 +8,13 @@ import {
     Trash2,
     ShieldCheck,
     ShieldAlert,
-    Search,
     Mail,
     Loader2,
-    Info
+    Info,
+    ArrowRight
 } from 'lucide-react';
 
 const CoachingStaff = () => {
-    const { isDarkMode } = useTheme();
     const { user } = useAuth();
     const [staff, setStaff] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -77,123 +75,123 @@ const CoachingStaff = () => {
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                        Coaching Staff
-                    </h1>
-                    <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        Manage your team's coaching staff and their assigned roles.
-                    </p>
-                </div>
+        <div className="space-y-12 pb-12">
+            <div>
+                <h1 className="text-6xl font-black tracking-tighter mb-4 text-white">Coaching Staff</h1>
+                <p className="text-xl text-gray-500">
+                    Manage your team's coaching staff and their <span className="text-orange-500 font-black">assigned roles</span>.
+                </p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Linking Form - Only for Owners */}
                 {isOwner && (
-                    <div className={`p-6 rounded-xl shadow-lg border h-fit ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-                        <div className="flex items-center space-x-2 mb-6">
-                            <UserPlus className="text-orange-500" size={20} />
-                            <h2 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Link New Coach</h2>
+                    <div className="p-8 rounded-[2rem] glass-dark border border-white/5 h-fit">
+                        <div className="flex items-center space-x-3 mb-8">
+                            <div className="p-3 rounded-2xl bg-orange-500/10 text-orange-500">
+                                <UserPlus size={24} />
+                            </div>
+                            <h2 className="text-2xl font-black text-white tracking-tight">Add Coach</h2>
                         </div>
 
-                        <form onSubmit={handleLinkStaff} className="space-y-4">
+                        <form onSubmit={handleLinkStaff} className="space-y-6">
                             <div>
-                                <label className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                                <label className="block text-[10px] uppercase font-black tracking-widest text-gray-500 mb-2">
                                     Coach Email
                                 </label>
                                 <div className="relative">
-                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 h-5 w-5" />
                                     <input
                                         type="email"
                                         required
                                         value={linkData.email}
                                         onChange={(e) => setLinkData({ ...linkData, email: e.target.value })}
                                         placeholder="coach@example.com"
-                                        className={`w-full pl-10 pr-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-orange-500 ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
-                                            }`}
+                                        className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 font-bold transition-all"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                                <label className="block text-[10px] uppercase font-black tracking-widest text-gray-500 mb-2">
                                     Designated Role
                                 </label>
-                                <select
-                                    value={linkData.role}
-                                    onChange={(e) => setLinkData({ ...linkData, role: e.target.value })}
-                                    className={`w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-orange-500 ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
-                                        }`}
-                                >
-                                    <option value="Main Coach">Main Coach</option>
-                                    <option value="Assistant Coach">Assistant Coach</option>
-                                    <option value="Technical Analyst">Technical Analyst</option>
-                                    <option value="Physical Trainer">Physical Trainer</option>
-                                </select>
+                                <div className="px-4 py-1 rounded-2xl bg-white/5 border border-white/10">
+                                    <select
+                                        value={linkData.role}
+                                        onChange={(e) => setLinkData({ ...linkData, role: e.target.value })}
+                                        className="w-full bg-transparent border-none text-white font-bold py-3 pr-8 focus:ring-0 appearance-none cursor-pointer"
+                                    >
+                                        <option value="Main Coach" className="bg-gray-900">Main Coach</option>
+                                        <option value="Assistant Coach" className="bg-gray-900">Assistant Coach</option>
+                                        <option value="Technical Analyst" className="bg-gray-900">Technical Analyst</option>
+                                        <option value="Physical Trainer" className="bg-gray-900">Physical Trainer</option>
+                                    </select>
+                                </div>
                             </div>
 
                             <button
                                 type="submit"
                                 disabled={isLinking}
-                                className="w-full flex items-center justify-center space-x-2 py-2.5 rounded-lg bg-orange-600 hover:bg-orange-700 text-white font-medium transition-colors disabled:opacity-50"
+                                className="w-full flex items-center justify-center space-x-2 py-4 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white font-black text-sm transition-all shadow-[0_0_20px_rgba(249,115,22,0.3)] disabled:opacity-50 disabled:shadow-none"
                             >
                                 {isLinking ? <Loader2 className="animate-spin" size={20} /> : <span>Link Coach Account</span>}
                             </button>
                         </form>
 
-                        <div className={`mt-6 p-4 rounded-lg flex items-start space-x-3 ${isDarkMode ? 'bg-gray-700/50' : 'bg-orange-50'}`}>
-                            <Info className="text-orange-500 shrink-0" size={18} />
-                            <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                                To link a coach, they must first create a "Team Coach" account using their email address.
+                        <div className="mt-8 p-4 rounded-2xl bg-white/5 border border-white/10 flex items-start space-x-3 group hover:border-orange-500/30 transition-colors cursor-help">
+                            <Info className="text-orange-500 shrink-0 mt-0.5" size={18} />
+                            <p className="text-xs font-bold text-gray-400 leading-relaxed group-hover:text-gray-300 transition-colors">
+                                To link a coach, they must first create a <span className="text-white">"Team Coach"</span> account using their email address.
                             </p>
                         </div>
                     </div>
                 )}
 
                 {/* Staff List */}
-                <div className={`lg:col-span-2 p-6 rounded-xl shadow-lg border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-                    <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center space-x-2">
-                            <Users className="text-indigo-500" size={20} />
-                            <h2 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Current Staff</h2>
+                <div className="lg:col-span-2 p-8 rounded-[2rem] glass-dark border border-white/5">
+                    <div className="flex items-center justify-between mb-8">
+                        <div className="flex items-center space-x-3">
+                            <div className="p-3 rounded-2xl bg-blue-500/10 text-blue-500">
+                                <Users size={24} />
+                            </div>
+                            <h2 className="text-2xl font-black text-white tracking-tight">Active Roster</h2>
                         </div>
-                        <span className={`text-xs px-2 py-1 rounded-full ${isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-500'}`}>
+                        <span className="text-[10px] uppercase font-black tracking-widest px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-400">
                             {staff.length} Members
                         </span>
                     </div>
 
                     {loading ? (
-                        <div className="flex flex-col items-center justify-center py-12">
+                        <div className="flex flex-col items-center justify-center py-20 px-8 text-center bg-white/5 rounded-3xl border border-white/5 border-dashed">
                             <Loader2 className="animate-spin text-orange-500 mb-4" size={40} />
-                            <p className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>Loading staff roster...</p>
+                            <p className="text-gray-500 font-bold text-sm uppercase tracking-widest">Loading staff roster...</p>
                         </div>
                     ) : staff.length === 0 ? (
-                        <div className="text-center py-12">
-                            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 mb-4">
-                                <Users className="text-gray-400" size={30} />
+                        <div className="flex flex-col items-center justify-center py-20 px-8 text-center bg-white/5 rounded-3xl border border-white/5">
+                            <div className="h-24 w-24 rounded-full bg-white/5 flex items-center justify-center mb-6">
+                                <Users className="text-gray-500" size={40} />
                             </div>
-                            <p className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>No coaching staff linked yet.</p>
+                            <p className="text-xl font-black text-white mb-2">No coaching staff linked yet</p>
+                            <p className="text-gray-500 font-bold text-sm">Use the form to invite your first coach.</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {staff.map((member) => (
                                 <div
                                     key={member.id}
-                                    className={`p-4 rounded-xl border flex flex-col justify-between transition-all hover:shadow-md ${isDarkMode ? 'bg-gray-700/30 border-gray-600' : 'bg-gray-50 border-gray-200'
-                                        }`}
+                                    className="p-6 rounded-3xl bg-white/5 border border-white/10 flex flex-col justify-between transition-all hover:bg-white/10 hover:border-white/20 group hover:-translate-y-1"
                                 >
                                     <div className="flex items-start justify-between">
-                                        <div className="flex items-center space-x-3">
-                                            <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold">
+                                        <div className="flex items-center space-x-4">
+                                            <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-black text-xl shadow-lg">
                                                 {member.full_name?.charAt(0) || <Users size={20} />}
                                             </div>
                                             <div>
-                                                <h3 className={`font-semibold text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                                <h3 className="font-black text-white text-lg leading-tight">
                                                     {member.full_name}
                                                 </h3>
-                                                <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                                <p className="text-xs font-bold text-gray-500 mt-0.5">
                                                     {member.email}
                                                 </p>
                                             </div>
@@ -201,28 +199,28 @@ const CoachingStaff = () => {
                                         {isOwner && (
                                             <button
                                                 onClick={() => handleRemoveStaff(member.id)}
-                                                className="text-gray-400 hover:text-red-500 transition-colors"
+                                                className="p-2 rounded-xl text-gray-500 hover:text-red-500 hover:bg-red-500/10 transition-colors"
                                                 title="Remove Staff"
                                             >
-                                                <Trash2 size={16} />
+                                                <Trash2 size={18} />
                                             </button>
                                         )}
                                     </div>
 
-                                    <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-600 flex items-center justify-between">
-                                        <div className="flex items-center space-x-1.5 shadow-sm px-2 py-0.5 rounded-full bg-white dark:bg-gray-800">
+                                    <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between">
+                                        <div className="flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-black/30 border border-white/5">
                                             {member.staff_role === 'Main Coach' ? (
                                                 <ShieldCheck className="text-green-500" size={14} />
                                             ) : (
                                                 <ShieldAlert className="text-blue-500" size={14} />
                                             )}
-                                            <span className={`text-[10px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-300">
                                                 {member.staff_role || 'Staff'}
                                             </span>
                                         </div>
 
-                                        <button className="text-[10px] font-semibold text-orange-500 hover:underline uppercase tracking-tighter">
-                                            View Activity
+                                        <button className="flex items-center text-[10px] font-black uppercase tracking-widest text-orange-500 group-hover:text-orange-400 transition-colors">
+                                            Overview <ArrowRight size={12} className="ml-1 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
                                         </button>
                                     </div>
                                 </div>

@@ -60,60 +60,56 @@ const Login = () => {
   }
 
   return (
-    <div className={`min-h-screen flex transition-colors duration-300 ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+    <div className="min-h-screen flex bg-[#0f1115] text-white">
       {/* Left Side: Illustration / Image */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/60 to-purple-900/60 z-10"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-black/80 to-[#0f1115]/90 z-10" />
         <img
           src="https://images.unsplash.com/photo-1546519638-68e109498ffc?q=80&w=2090&auto=format&fit=crop"
           alt="Basketball backdrop"
-          className="absolute inset-0 w-full h-full object-cover transform scale-105 hover:scale-100 transition-transform duration-10000"
+          className="absolute inset-0 w-full h-full object-cover transform scale-105 hover:scale-100 transition-transform duration-[10000ms]"
         />
 
-        <div className="relative z-20 flex flex-col items-start justify-end p-16 pb-24 text-white h-full w-full">
-          {/* Branding removed as per request */}
-          <h2 className="text-5xl font-medium mb-4 tracking-tight leading-none uppercase">
-            Elevate Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">Game.</span>
+        <div className="relative z-20 flex flex-col items-start justify-end p-16 pb-24 h-full w-full">
+          <h2 className="text-6xl font-black mb-6 tracking-tighter leading-none text-white">
+            Elevate Your <span className="text-orange-500">Game.</span>
           </h2>
-          <p className="text-xl text-gray-200 max-w-md font-medium">
+          <p className="text-xl text-gray-400 font-bold max-w-md">
             AI-Powered Basketball Skill and Performance Analysis for Teams and Players.
           </p>
-
-          {/* Est. text removed as per request */}
         </div>
 
         {/* Floating Accent Shapes */}
-        <div className="absolute top-20 right-20 w-32 h-32 bg-orange-500/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-40 left-1/4 w-40 h-40 bg-purple-500/20 rounded-full blur-3xl animate-pulse delay-700"></div>
+        <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-orange-500/20 rounded-full blur-[100px] animate-pulse" />
+        <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-[100px] animate-pulse delay-700" />
       </div>
 
       {/* Right Side: Form */}
-      <div className="w-full lg:w-1/2 flex items-start justify-center p-8 sm:p-12 lg:p-16 pt-2 lg:pt-4">
-        <div className="max-w-md w-full space-y-8 animate-fade-in-up">
-          <div className="text-left">
-            {/* Mobile branding removed as per request */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-12 lg:p-16 relative">
+        {/* Subtle glow behind form */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-orange-500/5 rounded-full blur-[120px] pointer-events-none" />
 
-            <h2 className={`text-4xl font-medium mb-2 tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+        <div className="max-w-md w-full space-y-10 relative z-10">
+          <div className="text-left">
+            <h2 className="text-5xl font-black mb-3 text-white tracking-tighter">
               Welcome Back
             </h2>
-            <p className={`text-lg font-medium mb-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            <p className="text-lg font-bold text-gray-500">
               Sign in to your dashboard to track your latest games.
             </p>
           </div>
 
-          <form className="space-y-4" onSubmit={handleSubmit}>
+          <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
-              <div className="bg-red-500/10 border border-red-500/50 text-red-500 p-4 rounded-2xl flex items-center space-x-3 animate-shake">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-                <p className="font-semibold text-sm">{error}</p>
+              <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-4 rounded-2xl flex items-center space-x-3 backdrop-blur-sm animate-in zoom-in-95">
+                <Shield className="h-5 w-5" />
+                <p className="font-bold text-sm tracking-wide">{error}</p>
               </div>
             )}
 
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div>
-                <label htmlFor="email" className={`block text-xs font-medium mb-1 uppercase tracking-widest ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                <label htmlFor="email" className="block text-[10px] font-black mb-2 uppercase tracking-widest text-gray-500">
                   Email Address
                 </label>
                 <div className="relative group">
@@ -123,24 +119,21 @@ const Login = () => {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className={`block w-full px-5 py-3.5 rounded-2xl font-medium transition-all duration-200 outline-none border-2 ${isDarkMode
-                      ? 'bg-gray-800 border-gray-700 text-white focus:border-indigo-500 placeholder-gray-500'
-                      : 'bg-white border-gray-200 text-gray-900 focus:border-indigo-600 placeholder-gray-400'
-                      }`}
+                    className="block w-full pl-5 pr-12 py-4 rounded-2xl font-bold bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all outline-none"
                     placeholder="name@example.com"
                   />
-                  <div className="absolute inset-y-0 right-0 pr-5 flex items-center pointer-events-none text-gray-400 group-focus-within:text-indigo-500 transition-colors">
+                  <div className="absolute inset-y-0 right-0 pr-5 flex items-center pointer-events-none text-gray-600 group-focus-within:text-orange-500 transition-colors">
                     <Mail className="h-5 w-5" />
                   </div>
                 </div>
               </div>
 
               <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label htmlFor="password" className={`block text-xs font-medium uppercase tracking-widest ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                <div className="flex justify-between items-center mb-2">
+                  <label htmlFor="password" className="block text-[10px] font-black uppercase tracking-widest text-gray-500">
                     Password
                   </label>
-                  <a href="#" className="text-xs font-bold text-indigo-500 hover:text-indigo-400 transition-colors uppercase tracking-widest leading-none">
+                  <a href="#" className="text-[10px] font-black text-orange-500 hover:text-orange-400 transition-colors uppercase tracking-widest">
                     Forgot?
                   </a>
                 </div>
@@ -151,13 +144,10 @@ const Login = () => {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className={`block w-full px-5 py-3.5 rounded-2xl font-medium transition-all duration-200 outline-none border-2 ${isDarkMode
-                      ? 'bg-gray-800 border-gray-700 text-white focus:border-indigo-500 placeholder-gray-500'
-                      : 'bg-white border-gray-200 text-gray-900 focus:border-indigo-600 placeholder-gray-400'
-                      }`}
+                    className="block w-full pl-5 pr-12 py-4 rounded-2xl font-bold bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all outline-none tracking-widest"
                     placeholder="••••••••"
                   />
-                  <div className="absolute inset-y-0 right-0 pr-5 flex items-center pointer-events-none text-gray-400 group-focus-within:text-indigo-500 transition-colors">
+                  <div className="absolute inset-y-0 right-0 pr-5 flex items-center pointer-events-none text-gray-600 group-focus-within:text-orange-500 transition-colors">
                     <Shield className="h-5 w-5" />
                   </div>
                 </div>
@@ -167,7 +157,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full flex justify-center items-center py-4 px-6 rounded-2xl text-white font-medium text-lg shadow-xl transform transition duration-200 hover:scale-[1.02] active:scale-[0.98] ${isLoading ? 'bg-indigo-400 cursor-not-allowed' : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:shadow-indigo-500/25'
+              className={`w-full flex justify-center items-center py-5 px-6 rounded-2xl text-white font-black text-lg transition-all shadow-[0_0_20px_rgba(249,115,22,0.2)] ${isLoading ? 'bg-orange-500/50 cursor-not-allowed shadow-none' : 'bg-orange-500 hover:bg-orange-600 hover:shadow-[0_0_30px_rgba(249,115,22,0.4)] hover:-translate-y-0.5'
                 }`}
             >
               {isLoading ? (
@@ -175,20 +165,19 @@ const Login = () => {
               ) : (
                 <>
                   SIGN IN TO BAKO
-                  <ArrowRight className="h-6 w-6 ml-3" />
+                  <ArrowRight className="h-5 w-5 ml-3" />
                 </>
               )}
             </button>
           </form>
 
-          <div className="text-center pt-2 space-y-4">
-            <p className={`text-lg font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+          <div className="text-center pt-2">
+            <p className="text-sm font-bold text-gray-500">
               New to BAKO?{' '}
-              <Link to="/register" className="text-indigo-500 hover:text-indigo-400 font-bold decoration-2 underline-offset-4 hover:underline transition-all">
+              <Link to="/register" className="text-orange-500 hover:text-orange-400 font-black tracking-wide underline-offset-4 hover:underline transition-all ml-1">
                 Create an account
               </Link>
             </p>
-
           </div>
         </div>
       </div>
@@ -196,4 +185,4 @@ const Login = () => {
   );
 };
 
-export default Login; 
+export default Login;

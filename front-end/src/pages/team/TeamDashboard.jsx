@@ -116,197 +116,145 @@ const TeamDashboard = () => {
 
   if (stats.loading) {
     return (
-      <div className={`flex items-center justify-center min-h-screen ${isDarkMode
-        ? 'bg-gradient-to-b from-gray-900 to-indigo-950'
-        : 'bg-gradient-to-b from-blue-50 to-indigo-100'
-        }`}>
-        <div className="flex flex-col items-center justify-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-orange-500"></div>
-          <p className={`mt-4 text-lg ${isDarkMode ? 'text-white' : 'text-indigo-700'}`}>Loading team dashboard...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
       </div>
     );
   }
 
   if (stats.error) {
     return (
-      <div className={`flex items-center justify-center min-h-screen ${isDarkMode
-        ? 'bg-gradient-to-b from-gray-900 to-indigo-950'
-        : 'bg-gradient-to-b from-blue-50 to-indigo-100'
-        }`}>
-        <div className="text-center">
-          <p className={`text-lg ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>{stats.error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className={`mt-4 px-4 py-2 rounded ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}
-          >
+      <div className="mb-6 p-6 glass rounded-3xl border-l-4 border-amber-500 text-amber-400 font-bold animate-in fade-in">
+        {stats.error}
+        <button onClick={() => window.location.reload()} className="ml-4 px-4 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-500 rounded-xl transition-colors">
             Retry
-          </button>
-        </div>
+        </button>
       </div>
     );
   }
 
-  return (
-    <div className={`min-h-screen transition-colors duration-300 ${isDarkMode
-      ? 'bg-gradient-to-b from-gray-900 to-purple-950'
-      : 'bg-gradient-to-b from-blue-50 to-purple-100'
-      }`}>
+  const sub = "text-gray-500";
 
-      {/* Header Section */}
-      <div className="relative pt-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className={`flex flex-col md:flex-row justify-between items-start md:items-center mb-8`}>
-          <div>
-            <h1 className={`text-3xl sm:text-4xl font-bold mb-2 ${isDarkMode
-              ? 'text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-red-500 to-purple-600'
-              : 'text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-orange-500'
-              } animate-gradient`}>
-              Team Dashboard
-            </h1>
-            <p className={`${isDarkMode ? 'text-gray-300' : 'text-indigo-800'} text-lg`}>
-              Welcome back, {user?.name || user?.firstName || 'Coach'}! Here's your team's performance overview.
-            </p>
-          </div>
-          <div className="mt-4 md:mt-0 flex space-x-2">
-            <Link
-              to="/team/profile"
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${isDarkMode
-                ? 'bg-gray-800 text-white hover:bg-gray-700'
-                : 'bg-white text-indigo-600 hover:bg-gray-50 shadow-sm'
-                }`}
-            >
-              Team Profile
-            </Link>
-            <Link
-              to="/team/notifications"
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${isDarkMode
-                ? 'bg-gray-800 text-white hover:bg-gray-700'
-                : 'bg-white text-indigo-600 hover:bg-gray-50 shadow-sm'
-                }`}
-            >
-              <Bell className="inline h-4 w-4 mr-1" />
-              Notifications
-            </Link>
-          </div>
+  return (
+    <div className="space-y-12 pb-12">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12">
+        <div>
+          <h1 className="text-6xl font-black tracking-tighter mb-4 text-white">Team Hub</h1>
+          <p className="text-xl text-gray-500">
+            Lead <span className="text-orange-500 font-black">{user?.name || user?.firstName || 'Your Team'}</span> to victory.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Link
+            to="/team/profile"
+            className="flex items-center px-6 py-3 rounded-2xl font-bold text-sm transition-all duration-300 bg-white/5 hover:bg-white/10 border border-white/10 text-white"
+          >
+            Team Settings
+          </Link>
+          <Link
+            to="/team/notifications"
+            className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm transition-all duration-300 bg-orange-500 hover:bg-orange-600 text-white shadow-[0_0_20px_rgba(249,115,22,0.3)]"
+          >
+            <Bell className="h-4 w-4" />
+            Inbox
+          </Link>
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      {/* Quick Actions Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {quickActions.map((action, index) => (
           <Link
             key={index}
             to={action.link}
-            className={`p-4 rounded-lg transition-all duration-200 transform hover:scale-105 ${isDarkMode
-              ? 'bg-gray-800 hover:bg-gray-700 text-white'
-              : 'bg-white hover:bg-gray-50 text-gray-900 shadow-md'
-              }`}
+            className="group p-6 rounded-[2rem] glass-dark border border-white/5 hover:bg-white/5 transition-all duration-300 flex flex-col items-center justify-center text-center overflow-hidden relative"
           >
-            <div className="flex items-center space-x-3">
-              <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-indigo-100 text-indigo-600'}`}>
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div className="p-4 rounded-2xl bg-white/5 group-hover:bg-orange-500/20 text-gray-400 group-hover:text-orange-500 transition-colors mb-4 border border-white/5">
                 {action.icon}
-              </div>
-              <div>
-                <p className="font-medium">{action.name}</p>
-                <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  {action.description}
-                </p>
-              </div>
             </div>
+            <p className="font-black text-sm text-white">{action.name}</p>
           </Link>
         ))}
       </div>
 
-      {/* Main Dashboard Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        {/* Left Column - Stats and Recent Activity */}
-        <div className="lg:col-span-2 space-y-6">
-
-          {/* Team Stats Component */}
-          <TeamStats stats={{
-            totalPlayers: stats.totalPlayers || 0,
-            activePlayers: stats.totalPlayers || 0,
-            gamesAnalyzed: stats.matchesAnalyzed || 0,
-            totalVideos: stats.matchesAnalyzed || 0,
-            winRate: stats.winRate || 0,
-            gamesPlayed: stats.totalMatches || 0,
-            trainingVideos: 0
-          }} />
-
-          {/* Recent Games Component */}
-          {/* Transform mock activities to match RecentGames expected format */}
-          <RecentGames games={stats.recentActivities.map(activity => ({
-            id: activity.id,
-            title: activity.title,
-            type: activity.type === 'match' ? 'win' : (activity.type === 'analysis' ? 'analysis' : 'training'),
-            description: activity.message || activity.status || '',
-            date: activity.createdAt || activity.date || new Date().toISOString()
-          }))} />
-
-        </div>
-
-        {/* Right Column - Charts and Player Management */}
-        <div className="space-y-6">
-
-          {/* Performance Chart */}
-          <TeamDashboardChart
-            data={stats.performanceData || []}
-          />
-
-          {/* Player Management Overview */}
-          <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white shadow-md'}`}>
-            <div className="flex justify-between items-center mb-4">
-              <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                Player Management
-              </h3>
-              <Link
-                to="/team/roster"
-                className={`text-sm ${isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'}`}
-              >
-                View All
-              </Link>
-            </div>
-
-            <div className="space-y-3">
-              <div className={`flex justify-between items-center p-3 rounded ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                <div>
-                  <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                    Total Players
-                  </p>
-                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    Active roster
-                  </p>
-                </div>
-                <div className={`text-2xl font-bold ${isDarkMode ? 'text-orange-400' : 'text-orange-600'}`}>
-                  {stats.totalPlayers}
-                </div>
-              </div>
-
-              <div className={`flex justify-between items-center p-3 rounded ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                <div>
-                  <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                    Matches Analyzed
-                  </p>
-                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    This season
-                  </p>
-                </div>
-                <div className={`text-2xl font-bold ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>
-                  {stats.matchesAnalyzed}
-                </div>
-              </div>
-
-              <Link
-                to="/team/roster"
-                className={`block w-full text-center p-3 rounded-lg transition-colors ${isDarkMode ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-indigo-500 hover:bg-indigo-600 text-white'}`}
-              >
-                <UserPlus className="inline h-4 w-4 mr-2" />
-                Link Player Account
-              </Link>
-            </div>
+      {/* Main Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        {/* Left Column */}
+        <div className="lg:col-span-2 space-y-10">
+          <div className="rounded-[3rem] p-10 glass-dark border border-white/5 relative overflow-hidden">
+            <h2 className="text-2xl font-black tracking-tight mb-8">Performance Overview</h2>
+            <TeamStats stats={{
+                totalPlayers: stats.totalPlayers || 0,
+                activePlayers: stats.totalPlayers || 0,
+                gamesAnalyzed: stats.matchesAnalyzed || 0,
+                totalVideos: stats.matchesAnalyzed || 0,
+                winRate: stats.winRate || 0,
+                gamesPlayed: stats.totalMatches || 0,
+                trainingVideos: 0
+            }} />
           </div>
 
+          <div className="rounded-[3rem] overflow-hidden border border-white/5 glass-dark flex flex-col">
+            <div className="p-10 border-b border-white/5 flex justify-between items-center">
+              <h2 className="text-2xl font-black tracking-tight">Recent Activity</h2>
+              <Link to="/team/notifications" className="text-[10px] font-black uppercase tracking-widest text-orange-500 hover:text-orange-400 transition-colors">View All</Link>
+            </div>
+            <div className="p-8 bg-black/20">
+              {stats.recentActivities.length > 0 ? (
+                <RecentGames games={stats.recentActivities.map(activity => ({
+                    id: activity.id,
+                    title: activity.title,
+                    type: activity.type === 'match' ? 'win' : (activity.type === 'analysis' ? 'analysis' : 'training'),
+                    description: activity.message || activity.status || '',
+                    date: activity.createdAt || activity.date || new Date().toISOString()
+                }))} />
+              ) : (
+                <p className="text-center text-gray-500 font-bold py-10">No recent activity detected.</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column */}
+        <div className="space-y-10">
+          <div className="rounded-[3rem] p-8 glass-dark border border-white/5 relative overflow-hidden">
+            <h2 className="text-xl font-black tracking-tight mb-6">Activity Trends</h2>
+            <TeamDashboardChart data={stats.performanceData || []} />
+          </div>
+
+          <div className="rounded-[3rem] p-8 glass-dark border border-white/5 relative overflow-hidden">
+            <div className="absolute -top-10 -right-10 w-32 h-32 bg-orange-500/10 blur-3xl rounded-full" />
+            <div className="relative z-10">
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-xl font-black tracking-tight">Roster Status</h2>
+                    <Link to="/team/roster" className="text-[10px] font-black uppercase tracking-widest text-orange-500 hover:text-orange-400 transition-colors">View Roster</Link>
+                </div>
+
+                <div className="space-y-3">
+                    <div className="flex justify-between items-center p-4 rounded-2xl bg-white/5 border border-white/5">
+                        <div>
+                            <p className="text-white font-bold text-sm">Total Players</p>
+                            <p className="text-[10px] uppercase font-black tracking-widest text-gray-500 mt-1">Active Roster</p>
+                        </div>
+                        <div className="text-2xl font-black text-orange-500">{stats.totalPlayers}</div>
+                    </div>
+                    
+                    <div className="flex justify-between items-center p-4 rounded-2xl bg-white/5 border border-white/5">
+                        <div>
+                            <p className="text-white font-bold text-sm">Matches Analyzed</p>
+                            <p className="text-[10px] uppercase font-black tracking-widest text-gray-500 mt-1">This Season</p>
+                        </div>
+                        <div className="text-2xl font-black text-green-500">{stats.matchesAnalyzed}</div>
+                    </div>
+
+                    <Link to="/team/roster" className="mt-6 w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-white/5 hover:bg-white/10 text-white font-black text-[10px] uppercase tracking-widest border border-white/5 transition-colors">
+                        <UserPlus size={16} /> Manage Roster
+                    </Link>
+                </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -84,53 +84,53 @@ const Register = () => {
   }
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center">
-      <div className={`max-w-md w-full space-y-8 p-8 rounded-xl shadow-lg transition-colors duration-300 ${isDarkMode ? 'bg-gray-800' : 'bg-white'
-        }`}>
+    <div className="min-h-screen flex items-center justify-center p-4 sm:p-8 bg-[#0f1115] relative overflow-hidden">
+      {/* Background Ambience */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-orange-500/10 rounded-full blur-[120px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[120px]" />
+      </div>
+
+      <div className="max-w-xl w-full space-y-10 p-10 sm:p-14 rounded-[3rem] glass-dark border border-white/5 relative z-10 shadow-2xl">
         <div className="text-center">
-          <h2 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'
-            }`}>
+          <h2 className="text-5xl font-black text-white tracking-tighter mb-4">
             Create an Account
           </h2>
-          <p className={`mt-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'
-            }`}>
-            Join the BAKO basketball analytics platform
+          <p className="text-lg font-bold text-gray-500">
+            Join the <span className="text-orange-500 font-black">BAKO</span> basketball analytics platform.
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="space-y-8" onSubmit={handleSubmit}>
           {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative animate-fade-in">
+            <div className="bg-red-500/10 border border-red-500/20 text-red-500 px-5 py-4 rounded-2xl font-bold text-sm text-center">
               {error}
             </div>
           )}
 
-          <div className="space-y-4">
+          <div className="space-y-5">
             {/* Account Type Selection */}
             <div>
-              <label htmlFor="accountType" className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
+              <label htmlFor="accountType" className="block text-[10px] uppercase font-black tracking-widest text-gray-500 mb-2">
                 Account Type
               </label>
-              <select
-                id="accountType"
-                name="accountType"
-                value={formData.accountType}
-                onChange={handleChange}
-                className={`mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${isDarkMode
-                  ? 'bg-gray-700 border-gray-600 text-white'
-                  : 'bg-white border-gray-300 text-gray-900'
-                  }`}
-              >
-                <option value="player">Personal Player</option>
-                <option value="coach">Team Coach</option>
-                <option value="team">Team Organization</option>
-              </select>
+              <div className="px-4 py-1 rounded-2xl bg-white/5 border border-white/10">
+                <select
+                  id="accountType"
+                  name="accountType"
+                  value={formData.accountType}
+                  onChange={handleChange}
+                  className="w-full bg-transparent border-none text-white font-bold py-4 pr-8 focus:ring-0 appearance-none cursor-pointer outline-none"
+                >
+                  <option value="player" className="bg-gray-900">Personal Player</option>
+                  <option value="coach" className="bg-gray-900">Team Coach</option>
+                  <option value="team" className="bg-gray-900">Team Organization</option>
+                </select>
+              </div>
             </div>
 
             <div>
-              <label htmlFor="name" className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
+              <label htmlFor="name" className="block text-[10px] uppercase font-black tracking-widest text-gray-500 mb-2 mt-2">
                 {formData.accountType === 'team' ? 'Team Name' : 'Full Name'}
               </label>
               <input
@@ -140,17 +140,13 @@ const Register = () => {
                 required
                 value={formData.name}
                 onChange={handleChange}
-                className={`mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${isDarkMode
-                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
-                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                  }`}
+                className="block w-full px-5 py-4 rounded-2xl font-bold bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all outline-none"
                 placeholder={formData.accountType === 'team' ? "Enter team name" : "Enter your full name"}
               />
             </div>
 
             <div>
-              <label htmlFor="email" className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
+              <label htmlFor="email" className="block text-[10px] uppercase font-black tracking-widest text-gray-500 mb-2 mt-2">
                 Email address
               </label>
               <input
@@ -160,80 +156,67 @@ const Register = () => {
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className={`mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${isDarkMode
-                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
-                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                  }`}
+                className="block w-full px-5 py-4 rounded-2xl font-bold bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all outline-none"
                 placeholder="Enter your email"
               />
             </div>
 
-            <div>
-              <label htmlFor="password" className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                value={formData.password}
-                onChange={handleChange}
-                className={`mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${isDarkMode
-                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
-                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                  }`}
-                placeholder="Create a password"
-              />
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label htmlFor="password" className="block text-[10px] uppercase font-black tracking-widest text-gray-500 mb-2 mt-2">
+                  Password
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="block w-full px-5 py-4 rounded-2xl font-bold bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all outline-none tracking-widest"
+                  placeholder="••••••••"
+                />
+              </div>
 
-            <div>
-              <label htmlFor="confirmPassword" className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
-                Confirm Password
-              </label>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                required
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                className={`mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${isDarkMode
-                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
-                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                  }`}
-                placeholder="Confirm your password"
-              />
+              <div>
+                <label htmlFor="confirmPassword" className="block text-[10px] uppercase font-black tracking-widest text-gray-500 mb-2 mt-2">
+                  Confirm Password
+                </label>
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  required
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  className="block w-full px-5 py-4 rounded-2xl font-bold bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all outline-none tracking-widest"
+                  placeholder="••••••••"
+                />
+              </div>
             </div>
           </div>
 
-          <div>
+          <div className="pt-4">
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary-500 hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''
+              className={`w-full flex justify-center items-center py-5 px-6 rounded-2xl text-white font-black text-lg transition-all shadow-[0_0_20px_rgba(249,115,22,0.2)] ${isLoading ? 'bg-orange-500/50 cursor-not-allowed shadow-none' : 'bg-orange-500 hover:bg-orange-600 hover:shadow-[0_0_30px_rgba(249,115,22,0.4)] hover:-translate-y-0.5'
                 }`}
             >
               {isLoading ? (
-                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
+                <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
               ) : (
-                'Create Account'
+                'CREATE ACCOUNT'
               )}
             </button>
           </div>
 
-          <div className="text-center">
-            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>
+          <div className="text-center pt-2">
+            <p className="text-sm font-bold text-gray-500">
               Already have an account?{' '}
               <Link
                 to="/login"
-                className="font-medium text-primary-500 hover:text-primary-600 transition-colors duration-200"
+                className="text-orange-500 hover:text-orange-400 font-black tracking-wide underline-offset-4 hover:underline transition-all ml-1"
               >
                 Sign in here
               </Link>
@@ -245,4 +228,4 @@ const Register = () => {
   );
 };
 
-export default Register; 
+export default Register;
