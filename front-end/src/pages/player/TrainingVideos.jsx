@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useNavigate } from 'react-router-dom';
-import { playerAPI } from '../../services/api';
+import { playerAPI, videoAPI } from '../../services/api';
 import { Video, Upload, PlayCircle, Calendar, RefreshCw, AlertCircle, Zap, CheckCircle, Clock, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 
 const TrainingVideos = () => {
@@ -10,6 +10,8 @@ const TrainingVideos = () => {
   const [error, setError] = useState('');
   const [uploading, setUploading] = useState(false);
   const [analysing, setAnalysing] = useState({}); // jobId per video
+  const [deletingVideo, setDeletingVideo] = useState({});
+  const [confirmDeleteVideo, setConfirmDeleteVideo] = useState(null);
   const [shootingArm, setShootingArm] = useState('right');
   const { isDarkMode } = useTheme();
   const navigate = useNavigate();
@@ -82,6 +84,24 @@ const TrainingVideos = () => {
       setError('Could not start analysis for this video.');
     } finally {
       setAnalysing(prev => ({ ...prev, [video.id]: false }));
+    }
+  };
+
+  const handleDeleteVideo = async (videoId, e) => {
+    e.stopPropagation();
+    if (confirmDeleteVideo !== videoId) {
+      setConfirmDeleteVideo(videoId);
+      return;
+    }
+    setDeletingVideo(prev => ({ ...prev, [videoId]: true }));
+    setConfirmDeleteVideo(null);
+    try {
+      await videoAPI.delete(videoId);
+      setVideos(prev => prev.filter(v => v.id !== videoId));
+    } catch {
+      setError('Could not delete video.');
+    } finally {
+      setDeletingVideo(prev => ({ ...prev, [videoId]: false }));
     }
   };
 
@@ -177,8 +197,12 @@ const TrainingVideos = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mt-12">
             {videos.map((video) => {
               const status = video.job_status || 'analysed'; // mockup shows 'Analysed' or 'Processing'
+              const vId = video.id || video._id;
+              const isDeletingV = deletingVideo[vId];
+              const isConfirmingV = confirmDeleteVideo === vId;
+              
               return (
-                <div key={video.id || video._id} className={`group rounded-[2rem] overflow-hidden border transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl ${isDarkMode ? 'bg-gray-800/20 border-gray-700/50 hover:bg-gray-800/40 hover:border-orange-500/20' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
+                <div key={vId} className={`group rounded-[2rem] overflow-hidden border transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl ${isDarkMode ? 'bg-gray-800/20 border-gray-700/50 hover:bg-gray-800/40 hover:border-orange-500/20' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
                   <div className="aspect-[4/3] bg-gray-900 flex items-center justify-center relative overflow-hidden">
                     {video.thumbnailUrl
                       ? <img src={video.thumbnailUrl} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
@@ -211,6 +235,19 @@ const TrainingVideos = () => {
                         : <><Zap className="h-4 w-4 fill-current" /> Analyse</>
                       }
                     </button>
+                    {/* Delete Video */}
+                    <button
+                      onClick={(e) => handleDeleteVideo(vId, e)}
+                      disabled={isDeletingV}
+                      className={`w-full mt-2 flex items-center justify-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-300 ${isConfirmingV ? 'bg-red-500 text-white' : isDarkMode ? 'bg-white/5 border border-white/10 text-gray-400 hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30' : 'bg-gray-50 border border-gray-200 text-gray-500 hover:bg-red-50 hover:text-red-500 hover:border-red-200'} ${isDeletingV ? 'opacity-50 pointer-events-none' : ''}`}
+                    >
+                      {isDeletingV
+                        ? <><div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> Deleting…</>
+                        : isConfirmingV 
+                          ? 'Confirm Delete' 
+                          : <><Trash2 className="h-4 w-4" /> Delete</>
+                      }
+                    </button>
                   </div>
                 </div>
               );
@@ -230,6 +267,10 @@ const TrainingVideos = () => {
           </div>
         )}
       </div>
+      {/* Click-away to cancel video confirm */}
+      {confirmDeleteVideo && (
+        <div className="fixed inset-0 z-40" onClick={() => setConfirmDeleteVideo(null)} />
+      )}
     </div>
   );
 };
