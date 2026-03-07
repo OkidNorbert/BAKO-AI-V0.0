@@ -306,7 +306,38 @@ async def run_analysis_background(video_id: str, mode: str, supabase: SupabaseSe
                 except Exception:
                     pass
         
-        # Update video status
+        # ── Upload annotated video to Supabase Storage ────────────────────────
+        import os as _os
+        _ANNOTATED_BUCKET = "team-analysis-videos"
+        _annotated_local = _os.path.join("output_videos", "annotated", f"{video_id}.mp4")
+
+        if _os.path.exists(_annotated_local):
+            try:
+                _storage_path = f"{video.get('uploader_id', 'unknown')}/{video_id}_annotated.mp4"
+                await supabase.upload_file_from_path(
+                    bucket=_ANNOTATED_BUCKET,
+                    storage_path=_storage_path,
+                    local_path=_annotated_local,
+                    content_type="video/mp4",
+                )
+                _signed_url = await supabase.get_long_lived_url(
+                    bucket=_ANNOTATED_BUCKET,
+                    storage_path=_storage_path,
+                    expires_in=60 * 60 * 24 * 7,  # 7 days
+                )
+                if _signed_url:
+                    # Store signed URL in the videos record for direct playback
+                    await supabase.update("videos", video_id, {"annotated_url": _signed_url})
+                    # Clean up local annotated file
+                    try:
+                        _os.remove(_annotated_local)
+                    except Exception:
+                        pass
+            except Exception as _upload_err:
+                # Non-fatal — fallback to local FileResponse endpoint
+                print(f"[{video_id}] Supabase annotated upload failed (using local fallback): {_upload_err}")
+
+        # Update video status to COMPLETED
         await supabase.update("videos", video_id, {
             "status": VideoStatus.COMPLETED.value,
             "progress_percent": 100,

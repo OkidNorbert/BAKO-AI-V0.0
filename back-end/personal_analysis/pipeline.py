@@ -255,11 +255,25 @@ def _parse_report(report_path: str) -> list:
     for i, block in enumerate(blocks):
         lines = [l.strip() for l in block.splitlines() if l.strip()]
         verdict = "GOOD FORM" if any("GOOD FORM" in l for l in lines) else "NEEDS WORK"
-        issues = [l for l in lines if any(k in l.lower() for k in ["angle", "try", "shoot", "distance"])]
+        
+        # Extract issues (ignore header lines and metric lines)
+        issues = [l for l in lines if (any(k in l.lower() for k in ["angle", "try", "shoot", "distance", "open", "close", "arc"]) and not l.startswith("ANGLE_"))]
+        
+        # Extract metrics
+        metrics = {"elbow_angle": 0.0, "shoulder_angle": 0.0, "knee_angle": 0.0, "hip_angle": 0.0}
+        for l in lines:
+            if l.startswith("ANGLE_SEW:"):
+                try: metrics["elbow_angle"] = float(l.split(":")[1].strip())
+                except: pass
+            elif l.startswith("ANGLE_ESH:"):
+                try: metrics["shoulder_angle"] = float(l.split(":")[1].strip())
+                except: pass
+
         reports.append({
             "shot_number": i + 1,
             "verdict": verdict,
             "issues": issues,
+            "metrics": metrics
         })
 
     return reports

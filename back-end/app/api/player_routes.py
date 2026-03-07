@@ -7,11 +7,11 @@ from datetime import datetime
 from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, Query, status, UploadFile, File
 
-from app.dependencies import require_personal_account, get_supabase, get_current_user
-from app.services.supabase_client import SupabaseService
-from app.models.player import Player, PlayerCreate, PlayerUpdate
-from app.models.schedule import Schedule
-from app.models.notification import Notification
+from ..dependencies import require_personal_account, get_supabase, get_current_user
+from ..services.supabase_client import SupabaseService
+from ..models.player import Player, PlayerCreate, PlayerUpdate
+from ..models.schedule import Schedule
+from ..models.notification import Notification
 
 router = APIRouter()
 
@@ -287,18 +287,18 @@ async def get_performance_metrics(
                 except: results = {}
             
             if results.get("status") == "completed":
-                total_shots += results.get("shots_total", 0)
-                total_made += results.get("shots_made", 0)
+                total_shots += int(results.get("shots_total", 0) or 0)
+                total_made += int(results.get("shots_made", 0) or 0)
                 
                 # Simple form score: 100 for GOOD FORM, 60 for NEEDS WORK
                 reports = results.get("shot_reports", [])
-                if reports:
+                if reports and isinstance(reports, list):
                     score = sum(100 if r.get("verdict") == "GOOD FORM" else 60 for r in reports) / len(reports)
                     total_form_score += score
                     completed_analyses += 1
 
-        accuracy = (total_made / total_shots * 100) if total_shots > 0 else 0
-        overall_rating = (total_form_score / completed_analyses) if completed_analyses > 0 else 0
+        accuracy = float(total_made / total_shots * 100) if total_shots > 0 else 0.0
+        overall_rating = float(total_form_score / completed_analyses) if completed_analyses > 0 else 0.0
         
         return {
             "shootingAccuracy": round(accuracy, 1),
@@ -345,11 +345,13 @@ async def get_skill_trends(
                 shooting_points.append(results.get("made_percentage", 0))
                 
         # If we have too many points, sample or slice
-        shooting_points = shooting_points[-12:] # Last 12 sessions
+        recent_points: List[float] = []
+        for p in shooting_points[-12:]:
+            recent_points.append(p)
         
         # If we have no data, return empty or mock if requested (usually empty is better for "Real Data")
         return {
-            "shooting": shooting_points,
+            "shooting": recent_points,
             "dribbling": [],
             "defense": [],
             "fitness": []
@@ -383,30 +385,56 @@ async def get_skills_analytics(
                 except: results = {}
             
             if results.get("status") == "completed":
-                accuracy = results.get("made_percentage", 0)
+                accuracy = float(results.get("made_percentage", 0) or 0)
                 shooting_scores.append(accuracy)
                 
                 reports = results.get("shot_reports", [])
-                for r in reports:
-                    skills_data.append({
-                        "id": f"shot-{row['id']}-{r['shot_number']}",
-                        "name": f"Shot {r['shot_number']}",
-                        "category": "Shooting",
-                        "score": 100 if r.get("verdict") == "GOOD FORM" else 60,
-                        "feedback": r.get("issues", ["Form looking solid"]),
-                        "date": row.get("created_at"),
-                        "videoUrl": results.get("annotated_video_url"),
-                        "analysisData": results # Pass full results for AICoachFeedback
-                    })
+                if isinstance(reports, list):
+                    for r in reports:
+                        if not isinstance(r, dict): continue
+                        metrics = r.get("metrics", {}) if isinstance(r.get("metrics"), dict) else {}
+                        
+                        mapped_shot_details = [{
+                            "outcome": "made" if r.get("verdict") == "GOOD FORM" else "missed",
+                            "faults": r.get("issues", []) if isinstance(r.get("issues"), list) else [],
+                            "feedback": "\n".join(r.get("issues", ["Form looking solid"])) if isinstance(r.get("issues"), list) else "Form looking solid",
+                            "biometrics": {
+                                "shoulder_angle": float(metrics.get("shoulder_angle", 0) or 0),
+                                "elbow_angle": float(metrics.get("elbow_angle", 0) or 0),
+                                "knee_angle": float(metrics.get("knee_angle", 0) or 0),
+                                "hip_angle": float(metrics.get("hip_angle", 0) or 0),
+                            }
+                        }]
+                        
+                        issues_list = r.get("issues", []) if isinstance(r.get("issues"), list) else []
+                        if not issues_list or r.get("verdict") == "GOOD FORM":
+                            dynamic_feedback = "Perfect execution on this shot! Mechanics look solid and fluid. Keep up the consistency."
+                        else:
+                            issues_str = " ".join(str(i) for i in issues_list)
+                            dynamic_feedback = f"Focus areas for this attempt: {issues_str} Maintaining proper alignment will improve your accuracy."
 
-        avg_shooting = sum(shooting_scores) / len(shooting_scores) if shooting_scores else 0
+                        skills_data.append({
+                            "id": f"shot-{row.get('id', '')}-{r.get('shot_number', 0)}",
+                            "name": f"Shot {r.get('shot_number', 0)}",
+                            "category": "Shooting",
+                            "score": 100 if r.get("verdict") == "GOOD FORM" else 60,
+                            "feedback": issues_list,
+                            "date": str(row.get("created_at", "")),
+                            "videoUrl": str(results.get("annotated_video_url", "")),
+                            "analysisData": {
+                                "feedback": str(results.get("overall_feedback", dynamic_feedback)),
+                                "shot_details": mapped_shot_details
+                            }
+                        })
+
+        avg_shooting = float(sum(shooting_scores) / len(shooting_scores)) if shooting_scores else 0.0
         
         return {
             "skills": skills_data,
             "summary": {
                 "overall": round(avg_shooting * 0.8, 1),
                 "shooting": round(avg_shooting, 1),
-                "defense": 0,
+                "defense": 0.0,
                 "training_sessions": len(analyses),
                 "training_minutes": len(analyses) * 30,
                 "distance": 0.45 * len(analyses)
@@ -417,6 +445,52 @@ async def get_skills_analytics(
         print(f"CRITICAL ERROR fetching real skills: {e}")
         print(traceback.format_exc())
         return {"skills": [], "summary": {"overall": 0, "shooting": 0, "defense": 0}}
+
+
+@router.delete("/skills/{skill_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_skill_analysis(
+    skill_id: str,
+    current_user: dict = Depends(require_personal_account),
+    supabase: SupabaseService = Depends(get_supabase),
+):
+    """
+    Delete a personal analysis record.
+    The frontend ID format: shot-{db_id}-{shot_number}
+    """
+    # Extract the actual analysis ID
+    db_id = skill_id
+    if skill_id.startswith("shot-"):
+        parts = skill_id.split("-")
+        if len(parts) >= 2:
+            db_id = "-".join(parts[1:-1]) if len(parts) > 2 else parts[1]
+
+    analysis = await supabase.select_one("personal_analyses", db_id)
+    if not analysis:
+        raise HTTPException(status_code=404, detail="Analysis not found")
+        
+    if analysis.get("user_id") != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this analysis")
+
+    # If you want to delete the file from Supabase as well:
+    results = analysis.get("results_json") or {}
+    if isinstance(results, str):
+        try: 
+            import json
+            results = json.loads(results)
+        except: 
+            results = {}
+            
+    # NOTE: Optional - delete from Supabase block
+    # annotated_url = results.get("annotated_video_url")
+    # if annotated_url and "personal-analysis-videos" in annotated_url:
+    #     try:
+    #         # Need a way to extract the path from the signed URL or derive it
+    #         # For safety, we just delete the DB record.
+    #     except Exception:
+    #         pass
+
+    await supabase.delete("personal_analyses", db_id)
+    return None
 
 @router.post("/profile/image")
 async def upload_profile_image(
@@ -489,7 +563,7 @@ async def get_profile(
             }
         
         # Ensure full_name is present (might be fullName in some DB views)
-        if "fullName" in user and "full_name" not in user:
+        if isinstance(user, dict) and "fullName" in user and "full_name" not in user:
             user["full_name"] = user["fullName"]
 
         players = await supabase.select("players", filters={"user_id": current_user["id"]})

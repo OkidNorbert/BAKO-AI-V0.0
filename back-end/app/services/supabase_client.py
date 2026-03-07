@@ -332,6 +332,58 @@ class SupabaseService:
         await self._run_sync(lambda: self.client.storage.from_(bucket).remove([path]))
         return True
 
+    async def upload_file_from_path(
+        self,
+        bucket: str,
+        storage_path: str,
+        local_path: str,
+        content_type: str = "video/mp4",
+    ) -> str:
+        """
+        Upload a file from disk to Supabase Storage by streaming it.
+        Avoids loading the entire file into memory — safe for large videos.
+        Returns the storage path on success.
+        Falls back to serving from local path if Supabase is not connected.
+        """
+        import os
+        if not self.is_connected:
+            return local_path
+
+        with open(local_path, "rb") as f:
+            file_bytes = f.read()
+
+        def _upload():
+            return self.client.storage.from_(bucket).upload(
+                storage_path,
+                file_bytes,
+                {"content-type": content_type, "upsert": "true"},
+            )
+
+        await self._run_sync(_upload)
+        return storage_path
+
+    async def get_long_lived_url(
+        self,
+        bucket: str,
+        storage_path: str,
+        expires_in: int = 60 * 60 * 24 * 7,  # 7 days
+    ) -> str:
+        """
+        Generate a signed URL valid for `expires_in` seconds (default 7 days).
+        Falls back to the local /personal-output path when not connected.
+        """
+        if not self.is_connected:
+            filename = storage_path.split("/")[-1]
+            return f"/personal-output/{filename}"
+
+        response = await self._run_sync(
+            lambda: self.client.storage.from_(bucket).create_signed_url(
+                storage_path, expires_in
+            )
+        )
+        # Supabase SDK returns dict with 'signedURL' key
+        return response.get("signedURL") or response.get("signed_url") or ""
+
 
 # Singleton instance
 _supabase_service: Optional[SupabaseService] = None

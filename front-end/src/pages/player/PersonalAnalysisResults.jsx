@@ -204,8 +204,24 @@ const PersonalAnalysisResults = () => {
                                     </a>
                                 </div>
                                 <div className="bg-black aspect-video">
-                                    <video controls className="w-full h-full" src={annotated_video_url}>
-                                        Your browser does not support playback.
+                                    <video
+                                        key={annotated_video_url}
+                                        controls
+                                        className="w-full h-full"
+                                        crossOrigin="anonymous"
+                                        onError={(e) => {
+                                            e.target.style.display = 'none';
+                                            e.target.parentElement.innerHTML = `
+                                                <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;color:#9ca3af;">
+                                                    <p style="font-size:13px;font-weight:700;">Unable to play video in browser.</p>
+                                                    <a href="${annotated_video_url}" download style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;color:#f97316;padding:8px 20px;border:1px solid rgba(249,115,22,0.3);border-radius:12px;">
+                                                        Download to watch
+                                                    </a>
+                                                </div>`;
+                                        }}
+                                    >
+                                        <source src={annotated_video_url} type="video/mp4" />
+                                        Your browser does not support video playback.
                                     </video>
                                 </div>
                             </div>
@@ -224,11 +240,10 @@ const PersonalAnalysisResults = () => {
                             {(shot_reports || []).map((shot) => (
                                 <div
                                     key={shot.shot_number}
-                                    className={`p-5 rounded-2xl border transition-all duration-300 ${
-                                        shot.verdict === 'GOOD FORM'
+                                    className={`p-5 rounded-2xl border transition-all duration-300 ${shot.verdict === 'GOOD FORM'
                                             ? 'bg-green-500/5 border-green-500/15 hover:border-green-500/30'
                                             : 'bg-orange-500/5 border-orange-500/15 hover:border-orange-500/30'
-                                    }`}
+                                        }`}
                                 >
                                     <div className="flex items-center justify-between mb-3">
                                         <div className="flex items-center gap-2">

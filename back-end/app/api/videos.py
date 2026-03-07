@@ -401,8 +401,11 @@ async def download_annotated_video(
 ):
     """
     Download the annotated output video (if available).
+    Redirects to Supabase signed URL when stored in cloud, otherwise streams from disk.
     Ownership-checked via the uploaded video record.
     """
+    from fastapi.responses import RedirectResponse
+
     video = await supabase.select_one("videos", video_id)
     if not video:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Video not found")
@@ -415,6 +418,12 @@ async def download_annotated_video(
         else:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You don't have access to this video")
 
+    # Prefer Supabase signed URL (cloud storage) — redirect the client directly
+    annotated_url = video.get("annotated_url")
+    if annotated_url and annotated_url.startswith("https"):
+        return RedirectResponse(url=annotated_url, status_code=302)
+
+    # Fallback: serve from local disk
     annotated_path = _annotated_video_path(video_id)
     if not os.path.exists(annotated_path):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Annotated video not available yet")

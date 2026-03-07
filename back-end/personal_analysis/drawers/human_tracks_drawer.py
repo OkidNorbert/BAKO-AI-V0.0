@@ -282,9 +282,12 @@ class HumanTracksDrawer:
             if len(issues) == 2: verdict = ["GOOD FORM"]
             else: verdict = [f"shot {shot_num+1}"] + ["NEEDS WORK: "] + issues
 
+            # Also record raw metrics for the UI to display
             with open(report_path, "a") as f:
                 for item in verdict:
                     f.write(str(item) + "\n")
+                f.write(f"ANGLE_SEW: {sew_min if sew_min is not None else 0}\n")
+                f.write(f"ANGLE_ESH: {esh_max if esh_max is not None else 0}\n")
                 f.write("\n")
 
             # Draw a premium overlay box for the feedback

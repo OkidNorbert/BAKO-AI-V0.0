@@ -47,6 +47,8 @@ async def _run_and_update(job_id: str, video_path: str, user_id: str, supabase: 
     """Background task that runs the pipeline and updates the DB."""
     from personal_analysis.pipeline import run_personal_analysis
 
+    BUCKET = "personal-analysis-videos"
+
     _job_cache[job_id] = {"job_id": job_id, "status": "processing", "user_id": user_id}
 
     result = await run_personal_analysis(
@@ -55,6 +57,40 @@ async def _run_and_update(job_id: str, video_path: str, user_id: str, supabase: 
         job_id=job_id,
         shooting_arm=shooting_arm,
     )
+
+    # ── Upload annotated video to Supabase Storage ────────────────────────────
+    if result.get("status") == "completed":
+        local_output = os.path.join(PERSONAL_OUTPUT_DIR, f"{job_id}_output.mp4")
+        if os.path.exists(local_output):
+            try:
+                storage_path = f"{user_id}/{job_id}_output.mp4"
+                await supabase.upload_file_from_path(
+                    bucket=BUCKET,
+                    storage_path=storage_path,
+                    local_path=local_output,
+                    content_type="video/mp4",
+                )
+                signed_url = await supabase.get_long_lived_url(
+                    bucket=BUCKET,
+                    storage_path=storage_path,
+                    expires_in=60 * 60 * 24 * 7,  # 7 days
+                )
+                if signed_url:
+                    result["annotated_video_url"] = signed_url
+                    logger.info(f"[{job_id}] Uploaded to Supabase Storage → {storage_path}")
+                    # Clean up local file after successful upload
+                    try:
+                        os.remove(local_output)
+                        # Remove tmp file if it still exists
+                        tmp = local_output.replace("_output.mp4", "_output_tmp.mp4")
+                        if os.path.exists(tmp):
+                            os.remove(tmp)
+                    except Exception:
+                        pass
+            except Exception as upload_err:
+                # Upload failed — fall back to local URL so results still work
+                logger.warning(f"[{job_id}] Supabase upload failed, using local URL: {upload_err}")
+                result["annotated_video_url"] = f"/personal-output/{job_id}_output.mp4"
 
     _job_cache[job_id] = {**result, "user_id": user_id}
 

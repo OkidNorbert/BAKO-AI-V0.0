@@ -167,15 +167,7 @@ const PlayerDashboard = () => {
                 <h1 className="text-6xl font-black tracking-tighter mb-4">Player Dashboard</h1>
                 <p className={`text-xl ${sub}`}>Welcome back, <span className="text-orange-500 font-black">{user?.firstName || 'Champ'}</span>. Ready to grind?</p>
             </div>
-            <div className={`flex items-center gap-4 p-4 rounded-[2rem] border-2 shadow-glass ${isDarkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-100'}`}>
-                <div className="h-12 w-12 rounded-2xl bg-orange-500 flex items-center justify-center text-white shadow-premium">
-                    <TrendingUp className="h-6 w-6" />
-                </div>
-                <div>
-                   <p className="text-[10px] font-black uppercase tracking-widest opacity-50">Global Rank</p>
-                   <p className="text-xl font-black">#12,492</p>
-                </div>
-            </div>
+
         </div>
 
         {error && (
